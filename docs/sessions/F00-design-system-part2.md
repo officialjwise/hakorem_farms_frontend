@@ -141,7 +141,9 @@ Confirm in three lines: the phase, the remaining scope, and the gate. Then build
    hakorem-storefront-perf, hakorem-a11y, hakorem-frontend-adr. Each has a trigger
    description, a correct and an incorrect example, and stays under 400 lines.
 7. A short root CLAUDE.md: what the project is, which surface is which, the contract
-   rule, the commands, and the three things that go wrong most often.
+   rule, the commands, and the three things that go wrong most often. Include the rule
+   that git add, git commit and git push run as three separate commands: the permission
+   classifier refuses them chained in one (&&, ; or a pipe). Follow it yourself too.
 
 Stop at the gate, write docs/sessions/F00-design-system.md, push, and open the PR to main.
 ```
