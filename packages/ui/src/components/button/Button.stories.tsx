@@ -181,10 +181,10 @@ export const LoadingIgnoresClicks: Story = {
 export const KeyboardPath: Story = {
   render: (args) => (
     <div className="flex gap-3">
-      <Button {...args} disabled>
+      <Button onClick={args.onClick} disabled>
         Void sale
       </Button>
-      <Button {...args}>Complete sale</Button>
+      <Button onClick={args.onClick}>Complete sale</Button>
     </div>
   ),
   play: async ({ canvasElement, args }) => {
