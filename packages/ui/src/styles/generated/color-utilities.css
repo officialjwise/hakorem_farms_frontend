@@ -18,6 +18,10 @@
   background-color: var(--surface-hover);
 }
 
+@utility bg-scrim {
+  background-color: var(--scrim);
+}
+
 @utility border-border {
   border-color: var(--border);
 }

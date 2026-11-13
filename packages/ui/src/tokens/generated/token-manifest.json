@@ -47,6 +47,12 @@
       ],
       "scope": "app"
     },
+    "scrim": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
     "border": {
       "roles": [
         "line"

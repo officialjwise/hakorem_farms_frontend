@@ -54,6 +54,12 @@ export const colors = {
     roles: ['surface'],
     use: 'Hover on rows and quiet buttons. Darker in light, lighter in dark: hover lifts, it never sinks.',
   },
+  scrim: {
+    light: '#221E168C',
+    dark: '#000000B3',
+    roles: ['surface'],
+    use: 'Backdrop behind Dialog and Sheet. The alpha is in the value (#RRGGBBAA) because opacity modifiers are banned. Nothing is written on it.',
+  },
   border: {
     light: '#D6CDBA',
     dark: '#332F26',
@@ -300,6 +306,9 @@ export const colors = {
 } as const satisfies Record<string, ColorToken>;
 
 export type ColorName = keyof typeof colors;
+
+/** Tokens whose value carries an alpha channel (#RRGGBBAA). Every other token is opaque #RRGGBB. */
+export const TRANSLUCENT: readonly ColorName[] = ['scrim'];
 
 /**
  * Shadow colour per theme. Not a utility: it only feeds the shadow tokens. Dark

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { colors, contrastPairs, type ColorName, type Role } from './palette';
-import { contrastRatio } from './contrast';
+import { colors, contrastPairs, TRANSLUCENT, type ColorName, type Role } from './palette';
+import { composite, contrastRatio, parseHex, parseHexAlpha } from './contrast';
 import { GENERATED_FILES } from './render';
 
 const THEMES = ['light', 'dark'] as const;
@@ -10,6 +10,12 @@ const roles = (n: ColorName) => colors[n].roles as readonly Role[];
 
 /** Decorative-only tokens, deliberately not held to a contrast minimum. */
 const DECORATIVE: readonly ColorName[] = ['border'];
+
+/** Surfaces nothing is written on, so no text pair exists for them. The scrim has its own tests below. */
+const NO_TEXT: readonly ColorName[] = ['scrim'];
+
+/** Everything the scrim can be painted over: the page, and surfaces that sit on it. */
+const UNDER_SCRIM = ['bg', 'surface', 'surface-sunken', 'surface-hover'] as const;
 
 describe('contrast', () => {
   for (const theme of THEMES) {
@@ -34,7 +40,9 @@ describe('palette coverage', () => {
 
   it('checks every surface token behind at least one text colour', () => {
     const covered = new Set(contrastPairs.filter((p) => p.kind === 'text').map((p) => p.bg));
-    const unchecked = names.filter((n) => roles(n).includes('surface') && !covered.has(n));
+    const unchecked = names.filter(
+      (n) => roles(n).includes('surface') && !covered.has(n) && !NO_TEXT.includes(n),
+    );
     expect(unchecked).toEqual([]);
   });
 
@@ -55,9 +63,100 @@ describe('palette coverage', () => {
     }
   });
 
-  it('has a #RRGGBB value for every token in both themes', () => {
-    for (const n of names) for (const t of THEMES) expect(colors[n][t]).toMatch(/^#[0-9A-F]{6}$/);
+  it('has a #RRGGBB value for every opaque token in both themes', () => {
+    for (const n of names.filter((n) => !TRANSLUCENT.includes(n)))
+      for (const t of THEMES) expect(colors[n][t]).toMatch(/^#[0-9A-F]{6}$/);
   });
+
+  it('has a #RRGGBBAA value for every translucent token, and only those', () => {
+    for (const n of TRANSLUCENT)
+      for (const t of THEMES) expect(colors[n][t]).toMatch(/^#[0-9A-F]{8}$/);
+  });
+});
+
+/** Builds #RRGGBB or #RRGGBBAA from channel numbers, so the tests hold no hex literal (the token lint rule applies here too). */
+const hex = (...channels: number[]) =>
+  `#${channels.map((c) => c.toString(16).padStart(2, '0').toUpperCase()).join('')}`;
+
+describe('alpha compositing', () => {
+  it('reads #RRGGBBAA and refuses #RRGGBB, and the reverse for parseHex', () => {
+    expect(parseHexAlpha(hex(255, 0, 0, 128))).toEqual({ rgb: [255, 0, 0], alpha: 128 / 255 });
+    expect(() => parseHexAlpha(hex(255, 0, 0))).toThrow();
+    expect(() => parseHex(hex(255, 0, 0, 128))).toThrow();
+  });
+
+  it.each([
+    [
+      'fully opaque shows the top colour',
+      hex(16, 32, 48, 255),
+      hex(255, 255, 255),
+      hex(16, 32, 48),
+    ],
+    [
+      'fully transparent shows the base',
+      hex(16, 32, 48, 0),
+      hex(255, 255, 255),
+      hex(255, 255, 255),
+    ],
+    [
+      'black at 50% over white is mid grey',
+      hex(0, 0, 0, 128),
+      hex(255, 255, 255),
+      hex(127, 127, 127),
+    ],
+    [
+      'white at 50% over black is mid grey',
+      hex(255, 255, 255, 128),
+      hex(0, 0, 0),
+      hex(128, 128, 128),
+    ],
+  ])('%s', (_name, top, base, expected) => {
+    expect(composite(top, base)).toBe(expected);
+  });
+});
+
+describe('scrim (ADR 0004)', () => {
+  it('is a surface and nothing else, so only bg-scrim exists', () => {
+    expect(roles('scrim')).toEqual(['surface']);
+  });
+
+  it.each(THEMES)('%s: dims the page without blacking it out', (theme) => {
+    const { alpha } = parseHexAlpha(colors.scrim[theme]);
+    expect(alpha).toBeGreaterThanOrEqual(0.4);
+    expect(alpha).toBeLessThanOrEqual(0.85);
+  });
+
+  for (const theme of THEMES) {
+    describe(theme, () => {
+      const over = (under: (typeof UNDER_SCRIM)[number]) =>
+        composite(colors.scrim[theme], colors[under][theme]);
+
+      it.each(UNDER_SCRIM)(
+        'text on the dialog above the scrim over --%s still passes, because the dialog is opaque',
+        (under) => {
+          // The dialog is painted on --surface, which is opaque, so nothing the scrim does can reach its text...
+          expect(TRANSLUCENT).not.toContain('surface');
+          // ...and the dialog's own text pairs hold in this theme (the same pairs the contrast tests above run).
+          expect(contrastRatio(colors.fg[theme], colors.surface[theme])).toBeGreaterThanOrEqual(7);
+          expect(
+            contrastRatio(colors['fg-muted'][theme], colors.surface[theme]),
+          ).toBeGreaterThanOrEqual(4.5);
+          // The scrim composited over the page is a real opaque colour the dialog is measured against.
+          expect(over(under)).toMatch(/^#[0-9A-F]{6}$/);
+        },
+      );
+
+      it.each(UNDER_SCRIM)(
+        'the dialog edge stays visible against the scrim over --%s (3:1, by fill or by strong border)',
+        (under) => {
+          const behind = over(under);
+          const byFill = contrastRatio(colors.surface[theme], behind);
+          const byBorder = contrastRatio(colors['border-strong'][theme], behind);
+          expect(Math.max(byFill, byBorder)).toBeGreaterThanOrEqual(3);
+        },
+      );
+    });
+  }
 });
 
 describe('the mark / text / fill split', () => {
