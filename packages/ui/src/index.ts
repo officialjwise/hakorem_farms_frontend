@@ -33,3 +33,10 @@ export {
   type StatusBadgeProps,
   type StatusTone,
 } from './components/status-badge/StatusBadge';
+export {
+  UIProvider,
+  usePortalContainer,
+  type Density,
+  type ThemePreference,
+  type UIProviderProps,
+} from './components/ui-provider/UIProvider';

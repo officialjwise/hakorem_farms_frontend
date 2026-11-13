@@ -1,4 +1,5 @@
 import type { Decorator, Preview } from '@storybook/react-vite';
+import { UIProvider } from '../src/components/ui-provider/UIProvider';
 import '../src/styles/index.css';
 
 type Theme = 'light' | 'dark';
@@ -25,20 +26,19 @@ const withThemeAndDensity: Decorator = (Story, { globals, parameters }) => {
     <div className={single || stacked ? '' : 'grid gap-0 lg:grid-cols-2'}>
       {themes.flatMap((theme) =>
         densities.map((density) => (
-          <section
-            key={`${theme}-${density}`}
-            data-theme={theme}
-            data-density={density}
-            aria-label={`${theme} theme, ${density} density`}
-            className="min-w-0 p-6"
-          >
-            {single ? null : (
-              <p className="mb-4 text-xs font-semibold tracking-wide text-fg-muted uppercase">
-                {theme} · {density}
-              </p>
-            )}
-            <Story />
-          </section>
+          // Each frame is its own app root, as in the apps: one UIProvider per root (ADR 0006).
+          <div key={`${theme}-${density}`} className="min-w-0">
+            <UIProvider theme={theme} density={density}>
+              <section aria-label={`${theme} theme, ${density} density`} className="p-6">
+                {single ? null : (
+                  <p className="mb-4 text-xs font-semibold tracking-wide text-fg-muted uppercase">
+                    {theme} · {density}
+                  </p>
+                )}
+                <Story />
+              </section>
+            </UIProvider>
+          </div>
         )),
       )}
     </div>
