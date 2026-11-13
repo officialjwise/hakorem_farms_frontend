@@ -99,3 +99,36 @@ export function formatWeight(
   if (context === 'export') return `${sign}${whole}.${fraction}`;
   return `${sign}${groupThousands(whole)}.${fraction} kg`;
 }
+
+/**
+ * A stock quantity (the contract's `Quantity` or `SignedQuantity`) to text.
+ * The unit of measure is not part of the number: the caller shows it beside
+ * it. ADR 0007 is silent on quantities, so this keeps exactly the API's three
+ * places, never trimming or rounding, so no information is lost.
+ *
+ * | context     | "1250.5"     |
+ * | ----------- | ------------ |
+ * | `interface` | `1,250.500`  |
+ * | `document`  | `1,250.500`  |
+ * | `export`    | `1250.500`   |
+ */
+export function formatQuantity(
+  quantity: string | null,
+  { context = 'interface' }: { context?: FormatContext } = {},
+): string {
+  if (quantity === null) return emptyFor(context);
+  const match = WEIGHT.exec(quantity);
+  if (!match) {
+    throw new TypeError(
+      `formatQuantity takes a decimal string with up to three places; got "${quantity}".`,
+    );
+  }
+  const [, minus = '', intDigits = '0', fracDigits = ''] = match;
+  const whole = BigInt(intDigits).toString();
+  const fraction = fracDigits.padEnd(3, '0');
+  const zero = /^0+$/.test(intDigits + fracDigits);
+  const sign = minus && !zero ? MINUS : '';
+  return context === 'export'
+    ? `${sign}${whole}.${fraction}`
+    : `${sign}${groupThousands(whole)}.${fraction}`;
+}

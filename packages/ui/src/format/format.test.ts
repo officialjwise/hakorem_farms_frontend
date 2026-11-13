@@ -1,4 +1,4 @@
-import { CEDI_SIGN, NOT_APPLICABLE, formatMoney, formatWeight } from './format';
+import { CEDI_SIGN, NOT_APPLICABLE, formatMoney, formatQuantity, formatWeight } from './format';
 
 describe('formatMoney', () => {
   describe('interface (GH₵, no space)', () => {
@@ -122,6 +122,42 @@ describe('formatWeight', () => {
     'refuses "%s" rather than guessing or rounding',
     (bad) => {
       expect(() => formatWeight(bad)).toThrow(TypeError);
+    },
+  );
+});
+
+describe('formatQuantity', () => {
+  it.each([
+    ['0.000', '0.000'],
+    ['3.000', '3.000'],
+    ['3', '3.000'],
+    ['3.5', '3.500'],
+    ['1250.5', '1,250.500'],
+    ['99999999999.999', '99,999,999,999.999'],
+    ['-2.000', '-2.000'],
+  ])('%s is %s in the interface and on documents', (input, expected) => {
+    expect(formatQuantity(input)).toBe(expected);
+    expect(formatQuantity(input, { context: 'document' })).toBe(expected);
+  });
+
+  it('has no separator in exports', () => {
+    expect(formatQuantity('1250.5', { context: 'export' })).toBe('1250.500');
+    expect(formatQuantity('-1250.5', { context: 'export' })).toBe('-1250.500');
+  });
+
+  it('never shows a minus on zero', () => {
+    expect(formatQuantity('-0.000')).toBe('0.000');
+  });
+
+  it('renders null as an en dash, or an empty export cell', () => {
+    expect(formatQuantity(null)).toBe(NOT_APPLICABLE);
+    expect(formatQuantity(null, { context: 'export' })).toBe('');
+  });
+
+  it.each(['1.2345', '1,5', 'abc', '', '1e3', ' 1.000'])(
+    'refuses "%s" rather than rounding',
+    (bad) => {
+      expect(() => formatQuantity(bad)).toThrow(TypeError);
     },
   );
 });

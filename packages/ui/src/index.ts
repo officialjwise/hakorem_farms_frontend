@@ -46,6 +46,7 @@ export {
   CURRENCY_CODE,
   NOT_APPLICABLE,
   formatMoney,
+  formatQuantity,
   formatWeight,
   type FormatContext,
 } from './format/format';
@@ -77,3 +78,25 @@ export {
   type DateString,
 } from './components/date-picker/DatePicker';
 export { AffixInput, type AffixInputProps } from './components/affix-input/AffixInput';
+export {
+  MoneyDisplay,
+  type MoneyDisplayProps,
+  type MoneyDisplayContext,
+} from './components/money-display/MoneyDisplay';
+export {
+  WeightDisplay,
+  type WeightDisplayProps,
+  type WeightDisplayContext,
+} from './components/weight-display/WeightDisplay';
+export {
+  QuantityDisplay,
+  type QuantityDisplayProps,
+  type QuantityDisplayContext,
+} from './components/quantity-display/QuantityDisplay';
+export {
+  PriceBandDisplay,
+  type PriceBandDisplayProps,
+  type PriceBandValue,
+} from './components/price-band-display/PriceBandDisplay';
+export { AnimalTag, type AnimalTagProps } from './components/animal-tag/AnimalTag';
+export { LotBadge, type LotBadgeProps, type LotExpiry } from './components/lot-badge/LotBadge';
