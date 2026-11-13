@@ -1,6 +1,6 @@
 # F0 design system, part 1 of 2
 
-- Session: F0 (continues in "F0 continued")
+- Session: F0 (continues in F0b)
 - Date: 2026-11-13
 - Branch: `f00-design-system`, pushed to `origin`, last commit `d58e952`
 - Gate: **not yet reached.** This part stopped at a green commit because the session's context was heavy, as the session protocol requires.
@@ -54,7 +54,7 @@
 - **CR-001** added to `docs/CONTRACT_REQUESTS.md`: stock valuation at cost, with cost and price as separately named fields and totals from the API.
 - Screens moved from the mock to the real API: **none** (F0 has no screens).
 
-## Deferred to F0 continued (the remaining gate scope)
+## Deferred to F0b (the remaining gate scope)
 
 1. **Primitives on Radix**, built to the Button, Table and StatusBadge pattern: Input, Select, Combobox, Checkbox, Radio, Switch, Textarea, DatePicker, NumberInput, MoneyInput, WeightInput, Dialog, Sheet, Popover, Tooltip, Toast, Tabs, Pagination, Badge, Avatar, Card, Skeleton, EmptyState, ErrorState, Spinner.
    - Once Spinner and Skeleton exist, refactor Button's inline spinner and Table's skeleton bars to use them.
@@ -65,6 +65,53 @@
 5. **Frontend skills** in `.claude/skills/`: hakorem-screen, hakorem-ui-component, hakorem-api-call, hakorem-contract-sync, hakorem-pos-offline, hakorem-money-ui, hakorem-storefront-perf, hakorem-a11y, hakorem-frontend-adr.
 6. **Root `CLAUDE.md`**, short.
 7. **Gate report** at `docs/sessions/F00-design-system.md`, then open the pull request from `f00-design-system` to `main`.
+
+## Owner answers: binding for F0b
+
+These four patterns had no precedent in the reference components. The owner settled them before F0b started, and F0b builds them as written. Each is also an ADR.
+
+### 1. Overlays (ADR 0004)
+
+- **State:** Radix's convention exactly: `open` + `onOpenChange`, uncontrolled by default. No third way.
+- **Theming:** portaled content renders outside any themed wrapper, so fix this before the seven overlay components depend on it. Portals render into an explicit themed target that `UIProvider` provides, passed as Radix `Portal`'s `container`. The target carries the opener's `data-theme` and `data-density`.
+- **Proof story:** open a Dialog in dark compact and assert the dialog's own computed colours, not the page's.
+- **Stacking:** z-index comes from the token scale, never a literal.
+- **Tooltips:** they do not exist on touch, and the POS is touch. A Tooltip is never the only route to information, the same rule as StatusBadge. A control that needs explaining gets a visible label or hint.
+- **Focus:** Radix owns the focus trap and focus return, and we do not override them. Add a story with the POS barcode focus trap and a Dialog together, proving they do not fight.
+
+### 2. Form fields (ADR 0005)
+
+- **Field owns the wiring:** one `Field` wrapper owns the generated id, label association, `aria-describedby` for hint and error, `aria-invalid`, and required marking. Individual inputs never wire their own.
+- **Label:** `label` is a required prop, and a field without one is a compile error, as with StatusBadge. A placeholder is never a label.
+- **Errors:** an error always carries text. A red border alone is colour carrying state.
+- **Required:** marked with the `required` attribute and visible text, never an asterisk alone.
+
+### 3. Providers (ADR 0006)
+
+- **One provider:** exactly one `UIProvider` at each app root, carrying theme, density, the Toast viewport and the themed portal target. Not several nested providers. Storybook's decorator mounts it too.
+- **Forms:** react-hook-form's `FormProvider` is per form, never app level.
+- **Toast:** never the only record of a failed money or stock operation. Those failures also leave something persistent on screen.
+
+### 4. Formatting (ADR 0007)
+
+- **No locale for money:** no `Intl.NumberFormat` and no `toLocaleString`, because ICU versions differ between runtimes and a server-rendered total could disagree with the client's.
+- **`formatMoney(pesewas)`** in `packages/ui`, with explicit rules:
+  - comma thousands separator
+  - always two decimals
+  - no locale lookup
+  - integer pesewas only
+  - tested, including zero, negatives and large values
+- **Symbol:** `GH₵` in the interface, `GHS` on documents, exports and anything an accountant or customer keeps.
+- **Weight:** always three decimals with a `kg` suffix, never locale dependent.
+- **Not applicable:** an en dash (`–`, U+2013) for a value that does not apply. The Table story fixture was corrected from an em dash.
+- **Translation layer:** wired now, as the brief requires, for labels only. Numbers and currency never go through it. The library choice is a dependency decision: F0b records it in an ADR.
+- **Still to confirm with the owner:** spacing and sign. F0b uses `GH₵1,234.50`, `-GH₵1,234.50`, `GHS 1,234.50` and `-GHS 1,234.50` (ASCII minus) unless told otherwise. Also check that `GH₵` (U+20B5) renders on Android 9 system fonts; if it does not, raise it before choosing a fallback.
+
+### Build order these answers imply
+
+1. `UIProvider` with the themed portal target, plus the dark-compact Dialog proof story, before any other overlay.
+2. `Field`, before any input.
+3. `formatMoney`, `formatWeight` and the translation layer, before MoneyDisplay, WeightDisplay and the money and weight inputs.
 
 ## Notes for the next session
 
@@ -80,8 +127,8 @@
 
 ```text
 Read CLAUDE.md if present, docs/SHARED_BRIEF.md, and the F0 section of docs/BUILD_PROMPT.md.
-Read docs/sessions/F00-design-system-part1.md, then docs/adr/0001, 0003 and docs/ASSUMPTIONS.md.
-This is "F0 continued" on branch f00-design-system. Do not reopen decisions recorded there.
+Read docs/sessions/F00-design-system-part1.md, then docs/adr/0001 and 0003 to 0007, and docs/ASSUMPTIONS.md.
+This is F0b on branch f00-design-system. Do not reopen decisions recorded there.
 
 Confirm in three lines: the phase, the remaining scope, and the gate.
 Then build the deferred items in order, matching Button, Table and StatusBadge exactly.
