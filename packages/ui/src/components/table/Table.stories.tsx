@@ -364,7 +364,9 @@ export const At360px: Story = {
     </div>
   ),
   play: async ({ canvasElement }) => {
-    for (const region of within(canvasElement).getAllByRole('region')) {
+    for (const region of canvasElement.querySelectorAll<HTMLElement>(
+      '[data-slot="table-container"]',
+    )) {
       const bounds = region.getBoundingClientRect();
       const row = within(region).getByRole('row', { name: /Goat, Boer cross/ });
       await expect(getComputedStyle(row).display).toBe('block');

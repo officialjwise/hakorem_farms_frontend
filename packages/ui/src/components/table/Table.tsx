@@ -1,6 +1,9 @@
-import { ArrowDown, ArrowUp, ChevronsUpDown, Inbox, TriangleAlert } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
 import { createContext, useContext, type ComponentPropsWithRef, type ReactNode } from 'react';
 import { cn } from '../../lib/cn';
+import { EmptyState } from '../empty-state/EmptyState';
+import { ErrorState } from '../error-state/ErrorState';
+import { Skeleton } from '../skeleton/Skeleton';
 
 /*
  * Table: semantic <table> parts, styled by tokens, sized by density.
@@ -287,17 +290,9 @@ export function TableLoadingRows({ columns, rows = 5, label }: TableLoadingRowsP
         <tr key={r} role="row" data-slot="table-row" className="h-row" data-loading-row="">
           {Array.from({ length: columns }, (_, c) => (
             <td key={c} role="cell" data-slot="table-cell" className={cellBase}>
-              {r === 0 && c === 0 ? (
-                <span role="status" className="sr-only">
-                  {label}
-                </span>
-              ) : null}
-              <span
-                aria-hidden="true"
-                className={cn(
-                  'block h-3 rounded-sm bg-surface-sunken animate-pulse motion-reduce:animate-none',
-                  SKELETON_WIDTHS[(r + c) % SKELETON_WIDTHS.length],
-                )}
+              <Skeleton
+                label={r === 0 && c === 0 ? label : undefined}
+                className={SKELETON_WIDTHS[(r + c) % SKELETON_WIDTHS.length]}
               />
             </td>
           ))}
@@ -334,27 +329,22 @@ export function TableMessageRow({
   reference,
   referenceLabel,
 }: TableMessageRowProps) {
-  const Icon = tone === 'error' ? TriangleAlert : Inbox;
   return (
     <tr role="row" data-slot="table-message-row" data-tone={tone}>
-      <td role="cell" colSpan={colSpan} className="px-cell py-10 text-center">
-        <div
-          role={tone === 'error' ? 'alert' : undefined}
-          className="mx-auto flex max-w-md flex-col items-center gap-2"
-        >
-          <Icon
-            aria-hidden="true"
-            className={cn('size-7', tone === 'error' ? 'stroke-critical' : 'text-fg-muted')}
+      <td role="cell" colSpan={colSpan} className="px-cell text-center">
+        {tone === 'error' && reference !== undefined ? (
+          <ErrorState
+            title={title}
+            description={description}
+            action={action}
+            reference={reference}
+            referenceLabel={referenceLabel ?? ''}
           />
-          <p className="text-base font-semibold text-balance text-fg">{title}</p>
-          {description ? <p className="text-sm text-balance text-fg-muted">{description}</p> : null}
-          {reference !== undefined ? (
-            <p className="text-xs text-fg-muted">
-              {referenceLabel} <code className="font-mono text-fg">{reference}</code>
-            </p>
-          ) : null}
-          {action ? <div className="mt-2">{action}</div> : null}
-        </div>
+        ) : tone === 'error' ? (
+          <ErrorState title={title} description={description} action={action} />
+        ) : (
+          <EmptyState title={title} description={description} action={action} />
+        )}
       </td>
     </tr>
   );
