@@ -100,3 +100,5 @@ export {
 } from './components/price-band-display/PriceBandDisplay';
 export { AnimalTag, type AnimalTagProps } from './components/animal-tag/AnimalTag';
 export { LotBadge, type LotBadgeProps, type LotExpiry } from './components/lot-badge/LotBadge';
+export { Select, type SelectOption, type SelectProps } from './components/select/Select';
+export { Combobox, type ComboboxOption, type ComboboxProps } from './components/combobox/Combobox';
