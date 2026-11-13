@@ -10,6 +10,7 @@
     "setup": "pnpm install --frozen-lockfile && pnpm tokens:check",
     "tokens": "pnpm --filter @hakorem/ui tokens",
     "tokens:check": "pnpm --filter @hakorem/ui tokens:check",
+    "lint": "eslint . --max-warnings 0 && stylelint \"**/*.css\" --max-warnings 0",
     "typecheck": "pnpm -r typecheck",
     "test:unit": "pnpm -r test:unit",
     "test:a11y": "pnpm --filter @hakorem/ui test:stories",
@@ -19,8 +20,16 @@
     "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@hakorem/lint-tokens": "workspace:*",
     "@types/node": "22.20.5",
+    "eslint": "10.13.0",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.13.0",
     "prettier": "3.9.10",
-    "typescript": "5.9.3"
+    "stylelint": "17.16.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.1"
   }
 }
