@@ -1,0 +1,9 @@
+{
+  "field": {
+    "required": "Required"
+  },
+  "error": {
+    "reference": "Reference",
+    "tryAgain": "Try again"
+  }
+}
