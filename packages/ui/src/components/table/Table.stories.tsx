@@ -54,7 +54,7 @@ const STOCK = [
     item: 'Broiler chicken',
     location: 'Shop floor',
     qty: '24 head',
-    weight: '—',
+    weight: '–',
     costValue: '2,040.00',
   },
   {
@@ -78,7 +78,7 @@ const STOCK = [
     item: 'Eggs, big',
     location: 'Shop floor',
     qty: '18 crates',
-    weight: '—',
+    weight: '–',
     costValue: '756.00',
   },
   {
@@ -86,7 +86,7 @@ const STOCK = [
     item: 'Yam',
     location: 'Shop floor',
     qty: '140 tubers',
-    weight: '—',
+    weight: '–',
     costValue: '840.00',
   },
 ];
