@@ -7,9 +7,11 @@
     "node": ">=22.12 <23"
   },
   "scripts": {
-    "setup": "pnpm install --frozen-lockfile && pnpm tokens:check",
+    "setup": "pnpm install --frozen-lockfile && pnpm tokens:check && pnpm fonts:check",
     "tokens": "pnpm --filter @hakorem/ui tokens",
     "tokens:check": "pnpm --filter @hakorem/ui tokens:check",
+    "fonts": "pnpm --filter @hakorem/ui fonts",
+    "fonts:check": "pnpm --filter @hakorem/ui fonts:check",
     "lint": "eslint . --max-warnings 0 && stylelint \"**/*.css\" --max-warnings 0",
     "typecheck": "pnpm -r typecheck",
     "test:unit": "pnpm -r test:unit",

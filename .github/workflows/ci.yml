@@ -27,6 +27,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Generated tokens are up to date
         run: pnpm tokens:check
+      - name: Cedi glyph face is up to date
+        run: pnpm fonts:check
       - name: Lint (ESLint, Stylelint, token roles)
         run: pnpm lint
       - name: Format

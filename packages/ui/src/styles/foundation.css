@@ -6,6 +6,22 @@
  * reach for a colour or size that is not a HaKorem token.
  */
 
+/*
+ * The cedi sign, shipped with the page (ADR 0007). Older Android system fonts
+ * cover U+20B5 unreliably, so this glyph-only face (Noto Sans, OFL, subset by
+ * scripts/build-cedi-font.ts, 1.3 KB, variable weight) is listed first in every
+ * stack. unicode-range means it is downloaded only when GH₵ is on the page, and
+ * every other character still uses the system font.
+ */
+@font-face {
+  font-family: 'HaKorem Cedi';
+  src: url('./fonts/hakorem-cedi.woff2') format('woff2');
+  unicode-range: U+20B5;
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --color-*: initial;
   --shadow-*: initial;
@@ -20,8 +36,10 @@
    */
   --font-*: initial;
   --font-sans:
-    system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: ui-monospace, 'SFMono-Regular', 'Roboto Mono', Menlo, Consolas, monospace;
+    'HaKorem Cedi', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Helvetica Neue',
+    Arial, sans-serif;
+  --font-mono:
+    'HaKorem Cedi', ui-monospace, 'SFMono-Regular', 'Roboto Mono', Menlo, Consolas, monospace;
 
   --text-*: initial;
   --text-xs: 0.75rem;
