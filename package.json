@@ -1,0 +1,19 @@
+{
+  "name": "hakorem-farms-frontend",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.28.9",
+  "engines": {
+    "node": ">=22.12 <23"
+  },
+  "scripts": {
+    "typecheck": "pnpm -r --if-present typecheck",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "prettier": "3.9.10",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,15 @@
+packages:
+  - apps/*
+  - packages/*
+  - tooling/*
+
+# Supply chain: never resolve a version younger than two weeks (minutes), and
+# only run install scripts for packages explicitly allowed here.
+minimumReleaseAge: 20160
+allowBuilds:
+  esbuild: true
+
+peerDependencyRules:
+  allowedVersions:
+    # Unmaintained since 2024; its rules run on ESLint 10 (verified by `pnpm lint`). See docs/adr/0002.
+    eslint-plugin-jsx-a11y>eslint: '10'
