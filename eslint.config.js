@@ -37,6 +37,16 @@ export default tseslint.config(
     },
   },
   {
+    // Table parts carry explicit ARIA table roles on purpose: the stacked layout changes
+    // their CSS display, which can drop native table semantics in some browsers.
+    files: ['packages/ui/src/components/table/Table.tsx'],
+    rules: {
+      'jsx-a11y/no-redundant-roles': 'off',
+      // jsx-a11y classes <td> as interactive (gridcell); here it is a plain table cell.
+      'jsx-a11y/no-interactive-element-to-noninteractive-role': 'off',
+    },
+  },
+  {
     // Colour tokens: role-checked, no raw colours, marketing tokens scoped.
     files: ['**/*.{ts,tsx,js,mjs}'],
     ignores: ['tooling/lint-tokens/**'],

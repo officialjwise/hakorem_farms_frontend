@@ -1,0 +1,119 @@
+/*
+ * Table layout rules that utilities cannot express: the selected-row edge, and
+ * the stacked layout.
+ *
+ * Stacked is the default below 40rem of container width (not viewport width,
+ * so a table in a narrow panel on a desktop stacks too). Each row becomes a
+ * block: the row header is the heading, and every labelled cell is a
+ * label/value pair. TableContainer layout="scroll" opts out for genuinely wide
+ * reference tables. See docs/adr/0003-stacked-tables.md.
+ *
+ * These rules sit in the utilities layer, and their attribute selectors
+ * outrank single-class utilities, so they win over the components' own classes
+ * when stacked.
+ */
+@layer utilities {
+  [data-slot='table-container'] {
+    container: hk-table / inline-size;
+  }
+
+  [data-slot='table-row'][aria-selected='true'] > :first-child {
+    box-shadow: inset 3px 0 0 0 var(--accent);
+  }
+
+  @container hk-table (width < 40rem) {
+    [data-layout='stack'] [data-slot='table'],
+    [data-layout='stack'] [data-slot='table-caption'],
+    [data-layout='stack'] [data-slot='table-header'],
+    [data-layout='stack'] [data-slot='table-body'],
+    [data-layout='stack'] [data-slot='table-footer'],
+    [data-layout='stack'] [data-slot='table-message-row'],
+    [data-layout='stack'] [data-slot='table-message-row'] > td {
+      display: block;
+    }
+
+    /* Rows become blocks with the edge bar spanning the whole block. */
+    [data-layout='stack'] [data-slot='table-row'] {
+      display: block;
+      height: auto;
+      padding: calc(var(--cell-py) + 0.25rem) var(--cell-px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    [data-layout='stack'] [data-slot='table-body'] > [data-slot='table-row']:last-child {
+      border-bottom: 0;
+    }
+
+    [data-layout='stack'] [data-slot='table-row'][aria-selected='true'] {
+      box-shadow: inset 3px 0 0 0 var(--accent);
+    }
+
+    [data-layout='stack'] [data-slot='table-row'][aria-selected='true'] > :first-child {
+      box-shadow: none;
+    }
+
+    [data-layout='stack'] [data-slot='table-row'] > * {
+      display: block;
+      height: auto;
+      padding: 0.125rem 0;
+      border: 0;
+    }
+
+    [data-layout='stack'] [data-slot='table-row-header'] {
+      padding-bottom: 0.25rem;
+      text-align: start;
+    }
+
+    /* Label on the start edge, value on the end edge, numbers still tabular. */
+    [data-layout='stack'] [data-slot='table-cell'][data-label] {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      text-align: end;
+    }
+
+    /* The visible label is decoration: its alt text is empty, so assistive
+       technology hears the column header through the table roles instead. */
+    [data-layout='stack'] [data-slot='table-cell'][data-label]::before {
+      content: attr(data-label) / '';
+      flex: none;
+      max-width: 55%;
+      color: var(--fg-muted);
+      font-family: var(--font-sans);
+      font-weight: 400;
+      text-align: start;
+    }
+
+    /* Header: sortable columns stay usable as a sort bar; the rest are screen-reader only. */
+    [data-layout='stack'] [data-slot='table-header'] > [data-slot='table-row'] {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      align-items: center;
+      background-color: var(--surface-sunken);
+      border-bottom: 1px solid var(--border-strong);
+    }
+
+    [data-layout='stack'] [data-slot='table-head'][data-sortable] {
+      background-color: transparent;
+    }
+
+    [data-layout='stack'] [data-slot='table-head']:not([data-sortable]),
+    [data-layout='stack'] [data-slot='table-header']:not(:has([data-sortable])) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    [data-layout='stack'] [data-slot='table-footer'] {
+      border-top: 2px solid var(--border-strong);
+    }
+  }
+}

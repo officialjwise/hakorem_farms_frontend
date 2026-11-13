@@ -19,6 +19,7 @@ export {
   type TableContainerProps,
   type TableHeadProps,
   type TableHeaderProps,
+  type TableLayout,
   type TableLoadingRowsProps,
   type TableMessageRowProps,
   type TableProps,

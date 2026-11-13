@@ -10,6 +10,7 @@
 
 @import './generated/tokens.css';
 @import './foundation.css';
+@import './table.css';
 @import './generated/color-utilities.css';
 
 @source '../';

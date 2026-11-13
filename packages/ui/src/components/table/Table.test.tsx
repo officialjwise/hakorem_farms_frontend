@@ -119,4 +119,63 @@ describe('Table', () => {
     expect(screen.queryByRole('alert')).toBeNull();
     expect(screen.getByText('No stock at this location')).toBeInTheDocument();
   });
+
+  describe('stacked layout', () => {
+    it('stacks by default and lets wide reference tables opt out', () => {
+      const { rerender } = render(<TableContainer aria-label="Stock">x</TableContainer>);
+      expect(screen.getByRole('region')).toHaveAttribute('data-layout', 'stack');
+      rerender(
+        <TableContainer aria-label="Stock" layout="scroll">
+          x
+        </TableContainer>,
+      );
+      expect(screen.getByRole('region')).toHaveAttribute('data-layout', 'scroll');
+    });
+
+    it('gives each cell its column label and keeps explicit table roles', () => {
+      render(
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Item</TableHead>
+              <TableHead numeric>Weight (kg)</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableRowHeader>Goat, Boer cross</TableRowHeader>
+              <TableCell label="Weight (kg)" numeric>
+                38.400
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>,
+      );
+      expect(screen.getByRole('table')).toHaveAttribute('role', 'table');
+      expect(screen.getByRole('cell', { name: '38.400' })).toHaveAttribute(
+        'data-label',
+        'Weight (kg)',
+      );
+      expect(screen.getAllByRole('rowgroup')).toHaveLength(2);
+      expect(screen.getByRole('rowheader')).toHaveAttribute('role', 'rowheader');
+    });
+
+    it('marks sortable headers so the stacked sort bar can keep them', () => {
+      render(
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead sort="none" onSort={vi.fn()}>
+                Item
+              </TableHead>
+              <TableHead>Location</TableHead>
+            </TableRow>
+          </TableHeader>
+        </Table>,
+      );
+      const [item, location] = screen.getAllByRole('columnheader');
+      expect(item).toHaveAttribute('data-sortable');
+      expect(location).not.toHaveAttribute('data-sortable');
+    });
+  });
 });

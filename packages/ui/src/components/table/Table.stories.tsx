@@ -27,7 +27,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Story fixture: an opening stock position at the farm and shop. Not seed data. */
+/**
+ * Story fixture: an opening stock position at the farm and shop. Not seed data.
+ * Values are at cost (specific identification for animals, weighted average for
+ * the rest), never at selling price. The footer total is the sum of the rows.
+ */
 const STOCK = [
   {
     ref: 'GT-0142',
@@ -35,7 +39,7 @@ const STOCK = [
     location: 'Pen 3',
     qty: '1 head',
     weight: '38.400',
-    value: '1,450.00',
+    costValue: '980.00',
   },
   {
     ref: 'SH-0031',
@@ -43,7 +47,7 @@ const STOCK = [
     location: 'Pen 1',
     qty: '1 head',
     weight: '51.200',
-    value: '2,100.00',
+    costValue: '1,420.00',
   },
   {
     ref: 'B-07',
@@ -51,7 +55,7 @@ const STOCK = [
     location: 'Shop floor',
     qty: '24 head',
     weight: '—',
-    value: '4,080.00',
+    costValue: '2,040.00',
   },
   {
     ref: 'M-2611',
@@ -59,7 +63,7 @@ const STOCK = [
     location: 'Cold room',
     qty: '4 packs',
     weight: '60.000',
-    value: '2,240.00',
+    costValue: '1,560.00',
   },
   {
     ref: 'M-2598',
@@ -67,7 +71,7 @@ const STOCK = [
     location: 'Cold room',
     qty: '6 packs',
     weight: '90.000',
-    value: '1,140.00',
+    costValue: '780.00',
   },
   {
     ref: 'E-BIG',
@@ -75,7 +79,7 @@ const STOCK = [
     location: 'Shop floor',
     qty: '18 crates',
     weight: '—',
-    value: '1,080.00',
+    costValue: '756.00',
   },
   {
     ref: 'P-YAM',
@@ -83,10 +87,18 @@ const STOCK = [
     location: 'Shop floor',
     qty: '140 tubers',
     weight: '—',
-    value: '1,400.00',
+    costValue: '840.00',
   },
 ];
 const COLUMNS = 5;
+
+/** Column names: the same string labels the header and each stacked cell. */
+const L = {
+  location: 'Location',
+  onHand: 'On hand',
+  weight: 'Weight (kg)',
+  cost: 'Value at cost (GHS)',
+} as const;
 
 function Head({ sort = 'ascending', onSort }: { sort?: SortDirection; onSort?: () => void }) {
   return (
@@ -95,10 +107,10 @@ function Head({ sort = 'ascending', onSort }: { sort?: SortDirection; onSort?: (
         <TableHead sort={sort} onSort={onSort ?? (() => undefined)}>
           Item
         </TableHead>
-        <TableHead>Location</TableHead>
-        <TableHead numeric>On hand</TableHead>
-        <TableHead numeric>Weight (kg)</TableHead>
-        <TableHead numeric>Value (GHS)</TableHead>
+        <TableHead>{L.location}</TableHead>
+        <TableHead numeric>{L.onHand}</TableHead>
+        <TableHead numeric>{L.weight}</TableHead>
+        <TableHead numeric>{L.cost}</TableHead>
       </TableRow>
     </TableHeader>
   );
@@ -113,13 +125,17 @@ function Rows({ selected = 'M-2611', rows = STOCK }: { selected?: string; rows?:
             <span className="block">{r.item}</span>
             <span className="block font-mono text-xs font-normal text-fg-muted">{r.ref}</span>
           </TableRowHeader>
-          <TableCell className="text-fg-muted">{r.location}</TableCell>
-          <TableCell numeric>{r.qty}</TableCell>
-          <TableCell numeric className="font-mono">
+          <TableCell label={L.location} className="text-fg-muted">
+            {r.location}
+          </TableCell>
+          <TableCell label={L.onHand} numeric>
+            {r.qty}
+          </TableCell>
+          <TableCell label={L.weight} numeric className="font-mono">
             {r.weight}
           </TableCell>
-          <TableCell numeric className="font-mono">
-            {r.value}
+          <TableCell label={L.cost} numeric className="font-mono">
+            {r.costValue}
           </TableCell>
         </TableRow>
       ))}
@@ -132,8 +148,8 @@ function Totals() {
     <TableFooter>
       <TableRow>
         <TableRowHeader colSpan={4}>Stock value at cost</TableRowHeader>
-        <TableCell numeric className="font-mono">
-          13,490.00
+        <TableCell label={L.cost} numeric className="font-mono">
+          8,376.00
         </TableCell>
       </TableRow>
     </TableFooter>
@@ -327,12 +343,71 @@ export const ErrorState: Story = {
   ),
 };
 
-/** At 360px the table scrolls inside its container and the page itself never scrolls sideways. */
+/**
+ * The F5 case: a storekeeper reading stock on a phone. Below 40rem of container
+ * width each row stacks into a block, the item as heading and every column as a
+ * label/value pair, so nothing sits off screen. The sort control stays as a bar.
+ */
 export const At360px: Story = {
   parameters: { matrix: true },
   render: () => (
     <div className="w-[360px] max-w-full">
       <TableContainer aria-label="Stock on hand, narrow screen">
+        <Table>
+          <Head />
+          <TableBody>
+            <Rows />
+          </TableBody>
+          <Totals />
+        </Table>
+      </TableContainer>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const region of within(canvasElement).getAllByRole('region')) {
+      const bounds = region.getBoundingClientRect();
+      const row = within(region).getByRole('row', { name: /Goat, Boer cross/ });
+      await expect(getComputedStyle(row).display).toBe('block');
+      // Every value, including the last column, lies fully inside the visible region.
+      for (const cell of within(row).getAllByRole('cell')) {
+        const r = cell.getBoundingClientRect();
+        await expect(r.right).toBeLessThanOrEqual(bounds.right);
+        await expect(r.left).toBeGreaterThanOrEqual(bounds.left);
+      }
+      await expect(region.scrollWidth).toBeLessThanOrEqual(region.clientWidth);
+      const cost = within(row).getByRole('cell', { name: '980.00' });
+      await expect(getComputedStyle(cost).fontVariantNumeric).toContain('tabular-nums');
+    }
+  },
+};
+
+/** Loading, stacked: skeleton blocks in the same shape as the rows that will replace them. */
+export const At360pxLoading: Story = {
+  parameters: { matrix: true },
+  render: () => (
+    <div className="w-[360px] max-w-full">
+      <TableContainer aria-label="Stock on hand, narrow screen" aria-busy="true">
+        <Table>
+          <Head />
+          <TableBody>
+            <TableLoadingRows columns={COLUMNS} rows={3} label="Loading stock on hand" />
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </div>
+  ),
+};
+
+/**
+ * Opt-out: layout="scroll" keeps the columns and scrolls sideways inside the
+ * region. Only for genuinely wide reference tables, where comparing across
+ * columns matters more than reading one record.
+ */
+export const At360pxScrollOptOut: Story = {
+  parameters: { matrix: true },
+  render: () => (
+    <div className="w-[360px] max-w-full">
+      <TableContainer layout="scroll" aria-label="Stock on hand, wide reference">
         <Table>
           <Head />
           <TableBody>
