@@ -68,6 +68,7 @@
 
 ## Notes for the next session
 
+- **Owner rule:** Button, Table and StatusBadge are the approved reference. Match their shape exactly. If a component seems to need a pattern they do not have, stop and ask the owner rather than inventing a second way. Examples that count as a new pattern: a component stylesheet like `table.css`, a different way of passing strings, or a new variant mechanism.
 - **New components** follow the pattern:
   - token-only classes (lint enforces it), both densities through CSS variables, no copy in components (strings are props)
   - a story with `parameters: { matrix: true }` covering every state, unit tests for behaviour, and a `.typetest.tsx` for any API that must refuse misuse
@@ -83,6 +84,7 @@ Read docs/sessions/F00-design-system-part1.md, then docs/adr/0001, 0003 and docs
 This is "F0 continued" on branch f00-design-system. Do not reopen decisions recorded there.
 
 Confirm in three lines: the phase, the remaining scope, and the gate.
-Then build the deferred items in order, to the Button/Table/StatusBadge pattern.
+Then build the deferred items in order, matching Button, Table and StatusBadge exactly.
+If a component needs a pattern they do not have, stop and ask me before building it.
 Stop at the gate, write docs/sessions/F00-design-system.md, push, and open the PR to main.
 ```
