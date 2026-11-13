@@ -18,8 +18,8 @@ export const buttonVariants = cva(
       variant: {
         /** The one strong colour on the screen: the action the operator came to do. */
         primary: 'bg-accent text-accent-fg hover-enabled:bg-accent-hover',
-        secondary: 'border border-border-strong bg-surface text-fg hover-enabled:bg-surface-sunken',
-        ghost: 'bg-transparent text-fg hover-enabled:bg-surface-sunken',
+        secondary: 'border border-border-strong bg-surface text-fg hover-enabled:bg-surface-hover',
+        ghost: 'bg-transparent text-fg hover-enabled:bg-surface-hover',
         /** Destructive or irreversible: void, write off, refund. */
         danger: 'bg-critical-strong text-critical-on hover-enabled:bg-critical-strong-hover',
       },

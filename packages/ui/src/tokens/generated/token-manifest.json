@@ -41,6 +41,12 @@
       ],
       "scope": "app"
     },
+    "surface-hover": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
     "border": {
       "roles": [
         "line"

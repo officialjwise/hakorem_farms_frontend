@@ -115,7 +115,7 @@ export function TableRow({ className, selected, ...props }: TableRowProps) {
       aria-selected={selected}
       className={cn(
         'h-row transition-colors duration-fast',
-        'hover-enabled:bg-surface-sunken',
+        'hover-enabled:bg-surface-hover',
         striped && 'even:not-aria-selected:bg-bg',
         'aria-selected:bg-accent-subtle aria-selected:hover-enabled:bg-accent-subtle',
         'aria-selected:[&>*:first-child]:edge-accent',

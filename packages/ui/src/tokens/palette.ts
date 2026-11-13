@@ -46,7 +46,13 @@ export const colors = {
     light: '#EEE8DB',
     dark: '#0D0C09',
     roles: ['surface'],
-    use: 'Table header, hover, recessed wells',
+    use: 'Table header, recessed wells, skeletons',
+  },
+  'surface-hover': {
+    light: '#F2ECE0',
+    dark: '#2A2720',
+    roles: ['surface'],
+    use: 'Hover on rows and quiet buttons. Darker in light, lighter in dark: hover lifts, it never sinks.',
   },
   border: {
     light: '#D6CDBA',
@@ -316,7 +322,12 @@ const AA_NON_TEXT = 3;
 /** Body text is held to AAA because sun on a counter screen roughly halves perceived contrast. */
 const DAYLIGHT_BODY = 7;
 
-const PAGE_SURFACES = ['bg', 'surface', 'surface-sunken'] as const satisfies readonly ColorName[];
+const PAGE_SURFACES = [
+  'bg',
+  'surface',
+  'surface-sunken',
+  'surface-hover',
+] as const satisfies readonly ColorName[];
 const STATUSES = ['good', 'warning', 'critical', 'info'] as const;
 const CATEGORIES = ['violet', 'plum', 'clay', 'slate'] as const;
 
@@ -379,6 +390,13 @@ export const contrastPairs: readonly ContrastPair[] = [
     { fg: `${s}-fg`, bg: `${s}-subtle`, min: AA_TEXT, kind: 'text', use: `${s}: badge text` },
     { fg: `${s}-fg`, bg: 'surface', min: AA_TEXT, kind: 'text', use: `${s}: inline text` },
     { fg: `${s}-fg`, bg: 'bg', min: AA_TEXT, kind: 'text', use: `${s}: inline text on page` },
+    {
+      fg: `${s}-fg`,
+      bg: 'surface-hover',
+      min: AA_TEXT,
+      kind: 'text',
+      use: `${s}: inline text, hovered row`,
+    },
     {
       fg: `${s}-on`,
       bg: `${s}-strong`,
