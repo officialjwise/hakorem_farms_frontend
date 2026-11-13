@@ -176,3 +176,24 @@ export const LoadingIgnoresClicks: Story = {
     await expect(button).toHaveAttribute('aria-busy', 'true');
   },
 };
+
+/** The keyboard path: Tab reaches the button, Enter and Space both activate it, a disabled button is skipped. */
+export const KeyboardPath: Story = {
+  render: (args) => (
+    <div className="flex gap-3">
+      <Button {...args} disabled>
+        Void sale
+      </Button>
+      <Button {...args}>Complete sale</Button>
+    </div>
+  ),
+  play: async ({ canvasElement, args }) => {
+    const button = within(canvasElement).getByRole('button', { name: 'Complete sale' });
+    await userEvent.tab();
+    await expect(button).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await expect(args.onClick).toHaveBeenCalledTimes(1);
+    await userEvent.keyboard(' ');
+    await expect(args.onClick).toHaveBeenCalledTimes(2);
+  },
+};

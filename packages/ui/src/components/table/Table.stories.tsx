@@ -261,6 +261,40 @@ export const Sortable: Story = {
   },
 };
 
+/** The keyboard path: Tab reaches the region, then the sort button; Enter and Space both change the sort. */
+export const KeyboardPath: Story = {
+  render: function KeyboardPathTable() {
+    const [sort, setSort] = useState<SortDirection>('none');
+    const next: Record<SortDirection, SortDirection> = {
+      none: 'ascending',
+      ascending: 'descending',
+      descending: 'none',
+    };
+    return (
+      <TableContainer aria-label="Stock on hand, keyboard">
+        <Table>
+          <Head sort={sort} onSort={() => setSort(next[sort])} />
+          <TableBody>
+            <Rows rows={STOCK} selected="" />
+          </TableBody>
+        </Table>
+      </TableContainer>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const header = canvas.getByRole('columnheader', { name: 'Item' });
+    await userEvent.tab();
+    await expect(canvas.getByRole('region', { name: 'Stock on hand, keyboard' })).toHaveFocus();
+    await userEvent.tab();
+    await expect(within(header).getByRole('button', { name: 'Item' })).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await expect(header).toHaveAttribute('aria-sort', 'ascending');
+    await userEvent.keyboard(' ');
+    await expect(header).toHaveAttribute('aria-sort', 'descending');
+  },
+};
+
 /** The header stays put while a long list scrolls inside the container. */
 export const StickyHeader: Story = {
   parameters: { matrix: true },

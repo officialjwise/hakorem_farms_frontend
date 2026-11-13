@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useEffect } from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { parseHex } from '../../tokens/contrast';
 import { colors } from '../../tokens/palette';
 import { useToast } from '../ui-provider/UIProvider';
@@ -108,8 +108,13 @@ export const KeyboardPath: Story = {
     const body = within(document.body);
     await body.findByText(CRITICAL.title);
     const close = body.getByRole('button', { name: 'Dismiss notification' });
-    close.focus();
+    // Tab until the close button is reached, then Enter dismisses the persistent toast.
+    for (let i = 0; i < 8 && document.activeElement !== close; i += 1) {
+      await userEvent.tab();
+    }
     await expect(close).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(body.queryByText(CRITICAL.title)).toBeNull());
   },
 };
 
