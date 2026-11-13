@@ -68,7 +68,7 @@
 
 ## Owner answers: binding for F0b
 
-These four patterns had no precedent in the reference components. The owner settled them before F0b started, and F0b builds them as written. Each is also an ADR.
+These four patterns had no precedent in the reference components. The owner settled them before F0b started, and F0b builds them as written. Each is also an ADR. Every follow-up the owner answered is included below.
 
 ### 1. Overlays (ADR 0004)
 
@@ -104,14 +104,17 @@ These four patterns had no precedent in the reference components. The owner sett
 - **Symbol:** `GH₵` in the interface, `GHS` on documents, exports and anything an accountant or customer keeps.
 - **Weight:** always three decimals with a `kg` suffix, never locale dependent.
 - **Not applicable:** an en dash (`–`, U+2013) for a value that does not apply. The Table story fixture was corrected from an em dash.
-- **Translation layer:** wired now, as the brief requires, for labels only. Numbers and currency never go through it. The library choice is a dependency decision: F0b records it in an ADR.
-- **Still to confirm with the owner:** spacing and sign. F0b uses `GH₵1,234.50`, `-GH₵1,234.50`, `GHS 1,234.50` and `-GHS 1,234.50` (ASCII minus) unless told otherwise. Also check that `GH₵` (U+20B5) renders on Android 9 system fonts; if it does not, raise it before choosing a fallback.
+- **Exports:** CSV and spreadsheet exports carry money as a bare number (`1234.50`), with no symbol and no thousands separator, and the currency named in the column header. A cell reading `GHS 1,234.50` imports as text and will not sum.
+- **Sign and spacing, confirmed:** `GH₵1,234.50` and `-GH₵1,234.50` in the interface; `GHS 1,234.50` and `-GHS 1,234.50` on documents. ASCII minus everywhere.
+- **Pending, do not implement:** whether statements and ledger reports show negatives in parentheses. This is an open question for the owner's accountant, recorded in ADR 0007.
+- **Cedi sign:** ship the glyph rather than depend on the device. Add a glyph-only face subset to U+20B5 (an OFL source such as Noto Sans), loaded with `unicode-range` and listed first in the stack, in the shared `packages/ui` stylesheet. Add a story that renders `GH₵` in the subset face and asserts it. If that fails, fall back to `GH¢` (U+00A2). Never fall back to `GHS` in the interface.
+- **Translation layer (ADR 0008):** react-i18next, one catalogue shared by Next.js and Vite, split by namespace so the storefront loads only what a page needs. No hand-rolled `t()`. `packages/ui` stays translation-free: apps call `t()` and pass the strings in. Numbers and currency never go through it.
 
 ### Build order these answers imply
 
 1. `UIProvider` with the themed portal target, plus the dark-compact Dialog proof story, before any other overlay.
 2. `Field`, before any input.
-3. `formatMoney`, `formatWeight` and the translation layer, before MoneyDisplay, WeightDisplay and the money and weight inputs.
+3. `formatMoney` (interface, document and export contexts), `formatWeight`, the cedi glyph face with its story, and react-i18next, all before MoneyDisplay, WeightDisplay and the money and weight inputs.
 
 ## Notes for the next session
 
@@ -127,7 +130,7 @@ These four patterns had no precedent in the reference components. The owner sett
 
 ```text
 Read CLAUDE.md if present, docs/SHARED_BRIEF.md, and the F0 section of docs/BUILD_PROMPT.md.
-Read docs/sessions/F00-design-system-part1.md, then docs/adr/0001 and 0003 to 0007, and docs/ASSUMPTIONS.md.
+Read docs/sessions/F00-design-system-part1.md, then docs/adr/0001 and 0003 to 0008, and docs/ASSUMPTIONS.md.
 This is F0b on branch f00-design-system. Do not reopen decisions recorded there.
 
 Confirm in three lines: the phase, the remaining scope, and the gate.
