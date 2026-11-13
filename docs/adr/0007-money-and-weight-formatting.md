@@ -1,6 +1,6 @@
 # 0007. Money and weight are formatted by our own rules, never by locale
 
-- Status: accepted (owner confirmed 2026-11-13)
+- Status: accepted (owner confirmed 2026-11-13, including the weight separator and the empty export cell)
 - Date: 2026-11-13
 - Session: F0 (owner decision), implemented in F0b
 
@@ -14,7 +14,7 @@ The storefront renders on the server and the client. `Intl.NumberFormat` depends
 
 - **No locale formatting for money:** `Intl.NumberFormat` and `toLocaleString` are not used for money.
 - **Formatters:** money is formatted by functions in `packages/ui`, starting with `formatMoney(pesewas)`.
-- **Input:** integer pesewas only. A float, NaN or an unsafe integer is rejected, not rounded.
+- **Input:** integer pesewas only. A float, NaN or an unsafe integer is rejected, not rounded. This is the contract's `Pesewas` schema (CR-002, closed).
 - **Decimals:** always two, by explicit rules with no locale lookup.
 - **Minus:** ASCII hyphen-minus (U+002D), before the symbol or code.
 - **Tests:** zero, negatives and large values.
@@ -31,8 +31,10 @@ Exports carry a bare number because a cell reading `GHS 1,234.50` imports as tex
 
 ### Weight and empty values
 
-- **Weight:** always three decimals with a `kg` suffix (`38.400 kg`), never locale dependent. In CSV exports it is a bare number (`38.400`), with the unit in the column header, for example `Weight (kg)`.
+- **Weight:** always three decimals with a `kg` suffix (`38.400 kg`), never locale dependent. In CSV exports it is a bare number (`38.400`), with the unit in the column header, for example `Weight (kg)`. Input is a kilogram decimal string, the contract's `Kilograms` schema (CR-002, closed).
+- **Weight thousands separator:** a comma in the interface and on documents (`1,250.500 kg`), none in exports (`1250.500`), mirroring money. Owner confirmed 2026-11-13.
 - **Not applicable:** a value that does not apply renders as an en dash (`–`, U+2013).
+- **Not applicable in exports:** an empty cell, never a dash, for money and weight alike. A dash in a numeric column breaks the column's sum. Owner confirmed 2026-11-13.
 
 ### The cedi sign
 

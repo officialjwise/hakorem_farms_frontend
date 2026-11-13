@@ -11,6 +11,7 @@ Theme, density, the Toast viewport and the themed portal target (ADR 0004) all n
 ## Decision
 
 - **One provider:** exactly one `UIProvider` at each app root, carrying theme, density, the Toast viewport and the themed portal target. Not several nested providers.
+- **Toast viewport:** added to UIProvider when F0c builds Toast, never as a separate provider. Owner confirmed 2026-11-13. Inside UIProvider it is within a themed element, so toasts carry the app's theme and density.
 - **Forms stay separate:** react-hook-form's `FormProvider` is per form, never app level.
 - **Toast is not a record:** a toast is never the only record of a failed money or stock operation. A toast that vanishes in five seconds is not an audit trail. Those failures also leave something persistent on screen, such as an inline ErrorState or a failed row that stays until dealt with.
 

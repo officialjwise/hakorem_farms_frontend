@@ -19,3 +19,4 @@ Input, Textarea, Select, Combobox, Checkbox, Radio, Switch, DatePicker, NumberIn
 
 - Inputs used outside a Field are a review blocker. F0b should make that hard to do by accident, for example an input that throws or is typed to need Field context. If that needs a new pattern, F0b asks the owner first.
 - Field is the seam the form system (react-hook-form + Zod) maps field errors and server errors onto.
+- Field wires exactly one control. A group of options (radio group, checkbox group) goes in FieldGroup (ADR 0009), never in Field. Field is not stretched to cover groups.

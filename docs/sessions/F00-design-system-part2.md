@@ -53,64 +53,94 @@ All pass:
 - 268 ui unit tests, 5 i18n tests and 37 lint-rule tests
 - 27 Storybook stories with axe in Chromium
 
-## Decided or assumed in this part, for owner review
+## Decided in this part, and the owner's answers (2026-11-13)
 
-- **Weight thousands separator:** comma in the interface and on documents (`1,250.500 kg`), none in exports. Your rule fixed three decimals and the kg suffix but not grouping, so this mirrors money. It is easy to change before any screen uses it.
-- **Not applicable in exports:** an empty cell rather than an en dash, so a numeric column still sums.
-- **Weight input type:** a decimal string, not a number. Logged as **CR-002**, with money as integer pesewas and weight as kilogram decimal strings, so the backend serialises them that way.
-- **Theme on `<html>`:** UIProvider themes its own subtree and portal target, but not `<html>`. The apps (F1) should also set `data-theme` on `<html>`, server-rendered on the storefront to avoid a flash, so page scrollbars and overscroll match. No UIProvider change is needed for that.
+- **Weight thousands separator:** comma in the interface and on documents (`1,250.500 kg`), none in exports, mirroring money. **Accepted**, and confirmed in ADR 0007.
+- **Not applicable in exports:** an empty cell rather than an en dash, because a dash breaks the column sum. **Accepted**, and confirmed in ADR 0007.
+- **CR-002, money and weight shapes:** **withdrawn and closed.** Contract 1.0.0 already sent both shapes, so this was answered before it was raised (see Contract below).
+- **Theme on `<html>`, for F1:** UIProvider themes its own subtree and portal target, but not `<html>`. The apps should also set `data-theme` on `<html>`, rendered on the server for the storefront to avoid a flash, so page scrollbars and overscroll match. No UIProvider change is needed.
 - **`@radix-ui/react-dialog`** is a devDependency, used only by the proof story. F0c promotes it to a dependency when it builds Dialog.
 
 ## Contract
 
-- CR-002 added (money and weight serialisation). CR-001 remains open.
-- Screens moved from the mock to the real API: none (F0 has no screens).
+- **Synced:** contract 1.1.0 is now in `contract/openapi.yaml`.
+  - It was copied byte for byte from backend `f437489`; the contract last changed at `bb63f93`.
+  - `scripts/sync-contract.sh` and the generated client are still F2 scope, so this sync was a plain copy.
+  - Prettier ignores `contract/`.
+- **Confirmed against 1.1.0:**
+  - `Kilograms` is a string with exactly three places, never a JSON number.
+  - `Pesewas` is an int64 integer from 0 to 2^53 − 1, never a float.
+  - A value that does not apply is `anyOf` the schema or `null`.
+- **CR-002:** closed in `docs/CONTRACT_REQUESTS.md`, with a note that it was answered before it was raised. It was written without checking the contract.
+- **CR-001:** remains open.
+- **Screens moved from the mock to the real API:** none (F0 has no screens).
 
-## Questions F0c must bring to the owner before building
+## The four questions, answered by the owner (binding)
 
-These need patterns the references and ADRs 0004 to 0008 do not have. Ask first, as the owner's rule requires.
-
-1. **Dialog and Sheet backdrop:** a scrim needs a colour that is not in the palette, and opacity modifiers are banned. Should it be a new `scrim` token with an alpha value, and in which role?
-2. **Group fields:** Field wires exactly one control, but RadioGroup and CheckboxGroup need `fieldset` and `legend`. Should that be a `FieldGroup` sibling, or a Field variant?
-3. **Toast viewport:** ADR 0006 puts it in UIProvider. Confirm it is added to UIProvider when Toast is built, not as a separate provider.
-4. **The barcode-and-Dialog focus story** (ADR 0004) needs the POS barcode focus trap, which F1 builds. Should F0c build a barcode-input fixture for the story, or defer the story to F1 or F9?
+1. **Backdrop:** add a `scrim` token with the alpha in its value, because opacity modifiers are banned.
+   - It has a light and a dark value.
+   - A contrast test checks that text on the dialog above it still passes in both themes.
+   - Recorded in ADR 0004.
+   - The role is assumed to be `surface` (A-F0-04), for the owner to review at F0c's gate.
+2. **Groups:** a separate FieldGroup on `fieldset` and `legend`.
+   - It owns the group label, hint, error and `aria-describedby`.
+   - Each option keeps its own label.
+   - Field is not stretched to cover groups.
+   - It is a new pattern, so it has its own ADR, 0009.
+3. **Toast:** confirmed, the viewport goes inside UIProvider (ADR 0006).
+4. **Barcode-and-Dialog focus story:** deferred to F1, with no stand-in, because a stand-in proves only that the stand-in works.
+   - Added to the F1 section of `docs/BUILD_PROMPT.md` as a required story, and recorded in ADR 0004.
 
 ## Opening message for F0c
 
 ```text
 Read CLAUDE.md if present, docs/SHARED_BRIEF.md, and the F0 section of docs/BUILD_PROMPT.md.
 Read docs/sessions/F00-design-system-part1.md and docs/sessions/F00-design-system-part2.md,
-then docs/adr/0001 and 0003 to 0008, and docs/ASSUMPTIONS.md.
+then docs/adr/0001 and 0003 to 0009, docs/ASSUMPTIONS.md and docs/CONTRACT_REQUESTS.md.
 This is F0c on branch f00-design-system. Do not reopen decisions recorded there.
 
 Button, Table and StatusBadge are the reference shape. UIProvider, Field, formatMoney,
 formatWeight and @hakorem/i18n are the foundations. Build on them; never around them.
 If a component needs a pattern none of them has, stop and ask me before building it.
-Start by asking me the four questions in part 2, in one batch.
+
+Already answered, and binding. Do not ask these again:
+- Backdrop: a `scrim` token with its alpha in the value (#RRGGBBAA), light and dark.
+  Opacity modifiers stay banned. A contrast test composites it over the page background
+  and checks that text on the dialog above it still passes in both themes. parseHex
+  reads only #RRGGBB today, so add the compositing. Role: surface (A-F0-04). ADR 0004.
+- Groups: FieldGroup on fieldset and legend, separate from Field. It owns the group
+  label, hint, error and aria-describedby; each option keeps its own label. ADR 0009.
+- Toast: its viewport goes inside UIProvider, never a separate provider. ADR 0006.
+- The barcode-and-Dialog focus story is not F0c scope. It is a required F1 story.
+- Contract 1.1.0 is in contract/openapi.yaml, and CR-002 is closed. Pesewas is an
+  integer and never negative; direction travels in a separate field. Kilograms is a
+  string with exactly three places. A null can carry a meaning (a null thresholdPesewas
+  means "always"), so read the field's description before showing an en dash.
 
 Confirm in three lines: the phase, the remaining scope, and the gate. Then build, in order:
 
-1. Primitives on Radix. Overlays use open/onOpenChange and usePortalContainer;
-   inputs go inside Field:
+1. The scrim token and its contrast test, before any overlay.
+2. Primitives on Radix. Overlays use open/onOpenChange and usePortalContainer;
+   a single control goes inside Field, a radio or checkbox group inside FieldGroup:
    Spinner, Skeleton, Input, Textarea, NumberInput, MoneyInput, WeightInput, Select,
-   Combobox, Checkbox, Radio, Switch, DatePicker, Dialog, Sheet, Popover, Tooltip,
-   Toast (its viewport in UIProvider), Tabs, Pagination, Badge, Avatar, Card,
-   EmptyState, ErrorState.
+   Combobox, FieldGroup, Checkbox, Radio, Switch, DatePicker, Dialog, Sheet, Popover,
+   Tooltip, Toast, Tabs, Pagination, Badge, Avatar, Card, EmptyState, ErrorState.
+   Promote @radix-ui/react-dialog to a dependency when you build Dialog.
    Then refactor Button's spinner to Spinner, Table's skeleton bars to Skeleton,
    and TableMessageRow to compose EmptyState and ErrorState.
-2. Domain components: MoneyDisplay and WeightDisplay (on formatMoney and formatWeight),
+3. Domain components: MoneyDisplay and WeightDisplay (on formatMoney and formatWeight),
    QuantityDisplay, PriceBandDisplay, AnimalTag, LotBadge.
-3. The form system: react-hook-form with Zod resolvers, a per-form FormProvider,
-   field-level errors through Field, server error mapping, a dirty-state guard on
-   navigation, and submit-once through Button's loading state. A failed money or
-   stock operation also leaves something persistent on screen, never a toast alone.
-4. Budgets: a keyboard-path test per interactive component, and the storefront
+4. The form system: react-hook-form with Zod resolvers, a per-form FormProvider,
+   field-level errors through Field and FieldGroup, server error mapping, a dirty-state
+   guard on navigation, and submit-once through Button's loading state. A failed money
+   or stock operation also leaves something persistent on screen, never a toast alone.
+5. Budgets: a keyboard-path test per interactive component, and the storefront
    Lighthouse CI budget recorded.
-5. Frontend skills in .claude/skills/: hakorem-screen, hakorem-ui-component,
+6. Frontend skills in .claude/skills/: hakorem-screen, hakorem-ui-component,
    hakorem-api-call, hakorem-contract-sync, hakorem-pos-offline, hakorem-money-ui,
    hakorem-storefront-perf, hakorem-a11y, hakorem-frontend-adr. Each has a trigger
    description, a correct and an incorrect example, and stays under 400 lines.
-6. A short root CLAUDE.md: what the project is, which surface is which, the contract
+7. A short root CLAUDE.md: what the project is, which surface is which, the contract
    rule, the commands, and the three things that go wrong most often.
 
 Stop at the gate, write docs/sessions/F00-design-system.md, push, and open the PR to main.
