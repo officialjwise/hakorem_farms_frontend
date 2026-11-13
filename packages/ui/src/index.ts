@@ -40,3 +40,4 @@ export {
   type ThemePreference,
   type UIProviderProps,
 } from './components/ui-provider/UIProvider';
+export { Field, type FieldProps } from './components/field/Field';
