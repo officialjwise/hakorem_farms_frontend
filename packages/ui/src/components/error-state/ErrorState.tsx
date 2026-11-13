@@ -1,0 +1,65 @@
+import { TriangleAlert } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { cn } from '../../lib/cn';
+import type { BadgeIcon } from '../status-badge/StatusBadge';
+
+/** Rejects an empty string literal at compile time. Dynamic blank strings are rejected at render. */
+type NonEmpty<T extends string> = T extends '' ? never : T;
+
+type ReferenceProps =
+  | { reference?: undefined; referenceLabel?: never }
+  | {
+      /** The correlation id of a failed request, so a support call starts with a reference instead of a guess. */
+      reference: string;
+      referenceLabel: string;
+    };
+
+export type ErrorStateProps<L extends string = string> = ReferenceProps & {
+  /** Required. What went wrong, in words, already translated. */
+  title: NonEmpty<L>;
+  description?: string;
+  /** For example a "Try again" button. */
+  action?: ReactNode;
+  /** Defaults to a warning triangle. A screen passes a lock for permission denied. */
+  icon?: BadgeIcon;
+  /** Less vertical room, for use inside a card or a table row. */
+  compact?: boolean;
+  className?: string;
+};
+
+/** ErrorState. Something failed or is not allowed. Announced as an alert. */
+export function ErrorState<L extends string>({
+  title,
+  description,
+  action,
+  icon: Icon = TriangleAlert,
+  compact = false,
+  reference,
+  referenceLabel,
+  className,
+}: ErrorStateProps<L>) {
+  if (title.trim() === '') {
+    throw new Error('ErrorState needs a non-empty title.');
+  }
+  return (
+    <div
+      role="alert"
+      data-slot="error-state"
+      className={cn(
+        'mx-auto flex max-w-md flex-col items-center gap-2 text-center',
+        compact ? 'py-4' : 'py-10',
+        className,
+      )}
+    >
+      <Icon aria-hidden="true" focusable="false" className="size-7 stroke-critical" />
+      <p className="text-base font-semibold text-balance text-fg">{title}</p>
+      {description ? <p className="text-sm text-balance text-fg-muted">{description}</p> : null}
+      {reference !== undefined ? (
+        <p className="text-xs text-fg-muted">
+          {referenceLabel} <code className="font-mono text-fg">{reference}</code>
+        </p>
+      ) : null}
+      {action ? <div className="mt-2">{action}</div> : null}
+    </div>
+  );
+}

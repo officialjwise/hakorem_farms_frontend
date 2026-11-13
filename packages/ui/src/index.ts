@@ -116,3 +116,23 @@ export {
   type ToastTone,
   type ToastItemProps,
 } from './components/toast/Toast';
+export {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  type TabsListProps,
+} from './components/tabs/Tabs';
+export { Pagination, type PaginationProps } from './components/pagination/Pagination';
+export { Badge, badgeVariants, type BadgeProps } from './components/badge/Badge';
+export { Avatar, avatarVariants, initialsOf, type AvatarProps } from './components/avatar/Avatar';
+export {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardBody,
+  CardFooter,
+  type CardProps,
+} from './components/card/Card';
+export { EmptyState, type EmptyStateProps } from './components/empty-state/EmptyState';
+export { ErrorState, type ErrorStateProps } from './components/error-state/ErrorState';
