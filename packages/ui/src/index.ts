@@ -25,3 +25,11 @@ export {
   type TableProps,
   type TableRowProps,
 } from './components/table/Table';
+export {
+  StatusBadge,
+  type BadgeIcon,
+  type BadgeTone,
+  type CategoryTone,
+  type StatusBadgeProps,
+  type StatusTone,
+} from './components/status-badge/StatusBadge';
