@@ -1,0 +1,353 @@
+{
+  "note": "GENERATED from src/tokens/palette.ts by scripts/build-tokens.ts. Read by @hakorem/lint-tokens. Do not edit.",
+  "utilityRoles": {
+    "text": "text",
+    "decoration": "text",
+    "caret": "text",
+    "bg": "surface",
+    "border": "line",
+    "border-x": "line",
+    "border-y": "line",
+    "border-t": "line",
+    "border-r": "line",
+    "border-b": "line",
+    "border-l": "line",
+    "border-s": "line",
+    "border-e": "line",
+    "divide": "line",
+    "outline": "line",
+    "ring": "line",
+    "ring-offset": "line",
+    "edge": "line",
+    "fill": "glyph",
+    "stroke": "glyph"
+  },
+  "tokens": {
+    "bg": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "surface": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "surface-sunken": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "border": {
+      "roles": [
+        "line"
+      ],
+      "scope": "app"
+    },
+    "border-strong": {
+      "roles": [
+        "line"
+      ],
+      "scope": "app"
+    },
+    "fg": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "fg-muted": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "fg-disabled": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "accent": {
+      "roles": [
+        "surface",
+        "line",
+        "glyph"
+      ],
+      "scope": "app"
+    },
+    "accent-hover": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "accent-fg": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "accent-text": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "accent-subtle": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "accent-subtle-fg": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "focus": {
+      "roles": [
+        "line"
+      ],
+      "scope": "app"
+    },
+    "good": {
+      "roles": [
+        "line",
+        "glyph"
+      ],
+      "scope": "app"
+    },
+    "good-fg": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "good-subtle": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "good-strong": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "good-on": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "warning": {
+      "roles": [
+        "line",
+        "glyph"
+      ],
+      "scope": "app"
+    },
+    "warning-fg": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "warning-subtle": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "warning-strong": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "warning-on": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "critical": {
+      "roles": [
+        "line",
+        "glyph"
+      ],
+      "scope": "app"
+    },
+    "critical-fg": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "critical-subtle": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "critical-strong": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "critical-strong-hover": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "critical-on": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "info": {
+      "roles": [
+        "line",
+        "glyph"
+      ],
+      "scope": "app"
+    },
+    "info-fg": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "info-subtle": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "info-strong": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "info-on": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "violet": {
+      "roles": [
+        "line",
+        "glyph"
+      ],
+      "scope": "app"
+    },
+    "violet-fg": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "violet-subtle": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "plum": {
+      "roles": [
+        "line",
+        "glyph"
+      ],
+      "scope": "app"
+    },
+    "plum-fg": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "plum-subtle": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "clay": {
+      "roles": [
+        "line",
+        "glyph"
+      ],
+      "scope": "app"
+    },
+    "clay-fg": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "clay-subtle": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "slate": {
+      "roles": [
+        "line",
+        "glyph"
+      ],
+      "scope": "app"
+    },
+    "slate-fg": {
+      "roles": [
+        "text"
+      ],
+      "scope": "app"
+    },
+    "slate-subtle": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "brand-marketing": {
+      "roles": [
+        "surface",
+        "line",
+        "glyph"
+      ],
+      "scope": "marketing"
+    },
+    "brand-marketing-fg": {
+      "roles": [
+        "text"
+      ],
+      "scope": "marketing"
+    },
+    "brand-marketing-highlight": {
+      "roles": [
+        "surface",
+        "line",
+        "glyph"
+      ],
+      "scope": "marketing"
+    },
+    "brand-marketing-highlight-fg": {
+      "roles": [
+        "text"
+      ],
+      "scope": "marketing"
+    }
+  }
+}

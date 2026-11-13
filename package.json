@@ -7,7 +7,14 @@
     "node": ">=22.12 <23"
   },
   "scripts": {
-    "typecheck": "pnpm -r --if-present typecheck",
+    "setup": "pnpm install --frozen-lockfile && pnpm tokens:check",
+    "tokens": "pnpm --filter @hakorem/ui tokens",
+    "tokens:check": "pnpm --filter @hakorem/ui tokens:check",
+    "typecheck": "pnpm -r typecheck",
+    "test:unit": "pnpm -r test:unit",
+    "test:a11y": "pnpm --filter @hakorem/ui test:stories",
+    "storybook": "pnpm --filter @hakorem/ui storybook",
+    "build-storybook": "pnpm --filter @hakorem/ui build-storybook",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
