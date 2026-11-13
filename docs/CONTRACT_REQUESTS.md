@@ -5,7 +5,7 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | Id     | Date       | Status |
 | ------ | ---------- | ------ |
 | CR-001 | 2026-11-13 | Open   |
-| CR-002 | 2026-11-13 | Open   |
+| CR-002 | 2026-11-13 | Closed |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -28,6 +28,23 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 
 - **Raised by:** frontend F0, from `formatMoney` and `formatWeight` (frontend ADR 0007)
 - **Needed by:** every screen that shows money or weight, from F4 onward
+- **Closed 2026-11-13 by the owner: answered before it was raised.** No contract change was needed.
+
+**Answer.** Contract 1.0.0 already had both shapes, and 1.1.0 still does. 1.1.0 is now in `contract/openapi.yaml`, copied from backend `f437489`; the contract last changed at `bb63f93`. The backend changelog lists this request under "Requests answered without a change".
+
+- **`Kilograms`:** `type: string` with pattern `^(0|[1-9][0-9]{0,6})\.[0-9]{3}$`, exactly three places. Its description says it is never a JSON number.
+- **`Pesewas`:** `type: integer`, `format: int64`, from 0 to 9007199254740991, never a float. No amount exceeds 2^53 − 1, so no field needs a string form.
+- **Values that do not apply:** `anyOf: [<schema>, { type: "null" }]`.
+
+**Why it was raised.** The frontend had no copy of the contract at the time. This request was written from ADR 0007 without checking the contract. Read `contract/openapi.yaml` before raising a request.
+
+**What the frontend takes from the answer** (none of it needs a change to the formatters):
+
+- **Weight shape:** `Kilograms` always has exactly three places and no sign. `formatWeight` accepts that and more (one to three places, a leading minus).
+- **Money sign:** `Pesewas` is never negative, and direction travels in a separate field. A negative amount on screen comes from that field, never from the number.
+- **Null:** a null does not always mean "does not apply". Some fields give it a meaning; for example, a null `thresholdPesewas` means approval is always needed. Read the field's description before rendering null as an en dash.
+
+**Original request**
 
 **Request**
 
@@ -36,5 +53,3 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 3. **Nulls:** a value that does not apply is `null`, not `0` and not an empty string. The frontend renders `null` as an en dash and `0` as zero.
 
 **Why:** the frontend formats without float arithmetic or locale lookup. `formatMoney` refuses non-integers and `formatWeight` refuses anything but a decimal string, so a contract that sends floats fails loudly in the frontend's tests rather than showing a rounded figure.
-
-**Until this lands:** F2's mock overrides use exactly these shapes.
