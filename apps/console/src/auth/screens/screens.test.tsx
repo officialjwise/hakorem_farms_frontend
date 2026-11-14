@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { newClient, renderApp, USERS } from '../../test/harness';
-import { STUB_RESET_CODE, STUB_TOTP_CODE } from '../stub';
+import { FAKE_RESET_CODE, FAKE_TOTP_CODE } from '../../test/fakeAuthServer';
 import { ApiError, NetworkError, type AuthClient } from '../types';
 
 /** The words a field's error gives, read the way a screen reader does: through aria-describedby. */
@@ -95,8 +95,8 @@ describe('login screen', () => {
 
   it('goes to the code step for a TOTP user, and to the password step for a temporary password', async () => {
     const first = await renderApp('/login', newClient());
-    await fill(/email or phone number/i, USERS.owner.identifier);
-    await fill(/^password/i, USERS.owner.password);
+    await fill(/email or phone number/i, USERS.manager.identifier);
+    await fill(/^password/i, USERS.manager.password);
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
     await waitFor(() => expect(first.router.state.location.pathname).toBe('/login/totp'));
     first.unmount();
@@ -112,8 +112,8 @@ describe('login screen', () => {
 describe('TOTP screen', () => {
   async function toCodeStep() {
     const view = await renderApp('/login', newClient());
-    await fill(/email or phone number/i, USERS.owner.identifier);
-    await fill(/^password/i, USERS.owner.password);
+    await fill(/email or phone number/i, USERS.manager.identifier);
+    await fill(/^password/i, USERS.manager.password);
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
     await screen.findByRole('heading', { name: /enter your code/i });
     return view;
@@ -136,7 +136,7 @@ describe('TOTP screen', () => {
 
   it('right code: signs in and goes on', async () => {
     const { router } = await toCodeStep();
-    await fill(/^code/i, STUB_TOTP_CODE);
+    await fill(/^code/i, FAKE_TOTP_CODE);
     await userEvent.click(screen.getByRole('button', { name: 'Verify' }));
     await screen.findByRole('heading', { name: 'Dashboard' });
     expect(router.state.location.pathname).toBe('/');
@@ -246,7 +246,7 @@ describe('forgot and reset password', () => {
 
   it('reset: the right code changes the password and offers sign-in', async () => {
     await renderApp('/reset-password', newClient());
-    await fill(/reset code/i, STUB_RESET_CODE);
+    await fill(/reset code/i, FAKE_RESET_CODE);
     await fill(/^new password/i, 'A-much-longer-passphrase-9');
     await userEvent.click(screen.getByRole('button', { name: /set the password/i }));
     expect(await screen.findByRole('heading', { name: /password changed/i })).toBeInTheDocument();

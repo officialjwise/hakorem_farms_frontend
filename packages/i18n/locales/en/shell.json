@@ -26,6 +26,14 @@
     "body": "The address may be wrong, or the page may have moved.",
     "home": "Go to the start page"
   },
+  "handOff": {
+    "opening": "Opening the page",
+    "wrongTitle": "This page could not be opened",
+    "wrongBody": "The server sent the wrong part of the console for this address, and reloading will fetch the same one. Tell support which address you opened."
+  },
+  "route": {
+    "loading": "Loading the page"
+  },
   "session": {
     "checking": "Checking your session",
     "error": "We could not check your session",
@@ -48,8 +56,16 @@
     "stock": "Stock",
     "products": "Products",
     "orders": "Orders",
-    "users": "Users and roles",
-    "pos": "Point of sale"
+    "users": "Users",
+    "roles": "Roles",
+    "sessions": "Sessions",
+    "audit": "Audit log",
+    "pos": "Point of sale",
+    "userNew": "New user",
+    "userDetail": "User",
+    "roleNew": "New role",
+    "roleDetail": "Role",
+    "auditEvent": "Audit event"
   },
   "placeholder": {
     "title": "This area is built in a later session",
@@ -58,8 +74,7 @@
       "dashboard": "the owner dashboard",
       "stock": "stock",
       "products": "products",
-      "orders": "orders",
-      "users": "users and roles"
+      "orders": "orders"
     }
   },
   "pos": {

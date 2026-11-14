@@ -110,7 +110,7 @@ The gate is every frontend non-functional target met and evidenced against stagi
 - **PWA.** A service worker with an explicit caching strategy per route class, the offline queue persisted in IndexedDB following the conflict rules in `../backend/docs/OFFLINE_SYNC.md`, an install prompt, and an update flow that cannot lose a cart or an open sale.
 - **The offline test that actually matters.** Disconnect, run fifty POS transactions, reconnect. Exactly fifty land, no duplicates appear, and any stock conflict surfaces for a human rather than resolving itself quietly.
 - **End to end against real staging**, covering every acceptance scenario in the shared brief that has a user interface.
-- **Deploy.** Storefront and console built in CI and shipped to the VPS as the shared brief's deployment section describes, with a frontend smoke suite: storefront loads, catalogue renders, login works, POS shell boots with the network off.
+- **Deploy.** Storefront and console built in CI and shipped to the VPS as the shared brief's deployment section describes, with a frontend smoke suite: storefront loads, catalogue renders, login works, POS shell boots with the network off. Apply every rule in `docs/DEPLOYMENT.md`: the console host serves `pos.html` for `/pos` and `/pos/...` (ADR 0030), and the service worker precaches the till's on-demand chunks (ADR 0031). Each rule there says how the smoke suite checks it.
 
 Run the browser matrix on real devices wherever you can. A cheap Android phone on a weak connection tells you more here than any flagship will.
 

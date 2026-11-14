@@ -24,4 +24,7 @@ const lazyApi: ApiClient = {
 };
 
 /** The hooks every screen uses. Screens never import `@tanstack/react-query` or call `fetch`. */
-export const { useApiQuery, useApiMutation } = createApiHooks(lazyApi);
+export const { useApiQuery, useApiAllPages, useApiMutation } = createApiHooks(lazyApi);
+
+/** The code `useApiAllPages` fails with past its hard cap (ADR 0028), for a screen to say in its own words. */
+export { PAGE_CAP_EXCEEDED } from '@hakorem/data';

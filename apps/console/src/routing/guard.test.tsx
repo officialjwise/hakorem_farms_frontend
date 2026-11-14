@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PermissionGate } from './gates';
 import { renderApp, signedIn, newClient, USERS } from '../test/harness';
 import { NetworkError, type AuthClient } from '../auth/types';
+import { posRoutes } from '../pos/routes';
 
 describe('route guard: the four session states', () => {
   it('loading: says it is checking the session, and shows no page yet', async () => {
@@ -52,10 +53,10 @@ describe('route guard: permissions', () => {
 
   it('lets a user in who holds the permission', async () => {
     const client = newClient();
-    const login = await client.loginStaff(USERS.owner);
+    const login = await client.loginStaff(USERS.manager);
     await client.verifyTotp({ challengeToken: login.challengeToken ?? '', code: '481205' });
     await renderApp('/users', client);
-    expect(await screen.findByRole('heading', { name: /users and roles/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Users', level: 1 })).toBeInTheDocument();
     expect(screen.queryByText(/do not have access/i)).not.toBeInTheDocument();
   });
 
@@ -65,7 +66,8 @@ describe('route guard: permissions', () => {
   });
 
   it('denies the POS shell without rendering any of it, and offers a way out', async () => {
-    await renderApp('/pos', await signedIn('storekeeper'));
+    // The till is its own document with its own routes (ADR 0030).
+    await renderApp('/pos', await signedIn('storekeeper'), posRoutes);
     expect(await screen.findByRole('alert')).toHaveTextContent('pos.sale.create');
     expect(screen.queryByLabelText(/barcode/i)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /start page/i })).toBeInTheDocument();

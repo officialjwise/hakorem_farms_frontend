@@ -5,7 +5,8 @@ const CI = process.env.CI !== undefined;
 /**
  * End to end, in Chromium, at 360 px wide (the floor every screen must work at). The storefront uses port 3100 for tests because 3000 is a common dev port (it was a Docker container here). The console runs from its
  * production build through `vite preview`, so the service worker and the minified bundle are what is tested,
- * and the storefront from `next start`. Build both first: `pnpm test:e2e` does.
+ * and the storefront from `next start`. Build both first: `pnpm test:e2e` does, with the console's
+ * HK_API_BASE_URL set to /mock (ADR 0026).
  */
 export default defineConfig({
   testDir: './specs',
@@ -32,6 +33,15 @@ export default defineConfig({
     },
   ],
   webServer: [
+    {
+      // The Prism mock (ADR 0019). The console build talks to /mock, which vite preview forwards here
+      // (ADR 0025); the fake API answers auth and decides 401 and 403 before that (ADR 0026).
+      command: 'pnpm dev:mock',
+      cwd: '..',
+      url: 'http://127.0.0.1:4010/health',
+      reuseExistingServer: !CI,
+      timeout: 90_000,
+    },
     {
       command: 'pnpm exec vite preview --port 4173 --strictPort',
       cwd: '../apps/console',

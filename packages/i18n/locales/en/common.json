@@ -5,5 +5,49 @@
   "error": {
     "reference": "Reference",
     "tryAgain": "Try again"
+  },
+  "states": {
+    "errorBody": "Check the connection and try again. If it keeps happening, quote the reference.",
+    "reference": "Quote this reference to support:",
+    "retry": "Try again",
+    "deniedBody": "Your role does not include the permission this needs. Ask the owner or a manager to grant it.",
+    "notFound": "Not found",
+    "notFoundBody": "It may have been removed, or the link is wrong."
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {{page}}"
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "close": "Close",
+    "save": "Save changes",
+    "reload": "Reload",
+    "search": "Search",
+    "clear": "Clear"
+  },
+  "dirty": {
+    "title": "Leave without saving?",
+    "body": "Your changes on this page have not been saved.",
+    "leave": "Leave without saving",
+    "stay": "Stay on this page"
+  },
+  "stepUp": {
+    "title": "Confirm with your authenticator",
+    "body": "This change needs a fresh code from your authenticator app. It counts for five minutes.",
+    "code": "Code from your authenticator app",
+    "codeHint": "Six digits",
+    "confirm": "Confirm",
+    "failed": "The code was not accepted",
+    "invalid": "Enter the six-digit code"
+  },
+  "time": {
+    "zone": "Times are Accra time (GMT).",
+    "never": "Never"
+  },
+  "conflict": {
+    "title": "Someone else changed this",
+    "body": "It changed after you opened it. Reload to see the current version, then make your change again."
   }
 }

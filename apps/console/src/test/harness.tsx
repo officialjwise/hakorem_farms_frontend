@@ -4,28 +4,34 @@ import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-rout
 import { createI18n } from '@hakorem/i18n';
 import { routes as appRoutes } from '../app/routes';
 import { AuthProvider } from '../auth/AuthProvider';
-import { createStubAuthClient } from '../auth/stub';
 import type { AuthClient } from '../auth/types';
-import { memoryStorage } from './memoryStorage';
+import { FAKE_TOTP_CODE } from './fakeAuthServer';
+import { fakeBrowser } from './fakeFetch';
 
 export const USERS = {
-  owner: { identifier: 'kwabena.owusu@hakoremfarms.com', password: 'Mango-Season-2026!' },
+  /** Owner: every F3 permission, TOTP on. */
+  owner: { identifier: 'ama.mensah@hakoremfarms.com', password: 'Mango-Season-2026!' },
+  /** Manager: reads users but holds no grant, role, session or audit permission. TOTP on. */
+  manager: { identifier: 'kwabena.owusu@hakoremfarms.com', password: 'Mango-Season-2026!' },
   cashier: { identifier: 'adwoa.darko@hakoremfarms.com', password: 'Mango-Season-2026!' },
   storekeeper: { identifier: 'yaw.boateng@hakoremfarms.com', password: 'Mango-Season-2026!' },
   temp: { identifier: 'new.staff@hakoremfarms.com', password: 'Temp-8841-Farm' },
 } as const;
 
-/** A stub over an empty memory storage and an optional clock. */
-export function newClient(now?: () => number): AuthClient {
-  return createStubAuthClient({ storage: memoryStorage(), ...(now ? { now } : {}) });
+/** The real auth client in a fresh browser, on a fresh fake auth server (ADR 0026). */
+export function newClient(): AuthClient {
+  return fakeBrowser().client;
 }
 
-/** A client that already holds a signed-in cashier, manager or storekeeper (their cookies are in its jar). */
+/** A client that already holds a signed-in user (their cookies are in its jar). TOTP users give the code. */
 export async function signedIn(
-  user: 'cashier' | 'storekeeper',
+  user: keyof typeof USERS,
   client: AuthClient = newClient(),
 ): Promise<AuthClient> {
-  await client.loginStaff(USERS[user]);
+  const result = await client.loginStaff(USERS[user]);
+  if (result.status === 'TOTP_REQUIRED') {
+    await client.verifyTotp({ challengeToken: result.challengeToken ?? '', code: FAKE_TOTP_CODE });
+  }
   return client;
 }
 
@@ -35,7 +41,7 @@ export async function renderApp(
   routes: RouteObject[] = appRoutes,
   state?: unknown,
 ) {
-  const i18n = await createI18n({ namespaces: ['common', 'shell', 'auth'] });
+  const i18n = await createI18n({ namespaces: ['common', 'shell', 'auth', 'iam', 'audit'] });
   const router = createMemoryRouter(routes, {
     initialEntries: [state === undefined ? path : { pathname: path, state }],
   });

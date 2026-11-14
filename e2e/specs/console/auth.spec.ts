@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../../support/test';
 import { signIn, submitLogin, TOTP_CODE, USERS } from '../../support/helpers';
 
 test.describe('sign in', () => {
@@ -46,7 +46,7 @@ test.describe('TOTP challenge', () => {
     page,
   }) => {
     await page.goto('/login');
-    await submitLogin(page, USERS.owner);
+    await submitLogin(page, USERS.manager);
     await expect(page.getByRole('heading', { name: 'Enter your code' })).toBeVisible();
     await expect(page.getByLabel(/^code/i)).toBeFocused();
     await page.getByLabel(/^code/i).fill('000000');
@@ -55,16 +55,16 @@ test.describe('TOTP challenge', () => {
     await page.getByLabel(/^code/i).fill(TOTP_CODE);
     await page.getByRole('button', { name: 'Verify' }).click();
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
-    // The owner's role reaches users and roles.
+    // The manager's role reaches the users list.
     await page.goto('/users');
-    await expect(page.getByRole('heading', { name: 'Users and roles' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Users', level: 1 })).toBeVisible();
   });
 
   test('a reload in the middle loses the challenge on purpose and starts again', async ({
     page,
   }) => {
     await page.goto('/login');
-    await submitLogin(page, USERS.owner);
+    await submitLogin(page, USERS.manager);
     await expect(page.getByRole('heading', { name: 'Enter your code' })).toBeVisible();
     await page.reload();
     await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();

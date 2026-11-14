@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
+import { operationManifest } from '@hakorem/api-client';
+import { isValidElement } from 'react';
 import type { RouteObject } from 'react-router';
-import { protectedRoutes } from '../app/routes';
+import { entryFor } from '../app/entries';
+import { LazyScreen } from '../app/LazyScreen';
+import { protectedRoutes as backOfficeRoutes } from '../app/routes';
+import { posProtectedRoutes, posRoutes } from '../pos/routes';
 import { isRouteHandle } from './handle';
+
+/** Both documents' protected routes (ADR 0030): every rule below holds for each. */
+const protectedRoutes = [...backOfficeRoutes, ...posProtectedRoutes];
 
 function leaves(list: RouteObject[], trail = ''): { path: string; route: RouteObject }[] {
   return list.flatMap((route) => {
@@ -43,5 +51,70 @@ describe('route table', () => {
         path,
       ).toBeTruthy();
     }
+  });
+});
+
+describe('each document owns only its own addresses (ADR 0030)', () => {
+  it('the back office declares no till route, and the till declares nothing but /pos', () => {
+    for (const { path } of leaves(backOfficeRoutes))
+      expect(entryFor(path), path).toBe('back-office');
+    const till = leaves(posProtectedRoutes);
+    expect(till.length).toBeGreaterThan(0);
+    for (const { path } of till) expect(entryFor(path), path).toBe('pos');
+  });
+
+  it('routes /pos and below to the till, and everything else, files included, to the back office', () => {
+    expect(['/pos', '/pos/', '/pos/sale/1'].map(entryFor)).toEqual(['pos', 'pos', 'pos']);
+    expect(['/', '/users', '/login', '/posters', '/pos.html', '/pos/x.js'].map(entryFor)).toEqual(
+      Array(6).fill('back-office'),
+    );
+  });
+});
+
+describe('the till loads its sale screen and nothing else (PERFORMANCE_BUDGET)', () => {
+  const isLazy = (route: RouteObject) =>
+    isValidElement(route.element) && route.element.type === LazyScreen;
+
+  it('every till route but the sale screen and the hand-off is a lazy screen', () => {
+    const eager = leaves(posRoutes)
+      .filter(({ route }) => !isLazy(route))
+      .map(({ path }) => path);
+    // `/pos` is the sale screen (the index route); `/*` hands other addresses to the back office.
+    expect(eager.sort()).toEqual(['/*', '/pos']);
+  });
+
+  it('the sign-in screens are among the lazy ones', () => {
+    const lazy = leaves(posRoutes)
+      .filter(({ route }) => isLazy(route))
+      .map(({ path }) => path);
+    expect(lazy).toEqual(
+      expect.arrayContaining(['/login', '/login/totp', '/change-password', '/forgot-password']),
+    );
+  });
+});
+
+describe('F3 routes declare the permission of the operation they use', () => {
+  // Each screen's route permission is the contract's x-permission for its main read (a list or record
+  // screen) or its write (a form whose whole purpose is the write). Taken from the generated manifest, so a
+  // contract change that renames a permission fails here.
+  const EXPECTED: Record<string, keyof typeof operationManifest> = {
+    '/users': 'listUsers',
+    '/users/new': 'createUser',
+    '/users/:id': 'getUser',
+    '/roles': 'listRoles',
+    '/roles/new': 'createRole',
+    '/roles/:id': 'getRole',
+    '/sessions': 'listSessions',
+    '/audit': 'listAuditEvents',
+    '/audit/:id': 'getAuditEvent',
+  };
+
+  it.each(Object.entries(EXPECTED))('%s needs what %s needs', (path, operation) => {
+    const leaf = leaves(protectedRoutes).find((l) => l.path === path);
+    expect(leaf, `${path} is not a route`).toBeDefined();
+    const handle = leaf?.route.handle;
+    expect(isRouteHandle(handle) ? handle.permission : undefined).toBe(
+      operationManifest[operation].permission,
+    );
   });
 });

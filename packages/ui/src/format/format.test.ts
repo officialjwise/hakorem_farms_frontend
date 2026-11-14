@@ -1,4 +1,12 @@
-import { CEDI_SIGN, NOT_APPLICABLE, formatMoney, formatQuantity, formatWeight } from './format';
+import {
+  BUSINESS_TIME_ZONE,
+  CEDI_SIGN,
+  NOT_APPLICABLE,
+  formatDateTime,
+  formatMoney,
+  formatQuantity,
+  formatWeight,
+} from './format';
 
 describe('formatMoney', () => {
   describe('interface (GH₵, no space)', () => {
@@ -195,4 +203,43 @@ describe('formatQuantity', () => {
       expect(() => formatQuantity(bad, { places: 0 })).toThrow(TypeError);
     },
   );
+});
+
+describe('formatDateTime (Africa/Accra, UTC+0 all year)', () => {
+  it('shows a UTC instant as Accra wall time, largest unit first, without seconds', () => {
+    expect(formatDateTime('2026-11-14T08:05:59Z')).toBe('2026-11-14 08:05');
+    expect(formatDateTime('2026-11-14T08:05:59.999Z')).toBe('2026-11-14 08:05');
+  });
+
+  it('converts an instant sent with another offset to Accra time', () => {
+    expect(formatDateTime('2026-11-14T09:30:00+01:00')).toBe('2026-11-14 08:30');
+    expect(formatDateTime('2026-11-13T23:30:00-01:00')).toBe('2026-11-14 00:30');
+  });
+
+  it('crosses a year and a leap day without any daylight-saving shift', () => {
+    expect(formatDateTime('2026-12-31T23:59:00Z')).toBe('2026-12-31 23:59');
+    expect(formatDateTime('2028-02-29T00:00:00Z')).toBe('2028-02-29 00:00');
+    expect(formatDateTime('2026-07-01T12:00:00Z')).toBe('2026-07-01 12:00');
+  });
+
+  it('shows a time that does not apply as an en dash, or an empty export cell', () => {
+    expect(formatDateTime(null)).toBe(NOT_APPLICABLE);
+    expect(formatDateTime(null, { context: 'export' })).toBe('');
+  });
+
+  it('refuses anything that is not an instant with an offset', () => {
+    for (const bad of [
+      '2026-11-14',
+      '2026-11-14T08:00:00',
+      'yesterday',
+      '',
+      '2026-13-40T08:00:00Z',
+    ]) {
+      expect(() => formatDateTime(bad)).toThrow(TypeError);
+    }
+  });
+
+  it('names the business time zone', () => {
+    expect(BUSINESS_TIME_ZONE).toBe('Africa/Accra');
+  });
 });

@@ -9,6 +9,9 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-003 | 2026-11-14 | Open   |
 | CR-004 | 2026-11-14 | Open   |
 | CR-005 | 2026-11-14 | Open   |
+| CR-006 | 2026-11-14 | Open   |
+| CR-007 | 2026-11-14 | Open   |
+| CR-008 | 2026-11-14 | Open   |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -100,3 +103,37 @@ For each list operation's 200 response, replace the single `example` with an `ex
 
 - **Not breaking:** an `examples` map is documentation. No schema or field changes, so this is a patch or minor version.
 - **Until this lands:** the F2 integration test (`apps/console/src/data/states.integration.test.tsx`) shows the empty state from a successful answer with no rows, and says so in its header. The frontend can then call Prism with `Prefer: example=empty`, and the test is simplified.
+
+## CR-006. How TOTP enrolment authenticates during first sign-in (clarification)
+
+- **Raised by:** frontend F3, from `TOTP_ENROLMENT_REQUIRED`
+- **Needed by:** the TOTP enrolment screen (deferred from F3, A-F3-13)
+- **Contract read first:** `LoginResult` (`TOTP_ENROLMENT_REQUIRED`, `challengeToken`, `session: null`), `startTotpEnrolment` and `confirmTotpEnrolment` (both `staffSession` and `X-CSRF-Token`, neither takes a challenge token), and API.md 3.4 ("needs a session or, during first login, the challenge").
+
+**Request:**
+
+1. Say which it is. (a) `TOTP_ENROLMENT_REQUIRED` issues a restricted session and cookies, so the two calls work as written; or (b) both calls accept the `challengeToken` (for example in the body), with no CSRF token because there is no session yet. This is the same question as CR-004 point 1 for the forced password change, and one answer can cover both.
+2. **Return the QR code as a data URI in the enrolment response** (added 2026-11-14, owner decision: the frontend takes no QR code dependency). `TotpEnrolment` gains a field beside `otpauthUri` and `secretBase32`, for example `qrCodeDataUri`, holding an image of `otpauthUri` (`data:image/svg+xml;base64,…` or `data:image/png;base64,…`), with an example. The screen shows it in an `<img>` with a text alternative, and keeps `secretBase32` on screen for a phone that cannot scan. Additive. The owner has asked B3 for it.
+
+**Status:** with the backend (B3 is answering it).
+
+**Until this lands:** enrolment is not built. A user whose sign-in answers `TOTP_ENROLMENT_REQUIRED` sees "this sign-in step is not available yet" (F1).
+
+## CR-007. Mark step-up operations in a machine-readable way (additive)
+
+- **Raised by:** frontend F3, from the users, roles and grants screens
+- **Needed by:** every screen that writes through a step-up operation (F3 now, F8, F12 and others later)
+- **Contract read first:** step-up is stated only in prose, as "Requires step-up: a TOTP code entered within the last five minutes on this session" in an operation's `description`.
+
+**Request:** add `x-requires-step-up: true` beside `x-permission` on each operation whose description says it requires step-up. The generated operation table will then carry it, so a screen can ask for the code before the write instead of after a 403 `STEP_UP_REQUIRED`, and the frontend's test fake can stop listing the six F3 operations by hand. Additive: no schema changes.
+
+**Until this lands:** screens send the write first and handle the 403 (A-F3-07).
+
+## CR-008. Example rows repeat their ids (example fix)
+
+- **Raised by:** frontend F3, the new-user and add-role forms
+- **Checked:** the `listBranches` 200 example lists the three branches (DDW, TST, KSI) twice, with the same ids.
+
+**Request:** give each example row its own id, or drop the repeats. A real answer never repeats a row, but the mock serves the example as the answer, and a choice list built from it shows each branch twice. Example only; nothing changes for a generated client.
+
+**Until this lands:** option lists are made unique by id (`uniqueById`), which costs nothing against the real API.

@@ -20,7 +20,7 @@ A screen imports `useApiQuery` and `useApiMutation` from its app's `data/api` an
 
 ```bash
 pnpm dev:mock                                          # Prism on http://127.0.0.1:4010
-HK_API_BASE_URL=http://127.0.0.1:4010 pnpm dev:console # the console against the mock
+HK_API_BASE_URL=/mock pnpm dev:console                 # the console in a browser against the mock (ADR 0025)
 HK_API_BASE_URL=https://api.staging.hakoremfarms.com/v1 pnpm dev:console
 ```
 
@@ -112,7 +112,9 @@ const query = useApiQuery('listStockOnHand', { query: { locationId } });
 
 ## Pagination
 
-Cursor pages: `PageInfo` is `nextCursor`, `limit`, `hasMore`; there is no total. A screen keeps the cursor in state and passes it as `query.cursor`, so each page is its own cache entry, and uses `Pagination` with Previous and Next only. An infinite-scroll hook is not built; the first screen that needs one adds it here.
+Cursor pages: `PageInfo` is `nextCursor`, `limit`, `hasMore`; there is no total. A screen keeps the cursor in state (`useCursorPages` in the console keeps the visited cursors, so Previous returns to the exact page) and passes it as `query.cursor`, so each page is its own cache entry, and uses `Pagination` with Previous and Next only.
+
+A short reference list a screen must show whole (the permissions a role can hold) uses `useApiAllPages(operationId, input)` instead (ADR 0028): it follows the cursors into one cache entry, at most `MAX_ALL_PAGES` (5) pages, and answers `{ items }`. The cap is hard: a list still going after five pages fails with `PageCapExceededError` (code `PAGE_CAP_EXCEEDED`, never retried), and the screen says so in its own words with no retry. There is no partial answer. Never use it for a list people browse: pointed at one, it fails loudly at once. An infinite-scroll hook is still not built.
 
 ## Money, weight, quantity
 
@@ -126,14 +128,14 @@ Integer pesewas and three-place kilogram strings in and out, formatted only at t
 - `Prefer: code=401|403|404|500` returns the contract's own example for that status. This is how a screen is seen in its error and permission-denied states.
 - **Prism cannot return an empty list** (each list has one example with rows): CR-005. Until it lands, an empty state is shown from a successful answer with no rows.
 - It keeps no state: a write does not change what a later read returns.
-- A browser calling the mock from the dev server needs a same-origin path (Prism answers with `Access-Control-Allow-Origin: *`, which a credentialed request refuses). That is A-F2-03, for the first screen session to settle.
+- **In a browser, use `HK_API_BASE_URL=/mock`** (ADR 0025). The console's Vite dev and preview servers forward `/mock/…` to Prism and add the staff cookie, which the contract gives no way to set. CORS is not the problem: given an `Origin`, Prism echoes it with `Access-Control-Allow-Credentials: true` (it answers `*` only to a request without one, which is what Node sends). Against the mock the console is always signed in as the contract's example cashier; sign-in, TOTP and expiry are exercised against the fake auth server (ADR 0026).
 
 ## Tests
 
-| Layer       | Where                   | Against                                                                                                          |
-| ----------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Unit        | `pnpm test:unit`        | a function standing in for the network, for the client's own rules (headers, retry, single flight, error shapes) |
-| Integration | `pnpm test:integration` | the real Prism mock, started by the suite; a failure to start is a failure, not a skip                           |
-| End to end  | `pnpm test:e2e`         | production builds in Chromium at 360 px                                                                          |
+| Layer       | Where                   | Against                                                                                                             |
+| ----------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Unit        | `pnpm test:unit`        | a function standing in for the network, for the client's own rules (headers, retry, single flight, error shapes)    |
+| Integration | `pnpm test:integration` | the real Prism mock, started by the suite; a failure to start is a failure, not a skip                              |
+| End to end  | `pnpm test:e2e`         | production builds in Chromium at 360 px, auth answered by the fake auth server, everything else by Prism (ADR 0026) |
 
 A screen's integration test mounts the screen with its `QueryClientProvider` and asserts all four states: `Prefer: code=500` and `code=403` for error and denied, a held response for loading.

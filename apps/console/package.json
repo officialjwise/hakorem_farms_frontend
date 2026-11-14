@@ -7,6 +7,7 @@
     "dev": "vite --port 5173",
     "build": "tsc --noEmit -p tsconfig.json && vite build",
     "preview": "vite preview --port 4173 --strictPort",
+    "budget": "tsx scripts/check-budget.ts",
     "icons": "tsx scripts/build-icons.ts",
     "icons:check": "tsx scripts/build-icons.ts --check",
     "typecheck": "tsc --noEmit -p tsconfig.json",

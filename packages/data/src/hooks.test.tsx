@@ -1,5 +1,6 @@
 import { ApiError, NetworkError } from '@hakorem/api-client';
 import { act, renderHook, waitFor } from '@testing-library/react';
+import { MAX_ALL_PAGES, PAGE_CAP_EXCEEDED, PageCapExceededError } from './hooks';
 import { envelope, json, testData } from './testing';
 
 const page = {
@@ -179,5 +180,78 @@ describe('useApiMutation: invalidation', () => {
       result.current.archive.mutateAsync({ path: { id: 'p1' }, body: { version: 1, reason: 'x' } }),
     );
     expect(requests.filter((r) => new URL(r.url).pathname === '/v1/auth/session')).toHaveLength(2);
+  });
+});
+
+describe('useApiAllPages', () => {
+  const permission = (code: string) => ({
+    code,
+    module: code.split('.')[0],
+    description: code,
+    requiresStepUp: false,
+  });
+  const pageOf = (codes: string[], nextCursor: string | null) => ({
+    data: codes.map(permission),
+    page: { nextCursor, limit: 100, hasMore: nextCursor !== null },
+  });
+
+  it('reads every page in turn, passing each cursor, into one answer', async () => {
+    const { hooks, wrapper, requests, queryClient } = testData((request) => {
+      const cursor = new URL(request.url).searchParams.get('cursor');
+      if (cursor === null) return json(pageOf(['iam.user.read'], 'c2'));
+      if (cursor === 'c2') return json(pageOf(['iam.role.read'], 'c3'));
+      return json(pageOf(['aud.audit.read'], null));
+    });
+    const { result } = renderHook(
+      () => hooks.useApiAllPages('listPermissions', { query: { limit: 100 } }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.items.map((p) => p.code)).toEqual([
+      'iam.user.read',
+      'iam.role.read',
+      'aud.audit.read',
+    ]);
+    expect(requests.map((r) => new URL(r.url).search)).toEqual([
+      '?limit=100',
+      '?limit=100&cursor=c2',
+      '?limit=100&cursor=c3',
+    ]);
+    // Its own cache entry: one page of the same read is a different shape and must not collide.
+    expect(
+      queryClient.getQueryData(['listPermissions', { query: { limit: 100 } }]),
+    ).toBeUndefined();
+  });
+
+  it(`throws past ${MAX_ALL_PAGES} pages, once, instead of reading on or answering part of the list`, async () => {
+    // A list that never ends, as a stock list pointed at the wrong hook would look.
+    const { hooks, wrapper, requests } = testData(() => json(pageOf(['iam.user.read'], 'again')));
+    const { result } = renderHook(() => hooks.useApiAllPages('listPermissions'), { wrapper });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.data).toBeUndefined();
+    expect(result.current.error).toBeInstanceOf(PageCapExceededError);
+    expect(result.current.error?.code).toBe(PAGE_CAP_EXCEEDED);
+    expect(result.current.error?.message).toContain('listPermissions');
+    // Not retried: reading the same five pages again cannot help.
+    expect(requests).toHaveLength(MAX_ALL_PAGES);
+  });
+
+  it(`answers a list of exactly ${MAX_ALL_PAGES} pages whole`, async () => {
+    const { hooks, wrapper, requests } = testData((_request, attempt) =>
+      json(pageOf([`p.${attempt}`], attempt === MAX_ALL_PAGES ? null : `c${attempt}`)),
+    );
+    const { result } = renderHook(() => hooks.useApiAllPages('listPermissions'), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.items).toHaveLength(MAX_ALL_PAGES);
+    expect(requests).toHaveLength(MAX_ALL_PAGES);
+  });
+
+  it('fails as a whole when any page fails, with the normalised error', async () => {
+    const { hooks, wrapper } = testData((_request, attempt) =>
+      attempt === 1 ? json(pageOf(['iam.user.read'], 'c2')) : json(envelope('FORBIDDEN'), 403),
+    );
+    const { result } = renderHook(() => hooks.useApiAllPages('listPermissions'), { wrapper });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error?.status).toBe(403);
   });
 });

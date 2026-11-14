@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../../support/test';
 
 test.describe('installable PWA', () => {
   test('links a manifest with the fields an install needs, and its icons load', async ({
