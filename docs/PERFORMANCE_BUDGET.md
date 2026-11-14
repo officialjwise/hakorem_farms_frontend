@@ -46,28 +46,51 @@ lhci autorun --config=lighthouse/lighthouserc.json --collect.url=<storefront lis
 
 ## Console
 
-Set on 2026-11-14, on the owner's instruction, when the till and the back office became two documents (ADR 0030). Vite's 500 kB chunk warning is the bundler's default, not this budget, and it is switched off. The numbers are this session's choice (assumption A-F3-17), and changing one is an owner decision.
+Set on 2026-11-14 when the till and the back office became two documents (ADR 0030). The numbers were confirmed by the owner the same day (A-F3-17, resolved), and changing one is an owner decision. Vite's 500 kB chunk warning is the bundler's default, not this budget, and it is switched off.
+
+### The rule: the till loads its sale screen and nothing else
+
+The till's **initial load is its shell and the sale screen** (the `/pos` index route). Every other till route is loaded on demand with `lazyScreen(...)` in `apps/console/src/pos/routes.tsx`. That includes the sign-in screens today, and in F9: hold and recall, returns, shift open and close, and anything else that is not needed to ring up an item. Set by the owner on 2026-11-14, while the till had one screen (ADR 0031).
+
+- **The budget does not grow to fit F9.** F9 fills the till with routes, not with initial load.
+- **A feature inside the sale screen** that is not needed for the first item (split tender, for example) is a candidate for loading on first use too. F9 decides that per feature, against the number below.
+- **Enforced twice:**
+  - `apps/console/src/routing/routes.test.ts` fails if any till route other than the sale screen and the hand-off is not a `LazyScreen`.
+  - `pnpm budget:console` budgets the initial load only, so an eager screen shows up as initial bytes.
+- **Offline:** an on-demand chunk must still open with the network off. The service worker precaches all of them (F13; `docs/DEPLOYMENT.md` section 2).
 
 ### The numbers
 
-Gzipped, for what each document makes the browser fetch before anything renders: its entry script, every `modulepreload` and every stylesheet. 1 kB is 1,000 bytes.
+Gzipped, for each document's **initial load**: what the browser must fetch before the first screen renders. That is the entry chunk, every chunk it imports statically, the catalogue namespaces it loads at boot (`ENTRY_NAMESPACES` in `apps/console/src/app/entries.ts`) and its stylesheet. 1 kB is 1,000 bytes. What loads on demand is reported beside it, not budgeted.
 
-| Document                  | Script budget | Style budget | Measured at the split (script, style) |
-| ------------------------- | ------------- | ------------ | ------------------------------------- |
-| The till, `pos.html`      | 250 kB        | 15 kB        | 229.6 kB, 10.7 kB                     |
-| Back office, `index.html` | 300 kB        | 15 kB        | 253.2 kB, 10.7 kB                     |
+| Document                  | Script budget | Style budget | Measured (initial script, style; on demand) |
+| ------------------------- | ------------- | ------------ | ------------------------------------------- |
+| The till, `pos.html`      | 250 kB        | 15 kB        | 195.8 kB, 10.7 kB; 42.8 kB in 7 chunks      |
+| Back office, `index.html` | 300 kB        | 15 kB        | 266.1 kB, 10.7 kB; none                     |
 
-And one rule that is not a number: **the till's document never loads the back office's entry chunk.**
+And one rule that is not a number: **the till's initial load never contains the back office's entry chunk.**
 
-Not counted: the catalogue namespaces loaded at boot (1 to 3 kB each), the service worker and the icons.
+How the measurement got here:
+
+- **At the split** (whole document, namespaces not counted), the till was 229.6 kB and the back office 253.2 kB.
+- **The till fell to 195.8 kB** once its sign-in screens became lazy. They took the form libraries (`zod`, `react-hook-form`) and the sign-in screens out of its initial load.
+- **The back office reads higher, 266.1 kB.** It now counts the namespaces it loads at boot (about 8 kB). The shared code is also split into smaller chunks, which compress slightly less well.
+
+Not counted: the service worker and the icons.
 
 ### How it is enforced
 
-`pnpm budget:console`, after `pnpm build:console`, in CI and by hand. It reads `apps/console/dist/index.html` and `pos.html`, gzips what each one loads, prints the sizes against the budget, and exits 1 if a document is over or if the till loads the back office's entry chunk. The numbers live in `apps/console/scripts/check-budget.ts` (`CONSOLE_BUDGET`) and in the table above. Change both together. `e2e/specs/console/entries.spec.ts` checks the same rule from the requests a fresh till makes.
+`pnpm budget:console`, after `pnpm build:console`, in CI and by hand.
+
+- **What it reads:** `apps/console/dist/.vite/manifest.json`, the chunk graph Vite writes with `build.manifest`.
+- **What it does:** walks each document's static imports, adds the boot namespaces, gzips the files, and prints the initial load against the budget, with the on-demand total beside it.
+- **When it fails:** exit 1 if an initial load is over budget, or if the till's initial load contains the back office's entry chunk.
+- **Where the numbers live:** `CONSOLE_BUDGET` in `apps/console/scripts/check-budget.ts` and the table above. Change both together.
+- **On the wire:** `e2e/specs/console/entries.spec.ts` checks the same rules from the requests a fresh till makes. It never requests the back office's chunk or its words, a signed-in till never fetches the sign-in chunk, and signing out fetches it.
 
 ### Where the bytes are
 
-At the split, 229.5 kB of either document is the `shared` chunk both load. The largest parts, by source size, are `react-dom`, `react-router`, `zod`, `react-hook-form`, `@tanstack/query-core`, the generated operation table in `packages/api-client`, `tailwind-merge` and `i18next`. The back office's own chunk is 25.9 kB, and the till's is 2.2 kB.
+Most of either initial load is the foundation both documents share. The largest parts, by source size, are `react-dom`, `react-router`, `@tanstack/query-core`, the generated operation table in `packages/api-client`, `tailwind-merge` and `i18next`. The form libraries now sit only in the back office's initial load and in the till's on-demand sign-in chunk.
 
-- **The till's 20 kB of headroom** is for F9's sale screens. Past that, look at the shared chunk first.
-- **The back office's 47 kB** is for F4 to F6. When it gets close, each back office area loads on demand rather than the budget rising.
+- **The till has 54 kB of headroom.** It is for whatever the sale screen itself needs in F9. Past that, look at the shared code first.
+- **The back office has 34 kB.** It is for F4 to F6. When it gets close, each back office area loads on demand rather than the budget rising.

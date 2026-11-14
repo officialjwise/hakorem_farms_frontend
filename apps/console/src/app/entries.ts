@@ -9,6 +9,8 @@
  * addresses, and both documents also render them in place, so a till that signs out and in again stays
  * on the till's code.
  */
+import type { Namespace } from '@hakorem/i18n';
+
 export type ConsoleEntry = 'back-office' | 'pos';
 
 /** `/pos` and anything under it, but not a file such as `/pos.html`. */
@@ -22,4 +24,13 @@ export function entryFor(pathname: string): ConsoleEntry {
 export const ENTRY_DOCUMENT: Record<ConsoleEntry, string> = {
   'back-office': 'index.html',
   pos: 'pos.html',
+};
+
+/**
+ * The catalogue namespaces each document loads at boot, before its first screen renders. The till's are
+ * the ones its shell, sign-in and sale screen use. `pnpm budget:console` counts them in the initial load.
+ */
+export const ENTRY_NAMESPACES: Record<ConsoleEntry, Namespace[]> = {
+  'back-office': ['common', 'shell', 'auth', 'iam', 'audit'],
+  pos: ['common', 'shell', 'auth'],
 };
