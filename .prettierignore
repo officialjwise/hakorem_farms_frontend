@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+docs/SHARED_BRIEF.md
+docs/BUILD_PROMPT.md
+**/generated/**
+storybook-static
+contract/

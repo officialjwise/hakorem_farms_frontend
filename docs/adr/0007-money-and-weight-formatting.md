@@ -1,0 +1,68 @@
+# 0007. Money and weight are formatted by our own rules, never by locale
+
+- Status: accepted (owner confirmed 2026-11-13, including the weight separator and the empty export cell)
+- Date: 2026-11-13
+- Session: F0 (owner decision), implemented in F0b
+
+## Context
+
+The storefront renders on the server and the client. `Intl.NumberFormat` depends on the runtime's ICU data, which differs between Node, Chrome and Android WebView versions. A total rendered one way on the server and another way on the client is an invoice that reads two ways, the failure this system exists to prevent.
+
+## Decision
+
+### Rules
+
+- **No locale formatting for money:** `Intl.NumberFormat` and `toLocaleString` are not used for money.
+- **Formatters:** money is formatted by functions in `packages/ui`, starting with `formatMoney(pesewas)`.
+- **Input:** integer pesewas only. A float, NaN or an unsafe integer is rejected, not rounded. This is the contract's `Pesewas` schema (CR-002, closed).
+- **Decimals:** always two, by explicit rules with no locale lookup.
+- **Minus:** ASCII hyphen-minus (U+002D), before the symbol or code.
+- **Tests:** zero, negatives and large values.
+
+### Three contexts
+
+| Context                                                                                                   | Format                                                                                                                                | Example        | Example, negative |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ----------------- |
+| Interface (screens, POS, storefront)                                                                      | `GH₵`, no space, comma thousands, two decimals                                                                                        | `GH₵1,234.50`  | `-GH₵1,234.50`    |
+| Documents (invoices, receipts, quotes, statements, anything a customer or accountant keeps as a document) | `GHS`, one space, comma thousands, two decimals                                                                                       | `GHS 1,234.50` | `-GHS 1,234.50`   |
+| CSV and spreadsheet exports                                                                               | Bare number: no symbol, no thousands separator, two decimals. The currency is named in the column header, for example `Amount (GHS)`. | `1234.50`      | `-1234.50`        |
+
+Exports carry a bare number because a cell reading `GHS 1,234.50` imports as text and will not sum, which makes the export useless to an accountant.
+
+### Weight and empty values
+
+- **Weight:** always three decimals with a `kg` suffix (`38.400 kg`), never locale dependent. In CSV exports it is a bare number (`38.400`), with the unit in the column header, for example `Weight (kg)`. Input is a kilogram decimal string, the contract's `Kilograms` schema (CR-002, closed).
+- **Weight thousands separator:** a comma in the interface and on documents (`1,250.500 kg`), none in exports (`1250.500`), mirroring money. Owner confirmed 2026-11-13.
+- **Not applicable:** a value that does not apply renders as an en dash (`–`, U+2013).
+- **Not applicable in exports:** an empty cell, never a dash, for money and weight alike. A dash in a numeric column breaks the column's sum. Owner confirmed 2026-11-13.
+
+### Quantity: precision follows the unit
+
+Owner decision 2026-11-14. ADR 0007 was silent on quantities, and F0c first shipped the wire format (three places) as a conservative default. That was wrong: `3.000 head` is not how a farm counts goats.
+
+- **Precision follows the unit, not the wire format.** A unit of measure declares its display precision: **zero** for countable units (head, crates, tubers, packs) and **three** for weight and volume. The API still sends three places (`Quantity`).
+- **The guard:** a value with a non-zero digit beyond the declared precision shows its digits, up to the last non-zero one, so the display never lies about a half crate. `2.500` crates shows `2.5 crates`, and `2.999` at zero places shows `2.999`. Nothing is rounded.
+- **Built as:** `formatQuantity(quantity, { places, context })` and `QuantityDisplay`, where `places` (0 to 3) is required with no default, so a caller cannot forget it. Exports follow the same rule and stay bare numbers.
+- **Where `places` comes from:** the unit of measure. The contract's `Uom` has `code`, `name` and `kind` (COUNT, WEIGHT, VOLUME) but no decimal places, so CR-003 asks the backend for one.
+
+### The cedi sign
+
+- `GH₵` is U+20B5. Older Android system fonts cover it unreliably, so the glyph ships with the page rather than depending on the device.
+- **Mechanism:** a glyph-only face subset to U+20B5, with an OFL-licensed source such as Noto Sans. It is declared with `@font-face` and `unicode-range: U+20B5` and listed first in the font stack.
+  - The browser downloads it only when the glyph appears, at about a kilobyte, and all other text keeps the system stack (ADR 0001).
+  - It lives in the shared `packages/ui` stylesheet, so the console and POS (Android tablets at the counter) get it as well as the storefront.
+- **Proof:** a Storybook story renders `GH₵1,234.50` in the subset face and asserts the glyph comes from it.
+- **Fallback:** if the subset face fails, fall back to `GH¢` (U+00A2, the cent sign). Every font carries it, and the business's own print material already uses it. The interface never falls back to `GHS`.
+
+### Numbers do not go through translation
+
+The translation layer (ADR 0008) is for labels only. Numbers and currency never pass through it.
+
+## Pending, do not implement
+
+- **Negatives in parentheses:** whether statements and ledger reports should show negatives in parentheses (`(1,234.50)`) rather than with a minus. This is an open question for the owner's accountant. Until it is answered, every context uses the minus sign as above.
+
+## Consequences
+
+- Any money or weight on screen, in a document or in an export goes through these functions, chosen by context. Lint can later ban `toLocaleString` and `Intl.NumberFormat` in `packages/` and `apps/`.
+- Document rendering itself is server-side (backend), so the backend applies the same document rules. The frontend's document formatter exists for previews and must match the backend to the character.

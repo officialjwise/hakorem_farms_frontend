@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Enable corepack
+        run: corepack enable
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Generated tokens are up to date
+        run: pnpm tokens:check
+      - name: Cedi glyph face is up to date
+        run: pnpm fonts:check
+      - name: Lint (ESLint, Stylelint, token roles)
+        run: pnpm lint
+      - name: Format
+        run: pnpm format:check
+      - name: Type check
+        run: pnpm typecheck
+      - name: Unit tests (components, contrast, lint rules)
+        run: pnpm test:unit
+      - name: Install Chromium
+        run: pnpm --filter @hakorem/ui exec playwright install --with-deps chromium
+      - name: Story tests with axe (WCAG 2.2 AA)
+        run: pnpm test:a11y
+      - name: Build Storybook
+        run: pnpm build-storybook

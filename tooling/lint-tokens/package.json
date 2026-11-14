@@ -1,0 +1,26 @@
+{
+  "name": "@hakorem/lint-tokens",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./eslint": "./src/eslint.js",
+    "./stylelint": "./src/stylelint.js",
+    "./core": "./src/core.js"
+  },
+  "scripts": {
+    "test:unit": "node --test \"test/**/*.test.js\""
+  },
+  "dependencies": {
+    "@hakorem/ui": "workspace:*"
+  },
+  "peerDependencies": {
+    "eslint": "^10.0.0",
+    "stylelint": "^17.0.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/parser": "8.72.1",
+    "eslint": "10.13.0",
+    "stylelint": "17.16.0"
+  }
+}

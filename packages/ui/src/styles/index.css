@@ -1,0 +1,16 @@
+/*
+ * The design system stylesheet. Apps import this once:
+ *   @import '@hakorem/ui/styles.css';
+ */
+@layer theme, base, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@import './generated/tokens.css';
+@import './foundation.css';
+@import './table.css';
+@import './generated/color-utilities.css';
+
+@source '../';

@@ -49,6 +49,7 @@ The gate is all three shells running, routing and navigating, with authenticatio
 - **Role-aware routing.** Every route declares the permission it needs and renders the permission-denied state when the user lacks it, rather than redirecting silently to a dashboard and leaving them confused.
 - **Authentication screens**: login, TOTP challenge, forced password change on first login, forgot and reset password, and session expiry with silent refresh. Build them against a stub auth module that mimics the exact token and cookie behaviour the contract describes, so switching to the real one in F3 is a one-file change.
 - **A global error boundary, a toast system, and an offline indicator** in the POS shell, all wired before any screen needs them.
+- **Required story, carried over from F0** (owner, 2026-11-13; frontend ADR 0004): the POS barcode focus trap and an open Dialog together. Focus stays in the Dialog while it is open and returns to the barcode field when it closes. Build it against the real POS trap from this session, never a stand-in. F1's gate is not met without it.
 
 No business screens in this session. This one is the skeleton everything else hangs on.
 

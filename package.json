@@ -1,0 +1,37 @@
+{
+  "name": "hakorem-farms-frontend",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.28.9",
+  "engines": {
+    "node": ">=22.12 <23"
+  },
+  "scripts": {
+    "setup": "pnpm install --frozen-lockfile && pnpm tokens:check && pnpm fonts:check",
+    "tokens": "pnpm --filter @hakorem/ui tokens",
+    "tokens:check": "pnpm --filter @hakorem/ui tokens:check",
+    "fonts": "pnpm --filter @hakorem/ui fonts",
+    "fonts:check": "pnpm --filter @hakorem/ui fonts:check",
+    "lint": "eslint . --max-warnings 0 && stylelint \"**/*.css\" --max-warnings 0",
+    "typecheck": "pnpm -r typecheck",
+    "test:unit": "pnpm -r test:unit",
+    "test:a11y": "pnpm --filter @hakorem/ui test:stories",
+    "storybook": "pnpm --filter @hakorem/ui storybook",
+    "build-storybook": "pnpm --filter @hakorem/ui build-storybook",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@hakorem/lint-tokens": "workspace:*",
+    "@types/node": "22.20.5",
+    "eslint": "10.13.0",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.13.0",
+    "prettier": "3.9.10",
+    "stylelint": "17.16.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.1"
+  }
+}
