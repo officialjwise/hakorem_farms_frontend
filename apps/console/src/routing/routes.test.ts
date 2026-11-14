@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { operationManifest } from '@hakorem/api-client';
+import { isValidElement } from 'react';
 import type { RouteObject } from 'react-router';
 import { entryFor } from '../app/entries';
+import { LazyScreen } from '../app/LazyScreen';
 import { protectedRoutes as backOfficeRoutes } from '../app/routes';
-import { posProtectedRoutes } from '../pos/routes';
+import { posProtectedRoutes, posRoutes } from '../pos/routes';
 import { isRouteHandle } from './handle';
 
 /** Both documents' protected routes (ADR 0030): every rule below holds for each. */
@@ -65,6 +67,28 @@ describe('each document owns only its own addresses (ADR 0030)', () => {
     expect(['/pos', '/pos/', '/pos/sale/1'].map(entryFor)).toEqual(['pos', 'pos', 'pos']);
     expect(['/', '/users', '/login', '/posters', '/pos.html', '/pos/x.js'].map(entryFor)).toEqual(
       Array(6).fill('back-office'),
+    );
+  });
+});
+
+describe('the till loads its sale screen and nothing else (PERFORMANCE_BUDGET)', () => {
+  const isLazy = (route: RouteObject) =>
+    isValidElement(route.element) && route.element.type === LazyScreen;
+
+  it('every till route but the sale screen and the hand-off is a lazy screen', () => {
+    const eager = leaves(posRoutes)
+      .filter(({ route }) => !isLazy(route))
+      .map(({ path }) => path);
+    // `/pos` is the sale screen (the index route); `/*` hands other addresses to the back office.
+    expect(eager.sort()).toEqual(['/*', '/pos']);
+  });
+
+  it('the sign-in screens are among the lazy ones', () => {
+    const lazy = leaves(posRoutes)
+      .filter(({ route }) => isLazy(route))
+      .map(({ path }) => path);
+    expect(lazy).toEqual(
+      expect.arrayContaining(['/login', '/login/totp', '/change-password', '/forgot-password']),
     );
   });
 });

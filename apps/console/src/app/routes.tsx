@@ -12,6 +12,7 @@ import { NotFoundScreen } from '../screens/NotFoundScreen';
 import { PlaceholderScreen } from '../screens/PlaceholderScreen';
 import { BackOfficeShell } from '../shells/BackOfficeShell';
 import { appRoutes } from './appRoutes';
+import { authRoutes } from './authRoutes';
 import { OtherDocument } from './OtherDocument';
 
 /*
@@ -102,9 +103,13 @@ export const protectedRoutes: RouteObject[] = [
   },
 ];
 
-export const routes: RouteObject[] = appRoutes(protectedRoutes, [
-  // The till's addresses belong to pos.html. An in-app link here (the sidebar's POS item, the sign-in
-  // screen's `next`) is handed to the browser to load that document.
-  { path: 'pos/*', element: <OtherDocument /> },
-  { path: '*', element: <NotFoundScreen /> },
-]);
+export const routes: RouteObject[] = appRoutes({
+  publicRoutes: authRoutes,
+  protectedRoutes,
+  rest: [
+    // The till's addresses belong to pos.html. An in-app link here (the sidebar's POS item, the sign-in
+    // screen's `next`) is handed to the browser to load that document.
+    { path: 'pos/*', element: <OtherDocument /> },
+    { path: '*', element: <NotFoundScreen /> },
+  ],
+});

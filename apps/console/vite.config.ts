@@ -63,6 +63,9 @@ export default defineConfig(({ mode }) => {
     define: { 'process.env.HK_API_BASE_URL': JSON.stringify(env['HK_API_BASE_URL'] ?? '') },
     build: {
       sourcemap: true,
+      // dist/.vite/manifest.json: the chunk graph `pnpm budget:console` reads to tell a document's initial
+      // load from what it loads on demand. It names only files the documents already link to.
+      manifest: true,
       rolldownOptions: {
         input,
         // The code both documents load is one chunk, named for what it is rather than for whichever

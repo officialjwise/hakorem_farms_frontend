@@ -31,6 +31,9 @@
     "wrongTitle": "This page could not be opened",
     "wrongBody": "The server sent the wrong part of the console for this address, and reloading will fetch the same one. Tell support which address you opened."
   },
+  "route": {
+    "loading": "Loading the page"
+  },
   "session": {
     "checking": "Checking your session",
     "error": "We could not check your session",
