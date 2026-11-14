@@ -10,7 +10,7 @@ import { authClient } from './auth/client';
 import './styles.css';
 
 async function main() {
-  const i18n = await createI18n({ namespaces: ['common', 'shell', 'auth'] });
+  const i18n = await createI18n({ namespaces: ['common', 'shell', 'auth', 'iam', 'audit'] });
   const root = document.getElementById('root');
   if (root === null) throw new Error('#root is missing from index.html.');
   createRoot(root).render(

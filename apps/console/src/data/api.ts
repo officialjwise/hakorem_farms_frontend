@@ -24,4 +24,4 @@ const lazyApi: ApiClient = {
 };
 
 /** The hooks every screen uses. Screens never import `@tanstack/react-query` or call `fetch`. */
-export const { useApiQuery, useApiMutation } = createApiHooks(lazyApi);
+export const { useApiQuery, useApiAllPages, useApiMutation } = createApiHooks(lazyApi);

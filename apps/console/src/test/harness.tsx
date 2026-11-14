@@ -5,6 +5,7 @@ import { createI18n } from '@hakorem/i18n';
 import { routes as appRoutes } from '../app/routes';
 import { AuthProvider } from '../auth/AuthProvider';
 import type { AuthClient } from '../auth/types';
+import { FAKE_TOTP_CODE } from './fakeAuthServer';
 import { fakeBrowser } from './fakeFetch';
 
 export const USERS = {
@@ -22,12 +23,15 @@ export function newClient(): AuthClient {
   return fakeBrowser().client;
 }
 
-/** A client that already holds a signed-in cashier, manager or storekeeper (their cookies are in its jar). */
+/** A client that already holds a signed-in user (their cookies are in its jar). TOTP users give the code. */
 export async function signedIn(
-  user: 'cashier' | 'storekeeper',
+  user: keyof typeof USERS,
   client: AuthClient = newClient(),
 ): Promise<AuthClient> {
-  await client.loginStaff(USERS[user]);
+  const result = await client.loginStaff(USERS[user]);
+  if (result.status === 'TOTP_REQUIRED') {
+    await client.verifyTotp({ challengeToken: result.challengeToken ?? '', code: FAKE_TOTP_CODE });
+  }
   return client;
 }
 
@@ -37,7 +41,7 @@ export async function renderApp(
   routes: RouteObject[] = appRoutes,
   state?: unknown,
 ) {
-  const i18n = await createI18n({ namespaces: ['common', 'shell', 'auth'] });
+  const i18n = await createI18n({ namespaces: ['common', 'shell', 'auth', 'iam', 'audit'] });
   const router = createMemoryRouter(routes, {
     initialEntries: [state === undefined ? path : { pathname: path, state }],
   });

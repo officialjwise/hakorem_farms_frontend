@@ -8,8 +8,10 @@
  */
 import i18next, { type BackendModule, type i18n } from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import type audit from '../locales/en/audit.json';
 import type auth from '../locales/en/auth.json';
 import type common from '../locales/en/common.json';
+import type iam from '../locales/en/iam.json';
 import type shell from '../locales/en/shell.json';
 import type storefront from '../locales/en/storefront.json';
 
@@ -22,7 +24,7 @@ export const DEFAULT_LANGUAGE: Language = 'en';
  * bundler splits it into its own chunk and a page downloads only the
  * namespaces it asks for. Add a namespace here and in every language.
  */
-export const NAMESPACES = ['common', 'shell', 'auth', 'storefront'] as const;
+export const NAMESPACES = ['common', 'shell', 'auth', 'storefront', 'iam', 'audit'] as const;
 export type Namespace = (typeof NAMESPACES)[number];
 
 type Catalogue = Record<string, unknown>;
@@ -36,6 +38,8 @@ export const catalogue: Record<
     shell: () => import('../locales/en/shell.json'),
     auth: () => import('../locales/en/auth.json'),
     storefront: () => import('../locales/en/storefront.json'),
+    iam: () => import('../locales/en/iam.json'),
+    audit: () => import('../locales/en/audit.json'),
   },
 };
 
@@ -95,6 +99,8 @@ declare module 'i18next' {
       shell: typeof shell;
       auth: typeof auth;
       storefront: typeof storefront;
+      iam: typeof iam;
+      audit: typeof audit;
     };
   }
 }
