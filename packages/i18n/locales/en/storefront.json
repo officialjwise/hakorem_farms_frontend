@@ -1,0 +1,98 @@
+{
+  "meta": {
+    "title": "HaKorem Farms",
+    "titleTemplate": "{{page}} | HaKorem Farms",
+    "description": "Fresh meat, live animals, eggs and produce from HaKorem Farms in Dodowa, Ghana.",
+    "categoryDescription": "Browse {{category}} from HaKorem Farms.",
+    "checkoutTitle": "Checkout",
+    "productTitle": "Product"
+  },
+  "header": {
+    "home": "HaKorem Farms, home",
+    "menu": "Menu",
+    "closeMenu": "Close menu",
+    "cart": "Cart",
+    "cartCount": "Cart, {{count}} items",
+    "skip": "Skip to main content",
+    "nav": "Shop by category",
+    "primary": "Main"
+  },
+  "nav": {
+    "all": "All products",
+    "live": "Live animals",
+    "meat": "Meat",
+    "eggs": "Eggs",
+    "produce": "Produce",
+    "inputs": "Farm inputs"
+  },
+  "categories": {
+    "live": "Live animals",
+    "meat": "Meat",
+    "eggs": "Eggs",
+    "produce": "Produce",
+    "inputs": "Farm inputs"
+  },
+  "home": {
+    "title": "Fresh from our farm in Dodowa",
+    "body": "Meat weighed to order, live animals, eggs and produce. Browse a category to begin.",
+    "browse": "Shop by category"
+  },
+  "category": {
+    "title": "{{category}}",
+    "empty": {
+      "title": "Products arrive soon",
+      "body": "The catalogue for this category is not connected yet."
+    },
+    "back": "All categories"
+  },
+  "product": {
+    "empty": {
+      "title": "This product is not available",
+      "body": "We could not find it. It may have been removed, or the catalogue is not connected yet."
+    },
+    "back": "Back to the shop"
+  },
+  "cart": {
+    "title": "Your cart",
+    "open": "Open cart",
+    "close": "Close cart",
+    "emptyTitle": "Your cart is empty",
+    "emptyBody": "Add something from the shop and it will appear here.",
+    "checkout": "Go to checkout",
+    "continue": "Keep shopping"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "body": "Checkout is built in a later session. Your cart is not charged.",
+    "empty": {
+      "title": "Nothing to check out",
+      "body": "Your cart is empty."
+    },
+    "back": "Back to the shop"
+  },
+  "footer": {
+    "label": "Site",
+    "about": "HaKorem Farms, Dodowa, Ghana",
+    "rights": "All rights reserved.",
+    "shop": "Shop",
+    "legal": "Legal",
+    "privacy": "Privacy",
+    "terms": "Terms"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "The address may be wrong, or the page may have moved.",
+    "home": "Back to the shop"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "body": "This page stopped working. Try again.",
+    "retry": "Try again",
+    "reference": "Reference"
+  },
+  "toast": {
+    "region": "Notifications ({hotkey})",
+    "announcement": "Notification",
+    "close": "Dismiss notification"
+  }
+}
