@@ -36,6 +36,66 @@ const back = (permission: string | null, crumb: RouteHandle['crumb']): RouteHand
   crumb,
 });
 
+/** Everything behind sign-in. Each leaf must declare its permission in `handle` (routes.test.ts checks). */
+export const protectedRoutes: RouteObject[] = [
+  {
+    element: <BackOfficeShell />,
+    children: [
+      {
+        index: true,
+        element: <PlaceholderScreen area="dashboard" />,
+        handle: back(null, 'dashboard'),
+      },
+      {
+        path: 'stock',
+        element: <PlaceholderScreen area="stock" />,
+        handle: back('inv.stock.read', 'stock'),
+      },
+      {
+        path: 'products',
+        element: <PlaceholderScreen area="products" />,
+        handle: back('mdm.product.read', 'products'),
+      },
+      {
+        path: 'orders',
+        element: <PlaceholderScreen area="orders" />,
+        handle: back('ord.order.read', 'orders'),
+      },
+      {
+        path: 'users',
+        element: <PlaceholderScreen area="users" />,
+        handle: back('iam.user.read', 'users'),
+      },
+    ],
+  },
+  {
+    path: 'pos',
+    handle: {
+      permission: 'pos.sale.create',
+      shell: 'pos',
+      crumb: 'pos',
+    } satisfies RouteHandle,
+    element: (
+      <PermissionGate>
+        <Suspense fallback={<Loading />}>
+          <PosShell />
+        </Suspense>
+      </PermissionGate>
+    ),
+    children: [
+      {
+        index: true,
+        element: <PosHome />,
+        handle: {
+          permission: 'pos.sale.create',
+          shell: 'pos',
+          crumb: 'pos',
+        } satisfies RouteHandle,
+      },
+    ],
+  },
+];
+
 /** Public routes need no session, so they declare no permission. Everything under `SessionGate` must declare one. */
 export const routes: RouteObject[] = [
   {
@@ -53,64 +113,7 @@ export const routes: RouteObject[] = [
             <Outlet />
           </SessionGate>
         ),
-        children: [
-          {
-            element: <BackOfficeShell />,
-            children: [
-              {
-                index: true,
-                element: <PlaceholderScreen area="dashboard" />,
-                handle: back(null, 'dashboard'),
-              },
-              {
-                path: 'stock',
-                element: <PlaceholderScreen area="stock" />,
-                handle: back('inv.stock.read', 'stock'),
-              },
-              {
-                path: 'products',
-                element: <PlaceholderScreen area="products" />,
-                handle: back('mdm.product.read', 'products'),
-              },
-              {
-                path: 'orders',
-                element: <PlaceholderScreen area="orders" />,
-                handle: back('ord.order.read', 'orders'),
-              },
-              {
-                path: 'users',
-                element: <PlaceholderScreen area="users" />,
-                handle: back('iam.user.read', 'users'),
-              },
-            ],
-          },
-          {
-            path: 'pos',
-            handle: {
-              permission: 'pos.sale.create',
-              shell: 'pos',
-              crumb: 'pos',
-            } satisfies RouteHandle,
-            element: (
-              <PermissionGate>
-                <Suspense fallback={<Loading />}>
-                  <PosShell />
-                </Suspense>
-              </PermissionGate>
-            ),
-            children: [
-              {
-                index: true,
-                element: <PosHome />,
-                handle: {
-                  permission: 'pos.sale.create',
-                  shell: 'pos',
-                  crumb: 'pos',
-                } satisfies RouteHandle,
-              },
-            ],
-          },
-        ],
+        children: protectedRoutes,
       },
       { path: '*', element: <NotFoundScreen /> },
     ],

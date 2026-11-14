@@ -206,7 +206,7 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
     async (currentPassword, newPassword) => {
       await client.changePassword({ currentPassword, newPassword });
       // After a forced change the user signs in again with the new password (assumption A-F1-03).
-      setPending(null);
+      // The pending step is left for the screen to drop once it has navigated, so it does not redirect early.
     },
     [client],
   );

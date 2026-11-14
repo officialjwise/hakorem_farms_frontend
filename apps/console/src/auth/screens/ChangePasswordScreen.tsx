@@ -15,6 +15,8 @@ export function ChangePasswordScreen() {
   const auth = useAuth();
   const navigate = useNavigate();
   const [failure, setFailure] = useState<AuthFailure | null>(null);
+  // Once the change is saved the pending step is dropped; this keeps the guard below from redirecting before navigate lands.
+  const [saved, setSaved] = useState(false);
 
   const schema = useMemo(
     () =>
@@ -37,7 +39,7 @@ export function ChangePasswordScreen() {
   const toFailure = useAuthFailure(form);
 
   const allowed =
-    auth.pending?.kind === 'password-change' || auth.session?.mustChangePassword === true;
+    saved || auth.pending?.kind === 'password-change' || auth.session?.mustChangePassword === true;
   if (!allowed) return <Navigate to="/login" replace />;
 
   return (
@@ -47,7 +49,9 @@ export function ChangePasswordScreen() {
         onSubmit={async ({ currentPassword, newPassword }) => {
           setFailure(null);
           await auth.changePassword(currentPassword, newPassword);
+          setSaved(true);
           navigate('/login', { replace: true, state: { passwordChanged: true } });
+          auth.cancelPending();
         }}
         onSubmitError={(error) => setFailure(toFailure(error))}
       >
