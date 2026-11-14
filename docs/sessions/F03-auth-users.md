@@ -128,27 +128,37 @@ At page level, the integration tests show the server's 403 as the denied state o
 
 Each check was run on its own and its exit code recorded.
 
-| Check                                     | Exit | Result                                                                                  |
-| ----------------------------------------- | ---- | --------------------------------------------------------------------------------------- |
-| `lint`                                    | 0    | no suppressions                                                                         |
-| `format:check`                            | 0    |                                                                                         |
-| `typecheck`                               | 0    | every package and app, `e2e`, every `.typetest`                                         |
-| `tokens:check`                            | 0    |                                                                                         |
-| `fonts:check`                             | 0    |                                                                                         |
-| `icons:check`                             | 0    |                                                                                         |
-| `sync-contract:check`                     | 0    | the committed client matches contract 1.1.0                                             |
-| `test:unit`                               | 0    | 6 i18n, 24 api-client, 708 ui, 27 data, 14 storefront, 130 console                      |
-| `test:integration`                        | 0    | 60 on the real Prism (26 before, plus 34: four states × eight screens, plus two writes) |
-| `test:a11y`                               | 0    | 231 story tests in Chromium with axe                                                    |
-| `build-storybook`                         | 0    |                                                                                         |
-| `build:console` (`HK_API_BASE_URL=/mock`) | 0    | one chunk over Vite's 500 kB warning (see below)                                        |
-| `build:storefront`                        | 0    | 182 kB first load, unchanged                                                            |
-| `test:e2e`, full run 1                    | 0    | 76 passed                                                                               |
-| `test:e2e`, full run 2                    | 0    | 76 passed                                                                               |
-| `test:e2e`, full run 3                    | 0    | 76 passed                                                                               |
-| `test:e2e:quarantine` (spec alone)        | 0    | 1 passed                                                                                |
+| Check                                              | Exit | Result                                                                                  |
+| -------------------------------------------------- | ---- | --------------------------------------------------------------------------------------- |
+| `lint`                                             | 0    | no suppressions                                                                         |
+| `format:check`                                     | 0    |                                                                                         |
+| `typecheck`                                        | 0    | every package and app, `e2e`, every `.typetest`                                         |
+| `tokens:check`                                     | 0    |                                                                                         |
+| `fonts:check`                                      | 0    |                                                                                         |
+| `icons:check`                                      | 0    |                                                                                         |
+| `sync-contract:check`                              | 0    | the committed client matches contract 1.1.0                                             |
+| `test:unit`                                        | 0    | 6 i18n, 24 api-client, 708 ui, 27 data, 14 storefront, 130 console                      |
+| `test:integration`                                 | 0    | 60 on the real Prism (26 before, plus 34: four states × eight screens, plus two writes) |
+| `test:a11y`                                        | 0    | 231 story tests in Chromium with axe                                                    |
+| `build-storybook`                                  | 0    |                                                                                         |
+| `build:console` (`HK_API_BASE_URL=/mock`)          | 0    | one chunk over Vite's 500 kB warning (see below)                                        |
+| `build:storefront`                                 | 0    | 182 kB first load, unchanged                                                            |
+| `test:e2e`, full run 1 (part B, before the split)  | 0    | 76 passed                                                                               |
+| `test:e2e`, full run 2 (part B, before the split)  | 0    | 76 passed                                                                               |
+| `test:e2e`, full run 3 (part B, before the split)  | 0    | 76 passed                                                                               |
+| `test:e2e:quarantine` (spec alone)                 | 0    | 1 passed                                                                                |
+| independent check: full run, default workers       | 1    | 75 passed, 1 timed out (see below)                                                      |
+| independent check: two full runs, default workers  | 1, 1 | 87 of 92 and 90 of 92, every failure a timeout, under a load average near 40            |
+| after the split: three full runs, 2 workers (CI's) | 0    | 122 passed each time (3.3, 1.8 and 1.5 minutes)                                         |
+| after the split: one full run, default workers     | 1    | 121 passed; `users.spec.ts:62` waited more than 5 s for "Role added" (below)            |
+| `users.spec.ts:62` alone, `--repeat-each 10`       | 0    | 10 passed, eight at a time, 9 to 11 s each                                              |
 
-The 76 end-to-end tests are part A's 64 plus 12 new:
+**What the independent check found, and what changed.** Re-running the suite myself, the machine was shared with a Docker VM using about two cores (the backend session, by all appearances), and the load average ran from 14 to 40 on 8 cores. Every failure was a time budget running out, never a wrong page:
+
+- **Three tests walked seven to nine routes in one 30 s budget:** the owner's axe walk of the F3 screens, the back office axe walk, and the gate's part (a), which took 16 s even unloaded. Each now runs one test per route, with every assertion kept (the gate's "no request for a refused operation" and "no page error" are checked per route). That is why the count went from 76 to 122. No timeout was raised and no retry was added.
+- **One write can outlast a 5 s wait under load:** `users.spec.ts:62`, where step-up, the repeated `createGrant` and the refetch it waits for all have to land before "Role added" shows. The snapshot showed the dialog still submitting, not stuck. It passed every time with CI's two workers and 10 of 10 alone. It is not quarantined, but it is the first test to watch if CI goes red (see "For the owner's review").
+
+The 76 end-to-end tests before the split were part A's 64 plus 12 new:
 
 - `wrong-role`: 2 tests × 2 themes
 - the owner's axe walk of every F3 screen: 2 themes
@@ -204,6 +214,7 @@ A-F2-03 is resolved.
 4. **The e2e fixture key `owner` was renamed `manager`.** It was always Kwabena, with the Manager role. A real Owner, Ama Mensah with every F3 permission, joins the fixtures.
 5. **Vite warns that one console chunk is over 500 kB minified.** The F3 screens are in the main chunk; the POS is still its own. No budget covers the console. Splitting the back office routes is cheap whenever you want it.
 6. **CR-006, CR-007 and CR-008** are new, for the backend.
+7. **End-to-end timing under load.** On a loaded machine with Playwright's default worker count, `users.spec.ts:62` can exceed its 5 s wait for "Role added" (see "Checks at the tip"). With CI's two workers it was green in every run. If it goes red in CI, it gets an issue and the quarantine tag, like #4, rather than a longer timeout.
 
 ## Not verified, and said plainly
 
