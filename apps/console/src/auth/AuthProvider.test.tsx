@@ -1,7 +1,10 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { AuthProvider, REFRESH_LEAD_MS, useAuth } from './AuthProvider';
+import { AuthProvider, MIN_REFRESH_INTERVAL_MS, REFRESH_LEAD_MS, useAuth } from './AuthProvider';
 
+it('keeps silent refreshes at least 30 s apart', () => {
+  expect(MIN_REFRESH_INTERVAL_MS).toBe(30_000);
+});
 import { ACCESS_TTL_MS } from '../test/fakeAuthServer';
 import { fakeBrowser } from '../test/fakeFetch';
 import { ApiError, NetworkError, type AuthClient } from './types';
@@ -152,6 +155,36 @@ describe('AuthProvider: silent refresh and expiry', () => {
       release();
       await vi.advanceTimersByTimeAsync(0);
     });
+    expect(screen.getByText(/status:authenticated/)).toBeInTheDocument();
+  });
+
+  it('refreshes at most once every 30 s when the expiry it is given is already past, instead of in a tight loop', async () => {
+    // A device clock ahead of the server's, or Prism's fixed example, gives an accessExpiresAt in the past.
+    const client = fakeBrowser().client;
+    await client.loginStaff(CASHIER);
+    const real = client.refreshSession.bind(client);
+    const stale = '2026-11-13T09:10:00.000Z';
+    const refresh = vi.fn(async () => ({ ...(await real()), accessExpiresAt: stale }));
+    await mount({
+      ...client,
+      getCurrentSession: async () => ({
+        ...(await client.getCurrentSession()),
+        accessExpiresAt: stale,
+      }),
+      refreshSession: refresh,
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10);
+    });
+    expect(refresh).toHaveBeenCalledTimes(1); // the first one is due at once
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(29_000); // fixed figures, so the test does not lean on the constant
+    });
+    expect(refresh).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2000);
+    });
+    expect(refresh).toHaveBeenCalledTimes(2);
     expect(screen.getByText(/status:authenticated/)).toBeInTheDocument();
   });
 });

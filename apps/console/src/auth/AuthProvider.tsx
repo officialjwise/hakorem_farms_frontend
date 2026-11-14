@@ -62,6 +62,12 @@ const AuthContext = createContext<AuthApi | null>(null);
 
 /** Refresh this long before the access token expires. */
 export const REFRESH_LEAD_MS = 60 * 1000;
+/**
+ * Never refresh silently more often than this. A session whose `accessExpiresAt` is already past by this
+ * device's clock (a clock running ahead of the server's, or the mock's fixed example) would otherwise be
+ * refreshed again the moment each refresh lands: hundreds of times a second (ADR 0024).
+ */
+export const MIN_REFRESH_INTERVAL_MS = 30 * 1000;
 const RETRY_AFTER_NETWORK_ERROR_MS = 15 * 1000;
 
 export interface AuthProviderProps {
@@ -85,6 +91,8 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
   const [pending, setPending] = useState<PendingStep>(null);
   const [signedOut, setSignedOut] = useState(false);
   const inFlight = useRef<Promise<SessionInfo> | null>(null);
+  /** When the last refresh succeeded, by `now()`. */
+  const lastRefresh = useRef<number | null>(null);
   const [bootAttempt, setBootAttempt] = useState(0);
 
   const adopt = useCallback((next: SessionInfo) => {
@@ -102,12 +110,17 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
       typeof navigator !== 'undefined' && navigator.locks
         ? navigator.locks.request('hk-session-refresh', run).then((session) => session)
         : run();
-    const shared = locked.finally(() => {
-      inFlight.current = null;
-    });
+    const shared = locked
+      .then((session) => {
+        lastRefresh.current = now();
+        return session;
+      })
+      .finally(() => {
+        inFlight.current = null;
+      });
     inFlight.current = shared;
     return shared;
-  }, [client]);
+  }, [client, now]);
 
   // Boot: is there a session already (a reload keeps the cookies)?
   useEffect(() => {
@@ -162,13 +175,17 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
       }
     };
 
+    /** How long until the floor between refreshes allows another one. */
+    const floor = () =>
+      lastRefresh.current === null ? 0 : lastRefresh.current + MIN_REFRESH_INTERVAL_MS - now();
     const due = Date.parse(session.accessExpiresAt) - REFRESH_LEAD_MS - now();
-    timer = setTimeout(() => void run(), Math.max(due, 0));
+    timer = setTimeout(() => void run(), Math.max(due, floor(), 0));
 
     const onVisible = () => {
       if (
         document.visibilityState === 'visible' &&
-        Date.parse(session.accessExpiresAt) - REFRESH_LEAD_MS <= now()
+        Date.parse(session.accessExpiresAt) - REFRESH_LEAD_MS <= now() &&
+        floor() <= 0
       ) {
         clearTimeout(timer);
         void run();
