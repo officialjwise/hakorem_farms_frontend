@@ -309,6 +309,23 @@ Each was run on its own.
 
 Not re-run after the answers, because nothing they read changed: `test:a11y`, `build-storybook`, `build:storefront` (rebuilt by `test:e2e`) and the token, font, icon and contract checks.
 
+## After the report, second round: the owner's four answers (2026-11-14)
+
+| #   | Answer                                                                                                                                                    | What was done                                                                                                                                                                                                                                                             |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | F4's gate: do not stop dead. Attempt it; if unavailable, record it unmet, carry on with F4, and carry it to F5 as task 1                                  | F4's opening message below says exactly that.                                                                                                                                                                                                                             |
+| 2   | TOTP correct as recorded                                                                                                                                  | Nothing to change.                                                                                                                                                                                                                                                        |
+| 3   | Step-up and `useApiAllPages` approved as built                                                                                                            | Nothing to change.                                                                                                                                                                                                                                                        |
+| 4   | Budgets confirmed (A-F3-17 resolved). Split routes inside the till now: initial load the sale screen alone, everything else lazy; budget the initial load | ADR 0031: every till route but the sale screen is `lazyScreen(...)`, enforced by `routes.test.ts`. `budget:console` reads Vite's manifest and budgets the initial load, reporting on-demand chunks beside it. The rule is in PERFORMANCE_BUDGET "Console".                |
+| —   | Write the `/pos` → `pos.html` hosting rule into the deployment document                                                                                   | New `docs/DEPLOYMENT.md`, with the exact Caddy change and its smoke check. BUILD_PROMPT F13's deploy step now points to it. **The backend's `docs/DEPLOYMENT.md` section 5.1 still says `try_files {path} /index.html` and must change; this repository cannot edit it.** |
+
+Measured after the till's split, initial load gzipped:
+
+- **The till:** 195.8 kB of 250. It was 229.6, and the sign-in screens took the form libraries with them. Another 42.8 kB in 7 chunks loads on demand.
+- **The back office:** 266.1 kB of 300. It was 253.2, because it now counts its boot namespaces and the shared code is in smaller chunks.
+
+**One consequence for F13:** a till that has never opened a lazy route cannot open it offline. The service worker must precache the till's on-demand chunks (`docs/DEPLOYMENT.md` section 2).
+
 ## Opening message for F4
 
 ```text
@@ -316,7 +333,7 @@ Read CLAUDE.md, docs/SHARED_BRIEF.md, and the F4 row of the screen sessions tabl
 docs/BUILD_PROMPT.md (plus its "How to run this prompt" rules at the top). Read
 docs/DATA_CONVENTIONS.md in full. List docs/sessions/ and read only the most recent report
 (F03-auth-users.md, including "After the report"). Do not reopen decisions in docs/adr/
-(0001 to 0030).
+(0001 to 0031).
 
 You are on a branch created off f03-auth-users, or off main if the owner has merged the stack.
 
@@ -324,8 +341,8 @@ Run ./scripts/sync-contract.sh, read ../backend/docs/CONTRACT_CHANGELOG.md for a
 1.1.0, and read the backend's latest session report in ../backend/docs/sessions/ for which
 modules went live and what B3 answered on CR-004, CR-006, CR-007 and CR-008.
 
-TASK 1 (REQUIRED, before any F4 screen): the deferred real-API half of F3's gate.
-The owner accepted the deferral on the condition that it is done first in F4.
+TASK 1 (REQUIRED, first, before any F4 screen): the deferred real-API half of F3's gate.
+A gate is never skipped, and a session is never wasted waiting for one.
 - Point HK_API_BASE_URL at the B3 API. apps/console/src/auth/client.ts is already the real
   client.
 - Sign in through the console against the real API as an owner and as a cashier.
@@ -335,10 +352,11 @@ The owner accepted the deferral on the condition that it is done first in F4.
   origin rule against the real server.
 - Record each result in the F4 report as a check with its outcome. A failure is fixed or
   raised before F4 screens start.
-If B3 has not landed, or the real API cannot be reached, stop: tell the owner, and do not start
-F4 screens until they say how to go on. Do not mark this task skipped and carry on.
+If B3 has not landed, or the real API cannot be reached, attempt it anyway and record what you
+tried: the gate is UNMET, not skipped. Then carry on with F4's own work, and write this task,
+unchanged, as task 1 of F5's opening message.
 
-TASK 2, once task 1 has passed: issue #4, the quarantined session expiry spec. Rewrite it against
+TASK 2, only if task 1 passed: issue #4, the quarantined session expiry spec. Rewrite it against
 the real refresh, run 10 loaded full suites with traces kept, and take it out of quarantine only
 if all are green; otherwise leave it quarantined and update the issue.
 
@@ -351,7 +369,8 @@ Button, Table, StatusBadge, UIProvider and Field are the approved references. A 
 useApiMutation and QueryBoundary; nothing calls fetch. Writes that the contract marks
 "Requires step-up" go through useStepUp (ADR 0029). useApiAllPages is for short reference lists
 only and throws past five pages (ADR 0028). The console is two documents (ADR 0030): back office
-screens go in apps/console/src/app/routes.tsx, and after build:console run budget:console.
+screens go in apps/console/src/app/routes.tsx, and after build:console run budget:console. Every till
+route but the sale screen is lazyScreen(...) (ADR 0031). Hosting rules go in docs/DEPLOYMENT.md.
 
-Confirm in three lines: the phase, its scope, and its gate. Then do task 1, and only then F4.
+Confirm in three lines: the phase, its scope, and its gate. Then do task 1, then F4.
 ```
