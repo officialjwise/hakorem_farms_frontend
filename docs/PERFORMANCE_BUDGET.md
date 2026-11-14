@@ -35,3 +35,7 @@ lhci autorun --config=lighthouse/lighthouserc.json --collect.url=<storefront lis
 - The cedi glyph face is 1.3 KB and downloads only when `GH₵` appears (ADR 0007).
 - UI type is the system font stack, so there are no web fonts (ADR 0001).
 - Components are tree-shakeable named exports. The storefront must import only what a page uses, and server components stay the default (F1).
+
+## First measurement (F1, 2026-11-14)
+
+`next build` of `apps/storefront`, first-load JavaScript, gzipped: **103 kB shared** by every page (React 19 and the Next runtime) and **181 kB** on the home, category and checkout pages, which carry the one `UIProvider` with its Radix toast, tooltip and dialog code and the cart Sheet. That is about 60 kB over the provisional 120 KB script sub-budget (A-F0-06). Nothing is enforced before F13, and a Lighthouse run against a listing page is the real test. Levers, in order: load the cart drawer on first use, split the toast viewport so a page that never toasts does not pay for it, and review what the Radix packages pull in. The 300 KB listing page total is not measured yet.

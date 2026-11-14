@@ -18,7 +18,7 @@ Do not reopen a decision already recorded. If you believe one is wrong, write an
 
 ## The format
 
-Copy `docs/adr/0000-template.md`. File name `docs/adr/NNNN-kebab-title.md`. **The next number is 0011**; check `ls docs/adr` and take the next free one.
+Copy `docs/adr/0000-template.md`. File name `docs/adr/NNNN-kebab-title.md`. **The next number is 0018**; check `ls docs/adr` and take the next free one.
 
 ```md
 # NNNN. Title in the imperative

@@ -19,6 +19,7 @@ One folder per component under `packages/ui/src/components/<kebab-name>/`:
 
 ## Rules
 
+- **`'use client'` first line** on any component or hook file that uses a hook, context or a Radix primitive (ADR 0015). Next's server layer refuses such a module otherwise. Pure components stay without it so server components can use them.
 - **Tokens only** (ADR 0001). No raw hex, no `rgb()`, no Tailwind palette, no opacity modifier (`bg-accent/50`), no arbitrary colour value. Respect the token roles:
   - `text` colours are `text-*` only, `surface` colours are `bg-*`, `line` are `border-*`/`ring-*`, `glyph` are `fill-*`/`stroke-*`.
   - Mark tokens (`good`, `warning`, `critical`, `info`, `violet`, `plum`, `clay`, `slate`) are lines and glyphs only. Text is `critical-fg`, a tint is `critical-subtle`, a solid fill is `critical-strong` with `critical-on`.

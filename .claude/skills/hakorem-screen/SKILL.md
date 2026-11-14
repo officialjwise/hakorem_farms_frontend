@@ -37,7 +37,7 @@ Every screen ships all four. A screen with only a happy path is not finished.
 
 1. Walk the keyboard path through the primary flow, then run axe (`pnpm test:a11y`).
 2. Check the screen at **360 px** wide in both themes and both densities.
-3. Add a Playwright spec for each primary flow (Playwright arrives in F1/F2; until then record the flow in the session report).
+3. Add a Playwright spec for each primary flow in `e2e/specs/<app>/` (Chromium, 360 px, axe on the route; see ADR 0017). A route declares its permission in `handle` (console, ADR 0016).
 4. Write the session report lines the other track needs: which screens moved from the mock to the real API, and what you added to `docs/CONTRACT_REQUESTS.md`.
 
 ## Correct
