@@ -31,6 +31,8 @@ jobs:
         run: pnpm fonts:check
       - name: Console icons and manifest are up to date
         run: pnpm icons:check
+      - name: Generated API client matches the committed contract
+        run: pnpm sync-contract:check
       - name: Lint (ESLint, Stylelint, token roles)
         run: pnpm lint
       - name: Format
