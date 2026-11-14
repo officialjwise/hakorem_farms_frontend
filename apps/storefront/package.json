@@ -11,8 +11,11 @@
     "test:unit": "vitest run"
   },
   "dependencies": {
+    "@hakorem/api-client": "workspace:*",
+    "@hakorem/data": "workspace:*",
     "@hakorem/i18n": "workspace:*",
     "@hakorem/ui": "workspace:*",
+    "@tanstack/react-query": "5.105.0",
     "lucide-react": "1.64.0",
     "next": "15.5.28",
     "react": "19.3.1",

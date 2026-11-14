@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useMatches } from 'react-router';
 import { UIProvider, type ThemePreference } from '@hakorem/ui';
+import { DataProvider } from '../data/DataProvider';
 import { isRouteHandle } from '../routing/handle';
 
 /**
@@ -27,16 +28,18 @@ export function RootLayout() {
   }, [theme]);
 
   return (
-    <UIProvider
-      theme={theme}
-      density="compact"
-      toastLabels={{
-        region: t('toast.region'),
-        announcement: t('toast.announcement'),
-        close: t('toast.close'),
-      }}
-    >
-      <Outlet />
-    </UIProvider>
+    <DataProvider>
+      <UIProvider
+        theme={theme}
+        density="compact"
+        toastLabels={{
+          region: t('toast.region'),
+          announcement: t('toast.announcement'),
+          close: t('toast.close'),
+        }}
+      >
+        <Outlet />
+      </UIProvider>
+    </DataProvider>
   );
 }

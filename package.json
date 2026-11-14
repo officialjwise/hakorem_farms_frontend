@@ -15,6 +15,7 @@
     "lint": "eslint . --max-warnings 0 && stylelint \"**/*.css\" --max-warnings 0",
     "typecheck": "pnpm -r typecheck",
     "test:unit": "pnpm -r test:unit",
+    "test:integration": "pnpm --filter @hakorem/console test:integration",
     "test:a11y": "pnpm --filter @hakorem/ui test:stories",
     "storybook": "pnpm --filter @hakorem/ui storybook",
     "build-storybook": "pnpm --filter @hakorem/ui build-storybook",

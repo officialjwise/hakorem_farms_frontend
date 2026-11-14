@@ -45,6 +45,13 @@ export interface AuthApi {
   requestPasswordReset: (identifier: string) => Promise<void>;
   resetPassword: (token: string, newPassword: string) => Promise<void>;
   logout: () => Promise<void>;
+  /**
+   * Refresh the session now, through the same one-at-a-time path as the silent timer. The data layer calls
+   * it when any request gets a 401 (ADR 0021), so the timer and a 401 never run two refreshes.
+   */
+  refreshSession: () => Promise<void>;
+  /** End the session in the UI: the server refused a refresh. Shows the session expiry screen. */
+  expire: () => void;
   /** Re-run the boot check after an `error`. */
   retry: () => void;
   /** Drop a pending sign-in step and go back to the first screen. */
@@ -114,7 +121,12 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
             adoptIf(live, await refresh());
           } catch (refreshError) {
             if (!live) return;
-            setStatus(refreshError instanceof ApiError ? 'anonymous' : 'error');
+            // A NetworkError is an ApiError with status 0: no answer is not the same as a refused session.
+            setStatus(
+              refreshError instanceof ApiError && !(refreshError instanceof NetworkError)
+                ? 'anonymous'
+                : 'error',
+            );
           }
         } else if (live) {
           setStatus('error');
@@ -222,6 +234,16 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
     }
   }, [client]);
 
+  const refreshSession = useCallback(async () => {
+    adopt(await refresh());
+  }, [refresh, adopt]);
+
+  const expire = useCallback(() => {
+    setSession(null);
+    setPending(null);
+    setStatus('expired');
+  }, []);
+
   const api = useMemo<AuthApi>(
     () => ({
       status,
@@ -235,13 +257,27 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
       requestPasswordReset: (identifier) => client.requestPasswordReset({ identifier }),
       resetPassword: (token, newPassword) => client.resetPassword({ token, newPassword }),
       logout,
+      refreshSession,
+      expire,
       retry: () => {
         setStatus('loading');
         setBootAttempt((n) => n + 1);
       },
       cancelPending: () => setPending(null),
     }),
-    [status, session, pending, signedOut, login, verifyTotp, changePassword, logout, client],
+    [
+      status,
+      session,
+      pending,
+      signedOut,
+      login,
+      verifyTotp,
+      changePassword,
+      logout,
+      refreshSession,
+      expire,
+      client,
+    ],
   );
 
   return <AuthContext.Provider value={api}>{children}</AuthContext.Provider>;

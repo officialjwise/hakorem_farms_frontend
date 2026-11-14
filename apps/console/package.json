@@ -10,12 +10,16 @@
     "icons": "tsx scripts/build-icons.ts",
     "icons:check": "tsx scripts/build-icons.ts --check",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
+    "@hakorem/api-client": "workspace:*",
+    "@hakorem/data": "workspace:*",
     "@hakorem/i18n": "workspace:*",
     "@hakorem/ui": "workspace:*",
     "@hookform/resolvers": "6.0.2",
+    "@tanstack/react-query": "5.105.0",
     "i18next": "26.5.11",
     "lucide-react": "1.64.0",
     "react": "19.3.1",
