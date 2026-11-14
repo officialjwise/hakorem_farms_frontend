@@ -49,36 +49,45 @@ for (const scheme of ['light', 'dark'] as const) {
       await expectNoHorizontalScroll(page);
     });
 
-    test('back office: every route, the open menu, denied and not found', async ({ page }) => {
-      await signIn(page, USERS.cashier);
-      await page.getByRole('heading', { name: 'Dashboard' }).waitFor();
-      for (const path of ['/', '/stock', '/products', '/orders', '/users', '/audit', '/nowhere']) {
+    // One test per route, so each has its own time budget (seven in one test ran out of time under load).
+    for (const path of ['/', '/stock', '/products', '/orders', '/users', '/audit', '/nowhere']) {
+      test(`back office route ${path}, as the cashier (including denied and not found)`, async ({
+        page,
+      }) => {
+        await signIn(page, USERS.cashier);
+        await page.getByRole('heading', { name: 'Dashboard' }).waitFor();
         await page.goto(path);
         await page.getByRole('main').or(page.getByRole('alert')).first().waitFor();
         await expectNoAxeViolations(page);
         await expectNoHorizontalScroll(page);
-      }
-      await page.goto('/');
+      });
+    }
+
+    test('back office: the open menu', async ({ page }) => {
+      await signIn(page, USERS.cashier);
+      await page.getByRole('heading', { name: 'Dashboard' }).waitFor();
       await page.getByRole('button', { name: 'Menu' }).click();
       await page.getByRole('dialog').waitFor();
       await expectNoAxeViolations(page);
     });
 
-    test('F3 screens, as the owner, with their data from the mock', async ({ page }) => {
-      await signInWithTotp(page, USERS.owner);
-      await page.getByRole('heading', { name: 'Dashboard' }).waitFor();
-      const any = '019a7a86-3046-711a-a652-1a7389f79351';
-      for (const path of [
-        '/users',
-        '/users/new',
-        `/users/${any}`,
-        '/roles',
-        `/roles/${any}`,
-        '/roles/new',
-        '/sessions',
-        '/audit',
-        `/audit/${any}`,
-      ]) {
+    // One test per F3 screen, so each page load and axe pass has its own budget. Nine in one test ran past
+    // the 30 s timeout under a loaded full run.
+    const any = '019a7a86-3046-711a-a652-1a7389f79351';
+    for (const path of [
+      '/users',
+      '/users/new',
+      `/users/${any}`,
+      '/roles',
+      `/roles/${any}`,
+      '/roles/new',
+      '/sessions',
+      '/audit',
+      `/audit/${any}`,
+    ]) {
+      test(`F3 screen ${path}, as the owner, with its data from the mock`, async ({ page }) => {
+        await signInWithTotp(page, USERS.owner);
+        await page.getByRole('heading', { name: 'Dashboard' }).waitFor();
         await page.goto(path);
         await page.getByRole('heading', { level: 1 }).waitFor();
         // Wait for the data, not the placeholder: no loading status left.
@@ -88,8 +97,8 @@ for (const scheme of ['light', 'dark'] as const) {
           .waitFor({ state: 'detached' });
         await expectNoAxeViolations(page);
         await expectNoHorizontalScroll(page);
-      }
-    });
+      });
+    }
 
     test('POS: the shell, the open dialog and the offline state', async ({ page, context }) => {
       await signIn(page, USERS.cashier, '/pos');

@@ -53,30 +53,31 @@ for (const scheme of ['light', 'dark'] as const) {
   test.describe(`a wrong role meets words, not a broken page (${scheme})`, () => {
     test.use({ colorScheme: scheme });
 
-    test('(a) a cashier opening each F3 address directly is denied by the route, in words, on the same URL', async ({
-      page,
-      api,
-    }) => {
-      const errors = watchForErrors(page);
-      await signIn(page, USERS.cashier);
-      await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
-      for (const { path, permission } of CASHIER_DENIED) {
+    // One test per address, so each has its own time budget (nine in one test ran out of time under load).
+    for (const { path, permission } of CASHIER_DENIED) {
+      test(`(a) a cashier opening ${path} directly is denied by the route, in words, on the same URL`, async ({
+        page,
+        api,
+      }) => {
+        const errors = watchForErrors(page);
+        await signIn(page, USERS.cashier);
+        await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
         await page.goto(path);
         const alert = page.getByRole('alert');
-        await expect(alert, path).toContainText('You do not have access to this page');
-        await expect(alert, path).toContainText(permission);
-        await expect(page, path).toHaveURL(path);
+        await expect(alert).toContainText('You do not have access to this page');
+        await expect(alert).toContainText(permission);
+        await expect(page).toHaveURL(path);
         // Not blank, not stranded: the shell is there, and a way out.
         await expect(page.getByRole('link', { name: 'Go to the start page' })).toBeVisible();
         await expect(page.getByRole('banner')).toBeVisible();
         await expectNoAxeViolations(page);
         await expectNoHorizontalScroll(page);
-      }
-      // The route answered without asking the server for anything it would refuse.
-      const asked = api.log.filter((entry) => entry.operationId !== null);
-      expect(asked.map((entry) => entry.operationId)).toEqual([]);
-      expect(errors).toEqual([]);
-    });
+        // The route answered without asking the server for anything it would refuse.
+        const asked = api.log.filter((entry) => entry.operationId !== null);
+        expect(asked.map((entry) => entry.operationId)).toEqual([]);
+        expect(errors).toEqual([]);
+      });
+    }
 
     test('(b) a manager may read a user but not their grants: that section is denied by the server, the rest works', async ({
       page,
