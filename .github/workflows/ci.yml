@@ -53,6 +53,8 @@ jobs:
         run: pnpm build:console
         env:
           HK_API_BASE_URL: /mock
+      - name: Console bundle budget, per document (ADR 0030, PERFORMANCE_BUDGET.md)
+        run: pnpm budget:console
       - name: Build the storefront (Next.js)
         run: pnpm build:storefront
       - name: End to end at 360 px, with axe (Playwright)
