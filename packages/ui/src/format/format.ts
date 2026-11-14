@@ -100,21 +100,31 @@ export function formatWeight(
   return `${sign}${groupThousands(whole)}.${fraction} kg`;
 }
 
+/** How many decimal places a unit of measure shows: zero for countable units, up to three for weight and volume. */
+export type QuantityPlaces = 0 | 1 | 2 | 3;
+
 /**
  * A stock quantity (the contract's `Quantity` or `SignedQuantity`) to text.
  * The unit of measure is not part of the number: the caller shows it beside
- * it. ADR 0007 is silent on quantities, so this keeps exactly the API's three
- * places, never trimming or rounding, so no information is lost.
+ * it.
  *
- * | context     | "1250.5"     |
- * | ----------- | ------------ |
- * | `interface` | `1,250.500`  |
- * | `document`  | `1,250.500`  |
- * | `export`    | `1250.500`   |
+ * Display precision follows the unit, not the wire format (owner decision
+ * 2026-11-14, ADR 0007). `places` is the precision the unit declares: zero for
+ * countable units (head, crates, tubers, packs) and three for weight and
+ * volume. One guard: a value with a non-zero digit beyond `places` shows its
+ * digits, up to the last non-zero one, so the display never lies about a half
+ * crate. Nothing is rounded.
+ *
+ * | quantity   | places | `interface`  | `export`    |
+ * | ---------- | ------ | ------------ | ----------- |
+ * | `"3.000"`  | 0      | `3`          | `3`         |
+ * | `"2.500"`  | 0      | `2.5`        | `2.5`       |
+ * | `"1250.5"` | 3      | `1,250.500`  | `1250.500`  |
+ * | `"2.050"`  | 1      | `2.05`       | `2.05`      |
  */
 export function formatQuantity(
   quantity: string | null,
-  { context = 'interface' }: { context?: FormatContext } = {},
+  { context = 'interface', places }: { context?: FormatContext; places: QuantityPlaces },
 ): string {
   if (quantity === null) return emptyFor(context);
   const match = WEIGHT.exec(quantity);
@@ -125,10 +135,11 @@ export function formatQuantity(
   }
   const [, minus = '', intDigits = '0', fracDigits = ''] = match;
   const whole = BigInt(intDigits).toString();
-  const fraction = fracDigits.padEnd(3, '0');
+  const lastSignificant = fracDigits.replace(/0+$/, '').length;
+  const shown = Math.max(places, lastSignificant);
+  const fraction = fracDigits.padEnd(3, '0').slice(0, shown);
   const zero = /^0+$/.test(intDigits + fracDigits);
   const sign = minus && !zero ? MINUS : '';
-  return context === 'export'
-    ? `${sign}${whole}.${fraction}`
-    : `${sign}${groupThousands(whole)}.${fraction}`;
+  const grouped = context === 'export' ? whole : groupThousands(whole);
+  return fraction === '' ? `${sign}${grouped}` : `${sign}${grouped}.${fraction}`;
 }

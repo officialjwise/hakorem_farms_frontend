@@ -128,36 +128,71 @@ describe('formatWeight', () => {
 
 describe('formatQuantity', () => {
   it.each([
-    ['0.000', '0.000'],
-    ['3.000', '3.000'],
-    ['3', '3.000'],
-    ['3.5', '3.500'],
-    ['1250.5', '1,250.500'],
-    ['99999999999.999', '99,999,999,999.999'],
-    ['-2.000', '-2.000'],
-  ])('%s is %s in the interface and on documents', (input, expected) => {
-    expect(formatQuantity(input)).toBe(expected);
-    expect(formatQuantity(input, { context: 'document' })).toBe(expected);
+    // [input, places, shown]
+    ['3.000', 0, '3'],
+    ['0.000', 0, '0'],
+    ['-2.000', 0, '-2'],
+    ['1250.000', 0, '1,250'],
+    ['12500.000', 0, '12,500'],
+    ['99999999999.000', 0, '99,999,999,999'],
+    ['3', 0, '3'],
+    ['3.000', 3, '3.000'],
+    ['3.5', 3, '3.500'],
+    ['1250.5', 3, '1,250.500'],
+    ['99999999999.999', 3, '99,999,999,999.999'],
+    ['0.000', 3, '0.000'],
+    ['-2.000', 3, '-2.000'],
+    ['3.000', 2, '3.00'],
+    ['3.000', 1, '3.0'],
+  ] as const)('%s at %i places is %s', (input, places, expected) => {
+    expect(formatQuantity(input, { places })).toBe(expected);
+    expect(formatQuantity(input, { context: 'document', places })).toBe(expected);
   });
 
-  it('has no separator in exports', () => {
-    expect(formatQuantity('1250.5', { context: 'export' })).toBe('1250.500');
-    expect(formatQuantity('-1250.5', { context: 'export' })).toBe('-1250.500');
+  describe('the guard: digits beyond the declared precision are shown, never hidden', () => {
+    it.each([
+      // A half crate is shown as a half crate.
+      ['2.500', 0, '2.5'],
+      ['0.500', 0, '0.5'],
+      ['2.050', 0, '2.05'],
+      ['2.005', 0, '2.005'],
+      ['2.250', 0, '2.25'],
+      ['-0.500', 0, '-0.5'],
+      ['1250.500', 0, '1,250.5'],
+      ['2.500', 1, '2.5'],
+      ['2.250', 1, '2.25'],
+      ['2.250', 2, '2.25'],
+      ['2.005', 2, '2.005'],
+    ] as const)('%s at %i places is %s', (input, places, expected) => {
+      expect(formatQuantity(input, { places })).toBe(expected);
+    });
+
+    it('never rounds: 2.999 at 0 places is 2.999, not 3', () => {
+      expect(formatQuantity('2.999', { places: 0 })).toBe('2.999');
+    });
+  });
+
+  it('has no separator in exports, and follows the same precision', () => {
+    expect(formatQuantity('1250.500', { context: 'export', places: 3 })).toBe('1250.500');
+    expect(formatQuantity('-1250.5', { context: 'export', places: 3 })).toBe('-1250.500');
+    expect(formatQuantity('1250.000', { context: 'export', places: 0 })).toBe('1250');
+    expect(formatQuantity('1250.500', { context: 'export', places: 0 })).toBe('1250.5');
   });
 
   it('never shows a minus on zero', () => {
-    expect(formatQuantity('-0.000')).toBe('0.000');
+    expect(formatQuantity('-0.000', { places: 0 })).toBe('0');
+    expect(formatQuantity('-0.000', { places: 3 })).toBe('0.000');
   });
 
   it('renders null as an en dash, or an empty export cell', () => {
-    expect(formatQuantity(null)).toBe(NOT_APPLICABLE);
-    expect(formatQuantity(null, { context: 'export' })).toBe('');
+    expect(formatQuantity(null, { places: 0 })).toBe(NOT_APPLICABLE);
+    expect(formatQuantity(null, { context: 'export', places: 0 })).toBe('');
   });
 
   it.each(['1.2345', '1,5', 'abc', '', '1e3', ' 1.000'])(
     'refuses "%s" rather than rounding',
     (bad) => {
-      expect(() => formatQuantity(bad)).toThrow(TypeError);
+      expect(() => formatQuantity(bad, { places: 0 })).toThrow(TypeError);
     },
   );
 });

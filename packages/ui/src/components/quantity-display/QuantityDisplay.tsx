@@ -1,5 +1,5 @@
 import { cn } from '../../lib/cn';
-import { NOT_APPLICABLE, formatQuantity } from '../../format/format';
+import { NOT_APPLICABLE, formatQuantity, type QuantityPlaces } from '../../format/format';
 
 /** Rejects an empty string literal at compile time. Dynamic blank strings are rejected at render. */
 type NonEmpty<T extends string> = T extends '' ? never : T;
@@ -13,18 +13,27 @@ type NullProps =
 export type QuantityDisplayProps<U extends string = string> = NullProps & {
   /** Required. The unit of measure, already translated, for example "head" or "crates". */
   unit: NonEmpty<U>;
+  /**
+   * Required. The display precision the unit of measure declares: 0 for
+   * countable units (head, crates, tubers, packs), 3 for weight and volume.
+   * It comes from the unit, never from the wire format. A value with a
+   * non-zero digit beyond it still shows that digit.
+   */
+  places: QuantityPlaces;
   context?: QuantityDisplayContext;
   strong?: boolean;
   className?: string;
 };
 
 /**
- * QuantityDisplay. The contract's Quantity string and its unit, for example
- * `3.000 head`. Keeps the API's three places exactly (see `formatQuantity`).
+ * QuantityDisplay. The contract's Quantity string and its unit, at the
+ * precision the unit declares: `3 head`, `1,250.500 kg`. A half crate always
+ * shows as `2.5 crates` (see `formatQuantity`).
  */
 export function QuantityDisplay<U extends string>({
   quantity,
   unit,
+  places,
   notApplicableLabel,
   context = 'interface',
   strong = false,
@@ -47,7 +56,7 @@ export function QuantityDisplay<U extends string>({
   }
   return (
     <span data-slot="quantity-display" className={base}>
-      {formatQuantity(quantity, { context })} {unit}
+      {formatQuantity(quantity, { context, places })} {unit}
     </span>
   );
 }

@@ -50,6 +50,7 @@ export {
   NOT_APPLICABLE,
   formatMoney,
   formatQuantity,
+  type QuantityPlaces,
   formatWeight,
   type FormatContext,
 } from './format/format';
