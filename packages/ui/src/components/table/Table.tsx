@@ -1,3 +1,5 @@
+'use client';
+
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
 import { createContext, useContext, type ComponentPropsWithRef, type ReactNode } from 'react';
 import { cn } from '../../lib/cn';

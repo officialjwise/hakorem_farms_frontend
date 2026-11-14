@@ -1,0 +1,90 @@
+{
+  "app": {
+    "name": "HaKorem Farms",
+    "console": "HaKorem Farms console",
+    "skipToContent": "Skip to main content"
+  },
+  "toast": {
+    "region": "Notifications ({hotkey})",
+    "announcement": "Notification",
+    "close": "Dismiss notification"
+  },
+  "boundary": {
+    "title": "Something went wrong",
+    "body": "This page stopped working. Nothing you entered has been lost on the server. Reload to try again.",
+    "reload": "Reload the page",
+    "reference": "Reference"
+  },
+  "denied": {
+    "title": "You do not have access to this page",
+    "body": "Your role does not include the permission this page needs. Ask the owner or a manager to grant it.",
+    "permission": "Permission needed",
+    "home": "Go to the start page"
+  },
+  "notFound": {
+    "title": "This page does not exist",
+    "body": "The address may be wrong, or the page may have moved.",
+    "home": "Go to the start page"
+  },
+  "session": {
+    "checking": "Checking your session",
+    "error": "We could not check your session",
+    "errorBody": "The connection may be down. Try again.",
+    "retry": "Try again"
+  },
+  "backOffice": {
+    "navLabel": "Main navigation",
+    "menu": "Menu",
+    "closeMenu": "Close menu",
+    "breadcrumb": "Breadcrumb",
+    "home": "Home",
+    "signedInAs": "Signed in as {{name}}",
+    "signOut": "Sign out",
+    "openPos": "Open the point of sale",
+    "mainLabel": "Page content"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "stock": "Stock",
+    "products": "Products",
+    "orders": "Orders",
+    "users": "Users and roles",
+    "pos": "Point of sale"
+  },
+  "placeholder": {
+    "title": "This area is built in a later session",
+    "body": "The navigation, permission check and layout work. The screens for {{area}} arrive with their own session.",
+    "area": {
+      "dashboard": "the owner dashboard",
+      "stock": "stock",
+      "products": "products",
+      "orders": "orders",
+      "users": "users and roles"
+    }
+  },
+  "pos": {
+    "title": "Point of sale",
+    "barcode": "Barcode",
+    "barcodeHint": "Scan an item. Typing anywhere on this screen lands here.",
+    "barcodeSubmit": "Add item",
+    "scanned": "Last scan: {{code}}",
+    "scannedNone": "Nothing scanned yet",
+    "signOut": "Sign out",
+    "backOffice": "Back office",
+    "lastScanLabel": "Last scan",
+    "signOutTitle": "Sign out of the point of sale?",
+    "signOutBody": "Sales kept on this device stay here until they are sent.",
+    "signOutConfirm": "Sign out",
+    "cancel": "Stay signed in",
+    "close": "Close",
+    "empty": {
+      "title": "No sale in progress",
+      "body": "Scan an item to start a sale. Selling arrives in a later session."
+    }
+  },
+  "offline": {
+    "online": "Online",
+    "offline": "Offline",
+    "offlineBody": "No connection. Sales are kept on this device and sent when the connection returns."
+  }
+}

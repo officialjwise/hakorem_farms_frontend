@@ -8,14 +8,15 @@ Read this file, `docs/SHARED_BRIEF.md`, your session's section of `docs/BUILD_PR
 
 ## Which surface is which
 
-| Path                  | What it is                                                                                           |
-| --------------------- | ---------------------------------------------------------------------------------------------------- |
-| `packages/ui`         | The design system: tokens, components, formatters, forms, Storybook. Built (F0).                     |
-| `packages/i18n`       | react-i18next catalogue, one namespace per feature. Apps call `t()`; `packages/ui` never does.       |
-| `apps/storefront`     | Public shop, Next.js, server rendered, built for 3G. Not built yet (F1).                             |
-| `apps/console`        | Installable PWA with two shells: back office (dense tables) and POS (offline first). Not built (F1). |
-| `contract/`           | A synced copy of the backend's OpenAPI contract. Never hand-edited.                                  |
-| `tooling/lint-tokens` | The `hakorem/token-usage` lint rule.                                                                 |
+| Path                  | What it is                                                                                          |
+| --------------------- | --------------------------------------------------------------------------------------------------- |
+| `packages/ui`         | The design system: tokens, components, formatters, forms, Storybook. Built (F0).                    |
+| `packages/i18n`       | react-i18next catalogue, one namespace per feature. Apps call `t()`; `packages/ui` never does.      |
+| `apps/storefront`     | Public shop, Next.js 15, server rendered, built for 3G. Shell built (F1); catalogue screens are F7. |
+| `apps/console`        | Installable PWA, Vite: back office and POS shells, auth against a stub (F1); screens from F3.       |
+| `e2e/`                | Playwright and axe specs, Chromium, 360 px, against production builds.                              |
+| `contract/`           | A synced copy of the backend's OpenAPI contract. Never hand-edited.                                 |
+| `tooling/lint-tokens` | The `hakorem/token-usage` lint rule.                                                                |
 
 ## The contract rule
 
@@ -35,9 +36,13 @@ pnpm test:a11y         # every story in Chromium with axe, WCAG 2.2 AA
 pnpm storybook         # port 6006
 pnpm build-storybook
 pnpm format:check
+pnpm dev:storefront    # Next.js on port 3000
+pnpm dev:console       # Vite on port 5173
+pnpm test:e2e          # builds both apps, then Playwright with axe
+pnpm icons:check       # fails if the console icons or manifest are stale
 ```
 
-Arrive later, named in `docs/BUILD_PROMPT.md`: `pnpm dev:mock`, `dev:storefront`, `dev:console`, `sync-contract`, `test:integration`, `test:e2e`, `test:e2e:staging` and `lighthouse` (F1, F2 and F13).
+Arrive later, named in `docs/BUILD_PROMPT.md`: `pnpm dev:mock`, `sync-contract`, `test:integration` (F2), `test:e2e:staging` and `lighthouse` (F13).
 
 ## Skills (`.claude/skills/`)
 

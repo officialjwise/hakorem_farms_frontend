@@ -9,7 +9,8 @@ Read `docs/SHARED_BRIEF.md` (hard constraint 9, "Integrity and reliability", the
 
 ## What exists today, and what does not
 
-- **Not built yet:** the IndexedDB queue, the service worker, the offline indicator, the POS shell, the local cart total. These arrive in **F1** (shell and offline indicator, the barcode focus trap), **F9** (queue, sale, shift, sync) and **F13** (service worker strategy, the fifty-transaction test). Do not describe or import them before then.
+- **Built in F1:** the POS shell (`apps/console/src/shells/PosShell.tsx`), the barcode focus trap (`pos/useBarcodeTrap.ts`, ADR 0014, proved with a real Dialog in `e2e/specs/console/pos-barcode-dialog.spec.ts`), and the offline indicator. The service worker is a minimal no-cache stub (ADR 0013).
+- **Not built yet:** the IndexedDB queue, the local cart total, the sale screens (**F9**), and the service worker strategy and the fifty-transaction test (**F13**). Do not describe or import them before then.
 - Available now in `packages/ui`: the touch-sized `lg` Button, `Dialog` for confirmations, `useToast`, `ErrorState`, `StatusBadge`, and the compact density the POS runs in.
 
 ## Rules (they hold from the first POS line)
@@ -22,7 +23,7 @@ Read `docs/SHARED_BRIEF.md` (hard constraint 9, "Integrity and reliability", the
 6. **Money paths confirm first.** Any write to money or stock shows the exact amounts in a `Dialog` before it is queued, because an accidental tap at a busy counter is the realistic failure.
 7. **A failed or queued sale stays visible.** A queued sale shows as queued (`StatusBadge` with icon and words), and a failed sync leaves persistent on-screen text. A toast is never the only record (ADR 0006).
 8. **Defaults:** compact density, light theme (A-F0-03), large touch targets, keyboard first. A Tooltip never carries information on touch (ADR 0004).
-9. **Focus.** The barcode field must keep receiving scans. Radix owns the Dialog focus trap and focus return; the real POS focus trap is built in F1, and its Dialog story is a required F1 story (ADR 0004). Never build a stand-in.
+9. **Focus.** The barcode field must keep receiving scans. Radix owns the Dialog focus trap and focus return; the real POS focus trap is `useBarcodeTrap` (ADR 0014); it acts after Radix and never overrides it. Never build a stand-in.
 
 ## The test that matters
 

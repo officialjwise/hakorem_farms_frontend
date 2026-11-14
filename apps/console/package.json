@@ -1,0 +1,42 @@
+{
+  "name": "@hakorem/console",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5173",
+    "build": "tsc --noEmit -p tsconfig.json && vite build",
+    "preview": "vite preview --port 4173 --strictPort",
+    "icons": "tsx scripts/build-icons.ts",
+    "icons:check": "tsx scripts/build-icons.ts --check",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:unit": "vitest run"
+  },
+  "dependencies": {
+    "@hakorem/i18n": "workspace:*",
+    "@hakorem/ui": "workspace:*",
+    "@hookform/resolvers": "6.0.2",
+    "i18next": "26.5.11",
+    "lucide-react": "1.64.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-hook-form": "7.91.0",
+    "react-i18next": "17.1.9",
+    "react-router": "7.18.5",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.8",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "jsdom": "30.1.3",
+    "tailwindcss": "4.3.3",
+    "tsx": "4.23.15",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}

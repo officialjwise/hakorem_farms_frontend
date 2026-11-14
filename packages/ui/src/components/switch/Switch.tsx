@@ -1,3 +1,5 @@
+'use client';
+
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 import { Check } from 'lucide-react';
 import type { ComponentPropsWithRef } from 'react';

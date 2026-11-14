@@ -15,7 +15,7 @@ concurrency:
 jobs:
   checks:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -29,6 +29,8 @@ jobs:
         run: pnpm tokens:check
       - name: Cedi glyph face is up to date
         run: pnpm fonts:check
+      - name: Console icons and manifest are up to date
+        run: pnpm icons:check
       - name: Lint (ESLint, Stylelint, token roles)
         run: pnpm lint
       - name: Format
@@ -43,3 +45,9 @@ jobs:
         run: pnpm test:a11y
       - name: Build Storybook
         run: pnpm build-storybook
+      - name: Build the console (typecheck, then Vite)
+        run: pnpm build:console
+      - name: Build the storefront (Next.js)
+        run: pnpm build:storefront
+      - name: End to end at 360 px, with axe (Playwright)
+        run: pnpm --filter @hakorem/e2e test

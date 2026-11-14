@@ -2,6 +2,7 @@ packages:
   - apps/*
   - packages/*
   - tooling/*
+  - e2e
 
 # Supply chain: never resolve a version younger than two weeks (minutes), and
 # only run install scripts for packages explicitly allowed here.

@@ -1,3 +1,5 @@
+'use client';
+
 import * as ToastPrimitive from '@radix-ui/react-toast';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import {

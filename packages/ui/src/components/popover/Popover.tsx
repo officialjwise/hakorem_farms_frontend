@@ -1,3 +1,5 @@
+'use client';
+
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import type { ReactElement, ReactNode } from 'react';
 import { cn } from '../../lib/cn';

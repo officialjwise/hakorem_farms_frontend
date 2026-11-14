@@ -12,7 +12,7 @@ export async function keys() {
   const missing = i18n.t('field.requird');
 
   // @ts-expect-error a namespace that does not exist
-  await createI18n({ namespaces: ['storefront'] });
+  await createI18n({ namespaces: ['checkout'] });
 
   return [ok, missing];
 }

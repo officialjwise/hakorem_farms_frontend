@@ -1,3 +1,5 @@
+'use client';
+
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import type { VariantProps } from 'class-variance-authority';
 import { Check, ChevronDown } from 'lucide-react';

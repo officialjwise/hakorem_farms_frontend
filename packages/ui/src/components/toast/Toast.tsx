@@ -1,3 +1,5 @@
+'use client';
+
 import * as ToastPrimitive from '@radix-ui/react-toast';
 import { CircleAlert, CircleCheck, Info, TriangleAlert, X } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';

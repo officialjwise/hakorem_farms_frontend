@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, type ChangeEvent, type ComponentPropsWithRef } from 'react';
 import { formatWeight } from '../../format/format';
 import { AffixInput } from '../affix-input/AffixInput';

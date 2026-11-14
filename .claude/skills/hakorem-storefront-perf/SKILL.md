@@ -10,7 +10,8 @@ The storefront opens on cheap Android phones over 3G. Read `docs/PERFORMANCE_BUD
 ## What exists today
 
 - The budget is **recorded, not enforced**: `lighthouse/budget.json`, `lighthouse/lighthouserc.json` and `docs/PERFORMANCE_BUDGET.md`, plus a unit test that keeps them equal to the brief.
-- **Not built yet:** `apps/storefront` (F1), `@lhci/cli` and the `pnpm lighthouse` script (F13).
+- **Built (F1):** `apps/storefront`, with server components by default, `getT()` for server side translation and the theme cookie (ADR 0015). First measurement: 103 kB shared, 181 kB on pages with the cart drawer, over the 120 KB sub-budget (`docs/PERFORMANCE_BUDGET.md`).
+- **Not built yet:** `@lhci/cli` and the `pnpm lighthouse` script (F13).
 
 ## The budget
 

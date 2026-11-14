@@ -4,3 +4,5 @@ docs/BUILD_PROMPT.md
 **/generated/**
 storybook-static
 contract/
+**/next-env.d.ts
+.next
