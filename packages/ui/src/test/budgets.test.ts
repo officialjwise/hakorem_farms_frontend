@@ -31,6 +31,7 @@ const INTERACTIVE = [
   'toast',
   'tabs',
   'pagination',
+  'query-boundary',
   'card',
   'table',
 ] as const;

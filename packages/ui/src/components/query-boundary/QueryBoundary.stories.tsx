@@ -120,3 +120,21 @@ export const DeniedBySession: Story = {
   parameters: { matrix: true },
   args: { denied: true, query: pending },
 };
+
+/** The retry button is reached with Tab and activated with Enter, then with Space. */
+export const KeyboardPath: Story = {
+  args: {
+    query: failed(
+      failure(500, 'INTERNAL', 'Something went wrong on our side.', '019a7b1e-32bc-78e3'),
+    ),
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.tab();
+    await expect(canvas.getByRole('button', { name: 'Try again' })).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await expect(args.query.refetch).toHaveBeenCalledTimes(1);
+    await userEvent.keyboard(' ');
+    await expect(args.query.refetch).toHaveBeenCalledTimes(2);
+  },
+};
