@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '../../support/test';
 import { signIn, USERS } from '../../support/helpers';
 
 /**
@@ -169,18 +169,16 @@ test.describe('POS shell chrome', () => {
     expect(overflow).toBeLessThanOrEqual(0);
   });
 
-  test('the POS shell defaults to the light theme even on a dark device', async ({ browser }) => {
-    const context = await browser.newContext({
-      colorScheme: 'dark',
-      viewport: { width: 360, height: 740 },
-      baseURL: 'http://localhost:4173',
+  test.describe('on a device set to dark', () => {
+    // The default context, so the fake API (ADR 0026) is installed on it as on every other test.
+    test.use({ colorScheme: 'dark' });
+
+    test('the POS shell defaults to the light theme even on a dark device', async ({ page }) => {
+      await signIn(page, USERS.cashier, '/pos');
+      await expect(page.getByRole('heading', { name: 'Point of sale' })).toBeVisible();
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+      await page.goto('/');
+      await expect(page.locator('html')).not.toHaveAttribute('data-theme', /.+/);
     });
-    const page = await context.newPage();
-    await signIn(page, USERS.cashier, '/pos');
-    await expect(page.getByRole('heading', { name: 'Point of sale' })).toBeVisible();
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-    await page.goto('/');
-    await expect(page.locator('html')).not.toHaveAttribute('data-theme', /.+/);
-    await context.close();
   });
 });

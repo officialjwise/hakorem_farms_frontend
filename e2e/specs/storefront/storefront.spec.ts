@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../../support/test';
 import { expectNoAxeViolations, expectNoHorizontalScroll } from '../../support/helpers';
 
 test.describe('public shell', () => {

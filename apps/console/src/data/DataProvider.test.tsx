@@ -2,9 +2,8 @@ import { ApiError, createApiClient } from '@hakorem/api-client';
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider, useAuth } from '../auth/AuthProvider';
-import { createStubAuthClient } from '../auth/stub';
 import type { AuthClient } from '../auth/types';
-import { memoryStorage } from '../test/memoryStorage';
+import { fakeBrowser } from '../test/fakeFetch';
 import { queryClient } from './api';
 import { DataProvider } from './DataProvider';
 import { sessionHooks } from './session';
@@ -59,10 +58,10 @@ afterEach(() => {
 
 describe('DataProvider: the data layer on the console session', () => {
   it('refreshes the AuthProvider session once for concurrent 401s, then retries with the new CSRF token', async () => {
-    const stub = createStubAuthClient({ storage: memoryStorage() });
-    await stub.loginStaff(CASHIER);
-    const refresh = vi.fn(() => stub.refreshSession());
-    await mount({ ...stub, refreshSession: refresh });
+    const auth = fakeBrowser().client;
+    await auth.loginStaff(CASHIER);
+    const refresh = vi.fn(() => auth.refreshSession());
+    await mount({ ...auth, refreshSession: refresh });
     expect(screen.getByText('status:authenticated')).toBeInTheDocument();
 
     const seen: Request[] = [];
@@ -73,7 +72,7 @@ describe('DataProvider: the data layer on the console session', () => {
       fetch: async (request) => {
         seen.push(request.clone());
         if (refresh.mock.calls.length === 0) return refused();
-        refreshedToken ??= (await stub.getCurrentSession()).csrfToken;
+        refreshedToken ??= (await auth.getCurrentSession()).csrfToken;
         return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } });
       },
     });
@@ -91,8 +90,8 @@ describe('DataProvider: the data layer on the console session', () => {
   });
 
   it('lands the app on session expiry, in words, when the refresh is refused', async () => {
-    const stub = createStubAuthClient({ storage: memoryStorage() });
-    await stub.loginStaff(CASHIER);
+    const auth = fakeBrowser().client;
+    await auth.loginStaff(CASHIER);
     const refresh = vi.fn(() =>
       Promise.reject(
         new ApiError({
@@ -103,7 +102,7 @@ describe('DataProvider: the data layer on the console session', () => {
         }),
       ),
     );
-    await mount({ ...stub, refreshSession: refresh });
+    await mount({ ...auth, refreshSession: refresh });
 
     const api = createApiClient({
       baseUrl: 'http://api.test',
@@ -122,9 +121,9 @@ describe('DataProvider: the data layer on the console session', () => {
   });
 
   it('drops every cached answer when the user signs out, so the next person sees none of it', async () => {
-    const stub = createStubAuthClient({ storage: memoryStorage() });
-    await stub.loginStaff(CASHIER);
-    await mount(stub);
+    const auth = fakeBrowser().client;
+    await auth.loginStaff(CASHIER);
+    await mount(auth);
     queryClient.setQueryData(['listProducts'], { data: ['secret'] });
     expect(queryClient.getQueryData(['listProducts'])).toBeDefined();
     await act(async () => {

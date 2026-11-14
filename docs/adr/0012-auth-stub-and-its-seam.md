@@ -1,6 +1,6 @@
 # 0012. Authentication runs against a stub behind one file
 
-- Status: accepted
+- Status: accepted; the stub was replaced in F3 as planned here (ADR 0024), and its rules moved to the test fake (ADR 0026). The seam stands.
 - Date: 2026-11-14
 - Session: F1
 

@@ -15,7 +15,7 @@ Read this file, `docs/SHARED_BRIEF.md`, your session's section of `docs/BUILD_PR
 | `packages/api-client` | Generated from the contract: types, operation table, `call(operationId, …)`. Never hand-edited.        |
 | `packages/data`       | TanStack Query layer: `useApiQuery`, `useApiMutation`, keys, stale times, retry. See DATA_CONVENTIONS. |
 | `apps/storefront`     | Public shop, Next.js 15, server rendered, built for 3G. Shell built (F1); catalogue screens are F7.    |
-| `apps/console`        | Installable PWA, Vite: back office and POS shells, auth against a stub (F1); screens from F3.          |
+| `apps/console`        | Installable PWA, Vite: back office and POS shells, the real auth client (F3); screens from F3.         |
 | `e2e/`                | Playwright and axe specs, Chromium, 360 px, against production builds.                                 |
 | `contract/`           | A synced copy of the backend's OpenAPI contract. Never hand-edited.                                    |
 | `tooling/lint-tokens` | The `hakorem/token-usage` lint rule.                                                                   |
@@ -40,7 +40,8 @@ pnpm build-storybook
 pnpm format:check
 pnpm dev:storefront    # Next.js on port 3000
 pnpm dev:console       # Vite on port 5173
-pnpm test:e2e          # builds both apps, then Playwright with axe
+pnpm test:e2e          # builds both apps (console on HK_API_BASE_URL=/mock), then Playwright with axe
+pnpm test:e2e:quarantine  # only the quarantined specs (tag @quarantine, each with its issue)
 pnpm icons:check       # fails if the console icons or manifest are stale
 pnpm sync-contract     # copy ../backend/contract, regenerate packages/api-client, typecheck everything
 pnpm sync-contract:check  # CI: fails if the committed client is stale
@@ -48,7 +49,7 @@ pnpm dev:mock          # Prism on 4010, from contract/openapi.yaml
 pnpm test:integration  # screens and the data layer against the real Prism (starts it itself)
 ```
 
-Set `HK_API_BASE_URL` to choose the API (`http://127.0.0.1:4010` is the mock). Nothing else decides it.
+Set `HK_API_BASE_URL` to choose the API. Nothing else decides it. For the mock in a browser, run `pnpm dev:mock` and `HK_API_BASE_URL=/mock pnpm dev:console`: the console's dev and preview servers forward `/mock` to Prism and add the staff cookie (ADR 0025). Node tests use `http://127.0.0.1:4010` directly.
 
 Arrive later, named in `docs/BUILD_PROMPT.md`: `test:e2e:staging` and `lighthouse` (F13).
 

@@ -1,0 +1,130 @@
+/**
+ * The API as the end-to-end suite sees it (ADR 0026). The console build under test talks to `/mock`
+ * (`HK_API_BASE_URL=/mock`, ADR 0025), and every request to it comes through here first:
+ *
+ * 1. **The eight auth operations** are answered by the fake auth server, the same one the console's unit
+ *    tests use (`apps/console/src/test/fakeAuthServer.ts`). It keeps sessions, rotation, lockout, TOTP and
+ *    CSRF, which Prism cannot, because Prism keeps no state.
+ * 2. **Any other operation** is found in the generated `operationManifest` by method and path, then:
+ *    - public: sent on to Prism;
+ *    - no live session behind this browser's cookies: Prism with `Prefer: code=401`, so the contract's own
+ *      401 comes back;
+ *    - the session lacks the operation's `x-permission`: Prism with `Prefer: code=403`, the contract's own 403;
+ *    - otherwise: on to Prism through the `/mock` proxy, which answers from the contract's examples.
+ *
+ * The cookie jar is the fake's, one per browser context, so nothing depends on how Chromium treats a
+ * Set-Cookie on a fulfilled response. A reload keeps it; a new context starts empty, like a new browser.
+ */
+import { operationManifest } from '@hakorem/api-client';
+import type { BrowserContext, Page, Route } from '@playwright/test';
+import {
+  createFakeAuthServer,
+  type CookieJar,
+  type FakeAuthServer,
+} from '../../apps/console/src/test/fakeAuthServer';
+
+/** The same-origin path the e2e build's HK_API_BASE_URL names. */
+export const API_PATH = '/mock';
+
+interface Operation {
+  id: string;
+  method: string;
+  pattern: RegExp;
+  /** Path parameters in the template: fewer is a more literal match. */
+  params: number;
+  permission: string | null;
+  public: boolean;
+}
+
+const OPERATIONS: Operation[] = Object.entries(operationManifest).map(([id, row]) => ({
+  id,
+  method: row.method.toUpperCase(),
+  pattern: new RegExp(`^${row.path.replace(/\{[^}]+\}/g, '[^/]+')}$`),
+  params: (row.path.match(/\{/g) ?? []).length,
+  permission: row.permission,
+  public: row.public,
+}));
+
+/** The operation a request is for. `/iam/users/me`-style literals beat `{id}` templates. */
+export function findOperation(method: string, path: string): Operation | undefined {
+  return OPERATIONS.filter((op) => op.method === method && op.pattern.test(path)).sort(
+    (a, b) => a.params - b.params,
+  )[0];
+}
+
+/** A permission code as `x-permission` writes one (`iam.user.read`), not a sentence about one. */
+const PERMISSION_CODE = /^[a-z]+(\.[a-z_]+)+$/;
+
+export type Outcome = 'fake' | 'prism' | 'prism-401' | 'prism-403';
+
+export class FakeApi {
+  readonly server: FakeAuthServer = createFakeAuthServer();
+  /** This browser's cookies for the API. */
+  readonly jar: CookieJar = {};
+  /** Every request seen, in order, and what answered it. */
+  readonly log: { method: string; path: string; operationId: string | null; outcome: Outcome }[] =
+    [];
+
+  async install(context: BrowserContext): Promise<void> {
+    await context.route(`**${API_PATH}/**`, (route) => this.answer(route));
+  }
+
+  /** Starts Playwright's clock and the fake's together, at the same instant. */
+  async installClock(page: Page, time: Date): Promise<void> {
+    await page.clock.install({ time });
+    this.server.clock.set(time.getTime());
+  }
+
+  /** Jumps both clocks. The server's moves first, so a timer the jump fires is answered at the new time. */
+  async fastForward(page: Page, ms: number): Promise<void> {
+    this.server.clock.advance(ms);
+    await page.clock.fastForward(ms);
+  }
+
+  private async answer(route: Route): Promise<void> {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (!url.pathname.startsWith(`${API_PATH}/`)) return route.continue();
+    const path = url.pathname.slice(API_PATH.length);
+    const method = request.method();
+    const text = request.postData() ?? '';
+
+    const answer = this.server.handle(
+      {
+        method,
+        path,
+        headers: await request.allHeaders(),
+        body: text === '' ? undefined : (JSON.parse(text) as unknown),
+      },
+      this.jar,
+    );
+    if (answer !== null) {
+      this.log.push({ method, path, operationId: null, outcome: 'fake' });
+      return route.fulfill({
+        status: answer.status,
+        headers: answer.headers ?? {},
+        body: answer.body === undefined ? '' : JSON.stringify(answer.body),
+      });
+    }
+
+    const operation = findOperation(method, path);
+    const record = (outcome: Outcome) =>
+      this.log.push({ method, path, operationId: operation?.id ?? null, outcome });
+    if (operation === undefined || operation.public) {
+      record('prism');
+      return route.continue();
+    }
+    const session = this.server.sessionFor(this.jar);
+    if (session === null) {
+      record('prism-401');
+      return route.continue({ headers: { ...request.headers(), prefer: 'code=401' } });
+    }
+    const needed = operation.permission;
+    if (needed !== null && PERMISSION_CODE.test(needed) && !session.permissions.includes(needed)) {
+      record('prism-403');
+      return route.continue({ headers: { ...request.headers(), prefer: 'code=403' } });
+    }
+    record('prism');
+    return route.continue();
+  }
+}

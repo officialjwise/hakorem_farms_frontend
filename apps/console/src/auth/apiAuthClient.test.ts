@@ -1,27 +1,48 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { memoryStorage } from '../test/memoryStorage';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ACCESS_TTL_MS,
+  createFakeAuthServer,
+  FAKE_RESET_CODE,
+  FAKE_TOTP_CODE,
   REFRESH_TTL_MS,
-  STUB_RESET_CODE,
-  STUB_TOTP_CODE,
-  createStubAuthClient,
-} from './stub';
-import { ApiError, type AuthClient, type SessionInfo } from './types';
+  type CookieJar,
+  type FakeAuthServer,
+} from '../test/fakeAuthServer';
+import { FAKE_BASE_URL, fakeBrowser, fakeFetch } from '../test/fakeFetch';
+import { createApiAuthClient } from './apiAuthClient';
+import { ApiError, NetworkError, type AuthClient, type SessionInfo } from './types';
+
+/**
+ * The real auth client (ADR 0024) against the fake auth server (ADR 0026). The first part pins the client's
+ * own rules: the contract's method and path for each operation, a 401 that is an answer and never a
+ * refresh, and the CSRF token from the last session response. The rest is the behaviour the F1 stub's
+ * tests described, now through the client the app ships.
+ */
 
 const OWNER = { identifier: 'kwabena.owusu@hakoremfarms.com', password: 'Mango-Season-2026!' };
 const CASHIER = { identifier: 'adwoa.darko@hakoremfarms.com', password: 'Mango-Season-2026!' };
 const TEMP = { identifier: 'new.staff@hakoremfarms.com', password: 'Temp-8841-Farm' };
+const NEW_PASSWORD = 'A-much-longer-passphrase-9';
 
-let clock: number;
-let storage: ReturnType<typeof memoryStorage>;
+let server: FakeAuthServer;
+let jar: CookieJar;
 let client: AuthClient;
+let clock: number;
 
 beforeEach(() => {
-  clock = Date.parse('2026-11-14T08:00:00Z');
-  storage = memoryStorage();
-  client = createStubAuthClient({ now: () => clock, storage });
+  // Only Date is frozen: the client's own timeout timer still runs.
+  vi.useFakeTimers({ now: Date.parse('2026-11-14T08:00:00Z'), toFake: ['Date'] });
+  clock = Date.now();
+  ({ server, jar, client } = fakeBrowser());
 });
+afterEach(() => {
+  vi.useRealTimers();
+});
+
+function tick(ms: number) {
+  clock += ms;
+  server.clock.advance(ms);
+}
 
 async function rejection(promise: Promise<unknown>): Promise<ApiError> {
   try {
@@ -39,7 +60,89 @@ async function signIn(): Promise<SessionInfo> {
   return result.session;
 }
 
-describe('stub auth: login', () => {
+/** A client whose requests are recorded before the fake answers them. */
+function recorded(): { client: AuthClient; requests: Request[] } {
+  const requests: Request[] = [];
+  const answer = fakeFetch(server, jar);
+  const recording = createApiAuthClient({
+    baseUrl: FAKE_BASE_URL,
+    fetch: (request) => {
+      requests.push(request.clone());
+      return answer(request);
+    },
+  });
+  return { client: recording, requests };
+}
+
+describe('the real auth client: its own rules', () => {
+  it('calls each operation at the method and path the contract gives it', async () => {
+    const { client: c, requests } = recorded();
+    await c.loginStaff(CASHIER);
+    await c.getCurrentSession();
+    await c.refreshSession();
+    await c.changePassword({ currentPassword: CASHIER.password, newPassword: NEW_PASSWORD });
+    await c.requestPasswordReset({ identifier: 'anyone@example.com' });
+    await c.resetPassword({ token: FAKE_RESET_CODE, newPassword: NEW_PASSWORD });
+    await c.logout();
+    const owner = await c.loginStaff(OWNER);
+    await c.verifyTotp({ challengeToken: owner.challengeToken ?? '', code: FAKE_TOTP_CODE });
+    expect(requests.map((r) => `${r.method} ${new URL(r.url).pathname}`)).toEqual([
+      'POST /auth/staff/login',
+      'GET /auth/session',
+      'POST /auth/refresh',
+      'POST /auth/password/change',
+      'POST /auth/password/reset-request',
+      'POST /auth/password/reset',
+      'POST /auth/logout',
+      'POST /auth/staff/login',
+      'POST /auth/totp/verify',
+    ]);
+    // None of the eight requires an idempotency key in contract 1.1.0, so none is sent.
+    expect(requests.some((r) => r.headers.has('Idempotency-Key'))).toBe(false);
+  });
+
+  it('treats a 401 as the answer: no refresh is attempted behind the caller’s back', async () => {
+    const { client: c, requests } = recorded();
+    expect(await rejection(c.getCurrentSession())).toMatchObject({
+      status: 401,
+      code: 'UNAUTHENTICATED',
+    });
+    expect(requests).toHaveLength(1);
+  });
+
+  it('sends the CSRF token of the last session response, and the newest one after a refresh', async () => {
+    const { client: c, requests } = recorded();
+    const login = await c.loginStaff(CASHIER);
+    const refreshed = await c.refreshSession();
+    expect(refreshed.csrfToken).not.toBe(login.session?.csrfToken);
+    await c.logout();
+    expect(requests.at(-1)?.headers.get('X-CSRF-Token')).toBe(refreshed.csrfToken);
+  });
+
+  it('forgets the CSRF token on logout, whatever the answer', async () => {
+    const { client: c, requests } = recorded();
+    await c.loginStaff(CASHIER);
+    await c.logout();
+    await rejection(c.logout()); // no session any more: 401
+    expect(requests.at(-1)?.headers.has('X-CSRF-Token')).toBe(false);
+  });
+
+  it('asks for a staff reset: realm STAFF is added to the request', async () => {
+    const { client: c, requests } = recorded();
+    await c.requestPasswordReset({ identifier: 'anyone@example.com' });
+    expect(await requests[0]?.json()).toEqual({ identifier: 'anyone@example.com', realm: 'STAFF' });
+  });
+
+  it('turns no answer into a NetworkError, which AuthProvider reads as "could not reach"', async () => {
+    const offline = createApiAuthClient({
+      baseUrl: FAKE_BASE_URL,
+      fetch: () => Promise.reject(new TypeError('Failed to fetch')),
+    });
+    await expect(offline.getCurrentSession()).rejects.toBeInstanceOf(NetworkError);
+  });
+});
+
+describe('sign in', () => {
   it('signs a user without TOTP straight in, with a session body that matches SessionInfo', async () => {
     const result = await client.loginStaff(CASHIER);
     expect(result.status).toBe('AUTHENTICATED');
@@ -58,9 +161,8 @@ describe('stub auth: login', () => {
     const session = await signIn();
     expect(Date.parse(session.accessExpiresAt) - clock).toBe(ACCESS_TTL_MS);
     expect(Date.parse(session.refreshExpiresAt) - clock).toBe(REFRESH_TTL_MS);
-    const jar = JSON.parse(storage.getItem('hk-stub:cookies') ?? '{}');
-    expect(jar.at.expires - clock).toBe(ACCESS_TTL_MS);
-    expect(jar.rt.expires - clock).toBe(REFRESH_TTL_MS);
+    expect((jar.at?.expires ?? 0) - clock).toBe(ACCESS_TTL_MS);
+    expect((jar.rt?.expires ?? 0) - clock).toBe(REFRESH_TTL_MS);
   });
 
   it('answers a wrong password and an unknown account identically, with 401 INVALID_CREDENTIALS', async () => {
@@ -74,13 +176,12 @@ describe('stub auth: login', () => {
     expect(wrong.correlationId).toMatch(/^[0-9a-f-]{36}$/);
   });
 
-  it('backs off with 429 RATE_LIMITED after repeated failures, then lets the account try again', async () => {
+  it('backs off with 429 RATE_LIMITED and a Retry-After after repeated failures, then lets the account try again', async () => {
     for (let i = 0; i < 5; i++)
       await rejection(client.loginStaff({ ...CASHIER, password: 'nope' }));
     const limited = await rejection(client.loginStaff(CASHIER));
-    expect(limited).toMatchObject({ status: 429, code: 'RATE_LIMITED' });
-    expect(limited.retryAfter).toBeGreaterThan(0);
-    clock += 31_000;
+    expect(limited).toMatchObject({ status: 429, code: 'RATE_LIMITED', retryAfter: 30 });
+    tick(31_000);
     expect((await client.loginStaff(CASHIER)).status).toBe('AUTHENTICATED');
   });
 
@@ -88,7 +189,7 @@ describe('stub auth: login', () => {
     const result = await client.loginStaff(OWNER);
     expect(result).toMatchObject({ status: 'TOTP_REQUIRED', session: null });
     expect(result.challengeToken).toMatch(/^hk1\.ch\./);
-    expect(storage.getItem('hk-stub:cookies')).toBeNull();
+    expect(jar).toEqual({});
     expect((await rejection(client.getCurrentSession())).status).toBe(401);
   });
 
@@ -99,12 +200,12 @@ describe('stub auth: login', () => {
   });
 });
 
-describe('stub auth: TOTP', () => {
+describe('TOTP', () => {
   it('turns the challenge and the right code into a session and cookies', async () => {
     const { challengeToken } = await client.loginStaff(OWNER);
     const result = await client.verifyTotp({
       challengeToken: challengeToken ?? '',
-      code: STUB_TOTP_CODE,
+      code: FAKE_TOTP_CODE,
     });
     expect(result.status).toBe('AUTHENTICATED');
     expect(result.session?.principal.displayName).toBe('Kwabena Owusu');
@@ -112,47 +213,44 @@ describe('stub auth: TOTP', () => {
   });
 
   it('refuses a wrong code with 401 TOTP_INVALID and burns the challenge after five tries', async () => {
-    const { challengeToken = '' } = await client.loginStaff(OWNER);
+    const { challengeToken } = await client.loginStaff(OWNER);
+    const token = challengeToken ?? '';
     expect(
-      (await rejection(client.verifyTotp({ challengeToken: challengeToken ?? '', code: '000000' })))
-        .code,
+      (await rejection(client.verifyTotp({ challengeToken: token, code: '000000' }))).code,
     ).toBe('TOTP_INVALID');
     for (let i = 0; i < 4; i++)
-      await rejection(client.verifyTotp({ challengeToken: challengeToken ?? '', code: '000000' }));
+      await rejection(client.verifyTotp({ challengeToken: token, code: '000000' }));
     const gone = await rejection(
-      client.verifyTotp({ challengeToken: challengeToken ?? '', code: STUB_TOTP_CODE }),
+      client.verifyTotp({ challengeToken: token, code: FAKE_TOTP_CODE }),
     );
     expect(gone.code).toBe('CHALLENGE_EXPIRED');
   });
 
   it('refuses a challenge that has expired or was already used', async () => {
     const { challengeToken } = await client.loginStaff(OWNER);
-    await client.verifyTotp({ challengeToken: challengeToken ?? '', code: STUB_TOTP_CODE });
+    const token = challengeToken ?? '';
+    await client.verifyTotp({ challengeToken: token, code: FAKE_TOTP_CODE });
     expect(
-      (
-        await rejection(
-          client.verifyTotp({ challengeToken: challengeToken ?? '', code: STUB_TOTP_CODE }),
-        )
-      ).code,
+      (await rejection(client.verifyTotp({ challengeToken: token, code: FAKE_TOTP_CODE }))).code,
     ).toBe('CHALLENGE_EXPIRED');
     const second = await client.loginStaff(OWNER);
-    clock += 6 * 60_000;
+    tick(6 * 60_000);
     expect(
       (
         await rejection(
-          client.verifyTotp({ challengeToken: second.challengeToken ?? '', code: STUB_TOTP_CODE }),
+          client.verifyTotp({ challengeToken: second.challengeToken ?? '', code: FAKE_TOTP_CODE }),
         )
       ).code,
     ).toBe('CHALLENGE_EXPIRED');
   });
 });
 
-describe('stub auth: access cookie expiry and refresh', () => {
+describe('access cookie expiry and refresh', () => {
   it('drops the access cookie when it expires, so the session call answers 401 UNAUTHENTICATED', async () => {
     await signIn();
-    clock += ACCESS_TTL_MS - 1;
+    tick(ACCESS_TTL_MS - 1);
     await expect(client.getCurrentSession()).resolves.toBeDefined();
-    clock += 2;
+    tick(2);
     expect(await rejection(client.getCurrentSession())).toMatchObject({
       status: 401,
       code: 'UNAUTHENTICATED',
@@ -161,86 +259,92 @@ describe('stub auth: access cookie expiry and refresh', () => {
 
   it('refreshes with the refresh cookie: a new access expiry, a new CSRF token and a rotated refresh token', async () => {
     const first = await signIn();
-    const before = JSON.parse(storage.getItem('hk-stub:cookies') ?? '{}');
-    clock += ACCESS_TTL_MS + 1000; // the access cookie is gone by now
+    const before = structuredClone(jar);
+    tick(ACCESS_TTL_MS + 1000); // the access cookie is gone by now
     const next = await client.refreshSession();
-    const after = JSON.parse(storage.getItem('hk-stub:cookies') ?? '{}');
     expect(next.sessionId).toBe(first.sessionId);
     expect(next.csrfToken).not.toBe(first.csrfToken);
     expect(Date.parse(next.accessExpiresAt)).toBe(clock + ACCESS_TTL_MS);
-    expect(after.rt.value).not.toBe(before.rt.value);
-    expect(after.at.value).not.toBe(before.at.value);
+    expect(jar.rt?.value).not.toBe(before.rt?.value);
+    expect(jar.at?.value).not.toBe(before.at?.value);
     await expect(client.getCurrentSession()).resolves.toBeDefined();
   });
 
   it('keeps the same absolute refresh deadline across rotations', async () => {
     const first = await signIn();
-    clock += 5 * 60_000;
+    tick(5 * 60_000);
     const next = await client.refreshSession();
     expect(next.refreshExpiresAt).toBe(first.refreshExpiresAt);
   });
 
   it('revokes the whole session when a rotated refresh token is presented again', async () => {
     await signIn();
-    const stale = storage.getItem('hk-stub:cookies') ?? '';
+    const stale = structuredClone(jar);
     await client.refreshSession(); // rotates
-    storage.setItem('hk-stub:cookies', stale); // a copied, already-used token
+    const newest = structuredClone(jar);
+    Object.assign(jar, stale); // a copied, already-used token
     expect(await rejection(client.refreshSession())).toMatchObject({
       status: 401,
       code: 'UNAUTHENTICATED',
     });
     // The legitimate holder of the newest token is out as well.
-    storage.setItem(
-      'hk-stub:cookies',
-      JSON.stringify({ at: { value: 'x', expires: clock + 1000 } }),
-    );
+    Object.assign(jar, newest);
     expect((await rejection(client.getCurrentSession())).status).toBe(401);
+    expect((await rejection(client.refreshSession())).status).toBe(401);
   });
 
   it('answers 401 when there is no refresh cookie, and when the refresh lifetime has passed', async () => {
     expect((await rejection(client.refreshSession())).status).toBe(401);
     await signIn();
-    clock += REFRESH_TTL_MS + 1;
+    tick(REFRESH_TTL_MS + 1);
     expect((await rejection(client.refreshSession())).status).toBe(401);
   });
 
-  it('survives a reload: a new client over the same storage still has the session', async () => {
+  it('survives a reload: a new client over the same cookies still has the session', async () => {
     const session = await signIn();
-    const reloaded = createStubAuthClient({ now: () => clock, storage });
+    const reloaded = fakeBrowser({ server, jar }).client;
     expect((await reloaded.getCurrentSession()).sessionId).toBe(session.sessionId);
+  });
+
+  it('answers 401 once a manager has revoked the session', async () => {
+    await signIn();
+    server.revokeAllSessions();
+    expect((await rejection(client.getCurrentSession())).status).toBe(401);
+    expect((await rejection(client.refreshSession())).status).toBe(401);
   });
 });
 
-describe('stub auth: logout and CSRF', () => {
+describe('logout and CSRF', () => {
   it('logs out with the CSRF token it was issued, clears the cookies and ends the session', async () => {
     await signIn();
     await client.logout();
-    expect(JSON.parse(storage.getItem('hk-stub:cookies') ?? '{}')).toEqual({});
+    expect(jar).toEqual({});
     expect((await rejection(client.getCurrentSession())).status).toBe(401);
   });
 
   it('refuses a state-changing call from a client that does not hold the current CSRF token', async () => {
     await signIn();
-    const otherTab = createStubAuthClient({ now: () => clock, storage }); // has the cookies, not the token
+    const otherTab = fakeBrowser({ server, jar }).client; // has the cookies, not the token
     expect(await rejection(otherTab.logout())).toMatchObject({
       status: 403,
       code: 'CSRF_TOKEN_INVALID',
     });
   });
+
+  it('a reloaded tab learns the token from the boot check and can sign out', async () => {
+    await signIn();
+    const reloaded = fakeBrowser({ server, jar }).client;
+    await reloaded.getCurrentSession();
+    await expect(reloaded.logout()).resolves.toBeUndefined();
+  });
 });
 
-describe('stub auth: passwords', () => {
+describe('passwords', () => {
   it('changes the temporary password at first login, then accepts only the new one', async () => {
     await client.loginStaff(TEMP);
-    await client.changePassword({
-      currentPassword: TEMP.password,
-      newPassword: 'A-much-longer-passphrase-9',
-    });
+    await client.changePassword({ currentPassword: TEMP.password, newPassword: NEW_PASSWORD });
     expect((await rejection(client.loginStaff(TEMP))).code).toBe('INVALID_CREDENTIALS');
-    const result = await client.loginStaff({
-      identifier: TEMP.identifier,
-      password: 'A-much-longer-passphrase-9',
-    });
+    const result = await client.loginStaff({ identifier: TEMP.identifier, password: NEW_PASSWORD });
     expect(result.status).toBe('AUTHENTICATED');
   });
 
@@ -262,10 +366,7 @@ describe('stub auth: passwords', () => {
     expect(
       (
         await rejection(
-          client.changePassword({
-            currentPassword: 'wrong',
-            newPassword: 'A-much-longer-passphrase-9',
-          }),
+          client.changePassword({ currentPassword: 'wrong', newPassword: NEW_PASSWORD }),
         )
       ).code,
     ).toBe('INVALID_CREDENTIALS');
@@ -279,14 +380,19 @@ describe('stub auth: passwords', () => {
       client.requestPasswordReset({ identifier: CASHIER.identifier }),
     ).resolves.toBeUndefined();
     expect(
-      (
-        await rejection(
-          client.resetPassword({ token: 'wrong', newPassword: 'A-much-longer-passphrase-9' }),
-        )
-      ).status,
+      (await rejection(client.resetPassword({ token: 'wrong', newPassword: NEW_PASSWORD }))).status,
     ).toBe(422);
     await expect(
-      client.resetPassword({ token: STUB_RESET_CODE, newPassword: 'A-much-longer-passphrase-9' }),
+      client.resetPassword({ token: FAKE_RESET_CODE, newPassword: NEW_PASSWORD }),
     ).resolves.toBeUndefined();
+  });
+});
+
+describe('the fake server itself', () => {
+  it('answers only the eight auth operations', () => {
+    const fresh = createFakeAuthServer();
+    expect(
+      fresh.handle({ method: 'GET', path: '/iam/users', headers: {}, body: undefined }, {}),
+    ).toBeNull();
   });
 });

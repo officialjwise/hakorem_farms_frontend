@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../../support/test';
 import { expectNoAxeViolations, signIn, USERS } from '../../support/helpers';
 
 test.describe('permission denied is a state, never a redirect', () => {

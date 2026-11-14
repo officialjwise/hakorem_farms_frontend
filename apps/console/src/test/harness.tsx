@@ -4,9 +4,8 @@ import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-rout
 import { createI18n } from '@hakorem/i18n';
 import { routes as appRoutes } from '../app/routes';
 import { AuthProvider } from '../auth/AuthProvider';
-import { createStubAuthClient } from '../auth/stub';
 import type { AuthClient } from '../auth/types';
-import { memoryStorage } from './memoryStorage';
+import { fakeBrowser } from './fakeFetch';
 
 export const USERS = {
   owner: { identifier: 'kwabena.owusu@hakoremfarms.com', password: 'Mango-Season-2026!' },
@@ -15,9 +14,9 @@ export const USERS = {
   temp: { identifier: 'new.staff@hakoremfarms.com', password: 'Temp-8841-Farm' },
 } as const;
 
-/** A stub over an empty memory storage and an optional clock. */
-export function newClient(now?: () => number): AuthClient {
-  return createStubAuthClient({ storage: memoryStorage(), ...(now ? { now } : {}) });
+/** The real auth client in a fresh browser, on a fresh fake auth server (ADR 0026). */
+export function newClient(): AuthClient {
+  return fakeBrowser().client;
 }
 
 /** A client that already holds a signed-in cashier, manager or storekeeper (their cookies are in its jar). */

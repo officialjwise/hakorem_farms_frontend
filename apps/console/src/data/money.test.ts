@@ -32,9 +32,6 @@ const files = SOURCES.flatMap((dir) => walk(join(root, dir))).filter(
   (path) => !/\.(test|typetest|integration\.test)\.tsx?$/.test(path),
 );
 
-/** Modules that handle time and never an amount: the auth stub rounds a retry delay up to whole seconds. Deleted with the stub in F3. */
-const TIME_ONLY = ['apps/console/src/auth/'];
-
 /** What turns an integer amount into a float, or formats with the runtime's locale. */
 const FORBIDDEN: [string, RegExp][] = [
   ['parseFloat', /\bparseFloat\s*\(/],
@@ -56,7 +53,6 @@ describe('no float arithmetic touches an amount', () => {
 
   it.each(FORBIDDEN)('no source file uses %s', (_name, pattern) => {
     const offenders = files
-      .filter((path) => !TIME_ONLY.some((dir) => path.includes(dir)))
       .filter((path) => pattern.test(readFileSync(path, 'utf8')))
       .map((path) => relative(root, path));
     expect(offenders).toEqual([]);
