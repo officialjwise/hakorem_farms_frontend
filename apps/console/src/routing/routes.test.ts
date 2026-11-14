@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { operationManifest } from '@hakorem/api-client';
 import type { RouteObject } from 'react-router';
-import { protectedRoutes } from '../app/routes';
+import { entryFor } from '../app/entries';
+import { protectedRoutes as backOfficeRoutes } from '../app/routes';
+import { posProtectedRoutes } from '../pos/routes';
 import { isRouteHandle } from './handle';
+
+/** Both documents' protected routes (ADR 0030): every rule below holds for each. */
+const protectedRoutes = [...backOfficeRoutes, ...posProtectedRoutes];
 
 function leaves(list: RouteObject[], trail = ''): { path: string; route: RouteObject }[] {
   return list.flatMap((route) => {
@@ -44,6 +49,23 @@ describe('route table', () => {
         path,
       ).toBeTruthy();
     }
+  });
+});
+
+describe('each document owns only its own addresses (ADR 0030)', () => {
+  it('the back office declares no till route, and the till declares nothing but /pos', () => {
+    for (const { path } of leaves(backOfficeRoutes))
+      expect(entryFor(path), path).toBe('back-office');
+    const till = leaves(posProtectedRoutes);
+    expect(till.length).toBeGreaterThan(0);
+    for (const { path } of till) expect(entryFor(path), path).toBe('pos');
+  });
+
+  it('routes /pos and below to the till, and everything else, files included, to the back office', () => {
+    expect(['/pos', '/pos/', '/pos/sale/1'].map(entryFor)).toEqual(['pos', 'pos', 'pos']);
+    expect(['/', '/users', '/login', '/posters', '/pos.html', '/pos/x.js'].map(entryFor)).toEqual(
+      Array(6).fill('back-office'),
+    );
   });
 });
 

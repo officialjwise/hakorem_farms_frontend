@@ -21,14 +21,15 @@ describe('auth seam (ADR 0012, ADR 0024)', () => {
     expect(files['/src/auth/apiAuthClient.ts']).toMatch(/from '@hakorem\/api-client'/);
   });
 
-  it('no screen imports the client export directly; only main.tsx hands it to AuthProvider', () => {
+  // The boot both documents share (ADR 0030) is the one file; main.tsx was, before the till had its own.
+  it('no screen imports the client export directly; only app/boot.tsx hands it to AuthProvider', () => {
     const importers = Object.entries(files)
       .filter(([, text]) =>
         /from\s+['"][^'"]*auth\/client['"]|from\s+['"]\.\/client['"]/.test(text),
       )
       .map(([path]) => path)
       .filter((path) => !path.endsWith('.test.ts') && !path.endsWith('.test.tsx'));
-    expect(importers).toEqual(['/src/main.tsx']);
+    expect(importers).toEqual(['/src/app/boot.tsx']);
   });
 
   it('no file calls fetch directly (the contract rule)', () => {

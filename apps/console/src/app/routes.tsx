@@ -1,12 +1,4 @@
-import { lazy, Suspense } from 'react';
-import { createBrowserRouter, Outlet, type RouteObject } from 'react-router';
-import { Skeleton } from '@hakorem/ui';
-import { useTranslation } from 'react-i18next';
-import { ChangePasswordScreen } from '../auth/screens/ChangePasswordScreen';
-import { ForgotPasswordScreen } from '../auth/screens/ForgotPasswordScreen';
-import { LoginScreen } from '../auth/screens/LoginScreen';
-import { ResetPasswordScreen } from '../auth/screens/ResetPasswordScreen';
-import { TotpScreen } from '../auth/screens/TotpScreen';
+import type { RouteObject } from 'react-router';
 import { AuditEventScreen } from '../audit/AuditEventScreen';
 import { AuditScreen } from '../audit/AuditScreen';
 import { RoleDetailScreen, RoleNewScreen } from '../iam/RoleScreen';
@@ -15,28 +7,17 @@ import { SessionsScreen } from '../iam/SessionsScreen';
 import { UserCreateScreen } from '../iam/UserCreateScreen';
 import { UserDetailScreen } from '../iam/UserDetailScreen';
 import { UsersScreen } from '../iam/UsersScreen';
-import { PermissionGate, SessionGate } from '../routing/gates';
 import type { RouteHandle } from '../routing/handle';
 import { NotFoundScreen } from '../screens/NotFoundScreen';
 import { PlaceholderScreen } from '../screens/PlaceholderScreen';
-import { PosHome } from '../screens/PosHome';
 import { BackOfficeShell } from '../shells/BackOfficeShell';
-import { RouteErrorFallback } from './ErrorBoundary';
-import { RootLayout } from './RootLayout';
+import { appRoutes } from './appRoutes';
+import { OtherDocument } from './OtherDocument';
 
-// The POS shell is its own chunk: the back office never downloads it, and it can be cached on its own in F13.
-const PosShell = lazy(() => import('../shells/PosShell').then((m) => ({ default: m.PosShell })));
-
-function Loading() {
-  const { t } = useTranslation('shell');
-  return (
-    <div className="grid min-h-dvh place-items-center p-6">
-      <div className="w-full max-w-sm">
-        <Skeleton label={t('session.checking')} shape="block" />
-      </div>
-    </div>
-  );
-}
+/*
+ * The back office document's routes (ADR 0030). The POS is the other document, `pos.html`, with its own
+ * routes in pos/routes.tsx: nothing here imports it, so the till never downloads these screens.
+ */
 
 const back = (permission: string | null, crumb: RouteHandle['crumb']): RouteHandle => ({
   permission,
@@ -119,58 +100,11 @@ export const protectedRoutes: RouteObject[] = [
       },
     ],
   },
-  {
-    path: 'pos',
-    handle: {
-      permission: 'pos.sale.create',
-      shell: 'pos',
-      crumb: 'pos',
-    } satisfies RouteHandle,
-    element: (
-      <PermissionGate>
-        <Suspense fallback={<Loading />}>
-          <PosShell />
-        </Suspense>
-      </PermissionGate>
-    ),
-    children: [
-      {
-        index: true,
-        element: <PosHome />,
-        handle: {
-          permission: 'pos.sale.create',
-          shell: 'pos',
-          crumb: 'pos',
-        } satisfies RouteHandle,
-      },
-    ],
-  },
 ];
 
-/** Public routes need no session, so they declare no permission. Everything under `SessionGate` must declare one. */
-export const routes: RouteObject[] = [
-  {
-    element: <RootLayout />,
-    errorElement: <RouteErrorFallback />,
-    children: [
-      { path: 'login', element: <LoginScreen /> },
-      { path: 'login/totp', element: <TotpScreen /> },
-      { path: 'change-password', element: <ChangePasswordScreen /> },
-      { path: 'forgot-password', element: <ForgotPasswordScreen /> },
-      { path: 'reset-password', element: <ResetPasswordScreen /> },
-      {
-        element: (
-          <SessionGate>
-            <Outlet />
-          </SessionGate>
-        ),
-        children: protectedRoutes,
-      },
-      { path: '*', element: <NotFoundScreen /> },
-    ],
-  },
-];
-
-export function createRouter() {
-  return createBrowserRouter(routes);
-}
+export const routes: RouteObject[] = appRoutes(protectedRoutes, [
+  // The till's addresses belong to pos.html. An in-app link here (the sidebar's POS item, the sign-in
+  // screen's `next`) is handed to the browser to load that document.
+  { path: 'pos/*', element: <OtherDocument /> },
+  { path: '*', element: <NotFoundScreen /> },
+]);

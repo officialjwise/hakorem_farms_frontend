@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PermissionGate } from './gates';
 import { renderApp, signedIn, newClient, USERS } from '../test/harness';
 import { NetworkError, type AuthClient } from '../auth/types';
+import { posRoutes } from '../pos/routes';
 
 describe('route guard: the four session states', () => {
   it('loading: says it is checking the session, and shows no page yet', async () => {
@@ -65,7 +66,8 @@ describe('route guard: permissions', () => {
   });
 
   it('denies the POS shell without rendering any of it, and offers a way out', async () => {
-    await renderApp('/pos', await signedIn('storekeeper'));
+    // The till is its own document with its own routes (ADR 0030).
+    await renderApp('/pos', await signedIn('storekeeper'), posRoutes);
     expect(await screen.findByRole('alert')).toHaveTextContent('pos.sale.create');
     expect(screen.queryByLabelText(/barcode/i)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /start page/i })).toBeInTheDocument();
