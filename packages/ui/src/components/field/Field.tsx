@@ -1,3 +1,5 @@
+'use client';
+
 import { Slot } from '@radix-ui/react-slot';
 import { CircleAlert } from 'lucide-react';
 import { useId, type HTMLAttributes, type ReactElement } from 'react';

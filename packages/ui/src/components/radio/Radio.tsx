@@ -1,3 +1,5 @@
+'use client';
+
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import * as RadioPrimitive from '@radix-ui/react-radio-group';
 import { useEffect, useId, useRef, type ComponentPropsWithRef } from 'react';

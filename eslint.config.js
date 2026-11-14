@@ -11,9 +11,12 @@ export default tseslint.config(
     ignores: [
       '**/node_modules/**',
       '**/dist/**',
+      '**/.next/**',
       '**/storybook-static/**',
       '**/generated/**',
       '**/coverage/**',
+      // Written by Next on every build; it carries the triple-slash references Next needs (ADR 0015).
+      '**/next-env.d.ts',
     ],
   },
   js.configs.recommended,

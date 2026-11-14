@@ -1,3 +1,5 @@
+'use client';
+
 import * as SelectPrimitive from '@radix-ui/react-select';
 import type { VariantProps } from 'class-variance-authority';
 import { Check, ChevronDown } from 'lucide-react';

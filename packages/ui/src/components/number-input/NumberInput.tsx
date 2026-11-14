@@ -1,3 +1,5 @@
+'use client';
+
 import type { ChangeEvent, ComponentPropsWithRef } from 'react';
 import { cn } from '../../lib/cn';
 import { useRequireLabel } from '../../lib/useRequireLabel';

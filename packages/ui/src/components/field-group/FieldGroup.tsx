@@ -1,3 +1,5 @@
+'use client';
+
 import { CircleAlert } from 'lucide-react';
 import { useId, type ComponentPropsWithRef, type ReactNode } from 'react';
 import { cn } from '../../lib/cn';
