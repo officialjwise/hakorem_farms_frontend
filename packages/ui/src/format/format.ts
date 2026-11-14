@@ -143,3 +143,35 @@ export function formatQuantity(
   const grouped = context === 'export' ? whole : groupThousands(whole);
   return fraction === '' ? `${sign}${grouped}` : `${sign}${grouped}.${fraction}`;
 }
+
+/** The business's time zone. Every timestamp is stored in UTC and shown in Accra time (SHARED_BRIEF). */
+export const BUSINESS_TIME_ZONE = 'Africa/Accra';
+
+/** An ISO 8601 instant with an offset or `Z`, as the contract's `format: date-time` sends it. */
+const INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
+
+const two = (n: number) => String(n).padStart(2, '0');
+
+/**
+ * A UTC instant to Accra wall-clock text, `YYYY-MM-DD HH:mm` (ADR 0027). Africa/Accra is UTC+0 all year
+ * with no daylight saving, so the conversion is the UTC fields themselves and no time-zone data or Intl is
+ * needed. The form is numeric and ordered largest first, so it reads the same in every language and sorts
+ * as text. Seconds are dropped; an audit screen that needs them shows the raw instant beside it.
+ *
+ * `null` is a time that does not apply (never signed in, not revoked): an en dash, or an empty export cell.
+ * Anything that is not an instant with an offset throws, as formatMoney does for a float.
+ */
+export function formatDateTime(
+  instant: string | null,
+  { context = 'interface' }: { context?: FormatContext } = {},
+): string {
+  if (instant === null) return emptyFor(context);
+  const ms = INSTANT.test(instant) ? Date.parse(instant) : Number.NaN;
+  if (Number.isNaN(ms)) {
+    throw new TypeError(
+      `formatDateTime takes an ISO 8601 instant with an offset; got "${instant}".`,
+    );
+  }
+  const d = new Date(ms);
+  return `${d.getUTCFullYear()}-${two(d.getUTCMonth() + 1)}-${two(d.getUTCDate())} ${two(d.getUTCHours())}:${two(d.getUTCMinutes())}`;
+}
