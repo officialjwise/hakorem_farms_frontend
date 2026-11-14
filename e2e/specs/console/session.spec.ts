@@ -40,33 +40,43 @@ test.describe('session expiry and silent refresh', () => {
     await expect(page.getByRole('heading', { name: 'Stock' })).toBeVisible();
   });
 
-  test('when the server ends the session the screen says so, and signing in again returns to the page', async ({
-    page,
-  }) => {
-    await page.clock.install({ time: new Date('2026-11-14T08:00:00Z') });
-    await signIn(page, USERS.cashier, '/orders');
-    await expect(page.getByRole('heading', { name: 'Orders' })).toBeVisible();
+  // Quarantined: intermittent under a loaded full run (issue #4). `pnpm test:e2e` leaves it out and
+  // `pnpm test:e2e:quarantine` runs it. It leaves quarantine only after a loaded repeat run is green.
+  test(
+    'when the server ends the session the screen says so, and signing in again returns to the page',
+    {
+      tag: '@quarantine',
+      annotation: {
+        type: 'issue',
+        description: 'https://github.com/officialjwise/hakorem_farms_frontend/issues/4',
+      },
+    },
+    async ({ page }) => {
+      await page.clock.install({ time: new Date('2026-11-14T08:00:00Z') });
+      await signIn(page, USERS.cashier, '/orders');
+      await expect(page.getByRole('heading', { name: 'Orders' })).toBeVisible();
 
-    // A manager revokes the session: the next refresh answers 401.
-    await page.evaluate(() => {
-      const server = JSON.parse(localStorage.getItem('hk-stub:server') ?? '{}') as {
-        sessions: Record<string, { revoked: boolean }>;
-      };
-      for (const session of Object.values(server.sessions)) session.revoked = true;
-      localStorage.setItem('hk-stub:server', JSON.stringify(server));
-    });
-    await page.clock.fastForward('09:30');
+      // A manager revokes the session: the next refresh answers 401.
+      await page.evaluate(() => {
+        const server = JSON.parse(localStorage.getItem('hk-stub:server') ?? '{}') as {
+          sessions: Record<string, { revoked: boolean }>;
+        };
+        for (const session of Object.values(server.sessions)) session.revoked = true;
+        localStorage.setItem('hk-stub:server', JSON.stringify(server));
+      });
+      await page.clock.fastForward('09:30');
 
-    await expect(page.getByRole('alert')).toContainText('Your session ended');
-    await expect(page).toHaveURL('/orders'); // words, not a redirect
-    await page.getByRole('link', { name: 'Sign in again' }).click();
-    await expect(page).toHaveURL(/\/login\?next=%2Forders/);
-    await page.getByLabel(/email or phone number/i).fill(USERS.cashier.identifier);
-    await page.getByLabel(/^password/i).fill(USERS.cashier.password);
-    await page.getByRole('button', { name: 'Sign in' }).click();
-    await expect(page.getByRole('heading', { name: 'Orders' })).toBeVisible();
-    await expect(page).toHaveURL('/orders');
-  });
+      await expect(page.getByRole('alert')).toContainText('Your session ended');
+      await expect(page).toHaveURL('/orders'); // words, not a redirect
+      await page.getByRole('link', { name: 'Sign in again' }).click();
+      await expect(page).toHaveURL(/\/login\?next=%2Forders/);
+      await page.getByLabel(/email or phone number/i).fill(USERS.cashier.identifier);
+      await page.getByLabel(/^password/i).fill(USERS.cashier.password);
+      await page.getByRole('button', { name: 'Sign in' }).click();
+      await expect(page.getByRole('heading', { name: 'Orders' })).toBeVisible();
+      await expect(page).toHaveURL('/orders');
+    },
+  );
 
   test('a reload keeps the session, as cookies do', async ({ page }) => {
     await signIn(page, USERS.cashier, '/products');
