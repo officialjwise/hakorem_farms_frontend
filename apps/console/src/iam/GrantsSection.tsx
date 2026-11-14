@@ -86,135 +86,137 @@ export function GrantsSection({
   );
 
   return (
-    <Card>
-      <CardHeader className="flex flex-wrap items-center justify-between gap-2">
-        <CardTitle asChild>
-          <h2 id="grants-title">{t('grants.title')}</h2>
-        </CardTitle>
-        {manage ? (
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setDone(null);
-              setAdding(true);
-            }}
+    <section aria-labelledby="grants-title">
+      <Card>
+        <CardHeader className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle asChild>
+            <h2 id="grants-title">{t('grants.title')}</h2>
+          </CardTitle>
+          {manage ? (
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setDone(null);
+                setAdding(true);
+              }}
+            >
+              {t('grants.add')}
+            </Button>
+          ) : null}
+        </CardHeader>
+        <CardBody className="grid gap-3">
+          <p className="text-control-sm text-fg-muted">{t('grants.intro')}</p>
+          {done !== null ? (
+            <p role="status" className="font-semibold">
+              {done}
+            </p>
+          ) : null}
+          <QueryBoundary
+            query={grants}
+            labels={labels}
+            isEmpty={(page) => page.data.length === 0}
+            loadingFallback={
+              <TableContainer aria-labelledby="grants-title">
+                <Table>
+                  {header}
+                  <TableBody>
+                    <TableLoadingRows columns={COLUMNS} rows={2} label={labels.loading} />
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            }
           >
-            {t('grants.add')}
-          </Button>
-        ) : null}
-      </CardHeader>
-      <CardBody className="grid gap-3">
-        <p className="text-control-sm text-fg-muted">{t('grants.intro')}</p>
-        {done !== null ? (
-          <p role="status" className="font-semibold">
-            {done}
-          </p>
-        ) : null}
-        <QueryBoundary
-          query={grants}
-          labels={labels}
-          isEmpty={(page) => page.data.length === 0}
-          loadingFallback={
-            <TableContainer aria-labelledby="grants-title">
-              <Table>
-                {header}
-                <TableBody>
-                  <TableLoadingRows columns={COLUMNS} rows={2} label={labels.loading} />
-                </TableBody>
-              </Table>
-            </TableContainer>
-          }
-        >
-          {(page) => (
-            <TableContainer aria-labelledby="grants-title">
-              <Table>
-                {header}
-                <TableBody>
-                  {page.data.map((grant) => (
-                    <TableRow key={grant.id}>
-                      <TableRowHeader>{grant.role.name}</TableRowHeader>
-                      <TableCell label={t('grants.branch')}>
-                        {grant.branch.name}
-                        {grant.location === null
-                          ? ` · ${t('grants.anyLocation')}`
-                          : ` · ${grant.location.name}`}
-                      </TableCell>
-                      <TableCell label={t('grants.validFrom')}>
-                        <When instant={grant.validFrom} />
-                      </TableCell>
-                      <TableCell label={t('grants.validTo')}>
-                        <When instant={grant.validTo} empty={t('grants.noEnd')} />
-                      </TableCell>
-                      <TableCell label={t('grants.grantedBy')}>
-                        {grant.createdBy.displayName}
-                      </TableCell>
-                      <TableCell label={t('grants.revokeShort')}>
-                        {manage ? (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            aria-label={t('grants.revoke', {
-                              role: grant.role.name,
-                              branch: grant.branch.name,
-                            })}
-                            onClick={() => {
-                              revoke.reset();
-                              setDone(null);
-                              setRevoking(grant);
-                            }}
-                          >
-                            {t('grants.revokeShort')}
-                          </Button>
-                        ) : null}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </QueryBoundary>
+            {(page) => (
+              <TableContainer aria-labelledby="grants-title">
+                <Table>
+                  {header}
+                  <TableBody>
+                    {page.data.map((grant) => (
+                      <TableRow key={grant.id}>
+                        <TableRowHeader>{grant.role.name}</TableRowHeader>
+                        <TableCell label={t('grants.branch')}>
+                          {grant.branch.name}
+                          {grant.location === null
+                            ? ` · ${t('grants.anyLocation')}`
+                            : ` · ${grant.location.name}`}
+                        </TableCell>
+                        <TableCell label={t('grants.validFrom')}>
+                          <When instant={grant.validFrom} />
+                        </TableCell>
+                        <TableCell label={t('grants.validTo')}>
+                          <When instant={grant.validTo} empty={t('grants.noEnd')} />
+                        </TableCell>
+                        <TableCell label={t('grants.grantedBy')}>
+                          {grant.createdBy.displayName}
+                        </TableCell>
+                        <TableCell label={t('grants.revokeShort')}>
+                          {manage ? (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              aria-label={t('grants.revoke', {
+                                role: grant.role.name,
+                                branch: grant.branch.name,
+                              })}
+                              onClick={() => {
+                                revoke.reset();
+                                setDone(null);
+                                setRevoking(grant);
+                              }}
+                            >
+                              {t('grants.revokeShort')}
+                            </Button>
+                          ) : null}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </QueryBoundary>
 
-        {revoking !== null ? (
-          <ReasonDialog
-            open
-            onOpenChange={(next) => {
-              if (!next) setRevoking(null);
-            }}
-            title={t('grants.revokeTitle')}
-            body={t('grants.revokeBody', {
-              name: principal.displayName,
-              role: revoking.role.name,
-              branch: revoking.branch.name,
-            })}
-            submitLabel={t('grants.revokeSubmit')}
-            destructive
-            error={shownFailure(revoke.error)}
-            failureLabels={failureLabels}
-            onConfirm={async (reason) => {
-              const input = { path: { id: revoking.id }, body: { reason } };
-              const answer = await stepUp.run(() =>
-                revoke.mutateAsync(input, { idempotencyKey: keyFor(input) }),
-              );
-              if (answer === null) return;
-              setDone(t('grants.revoked'));
-              setRevoking(null);
-            }}
-          />
-        ) : null}
-        {adding ? (
-          <AddGrantDialog
-            principalId={principal.id}
-            onClose={() => setAdding(false)}
-            onAdded={() => {
-              setDone(t('grants.added'));
-              setAdding(false);
-            }}
-          />
-        ) : null}
-        {stepUp.dialog}
-      </CardBody>
-    </Card>
+          {revoking !== null ? (
+            <ReasonDialog
+              open
+              onOpenChange={(next) => {
+                if (!next) setRevoking(null);
+              }}
+              title={t('grants.revokeTitle')}
+              body={t('grants.revokeBody', {
+                name: principal.displayName,
+                role: revoking.role.name,
+                branch: revoking.branch.name,
+              })}
+              submitLabel={t('grants.revokeSubmit')}
+              destructive
+              error={shownFailure(revoke.error)}
+              failureLabels={failureLabels}
+              onConfirm={async (reason) => {
+                const input = { path: { id: revoking.id }, body: { reason } };
+                const answer = await stepUp.run(() =>
+                  revoke.mutateAsync(input, { idempotencyKey: keyFor(input) }),
+                );
+                if (answer === null) return;
+                setDone(t('grants.revoked'));
+                setRevoking(null);
+              }}
+            />
+          ) : null}
+          {adding ? (
+            <AddGrantDialog
+              principalId={principal.id}
+              onClose={() => setAdding(false)}
+              onAdded={() => {
+                setDone(t('grants.added'));
+                setAdding(false);
+              }}
+            />
+          ) : null}
+          {stepUp.dialog}
+        </CardBody>
+      </Card>
+    </section>
   );
 }
 

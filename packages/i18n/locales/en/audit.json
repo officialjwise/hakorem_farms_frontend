@@ -54,9 +54,9 @@
     "error": "The tamper check could not be loaded",
     "denied": "You do not have access to the tamper check",
     "empty": "No check has run yet",
-    "SUCCESS": "Intact: the chain verified with no gap or change",
-    "DRIFT": "Behind: some events are not sealed into the chain yet",
-    "FAILED": "Broken: the chain does not verify. Treat the log as possibly tampered with and call support.",
+    "SUCCESS": "Intact",
+    "DRIFT": "Behind",
+    "FAILED": "Broken",
     "lastVerified": "Last verified",
     "head": "Events in the chain",
     "anchor": "Last off-site copy",
@@ -64,7 +64,12 @@
     "anchorAt": "Number {{seq}}, {{time}}",
     "unsealed": "Waiting to be sealed",
     "oldestUnsealed": "Oldest waiting since",
-    "problems": "Problems found"
+    "problems": "Problems found",
+    "explain": {
+      "SUCCESS": "The chain verified with no gap and no change.",
+      "DRIFT": "Some events are not sealed into the chain yet. This clears by itself within minutes; if it does not, call support.",
+      "FAILED": "The chain does not verify. Treat the log as possibly tampered with and call support."
+    }
   },
   "event": {
     "loading": "Loading the audit event",

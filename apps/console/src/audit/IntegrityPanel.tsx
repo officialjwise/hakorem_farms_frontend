@@ -56,6 +56,7 @@ export function IntegrityPanel() {
                 variant={check.outcome === 'FAILED' ? 'strong' : 'subtle'}
                 label={t(`integrity.${check.outcome}`)}
               />
+              <p>{t(`integrity.explain.${check.outcome}`)}</p>
               <dl className="grid gap-x-4 gap-y-1 sm:grid-cols-[max-content_minmax(0,1fr)]">
                 <dt className="text-fg-muted">{t('integrity.lastVerified')}</dt>
                 <dd>
