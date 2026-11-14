@@ -158,6 +158,32 @@ describe.each(CASES)('the $screen screen against the Prism mock', (c) => {
   });
 });
 
+describe('the role screen reads every permission (ADR 0028)', () => {
+  it('reads the list to its end and shows it, with nothing about a cap', async () => {
+    await renderApp(`/roles/${ANY_ID}`, await signedIn('owner'));
+    expect(
+      await screen.findByRole('checkbox', { name: 'Make a counter sale' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('The permission list is longer than this screen can load'),
+    ).toBeNull();
+  });
+
+  it('past the hard cap: words, no list, no retry and nothing to save', async () => {
+    mock.endlessPages = true;
+    await renderApp(`/roles/${ANY_ID}`, await signedIn('owner'));
+    const words = 'The permission list is longer than this screen can load';
+    await waitFor(() =>
+      expect(screen.getAllByRole('alert').some((a) => a.textContent?.includes(words))).toBe(true),
+    );
+    const alert = screen.getAllByRole('alert').find((a) => a.textContent?.includes(words));
+    expect(alert).toHaveTextContent('Nothing has been saved.');
+    expect(within(alert as HTMLElement).queryByRole('button', { name: 'Try again' })).toBeNull();
+    expect(screen.queryByRole('checkbox')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Save role' })).toBeNull();
+  });
+});
+
 describe('writes against the Prism mock', () => {
   it('creates a user and shows the temporary password once, from the answer', async () => {
     const user = userEvent.setup();

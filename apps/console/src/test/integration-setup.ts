@@ -10,6 +10,10 @@ import { afterEach } from 'vitest';
  * - `hold`: the response is held back until released, so the loading state can be seen.
  * - `noRows`: a list's rows are dropped from a successful answer, because contract 1.1.0 has no empty
  *   example and Prism cannot return an empty list (CR-005). The page info says there is no more.
+ * - the end of a list: Prism answers every page with the same example, `hasMore: true` and the SAME
+ *   `nextCursor`, whatever cursor it was asked with, so its lists never end. A page whose `nextCursor` is
+ *   the cursor it was asked with is answered as the last page. Without this, `useApiAllPages` meets its
+ *   hard cap on every read (ADR 0028). `endlessPages` turns it off, to show the cap.
  */
 export const mock: {
   prefer: string | null;
@@ -17,7 +21,8 @@ export const mock: {
   preferPath: string | null;
   hold: Promise<void> | null;
   noRows: boolean;
-} = { prefer: null, preferPath: null, hold: null, noRows: false };
+  endlessPages: boolean;
+} = { prefer: null, preferPath: null, hold: null, noRows: false, endlessPages: false };
 
 /** Holds every response to the mock until the returned function is called. */
 export function holdResponses(): () => void {
@@ -33,6 +38,12 @@ Element.prototype.hasPointerCapture ??= () => false;
 Element.prototype.setPointerCapture ??= () => undefined;
 Element.prototype.releasePointerCapture ??= () => undefined;
 Element.prototype.scrollIntoView ??= () => undefined;
+// Nor ResizeObserver, which Radix Checkbox reads for its size (as packages/ui's stubResizeObserver says).
+globalThis.ResizeObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
 
 afterEach(() => {
   cleanup();
@@ -40,6 +51,7 @@ afterEach(() => {
   mock.preferPath = null;
   mock.hold = null;
   mock.noRows = false;
+  mock.endlessPages = false;
 });
 
 /**
@@ -63,11 +75,18 @@ globalThis.fetch = async (input, init) => {
   }
   const response = await realFetch(request);
   if (mock.hold !== null) await mock.hold;
-  if (!mock.noRows || request.method !== 'GET' || !response.ok) return response;
+  const cursor = url.searchParams.get('cursor');
+  const mayEnd = !mock.endlessPages && cursor !== null;
+  if ((!mock.noRows && !mayEnd) || request.method !== 'GET' || !response.ok) return response;
   const body = (await response.json()) as { data?: unknown; page?: Record<string, unknown> };
-  if (!Array.isArray(body.data)) return Response.json(body, { status: response.status });
-  return Response.json(
-    { ...body, data: [], page: { ...body.page, nextCursor: null, hasMore: false } },
-    { status: response.status, headers: { 'Content-Type': 'application/json' } },
-  );
+  const answer = (changed: unknown) =>
+    Response.json(changed, {
+      status: response.status,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  if (!Array.isArray(body.data)) return answer(body);
+  const lastPage = { ...body.page, nextCursor: null, hasMore: false };
+  if (mock.noRows) return answer({ ...body, data: [], page: lastPage });
+  if (body.page?.['nextCursor'] === cursor) return answer({ ...body, page: lastPage });
+  return answer(body);
 };

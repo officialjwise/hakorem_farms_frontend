@@ -13,6 +13,10 @@
  *    - the operation needs step-up and the session has none in the last five minutes: the fake's own 403
  *      `STEP_UP_REQUIRED` (API.md 3.4), because step-up is session state Prism does not keep;
  *    - otherwise: on to Prism through the `/mock` proxy, which answers from the contract's examples.
+ *      Prism's lists never end: every page says `hasMore: true` with the SAME `nextCursor`, whatever cursor
+ *      it was asked with. A page whose `nextCursor` is the cursor it was asked with comes back as the last
+ *      page, or `useApiAllPages` would meet its hard cap on every read (ADR 0028). The integration
+ *      tests' harness does the same.
  *
  * The cookie jar is the fake's, one per browser context, so nothing depends on how Chromium treats a
  * Set-Cookie on a fulfilled response. A reload keeps it; a new context starts empty, like a new browser.
@@ -136,6 +140,18 @@ export class FakeApi {
       });
     }
     record('prism');
-    return route.continue();
+    const cursor = url.searchParams.get('cursor');
+    if (method !== 'GET' || cursor === null) return route.continue();
+    const response = await route.fetch();
+    const body = response.ok()
+      ? ((await response.json().catch(() => null)) as {
+          page?: { nextCursor?: string | null };
+        } | null)
+      : null;
+    if (body?.page?.nextCursor !== cursor) return route.fulfill({ response });
+    return route.fulfill({
+      response,
+      json: { ...body, page: { ...body.page, nextCursor: null, hasMore: false } },
+    });
   }
 }

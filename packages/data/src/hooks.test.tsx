@@ -1,6 +1,6 @@
 import { ApiError, NetworkError } from '@hakorem/api-client';
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { MAX_ALL_PAGES } from './hooks';
+import { MAX_ALL_PAGES, PAGE_CAP_EXCEEDED, PageCapExceededError } from './hooks';
 import { envelope, json, testData } from './testing';
 
 const page = {
@@ -212,7 +212,6 @@ describe('useApiAllPages', () => {
       'iam.role.read',
       'aud.audit.read',
     ]);
-    expect(result.current.data?.truncated).toBe(false);
     expect(requests.map((r) => new URL(r.url).search)).toEqual([
       '?limit=100',
       '?limit=100&cursor=c2',
@@ -224,12 +223,27 @@ describe('useApiAllPages', () => {
     ).toBeUndefined();
   });
 
-  it(`stops after ${MAX_ALL_PAGES} pages and says the list was cut short`, async () => {
+  it(`throws past ${MAX_ALL_PAGES} pages, once, instead of reading on or answering part of the list`, async () => {
+    // A list that never ends, as a stock list pointed at the wrong hook would look.
     const { hooks, wrapper, requests } = testData(() => json(pageOf(['iam.user.read'], 'again')));
     const { result } = renderHook(() => hooks.useApiAllPages('listPermissions'), { wrapper });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.data).toBeUndefined();
+    expect(result.current.error).toBeInstanceOf(PageCapExceededError);
+    expect(result.current.error?.code).toBe(PAGE_CAP_EXCEEDED);
+    expect(result.current.error?.message).toContain('listPermissions');
+    // Not retried: reading the same five pages again cannot help.
     expect(requests).toHaveLength(MAX_ALL_PAGES);
-    expect(result.current.data?.truncated).toBe(true);
+  });
+
+  it(`answers a list of exactly ${MAX_ALL_PAGES} pages whole`, async () => {
+    const { hooks, wrapper, requests } = testData((_request, attempt) =>
+      json(pageOf([`p.${attempt}`], attempt === MAX_ALL_PAGES ? null : `c${attempt}`)),
+    );
+    const { result } = renderHook(() => hooks.useApiAllPages('listPermissions'), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.items).toHaveLength(MAX_ALL_PAGES);
+    expect(requests).toHaveLength(MAX_ALL_PAGES);
   });
 
   it('fails as a whole when any page fails, with the normalised error', async () => {

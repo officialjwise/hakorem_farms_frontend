@@ -24,7 +24,7 @@ import {
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { useStepUp } from '../auth/StepUp';
-import { useApiAllPages, useApiMutation, useApiQuery } from '../data/api';
+import { PAGE_CAP_EXCEEDED, useApiAllPages, useApiMutation, useApiQuery } from '../data/api';
 import { LeaveGuardDialog, useLeaveGuard } from '../lib/LeaveGuard';
 import { useIntentKey } from '../lib/queries';
 import { useStateLabels } from '../lib/states';
@@ -132,28 +132,30 @@ function RoleEditor({
         {role?.isSystem ? <p>{t('role.systemNote')}</p> : null}
         {role !== null && !canManage ? <p>{t('role.readOnly')}</p> : null}
       </div>
-      <QueryBoundary
-        query={permissions}
-        labels={labels}
-        isEmpty={(all) => all.items.length === 0}
-        loadingFallback={<Skeleton label={labels.loading} shape="block" className="h-96" />}
-      >
-        {(all) => {
-          const groups = groupPermissions(all.items);
-          const warning = all.truncated ? <ErrorState compact title={t('role.truncated')} /> : null;
-          return canManage ? (
-            <>
-              {warning}
+      {permissions.error?.code === PAGE_CAP_EXCEEDED ? (
+        // Past the hook's hard cap (ADR 0028): no partial list to judge a role by, and a retry reads the
+        // same pages again, so the words say what happened and there is no button.
+        <ErrorState
+          title={t('role.permissionsTooMany')}
+          description={t('role.permissionsTooManyBody')}
+        />
+      ) : (
+        <QueryBoundary
+          query={permissions}
+          labels={labels}
+          isEmpty={(all) => all.items.length === 0}
+          loadingFallback={<Skeleton label={labels.loading} shape="block" className="h-96" />}
+        >
+          {(all) => {
+            const groups = groupPermissions(all.items);
+            return canManage ? (
               <RoleForm current={role} groups={groups} onReload={onReload} />
-            </>
-          ) : role !== null ? (
-            <>
-              {warning}
+            ) : role !== null ? (
               <RolePermissionsReadOnly current={role} groups={groups} />
-            </>
-          ) : null;
-        }}
-      </QueryBoundary>
+            ) : null;
+          }}
+        </QueryBoundary>
+      )}
     </article>
   );
 }

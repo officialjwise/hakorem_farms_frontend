@@ -215,7 +215,8 @@
       "whl": "Wholesale",
       "other": "Other"
     },
-    "truncated": "The permission list is longer than the screen can load. Some permissions are not shown: do not save until support has looked."
+    "permissionsTooMany": "The permission list is longer than this screen can load",
+    "permissionsTooManyBody": "The role cannot be shown or changed here until support has looked. Nothing has been saved."
   },
   "sessions": {
     "title": "Sessions",

@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import {
+  ApiError,
   newIdempotencyKey,
   type ApiClient,
-  type ApiError,
   type InputIsOptional,
   type MutationOperationId,
   type OperationData,
@@ -80,18 +80,40 @@ export type PagedOperationId = {
 export type PageItem<Op extends PagedOperationId> =
   OperationData<Op> extends { data: readonly (infer Item)[] } ? Item : never;
 
-/** Every row of a paged read, and whether the page cap cut it short. */
+/** Every row of a paged read. There is no partial answer: past the cap the read fails (`PageCapExceededError`). */
 export interface AllPages<Item> {
   items: Item[];
-  /** True when more pages remained after `MAX_ALL_PAGES`. Say so on screen rather than look complete. */
-  truncated: boolean;
 }
 
 /**
  * The most pages `useApiAllPages` reads. With the contract's maximum page size of 100 that is 500 rows,
- * enough for a reference list (273 permissions in contract 1.1.0) and a stop for one that is not.
+ * enough for a reference list (273 permissions in contract 1.1.0) and a hard stop for one that is not.
  */
 export const MAX_ALL_PAGES = 5;
+
+/** The code a `PageCapExceededError` carries, for a screen to give it its own words. */
+export const PAGE_CAP_EXCEEDED = 'PAGE_CAP_EXCEEDED';
+
+/**
+ * `useApiAllPages` was pointed at a list longer than `MAX_ALL_PAGES` pages: a list people browse (stock,
+ * orders), not a reference list. It fails loudly instead of reading on, and is never retried (`isTransient`
+ * is false: it is not a `NetworkError` and its status is not a busy one). `status` is 0 because no single
+ * answer was wrong; the code is the client's own.
+ */
+export class PageCapExceededError extends ApiError {
+  readonly operationId: string;
+
+  constructor(operationId: string) {
+    super({
+      status: 0,
+      code: PAGE_CAP_EXCEEDED,
+      message: `${operationId} has more than ${MAX_ALL_PAGES} pages, which useApiAllPages does not read. A list this long is browsed with a cursor and Pagination (DATA_CONVENTIONS, ADR 0028).`,
+      correlationId: '',
+    });
+    this.name = 'PageCapExceededError';
+    this.operationId = operationId;
+  }
+}
 
 export interface ApiHooks {
   useApiQuery: <Op extends QueryOperationId>(
@@ -101,7 +123,8 @@ export interface ApiHooks {
   /**
    * Every page of a cursor-paged reference list, read one after another into ONE cache entry: for a short
    * list a screen must show whole, such as the permissions a role can hold. Not for browsing: a list
-   * someone pages through uses `useApiQuery` with a cursor (DATA_CONVENTIONS, "Pagination").
+   * someone pages through uses `useApiQuery` with a cursor (DATA_CONVENTIONS, "Pagination"). Past
+   * `MAX_ALL_PAGES` pages it fails with `PageCapExceededError` rather than read on.
    */
   useApiAllPages: <Op extends PagedOperationId>(
     operation: Op,
@@ -204,9 +227,10 @@ export function createApiHooks(api: ApiClient): ApiHooks {
           )) as { data: PageItem<Op>[]; page: { nextCursor: string | null; hasMore: boolean } };
           items.push(...page.data);
           cursor = page.page.hasMore ? page.page.nextCursor : null;
-          if (cursor === null) return { items, truncated: false };
+          if (cursor === null) return { items };
         }
-        return { items, truncated: true };
+        // The cap is hard: a list still going after MAX_ALL_PAGES is the wrong list for this hook.
+        throw new PageCapExceededError(operation);
       },
       staleTime: STALE_TIME_MS[options.staleClass ?? DEFAULT_STALE_CLASS],
       enabled: options.enabled,

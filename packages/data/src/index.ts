@@ -2,6 +2,8 @@ export { createQueryClient } from './queryClient';
 export {
   createApiHooks,
   MAX_ALL_PAGES,
+  PAGE_CAP_EXCEEDED,
+  PageCapExceededError,
   type AllPages,
   type ApiHooks,
   type PageItem,
