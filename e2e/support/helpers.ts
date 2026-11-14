@@ -41,6 +41,15 @@ export async function signInWithTotp(
   await page.getByRole('button', { name: 'Verify' }).click();
 }
 
+/** Answers the step-up dialog (API.md 3.4) with the authenticator code, for a write that asked for one. */
+export async function confirmStepUp(page: Page) {
+  const dialog = page.getByRole('dialog', { name: 'Confirm with your authenticator' });
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel(/^code from your authenticator app/i).fill(TOTP_CODE);
+  await dialog.getByRole('button', { name: 'Confirm' }).click();
+  await expect(dialog).toBeHidden();
+}
+
 /** WCAG 2.2 AA through axe. Never suppressed: a finding is fixed in the component. */
 export async function expectNoAxeViolations(page: Page) {
   const results = await new AxeBuilder({ page })

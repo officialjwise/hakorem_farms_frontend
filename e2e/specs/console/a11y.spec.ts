@@ -3,6 +3,7 @@ import {
   expectNoAxeViolations,
   expectNoHorizontalScroll,
   signIn,
+  signInWithTotp,
   submitLogin,
   USERS,
 } from '../../support/helpers';
@@ -51,7 +52,7 @@ for (const scheme of ['light', 'dark'] as const) {
     test('back office: every route, the open menu, denied and not found', async ({ page }) => {
       await signIn(page, USERS.cashier);
       await page.getByRole('heading', { name: 'Dashboard' }).waitFor();
-      for (const path of ['/', '/stock', '/products', '/orders', '/users', '/nowhere']) {
+      for (const path of ['/', '/stock', '/products', '/orders', '/users', '/audit', '/nowhere']) {
         await page.goto(path);
         await page.getByRole('main').or(page.getByRole('alert')).first().waitFor();
         await expectNoAxeViolations(page);
@@ -61,6 +62,33 @@ for (const scheme of ['light', 'dark'] as const) {
       await page.getByRole('button', { name: 'Menu' }).click();
       await page.getByRole('dialog').waitFor();
       await expectNoAxeViolations(page);
+    });
+
+    test('F3 screens, as the owner, with their data from the mock', async ({ page }) => {
+      await signInWithTotp(page, USERS.owner);
+      await page.getByRole('heading', { name: 'Dashboard' }).waitFor();
+      const any = '019a7a86-3046-711a-a652-1a7389f79351';
+      for (const path of [
+        '/users',
+        '/users/new',
+        `/users/${any}`,
+        '/roles',
+        `/roles/${any}`,
+        '/roles/new',
+        '/sessions',
+        '/audit',
+        `/audit/${any}`,
+      ]) {
+        await page.goto(path);
+        await page.getByRole('heading', { level: 1 }).waitFor();
+        // Wait for the data, not the placeholder: no loading status left.
+        await page
+          .getByText(/^Loading /)
+          .first()
+          .waitFor({ state: 'detached' });
+        await expectNoAxeViolations(page);
+        await expectNoHorizontalScroll(page);
+      }
     });
 
     test('POS: the shell, the open dialog and the offline state', async ({ page, context }) => {

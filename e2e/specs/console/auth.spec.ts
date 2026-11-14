@@ -55,9 +55,9 @@ test.describe('TOTP challenge', () => {
     await page.getByLabel(/^code/i).fill(TOTP_CODE);
     await page.getByRole('button', { name: 'Verify' }).click();
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
-    // The owner's role reaches users and roles.
+    // The manager's role reaches the users list.
     await page.goto('/users');
-    await expect(page.getByRole('heading', { name: 'Users and roles' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Users', level: 1 })).toBeVisible();
   });
 
   test('a reload in the middle loses the challenge on purpose and starts again', async ({
