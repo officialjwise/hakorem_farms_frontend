@@ -5,7 +5,8 @@
     "description": "Fresh meat, live animals, eggs and produce from HaKorem Farms in Dodowa, Ghana.",
     "categoryDescription": "Browse {{category}} from HaKorem Farms.",
     "checkoutTitle": "Checkout",
-    "productTitle": "Product"
+    "productTitle": "Product",
+    "siteName": "HaKorem Farms"
   },
   "header": {
     "home": "HaKorem Farms, home",
@@ -15,7 +16,8 @@
     "cartCount": "Cart, {{count}} items",
     "skip": "Skip to main content",
     "nav": "Shop by category",
-    "primary": "Main"
+    "primary": "Main",
+    "brand": "HaKorem Farms"
   },
   "nav": {
     "all": "All products",
@@ -35,7 +37,8 @@
   "home": {
     "title": "Fresh from our farm in Dodowa",
     "body": "Meat weighed to order, live animals, eggs and produce. Browse a category to begin.",
-    "browse": "Shop by category"
+    "browse": "Shop by category",
+    "categoryCards": "Categories"
   },
   "category": {
     "title": "{{category}}",
@@ -43,14 +46,16 @@
       "title": "Products arrive soon",
       "body": "The catalogue for this category is not connected yet."
     },
-    "back": "All categories"
+    "back": "All categories",
+    "loading": "Loading products"
   },
   "product": {
     "empty": {
       "title": "This product is not available",
       "body": "We could not find it. It may have been removed, or the catalogue is not connected yet."
     },
-    "back": "Back to the shop"
+    "back": "Back to the shop",
+    "loading": "Loading the product"
   },
   "cart": {
     "title": "Your cart",
@@ -68,7 +73,8 @@
       "title": "Nothing to check out",
       "body": "Your cart is empty."
     },
-    "back": "Back to the shop"
+    "back": "Back to the shop",
+    "loading": "Loading checkout"
   },
   "footer": {
     "label": "Site",
