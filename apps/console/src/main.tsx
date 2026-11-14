@@ -30,11 +30,14 @@ async function main() {
 /** A minimal service worker so the console is installable. Its caching strategy is F13 (ADR 0013). */
 function registerServiceWorker() {
   if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
+    const register = () => {
       navigator.serviceWorker.register('/sw.js').catch((error: unknown) => {
         console.error('[console] service worker registration failed', error);
       });
-    });
+    };
+    // main() is async, so the page may already have finished loading by now.
+    if (document.readyState === 'complete') register();
+    else window.addEventListener('load', register, { once: true });
   }
 }
 

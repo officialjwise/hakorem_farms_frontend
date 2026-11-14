@@ -13,7 +13,9 @@ const RETURN_GRACE_MS = 150;
  * field must own focus whenever nothing else deliberately does:
  *
  * 1. It takes focus on mount.
- * 2. If focus falls to the page (a click on blank space), it takes it back.
+ * 2. If focus falls to the page (a click on blank space), it takes it back. Not when the operator pressed
+ *    Tab (leaving the page for the browser is a keyboard user's right, and a trap there is WCAG 2.1.2), and
+ *    not when the window itself lost focus.
  * 3. A printable key pressed while focus is on the page, not on a control, moves focus to the field first,
  *    so the keystroke lands in it. A key on a button or link is left alone (Space activates a button).
  * 4. While a modal (Dialog, Sheet) is open it does nothing at all: Radix owns the modal's focus trap.
@@ -32,11 +34,14 @@ export function useBarcodeTrap(field: RefObject<HTMLInputElement | null>): void 
       if (!overlayOpen() && document.activeElement !== input) input.focus({ preventScroll: true });
     };
 
+    // Tab is the one key that may move focus off the page on purpose. A pointer press ends that.
+    let tabbing = false;
     let wasOpen = overlayOpen();
     let returning = false;
     let returnTimer: ReturnType<typeof setTimeout> | undefined;
 
     const onKeyDown = (event: KeyboardEvent) => {
+      tabbing = event.key === 'Tab';
       if (overlayOpen() || event.defaultPrevented) return;
       if (event.ctrlKey || event.metaKey || event.altKey || event.key.length !== 1) return;
       const target = event.target;
@@ -45,8 +50,13 @@ export function useBarcodeTrap(field: RefObject<HTMLInputElement | null>): void 
       input.focus({ preventScroll: true });
     };
 
+    const onPointerDown = () => {
+      tabbing = false;
+    };
+
     const onFocusOut = (event: FocusEvent) => {
-      if (event.relatedTarget === null) setTimeout(take, 0);
+      if (event.relatedTarget !== null || tabbing || !document.hasFocus()) return;
+      setTimeout(take, 0);
     };
 
     // Rule 5: focus arriving anywhere but the field right after a modal closed is Radix's return. Redirect it.
@@ -75,12 +85,14 @@ export function useBarcodeTrap(field: RefObject<HTMLInputElement | null>): void 
     take();
     document.addEventListener('keydown', onKeyDown, true);
     document.addEventListener('focusin', onFocusIn, true);
+    document.addEventListener('pointerdown', onPointerDown, true);
     input.addEventListener('focusout', onFocusOut);
     return () => {
       observer.disconnect();
       clearTimeout(returnTimer);
       document.removeEventListener('keydown', onKeyDown, true);
       document.removeEventListener('focusin', onFocusIn, true);
+      document.removeEventListener('pointerdown', onPointerDown, true);
       input.removeEventListener('focusout', onFocusOut);
     };
   }, [field]);

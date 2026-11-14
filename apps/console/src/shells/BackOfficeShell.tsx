@@ -9,7 +9,7 @@ import { PermissionGate } from '../routing/gates';
 import { Breadcrumbs } from './Breadcrumbs';
 
 const NAV_LINK =
-  'flex min-h-control-md items-center gap-2 border-s-4 border-transparent px-3 text-control-md text-fg ' +
+  'flex h-control-md items-center gap-2 border-s-4 border-transparent px-3 text-control-md text-fg ' +
   'outline-focus outline-offset-[-2px] focus-visible:outline-2 hover:bg-surface-hover ' +
   'aria-[current=page]:border-accent aria-[current=page]:bg-accent-subtle aria-[current=page]:font-semibold aria-[current=page]:text-accent-subtle-fg';
 
@@ -54,7 +54,7 @@ export function BackOfficeShell() {
       >
         {t('app.skipToContent')}
       </a>
-      <header className="flex items-center gap-2 border-b border-border bg-surface px-3 py-2">
+      <header className="flex flex-wrap items-center gap-2 border-b border-border bg-surface px-3 py-2">
         <div className="lg:hidden">
           <Sheet
             side="start"
@@ -74,7 +74,7 @@ export function BackOfficeShell() {
         <Link to="/" className="text-lg font-semibold outline-focus focus-visible:outline-2">
           {t('app.name')}
         </Link>
-        <div className="ms-auto flex items-center gap-2">
+        <div className="ms-auto flex flex-wrap items-center justify-end gap-2">
           {auth.can(POS_NAV.permission ?? '') ? (
             <Button asChild variant="secondary" size="sm">
               <Link to={POS_NAV.path}>

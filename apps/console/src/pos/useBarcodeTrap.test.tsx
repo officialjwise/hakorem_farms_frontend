@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useRef, useState } from 'react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useBarcodeTrap } from './useBarcodeTrap';
 
 /**
@@ -33,6 +33,11 @@ function Page() {
 }
 
 describe('useBarcodeTrap', () => {
+  beforeEach(() => {
+    // jsdom has no window focus; a real page being used has it.
+    vi.spyOn(document, 'hasFocus').mockReturnValue(true);
+  });
+
   it('focuses the barcode field on mount', () => {
     render(<Page />);
     expect(screen.getByLabelText('Barcode')).toHaveFocus();
@@ -44,6 +49,19 @@ describe('useBarcodeTrap', () => {
     await userEvent.click(screen.getByTestId('plain'));
     await new Promise((resolve) => setTimeout(resolve, 10));
     expect(screen.getByLabelText('Barcode')).toHaveFocus();
+  });
+
+  it('is not a keyboard trap: Tab moves on to the next control and the field does not pull focus back', async () => {
+    render(<Page />);
+    expect(screen.getByLabelText('Barcode')).toHaveFocus();
+    await userEvent.tab();
+    expect(screen.getByLabelText('Note')).toHaveFocus();
+    await userEvent.tab();
+    expect(screen.getByRole('button', { name: 'Open' })).toHaveFocus();
+    // Leaving the last control for the browser's own chrome must not be undone either.
+    await userEvent.tab();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(screen.getByLabelText('Barcode')).not.toHaveFocus();
   });
 
   it('lets a scan land in the field when focus is on the page, not on a control', async () => {

@@ -17,7 +17,7 @@ export async function SiteFooter() {
               <li key={slug}>
                 <Link
                   href={`/c/${slug}`}
-                  className="inline-flex min-h-control-md items-center text-accent-text underline"
+                  className="inline-flex h-control-md items-center text-accent-text underline"
                 >
                   {t(`nav.${key}`)}
                 </Link>

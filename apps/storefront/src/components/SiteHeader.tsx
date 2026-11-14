@@ -40,7 +40,7 @@ export async function SiteHeader() {
             <li key={slug}>
               <Link
                 href={`/c/${slug}`}
-                className="inline-flex min-h-control-md items-center rounded-md px-3 text-control-md text-accent-text underline-offset-4 outline-focus hover:underline focus-visible:outline-2"
+                className="inline-flex h-control-md items-center rounded-md px-3 text-control-md text-accent-text underline-offset-4 outline-focus hover:underline focus-visible:outline-2"
               >
                 {t(`nav.${key}`)}
               </Link>

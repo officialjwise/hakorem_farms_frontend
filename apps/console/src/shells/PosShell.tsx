@@ -41,7 +41,7 @@ export function PosShell() {
       <header className="flex flex-wrap items-center gap-3 border-b border-border bg-surface px-4 py-3">
         <h1 className="text-xl font-semibold">{t('pos.title')}</h1>
         <OfflineIndicator />
-        <div className="ms-auto flex items-center gap-2">
+        <div className="ms-auto flex flex-wrap items-center justify-end gap-2">
           <Button asChild variant="secondary" size="lg">
             <Link to="/">{t('pos.backOffice')}</Link>
           </Button>
