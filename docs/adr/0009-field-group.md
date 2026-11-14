@@ -1,6 +1,6 @@
 # 0009. FieldGroup labels a group of options; Field stays one control
 
-- Status: accepted (owner decision 2026-11-13). The details under "Details that follow from Field" are proposed, and the owner reviews them at F0c's gate.
+- Status: accepted (owner decision 2026-11-13). The details under "Details that follow from Field" were confirmed by the owner on 2026-11-14, after F0c built them.
 - Date: 2026-11-13
 - Session: F0b (owner decision), built in F0c
 
@@ -31,9 +31,9 @@ These are the owner's rules:
 - **Options:** each option keeps its own label. A radio or checkbox inside a FieldGroup is labelled by its own visible text, not by FieldGroup and not by Field.
 - **Field stays as it is:** Field is not stretched to cover groups. Field wires one control; FieldGroup labels a group.
 
-## Details that follow from Field (proposed)
+## Details that follow from Field (confirmed 2026-11-14)
 
-These mirror ADR 0005 so that the two components read the same.
+These mirror ADR 0005 so that the two components read the same. The owner confirmed all three proposals: options are not individually invalid, the group error reaches screen readers through the group description, and Required is visible text in the group label.
 
 - **Label required:** `label` is typed `NonEmpty`, so an empty literal is a compile error, and a blank label throws.
 - **Description order:** the error id first, then the hint id, on the fieldset's `aria-describedby`.

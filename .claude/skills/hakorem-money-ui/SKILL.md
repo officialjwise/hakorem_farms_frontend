@@ -27,7 +27,7 @@ Read `docs/adr/0007-money-and-weight-formatting.md`. The frontend **formats, it 
 7. **Cost is never shown as price** (CR-001). Cost fields (`unitCostPesewas`, `valueAtCostPesewas`, `accumulatedCostPesewas`) and price fields (`PriceBand`) are different columns with different labels. `PriceBandDisplay` shows selling prices only.
 8. **Totals come from the API.** Never sum rows or multiply quantity by price in a screen.
 9. **The cedi sign ships with the page** (a 1.3 KB glyph face for U+20B5). If it ever fails, fall back to `GH¢`, never to `GHS` in the interface.
-10. **Quantity display** keeps the API's three places (`3.000 head`). Whether a countable unit shows `3 head` is an open owner question; do not trim.
+10. **Quantity precision follows the unit, not the wire format** (ADR 0007). A unit declares its precision: `places={0}` for countable units (head, crates, tubers, packs), `places={3}` for weight and volume. `places` is required on `QuantityDisplay` and `formatQuantity`. The guard: a non-zero digit beyond `places` is shown, so a half crate reads `2.5 crates`, never `3`. Where the unit's precision comes from is CR-003 (the contract's `Uom` has no decimal places yet).
 
 ## Confirmation
 

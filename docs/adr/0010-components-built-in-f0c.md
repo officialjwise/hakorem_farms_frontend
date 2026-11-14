@@ -1,6 +1,6 @@
 # 0010. How the F0c components are built: Combobox, DatePicker, Toast, shared control look, four states
 
-- Status: accepted (owner answered the first three questions on 2026-11-13). The "four states" table is proposed, and the owner reviews it at F0c's gate (assumption A-F0-05).
+- Status: accepted. The owner answered the first three questions on 2026-11-13 and accepted the "four states" table as written on 2026-11-14 (assumption A-F0-05, resolved).
 - Date: 2026-11-13
 - Session: F0c
 
@@ -24,7 +24,12 @@ The reference components (Button, Table, StatusBadge, UIProvider, Field) have no
 - **Money and weight inputs parse, they do not calculate.** `MoneyInput` holds integer pesewas (or null) and `WeightInput` a three-place kilogram string (or null). Both sanitise as the operator types, so unparseable text cannot exist, and neither uses a float. `NumberInput` holds a digit string and never converts it to a number.
 - **No new stylesheet and no new variant mechanism.** Components use Tailwind utilities, token classes and `cva`, as Button does. Overlays do not animate, because that would need keyframes, which is a stylesheet.
 
-### Four states per component
+### Four states per component, and the four states per screen
+
+There are two levels, and both stand (owner, 2026-11-14):
+
+- **Components** ship the four states for their kind, in the table below. This is what F0c built.
+- **Screens** ship the brief's four states, **loading, empty, error and permission denied**, and that stays binding for every screen from F3 onward (docs/BUILD_PROMPT.md, F3 to F12). A screen composes `Skeleton` or `Spinner`, `EmptyState`, and `ErrorState` (with its `PermissionDenied` form) for them, and a component's own four states never stand in for a screen's.
 
 The owner's rule is that every component ships with four states and a story per state. A spinner and a text box have different states, so the four are defined per kind. A story is named for its state, and a component may have more than four.
 

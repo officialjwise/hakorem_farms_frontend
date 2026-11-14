@@ -1,6 +1,6 @@
 # Storefront performance budget
 
-Recorded in F0c so every later session inherits it. It is **not enforced yet**, because `apps/storefront` does not exist. F1 builds the first page and F13 wires `lhci autorun` into CI against the real storefront and against staging. Until then the numbers live here and in `lighthouse/`, and a unit test (`packages/ui/src/test/budgets.test.ts`) fails if they drift from the shared brief.
+Recorded in F0c so every later session inherits it. **These numbers are provisional, not confirmed** (owner, 2026-11-14): a budget set before a page exists is a guess. F7 builds the real catalogue listing page, so **F7 re-measures against it and adjusts the budget there** (assumption A-F0-06 stays open until then). It is also **not enforced yet**, because `apps/storefront` does not exist. F1 builds the first page and F13 wires `lhci autorun` into CI against the real storefront and against staging. Until then the numbers live here and in `lighthouse/`, and a unit test (`packages/ui/src/test/budgets.test.ts`) fails if they drift from the shared brief.
 
 ## The numbers
 

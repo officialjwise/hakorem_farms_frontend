@@ -36,6 +36,15 @@ Exports carry a bare number because a cell reading `GHS 1,234.50` imports as tex
 - **Not applicable:** a value that does not apply renders as an en dash (`–`, U+2013).
 - **Not applicable in exports:** an empty cell, never a dash, for money and weight alike. A dash in a numeric column breaks the column's sum. Owner confirmed 2026-11-13.
 
+### Quantity: precision follows the unit
+
+Owner decision 2026-11-14. ADR 0007 was silent on quantities, and F0c first shipped the wire format (three places) as a conservative default. That was wrong: `3.000 head` is not how a farm counts goats.
+
+- **Precision follows the unit, not the wire format.** A unit of measure declares its display precision: **zero** for countable units (head, crates, tubers, packs) and **three** for weight and volume. The API still sends three places (`Quantity`).
+- **The guard:** a value with a non-zero digit beyond the declared precision shows its digits, up to the last non-zero one, so the display never lies about a half crate. `2.500` crates shows `2.5 crates`, and `2.999` at zero places shows `2.999`. Nothing is rounded.
+- **Built as:** `formatQuantity(quantity, { places, context })` and `QuantityDisplay`, where `places` (0 to 3) is required with no default, so a caller cannot forget it. Exports follow the same rule and stay bare numbers.
+- **Where `places` comes from:** the unit of measure. The contract's `Uom` has `code`, `name` and `kind` (COUNT, WEIGHT, VOLUME) but no decimal places, so CR-003 asks the backend for one.
+
 ### The cedi sign
 
 - `GH₵` is U+20B5. Older Android system fonts cover it unreliably, so the glyph ships with the page rather than depending on the device.
