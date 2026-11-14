@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { EmptyState } from '@hakorem/ui';
 
-type Area = 'dashboard' | 'stock' | 'products' | 'orders' | 'users';
+type Area = 'dashboard' | 'stock' | 'products' | 'orders';
 
 /**
  * Stands in for a screen a later session builds. It has no data, so it has no loading or error state of its

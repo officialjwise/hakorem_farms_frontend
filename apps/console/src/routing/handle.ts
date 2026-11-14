@@ -14,7 +14,21 @@ export interface RouteHandle {
   crumb: NavKey;
 }
 
-export type NavKey = 'dashboard' | 'stock' | 'products' | 'orders' | 'users' | 'pos';
+export type NavKey =
+  | 'dashboard'
+  | 'stock'
+  | 'products'
+  | 'orders'
+  | 'users'
+  | 'roles'
+  | 'sessions'
+  | 'audit'
+  | 'pos'
+  | 'userNew'
+  | 'userDetail'
+  | 'roleNew'
+  | 'roleDetail'
+  | 'auditEvent';
 
 export function isRouteHandle(value: unknown): value is RouteHandle {
   return (

@@ -55,7 +55,7 @@ describe('route guard: permissions', () => {
     const login = await client.loginStaff(USERS.manager);
     await client.verifyTotp({ challengeToken: login.challengeToken ?? '', code: '481205' });
     await renderApp('/users', client);
-    expect(await screen.findByRole('heading', { name: /users and roles/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Users', level: 1 })).toBeInTheDocument();
     expect(screen.queryByText(/do not have access/i)).not.toBeInTheDocument();
   });
 

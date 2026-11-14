@@ -48,8 +48,16 @@
     "stock": "Stock",
     "products": "Products",
     "orders": "Orders",
-    "users": "Users and roles",
-    "pos": "Point of sale"
+    "users": "Users",
+    "roles": "Roles",
+    "sessions": "Sessions",
+    "audit": "Audit log",
+    "pos": "Point of sale",
+    "userNew": "New user",
+    "userDetail": "User",
+    "roleNew": "New role",
+    "roleDetail": "Role",
+    "auditEvent": "Audit event"
   },
   "placeholder": {
     "title": "This area is built in a later session",
@@ -58,8 +66,7 @@
       "dashboard": "the owner dashboard",
       "stock": "stock",
       "products": "products",
-      "orders": "orders",
-      "users": "users and roles"
+      "orders": "orders"
     }
   },
   "pos": {

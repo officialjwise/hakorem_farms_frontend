@@ -7,6 +7,14 @@ import { ForgotPasswordScreen } from '../auth/screens/ForgotPasswordScreen';
 import { LoginScreen } from '../auth/screens/LoginScreen';
 import { ResetPasswordScreen } from '../auth/screens/ResetPasswordScreen';
 import { TotpScreen } from '../auth/screens/TotpScreen';
+import { AuditEventScreen } from '../audit/AuditEventScreen';
+import { AuditScreen } from '../audit/AuditScreen';
+import { RoleDetailScreen, RoleNewScreen } from '../iam/RoleScreen';
+import { RolesScreen } from '../iam/RolesScreen';
+import { SessionsScreen } from '../iam/SessionsScreen';
+import { UserCreateScreen } from '../iam/UserCreateScreen';
+import { UserDetailScreen } from '../iam/UserDetailScreen';
+import { UsersScreen } from '../iam/UsersScreen';
 import { PermissionGate, SessionGate } from '../routing/gates';
 import type { RouteHandle } from '../routing/handle';
 import { NotFoundScreen } from '../screens/NotFoundScreen';
@@ -61,10 +69,53 @@ export const protectedRoutes: RouteObject[] = [
         element: <PlaceholderScreen area="orders" />,
         handle: back('ord.order.read', 'orders'),
       },
+      // F3. Each leaf's permission is the x-permission of the operation it reads (or, for a form, writes).
       {
         path: 'users',
-        element: <PlaceholderScreen area="users" />,
         handle: back('iam.user.read', 'users'),
+        children: [
+          { index: true, element: <UsersScreen />, handle: back('iam.user.read', 'users') },
+          {
+            path: 'new',
+            element: <UserCreateScreen />,
+            handle: back('iam.user.create', 'userNew'),
+          },
+          {
+            path: ':id',
+            element: <UserDetailScreen />,
+            handle: back('iam.user.read', 'userDetail'),
+          },
+        ],
+      },
+      {
+        path: 'roles',
+        handle: back('iam.role.read', 'roles'),
+        children: [
+          { index: true, element: <RolesScreen />, handle: back('iam.role.read', 'roles') },
+          { path: 'new', element: <RoleNewScreen />, handle: back('iam.role.manage', 'roleNew') },
+          {
+            path: ':id',
+            element: <RoleDetailScreen />,
+            handle: back('iam.role.read', 'roleDetail'),
+          },
+        ],
+      },
+      {
+        path: 'sessions',
+        element: <SessionsScreen />,
+        handle: back('iam.session.read', 'sessions'),
+      },
+      {
+        path: 'audit',
+        handle: back('aud.audit.read', 'audit'),
+        children: [
+          { index: true, element: <AuditScreen />, handle: back('aud.audit.read', 'audit') },
+          {
+            path: ':id',
+            element: <AuditEventScreen />,
+            handle: back('aud.audit.read', 'auditEvent'),
+          },
+        ],
       },
     ],
   },
