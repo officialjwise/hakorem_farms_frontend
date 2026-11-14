@@ -154,3 +154,12 @@ export {
   type ServerFailure,
 } from './forms/serverErrors';
 export { useDirtyGuard, type DirtyGuard } from './forms/useDirtyGuard';
+export {
+  MutationFailure,
+  QueryBoundary,
+  type FailureLike,
+  type MutationFailureProps,
+  type QueryBoundaryLabels,
+  type QueryBoundaryProps,
+  type QueryLike,
+} from './components/query-boundary/QueryBoundary';
