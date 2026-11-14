@@ -52,7 +52,7 @@ describe('route guard: permissions', () => {
 
   it('lets a user in who holds the permission', async () => {
     const client = newClient();
-    const login = await client.loginStaff(USERS.owner);
+    const login = await client.loginStaff(USERS.manager);
     await client.verifyTotp({ challengeToken: login.challengeToken ?? '', code: '481205' });
     await renderApp('/users', client);
     expect(await screen.findByRole('heading', { name: /users and roles/i })).toBeInTheDocument();

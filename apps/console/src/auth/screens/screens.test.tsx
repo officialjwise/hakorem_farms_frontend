@@ -95,8 +95,8 @@ describe('login screen', () => {
 
   it('goes to the code step for a TOTP user, and to the password step for a temporary password', async () => {
     const first = await renderApp('/login', newClient());
-    await fill(/email or phone number/i, USERS.owner.identifier);
-    await fill(/^password/i, USERS.owner.password);
+    await fill(/email or phone number/i, USERS.manager.identifier);
+    await fill(/^password/i, USERS.manager.password);
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
     await waitFor(() => expect(first.router.state.location.pathname).toBe('/login/totp'));
     first.unmount();
@@ -112,8 +112,8 @@ describe('login screen', () => {
 describe('TOTP screen', () => {
   async function toCodeStep() {
     const view = await renderApp('/login', newClient());
-    await fill(/email or phone number/i, USERS.owner.identifier);
-    await fill(/^password/i, USERS.owner.password);
+    await fill(/email or phone number/i, USERS.manager.identifier);
+    await fill(/^password/i, USERS.manager.password);
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
     await screen.findByRole('heading', { name: /enter your code/i });
     return view;

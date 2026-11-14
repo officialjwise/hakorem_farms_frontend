@@ -10,6 +10,8 @@
  *    - no live session behind this browser's cookies: Prism with `Prefer: code=401`, so the contract's own
  *      401 comes back;
  *    - the session lacks the operation's `x-permission`: Prism with `Prefer: code=403`, the contract's own 403;
+ *    - the operation needs step-up and the session has none in the last five minutes: the fake's own 403
+ *      `STEP_UP_REQUIRED` (API.md 3.4), because step-up is session state Prism does not keep;
  *    - otherwise: on to Prism through the `/mock` proxy, which answers from the contract's examples.
  *
  * The cookie jar is the fake's, one per browser context, so nothing depends on how Chromium treats a
@@ -55,7 +57,7 @@ export function findOperation(method: string, path: string): Operation | undefin
 /** A permission code as `x-permission` writes one (`iam.user.read`), not a sentence about one. */
 const PERMISSION_CODE = /^[a-z]+(\.[a-z_]+)+$/;
 
-export type Outcome = 'fake' | 'prism' | 'prism-401' | 'prism-403';
+export type Outcome = 'fake' | 'prism' | 'prism-401' | 'prism-403' | 'step-up-403';
 
 export class FakeApi {
   readonly server: FakeAuthServer = createFakeAuthServer();
@@ -123,6 +125,15 @@ export class FakeApi {
     if (needed !== null && PERMISSION_CODE.test(needed) && !session.permissions.includes(needed)) {
       record('prism-403');
       return route.continue({ headers: { ...request.headers(), prefer: 'code=403' } });
+    }
+    const refusal = this.server.stepUpRefusal(this.jar, operation.id);
+    if (refusal !== null) {
+      record('step-up-403');
+      return route.fulfill({
+        status: refusal.status,
+        headers: refusal.headers ?? {},
+        body: JSON.stringify(refusal.body),
+      });
     }
     record('prism');
     return route.continue();

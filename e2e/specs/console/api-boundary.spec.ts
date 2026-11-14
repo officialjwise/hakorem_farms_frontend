@@ -44,7 +44,7 @@ test.describe('the API the end-to-end suite runs against', () => {
 
   test('a manager who holds iam.user.read gets Prism’s example users', async ({ page, api }) => {
     await page.goto('/login');
-    await submitLogin(page, USERS.owner);
+    await submitLogin(page, USERS.manager);
     await page.getByLabel(/^code/i).fill(TOTP_CODE);
     await page.getByRole('button', { name: 'Verify' }).click();
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();

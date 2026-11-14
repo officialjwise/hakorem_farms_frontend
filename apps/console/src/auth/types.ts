@@ -24,7 +24,12 @@ export type ErrorDetail = components['schemas']['ErrorDetail'];
 
 type BodyOf<
   Op extends
-    'loginStaff' | 'verifyTotp' | 'changePassword' | 'requestPasswordReset' | 'resetPassword',
+    | 'loginStaff'
+    | 'verifyTotp'
+    | 'changePassword'
+    | 'requestPasswordReset'
+    | 'resetPassword'
+    | 'stepUp',
 > = OperationInput<Op> extends { body: infer Body } ? Body : never;
 
 /**
@@ -51,4 +56,9 @@ export interface AuthClient {
   requestPasswordReset(input: Omit<BodyOf<'requestPasswordReset'>, 'realm'>): Promise<void>;
   /** operationId `resetPassword`: POST /auth/password/reset. */
   resetPassword(input: BodyOf<'resetPassword'>): Promise<void>;
+  /**
+   * operationId `stepUp`: POST /auth/step-up. A TOTP code on the current session, answered with the session
+   * and a new `steppedUpAt`. Needed before an operation the contract marks "Requires step-up" (API.md 3.4).
+   */
+  stepUp(input: BodyOf<'stepUp'>): Promise<SessionInfo>;
 }

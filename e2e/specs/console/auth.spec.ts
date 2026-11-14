@@ -46,7 +46,7 @@ test.describe('TOTP challenge', () => {
     page,
   }) => {
     await page.goto('/login');
-    await submitLogin(page, USERS.owner);
+    await submitLogin(page, USERS.manager);
     await expect(page.getByRole('heading', { name: 'Enter your code' })).toBeVisible();
     await expect(page.getByLabel(/^code/i)).toBeFocused();
     await page.getByLabel(/^code/i).fill('000000');
@@ -64,7 +64,7 @@ test.describe('TOTP challenge', () => {
     page,
   }) => {
     await page.goto('/login');
-    await submitLogin(page, USERS.owner);
+    await submitLogin(page, USERS.manager);
     await expect(page.getByRole('heading', { name: 'Enter your code' })).toBeVisible();
     await page.reload();
     await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();

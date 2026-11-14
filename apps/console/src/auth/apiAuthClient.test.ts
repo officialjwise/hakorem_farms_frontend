@@ -97,7 +97,7 @@ describe('the real auth client: its own rules', () => {
       'POST /auth/staff/login',
       'POST /auth/totp/verify',
     ]);
-    // None of the eight requires an idempotency key in contract 1.1.0, so none is sent.
+    // None of the auth operations requires an idempotency key in contract 1.1.0, so none is sent.
     expect(requests.some((r) => r.headers.has('Idempotency-Key'))).toBe(false);
   });
 
@@ -388,8 +388,50 @@ describe('passwords', () => {
   });
 });
 
+describe('step-up', () => {
+  async function signedInOwner() {
+    const { challengeToken } = await client.loginStaff(OWNER);
+    await client.verifyTotp({ challengeToken: challengeToken ?? '', code: FAKE_TOTP_CODE });
+  }
+
+  it('steps up the current session with the CSRF token: the answer carries a new steppedUpAt', async () => {
+    const { client: c, requests } = recorded();
+    const { challengeToken } = await c.loginStaff(OWNER);
+    const login = await c.verifyTotp({
+      challengeToken: challengeToken ?? '',
+      code: FAKE_TOTP_CODE,
+    });
+    expect(login.session?.steppedUpAt).toBeNull();
+    const session = await c.stepUp({ code: FAKE_TOTP_CODE });
+    expect(session.steppedUpAt).toBe('2026-11-14T08:00:00.000Z');
+    const last = requests.at(-1);
+    expect(`${last?.method} ${new URL(last?.url ?? FAKE_BASE_URL).pathname}`).toBe(
+      'POST /auth/step-up',
+    );
+    expect(last?.headers.get('X-CSRF-Token')).toBe(login.session?.csrfToken);
+  });
+
+  it('refuses a wrong code with 401 TOTP_INVALID and leaves the session without a step-up', async () => {
+    await signedInOwner();
+    expect((await rejection(client.stepUp({ code: '000000' }))).code).toBe('TOTP_INVALID');
+    expect((await client.getCurrentSession()).steppedUpAt).toBeNull();
+  });
+
+  it('refuses a step-up operation until the session stepped up, and again five minutes later', async () => {
+    await signedInOwner();
+    expect(server.stepUpRefusal(jar, 'createGrant')?.status).toBe(403);
+    expect(server.stepUpRefusal(jar, 'listUsers')).toBeNull();
+    await client.stepUp({ code: FAKE_TOTP_CODE });
+    expect(server.stepUpRefusal(jar, 'createGrant')).toBeNull();
+    tick(5 * 60 * 1000);
+    expect(
+      (server.stepUpRefusal(jar, 'createGrant')?.body as { error: { code: string } }).error.code,
+    ).toBe('STEP_UP_REQUIRED');
+  });
+});
+
 describe('the fake server itself', () => {
-  it('answers only the eight auth operations', () => {
+  it('answers only the nine auth operations', () => {
     const fresh = createFakeAuthServer();
     expect(
       fresh.handle({ method: 'GET', path: '/iam/users', headers: {}, body: undefined }, {}),

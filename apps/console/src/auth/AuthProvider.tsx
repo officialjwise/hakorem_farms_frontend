@@ -50,6 +50,12 @@ export interface AuthApi {
    * it when any request gets a 401 (ADR 0021), so the timer and a 401 never run two refreshes.
    */
   refreshSession: () => Promise<void>;
+  /**
+   * Step up the current session with a TOTP code (API.md 3.4), for an operation the server refused with 403
+   * `STEP_UP_REQUIRED`. Adopts the session the server answers with (a new `steppedUpAt`); the caller then
+   * repeats the refused request with the same idempotency key.
+   */
+  stepUp: (code: string) => Promise<void>;
   /** End the session in the UI: the server refused a refresh. Shows the session expiry screen. */
   expire: () => void;
   /** Re-run the boot check after an `error`. */
@@ -255,6 +261,13 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
     adopt(await refresh());
   }, [refresh, adopt]);
 
+  const stepUp = useCallback<AuthApi['stepUp']>(
+    async (code) => {
+      adopt(await client.stepUp({ code }));
+    },
+    [client, adopt],
+  );
+
   const expire = useCallback(() => {
     setSession(null);
     setPending(null);
@@ -275,6 +288,7 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
       resetPassword: (token, newPassword) => client.resetPassword({ token, newPassword }),
       logout,
       refreshSession,
+      stepUp,
       expire,
       retry: () => {
         setStatus('loading');
@@ -292,6 +306,7 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
       changePassword,
       logout,
       refreshSession,
+      stepUp,
       expire,
       client,
     ],

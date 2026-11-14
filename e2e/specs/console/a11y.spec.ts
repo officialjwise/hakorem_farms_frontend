@@ -36,7 +36,7 @@ for (const scheme of ['light', 'dark'] as const) {
 
     test('TOTP and forced password change', async ({ page }) => {
       await page.goto('/login');
-      await submitLogin(page, USERS.owner);
+      await submitLogin(page, USERS.manager);
       await page.getByRole('heading', { name: 'Enter your code' }).waitFor();
       await expectNoAxeViolations(page);
       await expectNoHorizontalScroll(page);

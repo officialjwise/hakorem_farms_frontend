@@ -30,6 +30,22 @@ const LOCKOUT_MS = 30 * 1000;
 const MAX_TOTP_ATTEMPTS = 5;
 const MS_PER_SECOND = 1000;
 const MIN_PASSWORD_LENGTH = 12;
+/** A step-up counts for five minutes on the session it was made on (API.md 3.4). */
+export const STEP_UP_TTL_MS = 5 * 60 * 1000;
+
+/**
+ * The operations the contract marks "Requires step-up" that the F3 screens call. The fake answers them with
+ * 403 `STEP_UP_REQUIRED` until the session has stepped up in the last five minutes, as API.md 3.4 says the
+ * server does. The list is the contract's descriptions, read by hand: the operation table does not carry it.
+ */
+export const STEP_UP_OPERATIONS: ReadonlySet<string> = new Set([
+  'createUser',
+  'resetUserPassword',
+  'createRole',
+  'updateRole',
+  'createGrant',
+  'revokeGrant',
+]);
 
 /** The code the fake accepts for any user with TOTP. It is the contract's own example code. */
 export const FAKE_TOTP_CODE = '481205';
@@ -64,8 +80,37 @@ const CASHIER_PERMISSIONS = [
   'ord.order.read',
 ];
 
+/** What the owner holds for the F3 screens: users, roles, grants, sessions and the audit log. */
+const OWNER_PERMISSIONS = [
+  ...CASHIER_PERMISSIONS,
+  'iam.user.read',
+  'iam.user.create',
+  'iam.user.update',
+  'iam.user.disable',
+  'iam.user.unlock',
+  'iam.user.reset_password',
+  'iam.role.read',
+  'iam.role.manage',
+  'iam.grant.read',
+  'iam.grant.manage',
+  'iam.session.read',
+  'iam.session.revoke',
+  'mdm.branch.read',
+  'aud.audit.read',
+];
+
 /** Keyed by lower-case email. Permission codes are the contract's `x-permission` values. */
 export const FAKE_USERS: Record<string, FakeUser> = {
+  'ama.mensah@hakoremfarms.com': {
+    id: '019a7a86-1c4e-7b9a-9e2f-5d3c8a1b7e04',
+    displayName: 'Ama Mensah',
+    password: 'Mango-Season-2026!',
+    totp: true,
+    mustChangePassword: false,
+    roleCode: 'OWNER',
+    roleName: 'Owner',
+    permissions: OWNER_PERMISSIONS,
+  },
   'kwabena.owusu@hakoremfarms.com': {
     id: '019a7a86-4f35-7afd-b035-b8ab03a83188',
     displayName: 'Kwabena Owusu',
@@ -148,6 +193,8 @@ interface ServerSession {
   revoked: boolean;
   refreshExpires: number;
   accessExpires: number;
+  /** When the session last stepped up, by the fake's clock, or null. */
+  steppedUpAt: number | null;
 }
 interface Challenge {
   email: string;
@@ -156,7 +203,7 @@ interface Challenge {
   attempts: number;
 }
 
-/** The eight operations this fake answers, by method and path. Everything else is not its business. */
+/** The nine operations this fake answers, by method and path. Everything else is not its business. */
 export const FAKE_AUTH_ROUTES = {
   'POST /auth/staff/login': 'loginStaff',
   'POST /auth/totp/verify': 'verifyTotp',
@@ -166,6 +213,7 @@ export const FAKE_AUTH_ROUTES = {
   'POST /auth/password/change': 'changePassword',
   'POST /auth/password/reset-request': 'requestPasswordReset',
   'POST /auth/password/reset': 'resetPassword',
+  'POST /auth/step-up': 'stepUp',
 } as const;
 
 /** Whole seconds, rounded up, with integer arithmetic only (money.test.ts forbids Math rounding in sources). */
@@ -222,12 +270,17 @@ function header(request: FakeRequest, name: string): string | undefined {
 }
 
 export interface FakeAuthServer {
-  /** Answers one of the eight auth operations, or returns null for any other request. */
+  /** Answers one of the nine auth operations, or returns null for any other request. */
   handle(request: FakeRequest, jar: CookieJar): FakeResponse | null;
   /** The signed-in user behind the jar's access cookie, or null (no cookie, expired, or revoked). */
   sessionFor(jar: CookieJar): { email: string; permissions: readonly string[] } | null;
   /** A manager revokes every session (the next refresh answers 401). */
   revokeAllSessions(): void;
+  /**
+   * The 403 `STEP_UP_REQUIRED` answer for an operation the contract marks "Requires step-up", when the
+   * session behind the jar has not stepped up in the last five minutes; otherwise null.
+   */
+  stepUpRefusal(jar: CookieJar, operationId: string): FakeResponse | null;
   /** The fake's clock. `set` and `advance` keep it beside Playwright's or Vitest's. */
   clock: { now(): number; set(ms: number): void; advance(ms: number): void };
 }
@@ -261,7 +314,8 @@ export function createFakeAuthServer(): FakeAuthServer {
       csrfToken: session.csrf,
       accessExpiresAt: new Date(session.accessExpires).toISOString(),
       refreshExpiresAt: new Date(session.refreshExpires).toISOString(),
-      steppedUpAt: null,
+      steppedUpAt:
+        session.steppedUpAt === null ? null : new Date(session.steppedUpAt).toISOString(),
       mustChangePassword: false,
       totpEnrolled: user.totp,
       grants: [{ roleCode: user.roleCode, roleName: user.roleName, ...BRANCH }],
@@ -288,6 +342,7 @@ export function createFakeAuthServer(): FakeAuthServer {
       revoked: false,
       refreshExpires: now() + REFRESH_TTL_MS,
       accessExpires: 0,
+      steppedUpAt: null,
     };
     sessions[sessionId] = session;
     return issue(jar, sessionId, session);
@@ -459,7 +514,32 @@ export function createFakeAuthServer(): FakeAuthServer {
             return error(422, 'RESET_CODE_INVALID', 'That reset code is not valid or has expired.');
           }
           return NO_CONTENT;
+        case 'stepUp': {
+          const entry = authenticate(jar);
+          if (!entry) return UNAUTHENTICATED();
+          if (header(request, 'X-CSRF-Token') !== entry[1].csrf) return CSRF_INVALID();
+          if (!FAKE_USERS[entry[1].email]?.totp) {
+            return error(403, 'TOTP_ENROLMENT_REQUIRED', 'Set up two-step sign-in first.');
+          }
+          if ((body.code ?? '').trim() !== FAKE_TOTP_CODE) {
+            return error(401, 'TOTP_INVALID', 'The code is wrong or already used.');
+          }
+          entry[1].steppedUpAt = now();
+          return ok(sessionInfo(entry[0], entry[1]));
+        }
       }
+    },
+    stepUpRefusal(jar, operationId) {
+      if (!STEP_UP_OPERATIONS.has(operationId)) return null;
+      const entry = authenticate(jar);
+      if (!entry) return null;
+      const at = entry[1].steppedUpAt;
+      if (at !== null && now() - at < STEP_UP_TTL_MS) return null;
+      return error(
+        403,
+        'STEP_UP_REQUIRED',
+        'Enter a code from your authenticator app to confirm this change.',
+      );
     },
     sessionFor(jar) {
       const entry = authenticate(jar);

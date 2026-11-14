@@ -11,7 +11,7 @@
  *   fresh visitor's boot check would run a refresh, have it refused, and land on "your session ended". So
  *   the session hooks below refuse every refresh and do nothing on expiry, and the 401 reaches the caller.
  * - **The CSRF token is the one the last session response carried** (`SessionInfo.csrfToken`, from
- *   loginStaff, verifyTotp, getCurrentSession or refreshSession), held in memory only and forgotten on
+ *   loginStaff, verifyTotp, getCurrentSession, refreshSession or stepUp), held in memory only and forgotten on
  *   logout. Cookies are HttpOnly and the browser sends them itself (`credentials: 'include'`).
  */
 import {
@@ -88,5 +88,6 @@ export function createApiAuthClient(options: ApiAuthClientOptions): AuthClient {
     resetPassword: async (body) => {
       await api.call('resetPassword', { body });
     },
+    stepUp: async (body) => remember(await api.call('stepUp', { body })),
   };
 }
