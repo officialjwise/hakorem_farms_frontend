@@ -47,6 +47,15 @@ export default tseslint.config(
     },
   },
   {
+    // Combobox option rows are role="option" on the same element as the onClick, reached through
+    // aria-activedescendant while focus stays in the input (ARIA APG combobox, ADR 0010), so keys
+    // never reach a row. click-events-have-key-events checks the element type, not its ARIA role,
+    // and jsx-a11y has had no release since 2024 (ADR 0002). axe in Storybook stays the gate, and
+    // interactive-supports-focus still runs here and passes (tabIndex={-1}).
+    files: ['packages/ui/src/components/combobox/Combobox.tsx'],
+    rules: { 'jsx-a11y/click-events-have-key-events': 'off' },
+  },
+  {
     // Colour tokens: role-checked, no raw colours, marketing tokens scoped.
     files: ['**/*.{ts,tsx,js,mjs}'],
     ignores: ['tooling/lint-tokens/**'],

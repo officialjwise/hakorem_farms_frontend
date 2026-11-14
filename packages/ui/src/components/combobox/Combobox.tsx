@@ -275,13 +275,11 @@ export function Combobox<L extends string>({
                 {visible.map((option, index) => {
                   const chosen = option.value === value;
                   return (
-                    // The input keeps focus and the row is reached through aria-activedescendant, so the
-                    // row itself has no key handler (ARIA APG combobox pattern, ADR 0010).
-                    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/interactive-supports-focus
                     <div
                       key={option.value}
                       id={optionId(baseId, index)}
                       role="option"
+                      tabIndex={-1}
                       aria-selected={chosen}
                       aria-disabled={option.disabled || undefined}
                       data-active={index === active || undefined}

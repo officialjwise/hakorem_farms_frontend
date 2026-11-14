@@ -18,5 +18,6 @@ The brief fixes TypeScript 5.x, React 19 and Node 22 LTS. Several tools have shi
 
 ## Consequences
 
+- **One scoped exception (owner, 2026-11-14):** `jsx-a11y/click-events-have-key-events` is off for `packages/ui/src/components/combobox/Combobox.tsx` only, in `eslint.config.js`. Its option rows put `role="option"` on the same element as the `onClick` and are reached through `aria-activedescendant`, so keys never reach them. The rule checks element type, not ARIA role. No inline suppression remains in the package, and `interactive-supports-focus` passes there through `tabIndex={-1}`.
 - If jsx-a11y breaks on a future ESLint release, replace it with a maintained fork or drop it and rely on axe. Record that here.
 - `pnpm setup` is a built-in pnpm command, so the brief's setup step runs as `pnpm run setup`.

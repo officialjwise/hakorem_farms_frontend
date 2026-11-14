@@ -83,7 +83,7 @@ All pass, each run on its own so no pipe hid an exit code:
 2. **Four states (A-F0-05): resolved.** ADR 0010 is accepted as written. Both levels stand, and ADR 0010 now says so: component states per its table, and the brief's four screen states (loading, empty, error, permission denied) binding for every screen from F3 onward.
 3. **Lighthouse budgets (A-F0-06): still open, provisional.** Re-measure against a real listing page in F7 and adjust there. Noted in `docs/PERFORMANCE_BUDGET.md`.
 4. **Quantity: changed.** Display precision follows the unit, not the wire format: zero places for countable units, three for weight and volume, and a non-zero digit beyond the declared precision is always shown. `formatQuantity` and `QuantityDisplay` now take a required `places`. The contract's `Uom` has `code`, `name` and `kind` but no decimal places, so **CR-003** is raised. Recorded in ADR 0007.
-5. **Combobox suppression: no decision yet.** See the answer below.
+5. **Combobox suppression: resolved (owner, 2026-11-14).** `tabIndex={-1}` satisfies `interactive-supports-focus`, and the inline disable is gone. `click-events-have-key-events` still fired, and `role="option"` is on the same element as the `onClick`, so it is off for `Combobox.tsx` only through a scoped `eslint.config.js` exception citing ADR 0002 (the rule checks element type, not ARIA role). No inline suppression remains in the package. Lint passes, and the Combobox unit tests and all eight stories, KeyboardPath included, pass in Chromium with axe.
 6. **ADR 0009: confirmed**, all three proposals.
 
 ### Combobox: which rule, and why the code cannot satisfy it
