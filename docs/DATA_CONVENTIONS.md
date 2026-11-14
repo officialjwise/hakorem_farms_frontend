@@ -112,7 +112,9 @@ const query = useApiQuery('listStockOnHand', { query: { locationId } });
 
 ## Pagination
 
-Cursor pages: `PageInfo` is `nextCursor`, `limit`, `hasMore`; there is no total. A screen keeps the cursor in state and passes it as `query.cursor`, so each page is its own cache entry, and uses `Pagination` with Previous and Next only. An infinite-scroll hook is not built; the first screen that needs one adds it here.
+Cursor pages: `PageInfo` is `nextCursor`, `limit`, `hasMore`; there is no total. A screen keeps the cursor in state (`useCursorPages` in the console keeps the visited cursors, so Previous returns to the exact page) and passes it as `query.cursor`, so each page is its own cache entry, and uses `Pagination` with Previous and Next only.
+
+A short reference list a screen must show whole (the permissions a role can hold) uses `useApiAllPages(operationId, input)` instead (ADR 0028): it follows the cursors into one cache entry, at most `MAX_ALL_PAGES` (5) pages, and answers `{ items, truncated }`. Say on screen when `truncated` is true. Never use it for a list people browse. An infinite-scroll hook is still not built.
 
 ## Money, weight, quantity
 
