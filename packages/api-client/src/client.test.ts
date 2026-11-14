@@ -298,6 +298,33 @@ describe('the 401 single flight', () => {
     expect(seen).toHaveLength(1);
   });
 
+  it('does not refresh again for a 401 that arrives after the refresh it raced with has finished', async () => {
+    const hooks = session();
+    let release: () => void = () => undefined;
+    const slow = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    // The first request is refused at once and starts the refresh. The second was sent with the old
+    // cookie and its refusal arrives only after the refresh has finished.
+    const { client, seen } = harness(
+      async (_request, attempt) => {
+        if (attempt === 2) await slow;
+        return hooks.refresh.mock.calls.length === 0 || attempt === 2
+          ? json(envelope('UNAUTHENTICATED'), 401)
+          : json({ ok: true });
+      },
+      { session: hooks },
+    );
+    const first = client.call('getCurrentSession');
+    const second = client.call('getCurrentSession');
+    await first;
+    expect(hooks.refresh).toHaveBeenCalledTimes(1);
+    release();
+    await second;
+    expect(hooks.refresh).toHaveBeenCalledTimes(1);
+    expect(seen).toHaveLength(4); // two refused, two retried
+  });
+
   it('can refresh again later: the single flight is per flight, not per page load', async () => {
     let expiries = 0;
     const hooks = session();

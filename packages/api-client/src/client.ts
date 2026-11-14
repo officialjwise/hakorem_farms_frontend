@@ -114,10 +114,17 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       if (running !== null) await running;
 
       const retryCopy = request.clone();
+      const sentAt = refresher.generation();
       const response = await baseFetch(request);
       if (response.status !== 401) return response;
 
-      const outcome = await refresher.refresh();
+      // Refused with the cookie it was sent with. If a refresh finished while it was in flight, that
+      // cookie is already replaced: retry with the result, do not refresh again (a second refresh in a
+      // row would be read as token reuse and revoke the session).
+      const outcome =
+        refresher.generation() !== sentAt && refresher.inFlight() === null
+          ? refresher.lastOutcome()
+          : await refresher.refresh();
       if (outcome === 'unreachable') throw new NetworkError();
       if (outcome === 'expired') return response;
 
