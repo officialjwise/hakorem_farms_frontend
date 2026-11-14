@@ -8,19 +8,21 @@ Read this file, `docs/SHARED_BRIEF.md`, your session's section of `docs/BUILD_PR
 
 ## Which surface is which
 
-| Path                  | What it is                                                                                          |
-| --------------------- | --------------------------------------------------------------------------------------------------- |
-| `packages/ui`         | The design system: tokens, components, formatters, forms, Storybook. Built (F0).                    |
-| `packages/i18n`       | react-i18next catalogue, one namespace per feature. Apps call `t()`; `packages/ui` never does.      |
-| `apps/storefront`     | Public shop, Next.js 15, server rendered, built for 3G. Shell built (F1); catalogue screens are F7. |
-| `apps/console`        | Installable PWA, Vite: back office and POS shells, auth against a stub (F1); screens from F3.       |
-| `e2e/`                | Playwright and axe specs, Chromium, 360 px, against production builds.                              |
-| `contract/`           | A synced copy of the backend's OpenAPI contract. Never hand-edited.                                 |
-| `tooling/lint-tokens` | The `hakorem/token-usage` lint rule.                                                                |
+| Path                  | What it is                                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------------------------ |
+| `packages/ui`         | The design system: tokens, components, formatters, forms, Storybook. Built (F0).                       |
+| `packages/i18n`       | react-i18next catalogue, one namespace per feature. Apps call `t()`; `packages/ui` never does.         |
+| `packages/api-client` | Generated from the contract: types, operation table, `call(operationId, …)`. Never hand-edited.        |
+| `packages/data`       | TanStack Query layer: `useApiQuery`, `useApiMutation`, keys, stale times, retry. See DATA_CONVENTIONS. |
+| `apps/storefront`     | Public shop, Next.js 15, server rendered, built for 3G. Shell built (F1); catalogue screens are F7.    |
+| `apps/console`        | Installable PWA, Vite: back office and POS shells, auth against a stub (F1); screens from F3.          |
+| `e2e/`                | Playwright and axe specs, Chromium, 360 px, against production builds.                                 |
+| `contract/`           | A synced copy of the backend's OpenAPI contract. Never hand-edited.                                    |
+| `tooling/lint-tokens` | The `hakorem/token-usage` lint rule.                                                                   |
 
 ## The contract rule
 
-`contract/openapi.yaml` is the only truth about the API. Never hand-write an API type, guess a field, or call an endpoint it does not list. If you need something missing, append it to `docs/CONTRACT_REQUESTS.md` and carry on against a mock. Read the contract before raising a request. No screen calls `fetch`, and no screen computes money: totals, tax and margins come from the API.
+`contract/openapi.yaml` is the only truth about the API. Never hand-write an API type, guess a field, or call an endpoint it does not list. If you need something missing, append it to `docs/CONTRACT_REQUESTS.md` and carry on against a mock. Read the contract before raising a request. No screen calls `fetch`, and no screen computes money: totals, tax and margins come from the API. Data goes through `useApiQuery` and `useApiMutation` and the four states through `QueryBoundary`; the rules are in `docs/DATA_CONVENTIONS.md`.
 
 ## Commands that exist today
 
@@ -40,9 +42,15 @@ pnpm dev:storefront    # Next.js on port 3000
 pnpm dev:console       # Vite on port 5173
 pnpm test:e2e          # builds both apps, then Playwright with axe
 pnpm icons:check       # fails if the console icons or manifest are stale
+pnpm sync-contract     # copy ../backend/contract, regenerate packages/api-client, typecheck everything
+pnpm sync-contract:check  # CI: fails if the committed client is stale
+pnpm dev:mock          # Prism on 4010, from contract/openapi.yaml
+pnpm test:integration  # screens and the data layer against the real Prism (starts it itself)
 ```
 
-Arrive later, named in `docs/BUILD_PROMPT.md`: `pnpm dev:mock`, `sync-contract`, `test:integration` (F2), `test:e2e:staging` and `lighthouse` (F13).
+Set `HK_API_BASE_URL` to choose the API (`http://127.0.0.1:4010` is the mock). Nothing else decides it.
+
+Arrive later, named in `docs/BUILD_PROMPT.md`: `test:e2e:staging` and `lighthouse` (F13).
 
 ## Skills (`.claude/skills/`)
 

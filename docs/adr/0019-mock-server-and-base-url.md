@@ -28,4 +28,4 @@ Option 2.
 
 - The mock and the client come from the same file, so they cannot drift apart.
 - A browser cannot send credentials to a `*` CORS origin, so using the mock from the dev server needs a same-origin path (a Vite proxy to port 4010). That is first needed by F3 and is recorded in assumption A-F2-03.
-- Integration tests start Prism themselves (ADR 0022, section on tests) and fail, rather than skip, if it will not start.
+- Integration tests start the pinned Prism themselves (`pnpm test:integration`, docs/DATA_CONVENTIONS.md) and fail, rather than skip, if it will not start. Setting the staff cookie for Node's fetch is test infrastructure (A-F2-09).

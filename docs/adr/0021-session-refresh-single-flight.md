@@ -16,7 +16,8 @@ F1's `AuthProvider` refreshes a minute before the access token expires, one refr
 2. **Retry once.** Each refused request is sent again with the same `Idempotency-Key`, and with the refreshed session's CSRF token (a refresh rotates it).
 3. **A refused refresh lands on session expiry.** `onExpired()` is called once, and every waiting request fails with its original 401 `ApiError`. If a refreshed session is still refused, the same.
 4. **Unreachable is not expired.** If the refresh could not reach the server, the request fails as a `NetworkError` and the session is left alone.
-5. **Public operations are exempt.** A 401 from `loginStaff` is a wrong password, not an expired session; `refreshSession` is public so it cannot recurse.
+5. **A 401 that raced a finished refresh does not refresh again.** Each request notes the refresh generation when it is sent. If a refresh finished while it was in flight, its cookie was already stale: it is retried with that refresh's result. Without this, five parallel requests whose 401s arrive a few milliseconds apart start five refreshes in a row, and the second is read as token reuse. The real-Prism integration test found this; a unit test pins it.
+6. **Public operations are exempt.** A 401 from `loginStaff` is a wrong password, not an expired session; `refreshSession` is public so it cannot recurse.
 
 The console wires the hooks in `src/data/`: `refresh` calls `AuthProvider`'s own `refresh` (which keeps the Web Locks cross-tab lock and its one-at-a-time rule, so the timer and a 401 share one refresh), `onExpired` puts the provider in `expired`, and `getCsrfToken` reads the session's. The stub stays behind `auth/client.ts` until F3.
 
