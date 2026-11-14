@@ -247,31 +247,100 @@ A-F2-03 is resolved.
 - **TOTP enrolment,** once CR-006 is answered and the QR dependency is decided.
 - **CR-004 and CR-006** shape the forced password change and enrolment.
 
+## After the report: the owner's six answers (2026-11-14)
+
+| #   | Answer                                                                                     | What was done                                                                                                                                                                                               |
+| --- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | The deferred real-API gate is accepted, as a required first task in F4's opening message   | The opening message below makes it task 1, with what passes. If B3 has not landed, F4 stops and asks before any F4 screen.                                                                                  |
+| 2   | TOTP QR: no new dependency; the backend returns the QR as a data URI (asked of B3, CR-006) | CR-006 point 2 records the field and how the screen uses it. A-F3-13 updated. Nothing built: enrolment still waits on CR-006 point 1.                                                                       |
+| 3   | Step-up approved as built. `useApiAllPages` approved with a hard page cap that throws      | ADR 0029 marked approved. Past 5 pages the hook throws `PageCapExceededError` (not retried, no partial answer). The role screen says so in words with no retry. ADR 0028 amended; DATA_CONVENTIONS updated. |
+| 4   | Split POS and back office into separate entries, then set and record a console budget      | ADR 0030: `index.html` and `pos.html`, with their own route tables. A budget per document, enforced by `pnpm budget:console` in CI (PERFORMANCE_BUDGET "Console", A-F3-17).                                 |
+| 5   | CR-006 to CR-008: B3 is answering them                                                     | CR-006 marked as with the backend.                                                                                                                                                                          |
+| 6   | `users.spec.ts:62` stays as it is; if CI fails it, quarantine it with an issue             | Unchanged. It passed in both runs below.                                                                                                                                                                    |
+
+### The page cap, and the mock
+
+Prism answers every page with the same example, `hasMore: true` and **the same `nextCursor` whatever cursor it is asked with** (checked with curl). Its lists never end, so the throwing cap would fail the role screen on every read.
+
+- **Both test harnesses** answer a page whose `nextCursor` equals the cursor it was asked with as the last page: `apps/console/src/test/integration-setup.ts` and `e2e/support/fakeApi.ts`.
+- **In a browser on `/mock`** nothing changes the answer. The role screen there shows "The permission list is longer than this screen can load" and no permissions (A-F3-16). **If you look at `/roles/:id` through `pnpm dev:mock`, that is what you will see.** Against the real API the list is three pages.
+- **Two new integration tests:** the list read to its end, and the cap's words with no retry, no checkbox and no Save. Writing them showed the integration setup lacked a `ResizeObserver` stub, which Radix Checkbox needs. The old "ready" test passed without one because it only read the heading.
+
+### The split, measured
+
+| Chunk (gzipped)                    | Before | After |
+| ---------------------------------- | ------ | ----- |
+| One chunk, both documents          | 253.3  |       |
+| `shared` (React, router, forms, …) |        | 229.5 |
+| `main`, the back office's own      |        | 25.9  |
+| `pos`, the till's own              |        | 2.2   |
+| What the till loads (budget 250)   | 253.3  | 229.6 |
+| What the back office loads (300)   | 253.3  | 253.2 |
+
+The till no longer downloads any back office screen or the `iam` and `audit` words, which is what the split was for. It is only about 10% lighter, because most of both documents is the shared foundation. Trimming that foundation is the next lever (PERFORMANCE_BUDGET "Where the bytes are").
+
+How the documents meet:
+
+- `/pos` and below serve `pos.html`, in dev, in preview and (F13) on the production host.
+- The back office's POS button and "Back office" on the till are full page loads, and Back works.
+- The till renders sign-in in place, so signing out and in again keeps it on its own code.
+- A host that routes `/pos` to the wrong document gets words, not a reload loop.
+
+`e2e/specs/console/entries.spec.ts` (3 tests) proves:
+
+- a fresh till requests the `pos` chunk and never `main`, `iam` or `audit`;
+- the crossing both ways, and Back;
+- that sign-in stays on the till.
+
+### Checks after the answers
+
+Each was run on its own.
+
+| Check                                       | Exit | Result                                                                   |
+| ------------------------------------------- | ---- | ------------------------------------------------------------------------ |
+| `lint`, `format:check`, `typecheck`         | 0    |                                                                          |
+| `test:unit`                                 | 0    | data 28 (was 27), console 136 (was 130); the other packages unchanged    |
+| `test:integration`                          | 0    | 62 (was 60)                                                              |
+| `build:console` (`HK_API_BASE_URL=/mock`)   | 0    | two documents, no warning                                                |
+| `budget:console`                            | 0    | till 229.6 of 250 kB, back office 253.2 of 300 kB; style 10.7 of 15 each |
+| `budget:console` with the till's set to 200 | 1    | "over budget", so the check fails when it should                         |
+| `test:e2e`, default workers (load near 18)  | 0    | 125 passed (122 plus 3)                                                  |
+| e2e again, 2 workers (CI's)                 | 0    | 125 passed                                                               |
+
+Not re-run after the answers, because nothing they read changed: `test:a11y`, `build-storybook`, `build:storefront` (rebuilt by `test:e2e`) and the token, font, icon and contract checks.
+
 ## Opening message for F4
 
 ```text
 Read CLAUDE.md, docs/SHARED_BRIEF.md, and the F4 row of the screen sessions table in
 docs/BUILD_PROMPT.md (plus its "How to run this prompt" rules at the top). Read
 docs/DATA_CONVENTIONS.md in full. List docs/sessions/ and read only the most recent report
-(F03-auth-users.md). Do not reopen decisions in docs/adr/ (0001 to 0029).
+(F03-auth-users.md, including "After the report"). Do not reopen decisions in docs/adr/
+(0001 to 0030).
 
-You are on a branch created off f03-auth-users. F3 (auth, users, roles, sessions, audit) is
-finished against the mock and its stacked pull request is open and unmerged, as are F0's,
-F1's and F2's.
+You are on a branch created off f03-auth-users, or off main if the owner has merged the stack.
 
 Run ./scripts/sync-contract.sh, read ../backend/docs/CONTRACT_CHANGELOG.md for anything after
 1.1.0, and read the backend's latest session report in ../backend/docs/sessions/ for which
-modules went live.
+modules went live and what B3 answered on CR-004, CR-006, CR-007 and CR-008.
 
-First, before any F4 screen: if B3 (auth) has landed, switch the console's auth to the real
-API (HK_API_BASE_URL at the B3 API; apps/console/src/auth/client.ts is already the real
-client) and run the deferred half of F3's gate: log into the real API as an owner and as a
-cashier, and confirm the cashier still meets the permission-denied state in words on /users,
-/roles, /sessions and /audit. Check step-up and the CSRF origin rule against the real server.
-Then work issue #4 (the quarantined session expiry spec): rewrite it against the real refresh,
-run 10 loaded full suites with traces kept, and take it out of quarantine only if all are
-green; otherwise leave it quarantined and update the issue. If B3 has not landed, say so,
-leave both, and carry on.
+TASK 1 (REQUIRED, before any F4 screen): the deferred real-API half of F3's gate.
+The owner accepted the deferral on the condition that it is done first in F4.
+- Point HK_API_BASE_URL at the B3 API. apps/console/src/auth/client.ts is already the real
+  client.
+- Sign in through the console against the real API as an owner and as a cashier.
+- As the cashier, confirm the permission-denied state in words, on the same URL, on /users,
+  /roles, /sessions and /audit.
+- Check step-up (a write that needs it asks for the code and then succeeds) and the CSRF
+  origin rule against the real server.
+- Record each result in the F4 report as a check with its outcome. A failure is fixed or
+  raised before F4 screens start.
+If B3 has not landed, or the real API cannot be reached, stop: tell the owner, and do not start
+F4 screens until they say how to go on. Do not mark this task skipped and carry on.
+
+TASK 2, once task 1 has passed: issue #4, the quarantined session expiry spec. Rewrite it against
+the real refresh, run 10 loaded full suites with traces kept, and take it out of quarantine only
+if all are green; otherwise leave it quarantined and update the issue.
 
 Then F4: products, categories, units, grades, weight bands, and price lists with effective
 dates. The gate: a price list change can be previewed before it activates. Read CR-001,
@@ -280,7 +349,9 @@ CR-003, CR-005 and CR-007 for what the backend answered.
 Button, Table, StatusBadge, UIProvider and Field are the approved references. A new mechanism
 (stylesheet, provider, variant system) is a stop and a question. Screens use useApiQuery,
 useApiMutation and QueryBoundary; nothing calls fetch. Writes that the contract marks
-"Requires step-up" go through useStepUp (ADR 0029).
+"Requires step-up" go through useStepUp (ADR 0029). useApiAllPages is for short reference lists
+only and throws past five pages (ADR 0028). The console is two documents (ADR 0030): back office
+screens go in apps/console/src/app/routes.tsx, and after build:console run budget:console.
 
-Confirm in three lines: the phase, its scope, and its gate. Then execute F4 only.
+Confirm in three lines: the phase, its scope, and its gate. Then do task 1, and only then F4.
 ```

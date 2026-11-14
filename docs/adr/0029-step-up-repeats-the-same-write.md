@@ -1,6 +1,6 @@
 # 0029. Step up on the server's 403 and repeat the same write
 
-- Status: accepted
+- Status: accepted (owner, 2026-11-14, approved as built)
 - Date: 2026-11-14
 - Session: F3
 
