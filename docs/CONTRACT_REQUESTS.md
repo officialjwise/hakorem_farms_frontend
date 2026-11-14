@@ -8,6 +8,7 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-002 | 2026-11-13 | Closed |
 | CR-003 | 2026-11-14 | Open   |
 | CR-004 | 2026-11-14 | Open   |
+| CR-005 | 2026-11-14 | Open   |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -86,3 +87,16 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 **Not a request, noted:** `TOTP_ENROLMENT_REQUIRED` and `VERIFICATION_REQUIRED` are handled by F3 and F7. The stub never returns them, and the console shows "this sign-in step is not available yet" if the real API does first.
 
 **Until this lands:** the stub's behaviour above, behind `apps/console/src/auth/client.ts`.
+
+## CR-005. Every list response gets a named empty example (additive, not breaking)
+
+- **Raised by:** frontend F2, the data layer and its integration tests
+- **Needed by:** every screen session from F3: each screen ships an empty state, and the mock is how it is seen and tested before the backend module is live
+- **Checked:** `contract/openapi.yaml` 1.1.0 gives every list operation (for example `listProducts`) a single `example` with five or more rows, and no operation has an `examples` map. Prism answers a request with that one example whatever the query, and `Prefer: example=<name>` only works for a named example. So the mock cannot return an empty list, and the empty state of a screen cannot be exercised against it.
+
+**Request**
+
+For each list operation's 200 response, replace the single `example` with an `examples` map holding the current rows under `default` and an `empty` example with `data: []` and `page: { nextCursor: null, limit: <the default limit>, hasMore: false }`. The first screens need it for `listProducts`, `listCategories`, `listUsers`, `listRoles` and `listStockOnHand`; the rest can follow with each module.
+
+- **Not breaking:** an `examples` map is documentation. No schema or field changes, so this is a patch or minor version.
+- **Until this lands:** the F2 integration test (`apps/console/src/data/states.integration.test.tsx`) shows the empty state from a successful answer with no rows, and says so in its header. The frontend can then call Prism with `Prefer: example=empty`, and the test is simplified.

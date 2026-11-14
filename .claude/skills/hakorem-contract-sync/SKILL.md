@@ -9,15 +9,15 @@ The backend owns `contract/openapi.yaml` and never breaks it silently. The front
 
 ## What exists today
 
-- `contract/openapi.yaml` is a **plain byte-for-byte copy** from `../backend/contract/openapi.yaml` (contract 1.1.0 at F0b). Prettier ignores `contract/`.
-- **Arrives in F2, not built yet:** `scripts/sync-contract.sh` (copy, regenerate `packages/api-client`, fail loudly if the apps no longer compile), `pnpm sync-contract`, and the CI step that runs it against the committed contract.
-- Until F2, sync by copying the file by hand and recording the backend commit in the session report.
+- `contract/openapi.yaml` is a **byte-for-byte copy** of `../backend/contract/openapi.yaml`. Prettier ignores `contract/`.
+- `./scripts/sync-contract.sh` (`pnpm sync-contract`) copies it, regenerates `packages/api-client/src/generated`, then type checks every package and app, and exits non-zero with a message if any no longer compiles. `--check` (`pnpm sync-contract:check`) copies nothing, regenerates in memory and fails if the committed client differs; CI runs it so a stale client cannot merge.
+- The generated files are committed. After a sync, commit the contract and the regenerated client together.
 
 You may read `../backend/contract/` and `../backend/docs/CONTRACT_CHANGELOG.md`. Never read `../backend/src/` and never write anything under `../backend/`.
 
 ## Every session
 
-1. Sync the contract (script from F2; a plain copy before that).
+1. Run `./scripts/sync-contract.sh`, and read the type errors it reports.
 2. Read `../backend/docs/CONTRACT_CHANGELOG.md` for anything added since the last session.
 3. Read the backend's latest session report for which modules went live.
 4. For each screen whose module is now live, move it from the mock to the real API.

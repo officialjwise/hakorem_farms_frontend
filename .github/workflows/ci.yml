@@ -31,6 +31,8 @@ jobs:
         run: pnpm fonts:check
       - name: Console icons and manifest are up to date
         run: pnpm icons:check
+      - name: Generated API client matches the committed contract
+        run: pnpm sync-contract:check
       - name: Lint (ESLint, Stylelint, token roles)
         run: pnpm lint
       - name: Format
@@ -39,6 +41,8 @@ jobs:
         run: pnpm typecheck
       - name: Unit tests (components, contrast, lint rules)
         run: pnpm test:unit
+      - name: Integration tests against the real Prism mock
+        run: pnpm test:integration
       - name: Install Chromium
         run: pnpm --filter @hakorem/ui exec playwright install --with-deps chromium
       - name: Story tests with axe (WCAG 2.2 AA)

@@ -7,14 +7,17 @@ description: Use when touching data fetching or mutation in any app or hook, inc
 
 **The OpenAPI contract is the only truth about the API.** Read `docs/BUILD_PROMPT.md` (F2 and "Two rules that matter more than they look") and `docs/SHARED_BRIEF.md` ("Repositories, workspace and the contract").
 
-## What exists today, and what does not
+## What exists today
 
-Be exact about this. As of F0c:
+As of F2 everything below is built; the rules and numbers are in `docs/DATA_CONVENTIONS.md`.
 
-- `contract/openapi.yaml` is synced (a plain copy, contract 1.1.0).
-- **Not built yet, arrive in F2:** `scripts/sync-contract.sh`, the generated `packages/api-client`, the Prism mock (`pnpm dev:mock`), TanStack Query, `docs/DATA_CONVENTIONS.md`, and the idempotency-key helper. Until F2, do not build a screen that fetches. If you must prototype, read the contract and write the request in `docs/CONTRACT_REQUESTS.md`.
+- `packages/api-client`: generated types and operation table, `createApiClient().call(operationId, input, options)`, `ApiError`, `newIdempotencyKey()`, the 401 single flight.
+- `packages/data`: `createApiHooks(api)` gives `useApiQuery` and `useApiMutation`. Each app wraps them in its own `data/api.ts`; a screen imports from there.
+- `packages/ui`: `QueryBoundary` and `MutationFailure` for the four states.
+- `pnpm dev:mock` (Prism on 4010), `pnpm sync-contract`, `pnpm test:integration`. `HK_API_BASE_URL` is the one variable that chooses mock or real.
+- Not built: non-JSON request bodies (the file upload, F4), an infinite-scroll hook, the storefront's own client (F7).
 
-## Rules (they hold from F2 onward)
+## Rules
 
 1. **Generated client only.** Never hand-write an API type, never guess a field name, never call an endpoint that is not in `contract/openapi.yaml`.
 2. **Never call `fetch` directly** in a screen or hook. Everything goes through the generated client and the query layer, so a contract change surfaces as a type error, not a runtime surprise in front of a customer.
@@ -27,18 +30,22 @@ Be exact about this. As of F0c:
 9. **Cost is not price.** Show cost fields as cost and price fields as price, never one in place of the other (`docs/CONTRACT_REQUESTS.md` CR-001).
 10. **Build against the mock until the endpoint exists**, and say in the session report which screens moved to the real API.
 
-## Correct (shape, once the F2 client exists)
+## Correct
 
-```ts
-// Names follow the contract's operation ids. The client and hook below are F2 work.
-const adjust = useMutation({
-  mutationFn: (input: StockAdjustmentInput) =>
-    client.POST('/stock/adjustments', { body: input, headers: { 'Idempotency-Key': key } }),
-  onError: (error) => setFormErrors(mapServerErrors(error.details)),
-});
+```tsx
+const stock = useApiQuery('listStockOnHand', { query: { locationId } });
+const adjust = useApiMutation('createStockAdjustment', { invalidates: ['listStockOnHand'] });
+
+<QueryBoundary query={stock} labels={labels} isEmpty={(page) => page.data.length === 0}>
+  {(page) => <StockTable rows={page.data} />}
+</QueryBoundary>;
+
+// In the confirmation's submit. The key was made when the dialog opened and survives "Try again".
+adjust.mutate(input, { idempotencyKey: keyRef.current });
+<MutationFailure error={adjust.error} labels={labels} onRetry={retry} />;
 ```
 
-The key is created once per user intent (when the confirmation opens) and reused on retry, not regenerated per attempt.
+A form maps a failure with `mapServerErrors(error.envelope, form)`. The key is created once per user intent and reused on retry, not regenerated per attempt.
 
 ## Incorrect
 
