@@ -31,6 +31,7 @@ Option 2.
 - At the split, the till's document loads 229.6 kB of gzipped script and the back office's 253.2 kB. The till no longer loads the back office's 25.9 kB entry chunk, its screens, or the `iam` and `audit` words. `e2e/specs/console/entries.spec.ts` proves this from the requests a fresh till makes.
 - Most of either document is the `shared` chunk (229.5 kB gzipped). The split does not shrink the foundation. Making the till lighter from here means trimming what the shared code pulls in. The largest parts are `react-dom`, `react-router`, `zod`, `react-hook-form` and the generated operation table.
 - Moving between the back office and the till is a full page load, not an in-app transition. It happens a few times a shift.
-- A production host must route `/pos` and `/pos/...` to `pos.html`. A host that sends `index.html` for everything shows the "this page could not be opened" state on the till instead of the till. That is carried to F13 with the hosting work.
+- A production host must route `/pos` and `/pos/...` to `pos.html`. A host that sends `index.html` for everything shows the "this page could not be opened" state on the till instead of the till. The rule, the Caddy change it needs in the backend's `docs/DEPLOYMENT.md` and its smoke check are in `docs/DEPLOYMENT.md` section 1, which F13 applies.
+- Inside the till, every route but the sale screen loads on demand (ADR 0031).
 - A new back office screen goes in `src/app/routes.tsx` and counts against the back office's budget. When that budget gets close, each area loads on demand, and that is a later decision. A new till screen goes in `src/pos/routes.tsx`.
 - Revisit if the till becomes its own installable app, or if the service worker's caching (F13) needs one document.
