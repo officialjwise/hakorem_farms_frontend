@@ -64,22 +64,22 @@ Integer pesewas and three-place kilogram strings in and out, formatted only at t
 
 Each run on its own, exit status recorded.
 
-| Check                 | Exit | Result                                                                                     |
-| --------------------- | ---- | ------------------------------------------------------------------------------------------ |
-| `tokens:check`        | 0    | up to date                                                                                 |
-| `fonts:check`         | 0    | up to date                                                                                 |
-| `icons:check`         | 0    | up to date                                                                                 |
-| `lint`                | 0    | no suppressions                                                                            |
-| `format:check`        | 0    |                                                                                            |
-| `typecheck`           | 0    | all seven workspace projects and `e2e`, every `.typetest`                                  |
-| `test:unit`           | 0    | 24 api-client, 24 data, 6 i18n, 702 ui, 14 storefront, 89 console                          |
-| `test:a11y`           | 0    | 231 story tests in Chromium with axe                                                       |
-| `test:integration`    | 0    | 20 tests on the real Prism                                                                 |
+| Check                 | Exit | Result                                                                                       |
+| --------------------- | ---- | -------------------------------------------------------------------------------------------- |
+| `tokens:check`        | 0    | up to date                                                                                   |
+| `fonts:check`         | 0    | up to date                                                                                   |
+| `icons:check`         | 0    | up to date                                                                                   |
+| `lint`                | 0    | no suppressions                                                                              |
+| `format:check`        | 0    |                                                                                              |
+| `typecheck`           | 0    | all seven workspace projects and `e2e`, every `.typetest`                                    |
+| `test:unit`           | 0    | 24 api-client, 24 data, 6 i18n, 702 ui, 14 storefront, 89 console                            |
+| `test:a11y`           | 0    | 231 story tests in Chromium with axe                                                         |
+| `test:integration`    | 0    | 20 tests on the real Prism                                                                   |
 | `test:e2e`            | 0    | 61 Playwright tests on the final run; three earlier full runs failed on the flaky spec below |
-| `build-storybook`     | 0    |                                                                                            |
-| `build:console`       | 0    |                                                                                            |
-| `build:storefront`    | 0    | 182 kB first load on pages with the cart drawer                                            |
-| `sync-contract:check` | 0    | the committed client matches the committed contract                                        |
+| `build-storybook`     | 0    |                                                                                              |
+| `build:console`       | 0    |                                                                                              |
+| `build:storefront`    | 0    | 182 kB first load on pages with the cart drawer                                              |
+| `sync-contract:check` | 0    | the committed client matches the committed contract                                          |
 
 ## An intermittent end to end failure, not caused by F2 and not fixed
 
