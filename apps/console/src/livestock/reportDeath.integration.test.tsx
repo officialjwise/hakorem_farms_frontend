@@ -28,7 +28,9 @@ afterEach(() => {
 });
 
 async function fillReport(user: UserEvent) {
-  await user.type(await screen.findByRole('combobox', { name: /Animal/ }), 'G-01');
+  // The first screen of a file is cold (its lazy chunk and words load first): F5b's 5 s allowance.
+  const animal = await screen.findByRole('combobox', { name: /Animal/ }, { timeout: 5000 });
+  await user.type(animal, 'G-01');
   await user.click(await screen.findByRole('option', { name: 'G-0142, Goat' }));
   const reason = await screen.findByRole('combobox', { name: /Reason/ });
   await user.click(reason);

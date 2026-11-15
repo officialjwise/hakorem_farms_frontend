@@ -26,7 +26,10 @@ describe('the animal register', () => {
   it('loading, then every animal with its pen, last weight and cost, each opening its page', async () => {
     const release = holdResponses();
     await renderApp('/animals', await signedIn('owner'));
-    expect((await screen.findAllByText('Loading animals')).length).toBeGreaterThan(0);
+    // The first screen of a file is cold (its lazy chunk and words load first): F5b's 5 s allowance.
+    expect(
+      (await screen.findAllByText('Loading animals', {}, { timeout: 5000 })).length,
+    ).toBeGreaterThan(0);
     release();
     const goat = await screen.findByRole('link', { name: 'Open G-0142, Goat' });
     expect(goat).toHaveAttribute('href', `/animals/019a7a8f-5f3a-70a1-a5d9-12ebaa838bc9`);
@@ -226,7 +229,8 @@ describe('the records behind an animal', () => {
       mock.prefer = null;
       mock.noRows = true;
       await renderApp(path, await signedIn('owner'));
-      expect(await screen.findByText(empty)).toBeInTheDocument();
+      // Each screen is cold on its first visit here (its lazy chunk loads first): F5b's 5 s allowance.
+      expect(await screen.findByText(empty, {}, { timeout: 5000 })).toBeInTheDocument();
       queryClient.clear();
       mock.noRows = false;
       mock.prefer = 'code=500';

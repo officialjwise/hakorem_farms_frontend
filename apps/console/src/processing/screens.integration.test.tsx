@@ -26,7 +26,10 @@ describe('processing orders', () => {
   it('loading, then each order with its state and its animals', async () => {
     const release = holdResponses();
     await renderApp('/processing-orders', await signedIn('owner'));
-    expect((await screen.findAllByText('Loading processing orders')).length).toBeGreaterThan(0);
+    // The first screen of a file is cold (its lazy chunk and words load first): F5b's 5 s allowance.
+    expect(
+      (await screen.findAllByText('Loading processing orders', {}, { timeout: 5000 })).length,
+    ).toBeGreaterThan(0);
     release();
     await waitFor(() => expect(screen.getByRole('table')).toHaveTextContent('G-0098'));
     const table = screen.getByRole('table');

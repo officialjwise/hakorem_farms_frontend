@@ -25,7 +25,10 @@ describe('the approvals inbox', () => {
   it('loading, then each request with its kind, amount, who asked and its state', async () => {
     const release = holdResponses();
     await renderApp('/approvals', await signedIn('owner'));
-    expect((await screen.findAllByText('Loading approval requests')).length).toBeGreaterThan(0);
+    // The first screen of a file is cold (its lazy chunk and words load first): F5b's 5 s allowance.
+    expect(
+      (await screen.findAllByText('Loading approval requests', {}, { timeout: 5000 })).length,
+    ).toBeGreaterThan(0);
     release();
     await waitFor(() => expect(screen.getByRole('table')).toHaveTextContent('Void a sale'));
     const table = screen.getByRole('table');
