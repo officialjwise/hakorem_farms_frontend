@@ -79,7 +79,7 @@ test('the header’s branch scopes the dashboard and stock on hand to Kasoa', as
   );
 });
 
-test('a branch close the server refuses stays in the confirmation, in the server’s words', async ({
+test('a branch close the server refuses stays in the confirmation, with each broken rule in words', async ({
   page,
   api,
 }) => {
@@ -91,7 +91,10 @@ test('a branch close the server refuses stays in the confirmation, in the server
   await expectNoAxeViolations(page);
   await dialog.getByRole('button', { name: 'Close the branch' }).click();
   await expect(dialog.getByRole('alert')).toContainText('The branch was not closed');
-  await expect(dialog.getByRole('alert')).toContainText('This branch cannot be closed.');
+  // ADR 0038: the code and each rule in details[] (FARM_BRANCH, HOLDS_STOCK) in the console's words.
+  await expect(dialog.getByRole('alert')).toContainText(
+    'This branch cannot be closed. It is the farm, where the animals are kept. It still holds stock: move or sell it first.',
+  );
   expect(api.log.filter((e) => e.operationId === 'updateBranch')).toHaveLength(1);
 });
 
