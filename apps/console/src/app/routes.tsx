@@ -408,6 +408,27 @@ export const protectedRoutes: RouteObject[] = [
           },
         ],
       },
+      // F6b: the approvals inbox, and one request with its evidence.
+      {
+        path: 'approvals',
+        handle: back('iam.approval.read', 'approvals'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../approvals/ApprovalsScreen').then((m) => m.ApprovalsScreen),
+            ),
+            handle: back('iam.approval.read', 'approvals'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../approvals/ApprovalScreen').then((m) => m.ApprovalScreen),
+            ),
+            handle: back('iam.approval.read', 'approvals'),
+          },
+        ],
+      },
       // F6b: the reporter of a death sends it from here, whether or not they can read the records.
       {
         path: 'report-death',

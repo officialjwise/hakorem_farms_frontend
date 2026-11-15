@@ -16,6 +16,7 @@ import {
   FolderTree,
   History,
   LayoutDashboard,
+  Stamp,
   MonitorSmartphone,
   PackagePlus,
   PawPrint,
@@ -74,7 +75,11 @@ export const POS_NAV: NavItem = {
 export const BACK_OFFICE_GROUPS: readonly NavGroup[] = [
   {
     key: 'overview',
-    items: [{ key: 'dashboard', path: '/', permission: null, icon: LayoutDashboard }],
+    items: [
+      { key: 'dashboard', path: '/', permission: null, icon: LayoutDashboard },
+      // F6b: what waits on a second person, whichever module asked.
+      { key: 'approvals', path: '/approvals', permission: 'iam.approval.read', icon: Stamp },
+    ],
   },
   {
     key: 'selling',

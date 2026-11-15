@@ -62,6 +62,7 @@ export async function renderApp(
       'settings',
       'livestock',
       'processing',
+      'approvals',
     ],
   });
   const router = createMemoryRouter(routes, {
