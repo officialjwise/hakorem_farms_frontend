@@ -308,3 +308,16 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 **Request:** a second named example on `listStockTakeLines`, `inReview` (the default stays the counting one), with the same six lines and their expected quantities and variances filled, agreeing with `getStockTake`'s gain and loss totals for the take in `REVIEW`. No shape change.
 
 **Until this lands:** the gate keeps its table of review values, marked with this request.
+
+## CR-021. Find a live animal by its tag, for the roles that record at the pen (additive)
+
+- **Raised by:** frontend F6, weighing one animal and reporting a death, as the Farm hand
+- **Contract read first:**
+  - `recordWeights`, `reportMortality` and `recordHealthEvent` take a `stockUnitId`.
+  - The only way to find one by its tag is `listAnimals` (`q`), which needs `liv.animal.read`.
+  - The 1.24.0 changelog says the Farm hand reads only weights, so it cannot turn a tag into an id. No lookup by tag or barcode exists.
+- **What happens today:** the animal picker tells a person without `liv.animal.read`, in words, that their role cannot look animals up. They can weigh, treat or feed a whole pen, but not one animal.
+
+**Request:** `GET /animals/by-tag/{tagNo}` (or a `lookupStockUnit` by identifier), allowed with any of `liv.weight.record`, `liv.health.record` or `liv.mortality.report`. It would answer the live animal's `id`, `tagNo`, `species` and `currentLocation` only: no cost, no price. Unknown or not alive answers 404.
+
+**Until this lands:** the picker's words stay, and the Farm hand records by pen.
