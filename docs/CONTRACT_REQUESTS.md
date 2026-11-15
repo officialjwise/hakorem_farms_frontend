@@ -2,19 +2,20 @@
 
 Things the frontend needs that `contract/openapi.yaml` does not yet offer, or must offer in a specific shape. The backend track reads this file at the start of each session and either implements each request or explains in its report why not. Each entry names the screen that needs it.
 
-| Id     | Date       | Status |
-| ------ | ---------- | ------ |
-| CR-001 | 2026-11-13 | Open   |
-| CR-002 | 2026-11-13 | Closed |
-| CR-003 | 2026-11-14 | Open   |
-| CR-004 | 2026-11-14 | Open   |
-| CR-005 | 2026-11-14 | Open   |
-| CR-006 | 2026-11-14 | Open   |
-| CR-007 | 2026-11-14 | Open   |
-| CR-008 | 2026-11-14 | Open   |
-| CR-009 | 2026-11-15 | Open   |
-| CR-010 | 2026-11-15 | Open   |
-| CR-011 | 2026-11-15 | Open   |
+| Id     | Date       | Status                                          |
+| ------ | ---------- | ----------------------------------------------- |
+| CR-001 | 2026-11-13 | Answered in 1.1.0 (found in F5); owner to close |
+| CR-002 | 2026-11-13 | Closed                                          |
+| CR-003 | 2026-11-14 | Open                                            |
+| CR-004 | 2026-11-14 | Open                                            |
+| CR-005 | 2026-11-14 | Open                                            |
+| CR-006 | 2026-11-14 | Open                                            |
+| CR-007 | 2026-11-14 | Open                                            |
+| CR-008 | 2026-11-14 | Open                                            |
+| CR-009 | 2026-11-15 | Open                                            |
+| CR-010 | 2026-11-15 | Open                                            |
+| CR-011 | 2026-11-15 | Open                                            |
+| CR-012 | 2026-11-15 | Open                                            |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -32,6 +33,8 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 4. The response states the valuation basis and its as-of time, for example `valuationMethod: "weighted_average" | "specific_identification"` per line and `asOf` as a UTC timestamp, so the screen can label the figure honestly.
 
 **Until this lands:** F5 screens build against a local mock override with exactly these field names. They switch to the real API once the contract carries them.
+
+**Found in F5 (2026-11-15):** contract 1.1.0 already carries all four points: `StockOnHandLine.unitCostPesewas`, `valueAtCostPesewas`, `valuationMethod` and a separate `priceBand`; `StockOnHandPage.totalValueAtCostPesewas` and `asOf`. No override was needed. The owner may close this.
 
 ## CR-002. Money as integer pesewas, weight as kilogram decimal strings
 
@@ -171,3 +174,12 @@ For each list operation's 200 response, replace the single `example` with an `ex
 **Request:** say whether units are seeded only (then the screen stays read only, as now), and how a conversion is represented, for example a crate of 30 eggs, or a pack's nominal kilograms. If conversions exist, list them on `Uom` or a `listUomConversions` operation. CR-003 (`displayDecimals`) is still open on the same schema.
 
 **Until this lands:** `/units` is a read-only list (A-F4-05).
+
+## CR-012. The counting stock take's lines show the expected quantity (example fix)
+
+- **Raised by:** frontend F5, the stock take screen
+- **Checked:** `StockTakeLine.expectedQty` says "Null while counting: the count is blind", but the `listStockTakeLines` example, served for the `getStockTake` example in status COUNTING, gives every line an `expectedQty`.
+
+**Request:** give the counting example's lines `expectedQty: null` (and `varianceQty`, `varianceValuePesewas`, `varianceDirection` null), or say in the description which statuses carry it. Example only.
+
+**Until this lands:** the screen never shows `expectedQty` while counting, whatever the API sends (A-F5-02).
