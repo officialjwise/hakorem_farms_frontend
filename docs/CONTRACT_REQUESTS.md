@@ -2,16 +2,24 @@
 
 Things the frontend needs that `contract/openapi.yaml` does not yet offer, or must offer in a specific shape. The backend track reads this file at the start of each session and either implements each request or explains in its report why not. Each entry names the screen that needs it.
 
-| Id     | Date       | Status |
-| ------ | ---------- | ------ |
-| CR-001 | 2026-11-13 | Open   |
-| CR-002 | 2026-11-13 | Closed |
-| CR-003 | 2026-11-14 | Open   |
-| CR-004 | 2026-11-14 | Open   |
-| CR-005 | 2026-11-14 | Open   |
-| CR-006 | 2026-11-14 | Open   |
-| CR-007 | 2026-11-14 | Open   |
-| CR-008 | 2026-11-14 | Open   |
+| Id     | Date       | Status                   |
+| ------ | ---------- | ------------------------ |
+| CR-001 | 2026-11-13 | Closed                   |
+| CR-002 | 2026-11-13 | Closed                   |
+| CR-003 | 2026-11-14 | Answered (1.7.0, 1.16.0) |
+| CR-004 | 2026-11-14 | Answered (1.2.0, 1.11.0) |
+| CR-005 | 2026-11-14 | Open                     |
+| CR-006 | 2026-11-14 | Answered (1.2.0, 1.4.0)  |
+| CR-007 | 2026-11-14 | Answered (1.3.0)         |
+| CR-008 | 2026-11-14 | Answered (1.3.0)         |
+| CR-009 | 2026-11-15 | Open                     |
+| CR-010 | 2026-11-15 | Open                     |
+| CR-011 | 2026-11-15 | Open                     |
+| CR-012 | 2026-11-15 | Open                     |
+| CR-013 | 2026-11-15 | Open                     |
+| CR-014 | 2026-11-15 | Open                     |
+| CR-015 | 2026-11-15 | Open                     |
+| CR-016 | 2026-11-15 | Open                     |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -29,6 +37,8 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 4. The response states the valuation basis and its as-of time, for example `valuationMethod: "weighted_average" | "specific_identification"` per line and `asOf` as a UTC timestamp, so the screen can label the figure honestly.
 
 **Until this lands:** F5 screens build against a local mock override with exactly these field names. They switch to the real API once the contract carries them.
+
+**Found in F5 (2026-11-15):** contract 1.1.0 already carries all four points: `StockOnHandLine.unitCostPesewas`, `valueAtCostPesewas`, `valuationMethod` and a separate `priceBand`; `StockOnHandPage.totalValueAtCostPesewas` and `asOf`. No override was needed. The owner may close this.
 
 ## CR-002. Money as integer pesewas, weight as kilogram decimal strings
 
@@ -137,3 +147,98 @@ For each list operation's 200 response, replace the single `example` with an `ex
 **Request:** give each example row its own id, or drop the repeats. A real answer never repeats a row, but the mock serves the example as the answer, and a choice list built from it shows each branch twice. Example only; nothing changes for a generated client.
 
 **Until this lands:** option lists are made unique by id (`uniqueById`), which costs nothing against the real API.
+
+## CR-009. Preview a draft price list version against the one in force (additive)
+
+- **Raised by:** frontend F4, the price list version screen (the F4 gate)
+- **Needed by:** `/price-list-versions/:id` for any list longer than 500 lines
+- **Contract read first:** `getPriceListVersion`, `listPriceListEntries` (cursor pages, at most 100 a page), `submitPriceListVersion`, `resolvePrices` (its `at` defaults to now and it walks active versions only; it cannot price from a draft).
+
+**Request:** `GET /price-list-versions/{id}/preview` (permission `mdm.price_list.read`), answering cursor pages of lines with `kind` (`ADDED`, `CHANGED`, `REMOVED`, `UNCHANGED`), `current` (a `PriceListEntry` or null) and `proposed` (a `PriceListEntry` or null), plus `counts` for the four kinds and the `PriceListVersionSummary` it was compared against. Optionally, `resolvePrices` could accept a `priceListVersionId` so a sample basket can be priced as the draft would price it.
+
+**Why:** the screen now reads both versions whole (at most five pages of 100 each, ADR 0028) and lines them up by product, grade, band and quantity break. Past 500 lines it shows words and no preview, because a partial one would show a missing line as a dropped price (A-F4-02). The server already knows the identity rule.
+
+**Until this lands:** the screen's comparison, `apps/console/src/pricing/preview.ts`, which compares and never computes.
+
+## CR-010. Price list examples contradict each other (example fix)
+
+- **Raised by:** frontend F4
+- **Checked:** the `getPriceList` example gives `activeVersion.id` `019a7aa3-e9f0-…`, which the `listPriceListVersions` and `getPriceListVersion` examples give as version 5, status `DRAFT`, the same list's `draftVersionId`. Every version's entries example is the same eight lines.
+
+**Request:** make `getPriceList.activeVersion` version 4 (`019a7aa4-46bd-…`, the example's ACTIVE one), and if possible give the draft's entries a changed price, so the mock alone shows a preview with a change. Example only.
+
+**Until this lands:** against the mock the preview says no version is in force and every line is new; the end-to-end gate rewrites the two answers for its test only (`api.rewrite` in `e2e/support/fakeApi.ts`).
+
+## CR-011. Units of measure: conversions, and a way to add one (question)
+
+- **Raised by:** frontend F4, the units screen
+- **Contract read first:** `listUnitsOfMeasure` and `Uom` (`code`, `name`, `kind`). There is no create, update or conversion operation, and no conversion on any schema.
+- **The brief says:** "units of measure with conversions" (MDM).
+
+**Request:** say whether units are seeded only (then the screen stays read only, as now), and how a conversion is represented, for example a crate of 30 eggs, or a pack's nominal kilograms. If conversions exist, list them on `Uom` or a `listUomConversions` operation. CR-003 (`displayDecimals`) is still open on the same schema.
+
+**Until this lands:** `/units` is a read-only list (A-F4-05).
+
+## CR-012. The counting stock take's lines show the expected quantity (example fix)
+
+- **Raised by:** frontend F5, the stock take screen
+- **Checked:** `StockTakeLine.expectedQty` says "Null while counting: the count is blind", but the `listStockTakeLines` example, served for the `getStockTake` example in status COUNTING, gives every line an `expectedQty`.
+
+**Request:** give the counting example's lines `expectedQty: null` (and `varianceQty`, `varianceValuePesewas`, `varianceDirection` null), or say in the description which statuses carry it. Example only.
+
+**Until this lands:** the screen never shows `expectedQty` while counting, whatever the API sends (A-F5-02).
+
+## CR-013. The owner dashboard's figures, in one response, saying which have no data source yet (additive)
+
+- **Raised by:** frontend F5b, the dashboard (`/`)
+- **Contract read first (1.17.0):** `getOwnerDashboard` returns `salesTodayPesewas`, `salesYesterdayPesewas`, `salesMonthToDatePesewas`, `salesByChannel`, `cash`, `stockValueAtCostPesewas`, `receivablesOutstandingPesewas`, `receivablesOverduePesewas`, `topMovers`, `alerts`, `exceptionsToday`. Nothing else the dashboard shows is in it.
+- **The owner's rule (2026-11-15):** the dashboard makes **one** call, `getOwnerDashboard`, not one per tile. The response names the figures that have no data source yet, and the screen shows those as unavailable, never as zero. The backend is bringing this forward into B05x; when B8, B9a and B9b go live the contract does not change, only the list of unavailable figures shrinks.
+
+**Request:** add to `OwnerDashboard`, with a `period` query parameter (`WEEK` for the last seven days, `MONTH` for the last thirty, default `WEEK`):
+
+| Field                                                | Shape                                                                                                                            | Tile                                                                  |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `unavailable`                                        | array of `DashboardFigure`, an enum of the field names below plus the 1.17.0 ones                                                | every tile: listed means "no data source yet", shown in words         |
+| `purchasesTodayPesewas`, `purchasesYesterdayPesewas` | `Pesewas`                                                                                                                        | purchases today                                                       |
+| `change`                                             | object keyed by figure: `{ direction: UP \| DOWN \| FLAT, percent: string \| null, comparedWith: YESTERDAY \| PREVIOUS_PERIOD }` | the arrow and words on each stat tile (the client computes no change) |
+| `animalsOnHand`                                      | `{ count: integer, bySpecies: [{ species: SpeciesRef, count }] }`                                                                | animals on hand                                                       |
+| `stockHealth`                                        | `{ lowStockCount, availableCount, outOfStockCount }`, product counts                                                             | low stock tile and the stock health panel                             |
+| `stockByCategory`                                    | `[{ category: CategoryRef, productCount, valueAtCostPesewas }]`                                                                  | stock by category bars                                                |
+| `series`                                             | `[{ date, salesPesewas, purchasesPesewas }]` for the period, one row per day                                                     | sales and purchases chart                                             |
+| `periodTotals`                                       | `{ salesPesewas, purchasesPesewas }` with `change` as above                                                                      | the two comparison cards under the chart                              |
+| `stockAlerts`, `expiringLots`, `expiredLots`         | the first five `StockAlert` rows each, plus `count`                                                                              | the three alert lists (each row links to its record)                  |
+| `nearExpiryByMonth`                                  | `[{ month: "YYYY-MM", lotCount, valueAtCostPesewas }]`, the next four months                                                     | near-expiry chart                                                     |
+| `invoices`                                           | `{ total, paid, overdue }`, each `{ count, grossPesewas }`                                                                       | the three invoice tiles                                               |
+| `recentPayments`                                     | the last five `Payment` rows (or a summary: `paymentNo`, `method`, `amountPesewas`, `customer`, `receivedAt`)                    | recent transactions                                                   |
+| `paymentMethodSplit`                                 | `[{ method: PaymentMethodRef, amountPesewas, count }]` for today                                                                 | the payment method split                                              |
+
+Field names are a suggestion; the frontend will read whatever B05x names them. What matters is one response, a figure per tile, and the `unavailable` list.
+
+**Until this lands:** the dashboard calls `getOwnerDashboard` once. Each tile names its field in one table (`apps/console/src/dashboard/figures.ts`). A tile whose field is not in the contract yet shows the unavailable state ("No data source yet"), never a number. When the contract carries the fields and `unavailable`, wiring a tile is one line in that table.
+
+## CR-014. A location can move to another branch, or the contract says it cannot (question)
+
+- **Raised by:** frontend F5b, branch management (`/branches/:id`, "Locations in this branch")
+- **Contract read first:** `LocationCreate` takes `branchId`; `LocationUpdate` (`version`, `name`, `parentId`, `isSellable`, `tempMinC`, `tempMaxC`, `capacityHead`) does not.
+
+**Request:** add `branchId` to `LocationUpdate`, refused with a 422 code while the location holds stock, or say in its description that a location never changes branch.
+
+**Until this lands:** the branch screen assigns locations by creating them in the branch (`createLocation` with `branchId`). It does not offer to move an existing location.
+
+## CR-015. A branch filter on the lists the header's branch switcher must scope (additive)
+
+- **Raised by:** frontend F5b, the branch switcher in the console header, which scopes every screen to one branch (selling points at Kasoa and KNUST beside the farm)
+- **Contract read first:** 21 reads take `branchId` (`getOwnerDashboard`, `listStockOnHand`, `listStockAlerts`, `listLocations`, `listExceptions` and others). These do not: `listStockTransfers`, `listStockAdjustments`, `listGoodsReceipts`, `listStockTakes`, `listPayments`, `listBillingDocuments`, `listAuditEvents`.
+
+**Request:** an optional `branchId` query parameter on each, matching the 21 that have one. A transfer matches when either end is in the branch.
+
+**Until this lands:** those lists show every branch the user may see, and say so under the title ("All branches: this list cannot be narrowed to one branch yet"). Their new-document forms offer only the chosen branch's locations, from `listLocations?branchId=`.
+
+## CR-016. Labels for products and lots, not only packs (additive)
+
+- **Raised by:** frontend F5b, the labels screen (`/labels`), for the POS counter and the cold room
+- **Contract read first:** `printPackLabels` (`POST /processing-orders/{id}/labels`, `LabelPrintRequest` with `packIds` and `format`, answered with a `SignedUrl`) prints packs made by a processing order. `Product.barcode` and `StockUnit.identifier` exist; nothing prints a label for a product or a received lot.
+
+**Request:** `POST /labels` with `{ productIds?, stockUnitIds?, copies, format }`, answered with a `SignedUrl` to a PDF, so label printing is server rendered, archived and audited like every other document.
+
+**Until this lands:** the labels screen draws each label in the browser from `Product.barcode` (or `sku`) and `StockUnit.identifier` as a Code 128 barcode, and prints with the browser's print dialog. Nothing is written to the API.
