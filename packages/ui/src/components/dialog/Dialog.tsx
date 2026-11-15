@@ -108,13 +108,7 @@ export function Dialog<T extends string, C extends string>({
                 )}
               </div>
               <DialogPrimitive.Close asChild>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  iconOnly
-                  aria-label={closeLabel}
-                  className="bg-surface-sunken"
-                >
+                <Button variant="ghost" size="sm" iconOnly aria-label={closeLabel}>
                   <X />
                 </Button>
               </DialogPrimitive.Close>

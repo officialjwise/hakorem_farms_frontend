@@ -154,12 +154,13 @@
     --icon-sm: 0.875rem;
     --icon-md: 1rem;
     --icon-lg: 1.125rem;
-    --row-h: 2.25rem;
-    --cell-px: 0.625rem;
-    --cell-py: 0.25rem;
+    /* The reference's roomy rows (F5c): a 3rem row and a 2.5rem header, still tighter than comfortable's padding. */
+    --row-h: 3rem;
+    --cell-px: 0.75rem;
+    --cell-py: 0.5rem;
     --cell-text: 0.875rem;
     --head-text: 0.75rem;
-    --head-h: 2rem;
+    --head-h: 2.5rem;
   }
 
   :root {

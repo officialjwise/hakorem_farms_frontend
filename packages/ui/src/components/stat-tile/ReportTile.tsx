@@ -70,7 +70,7 @@ export function ReportTile<L extends string>({
       </span>
       <span className="relative grid min-w-0 gap-0.5">
         <span className="text-sm text-fg-muted">{label}</span>
-        <span className="text-xl font-bold break-words tabular-nums sm:text-2xl">{value}</span>
+        <span className="text-xl font-bold break-words tabular-nums">{value}</span>
         {detail === undefined ? null : (
           <span className="text-control-sm text-fg-muted">{detail}</span>
         )}

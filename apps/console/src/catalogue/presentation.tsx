@@ -38,23 +38,26 @@ const OTHER = { icon: Tag, tone: 'slate' } as const;
  */
 export function ProductPicture({ product }: { product: Pick<Product, 'glGroup' | 'images'> }) {
   const thumb = product.images[0]?.variants.find((variant) => variant.variant === 'thumb');
-  // A thumbnail that does not load (offline, a stale link) gives way to the chip, never a blank box.
+  // The chip is always drawn; a thumbnail that loads covers it. One that does not load (offline, a stale
+  // link, a slow connection) leaves the chip showing, never a blank box.
   const [failed, setFailed] = useState(false);
-  if (thumb !== undefined && !failed) {
-    return (
-      <img
-        src={thumb.url}
-        alt=""
-        width={32}
-        height={32}
-        loading="lazy"
-        onError={() => setFailed(true)}
-        className="size-8 shrink-0 rounded-md border border-border object-cover"
-      />
-    );
-  }
   const look = lookup(GROUP, product.glGroup, OTHER);
-  return <IconChip icon={look.icon} tone={look.tone} size="sm" />;
+  return (
+    <span className="relative inline-grid shrink-0">
+      <IconChip icon={look.icon} tone={look.tone} size="sm" />
+      {thumb === undefined || failed ? null : (
+        <img
+          src={thumb.url}
+          alt=""
+          width={32}
+          height={32}
+          loading="lazy"
+          onError={() => setFailed(true)}
+          className="absolute inset-0 size-8 rounded-md object-cover"
+        />
+      )}
+    </span>
+  );
 }
 
 const BADGE = {

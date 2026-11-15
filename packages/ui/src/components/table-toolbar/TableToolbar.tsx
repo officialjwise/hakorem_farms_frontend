@@ -97,7 +97,6 @@ export function ToolbarSearch<L extends string>({
       <Input
         id={id}
         type="search"
-        size="sm"
         placeholder={placeholder ?? label}
         value={value}
         onChange={(event) => onValueChange(event.target.value)}
@@ -120,7 +119,7 @@ function PillTrigger({
   'children'
 >) {
   return (
-    <Button variant="secondary" size="sm" className="shrink-0" {...props}>
+    <Button variant="secondary" className="shrink-0" {...props}>
       <Icon aria-hidden="true" />
       {label}
       {count !== undefined && count > 0 ? (
@@ -164,7 +163,6 @@ export function DateRangeMenu<L extends string>({
       trigger={
         <Button
           variant="secondary"
-          size="sm"
           className="shrink-0"
           data-slot="date-range-menu"
           aria-label={`${label}: ${summary}`}
@@ -386,7 +384,6 @@ export function ExportMenu<L extends string>({
       trigger={
         <Button
           variant="secondary"
-          size="sm"
           className="shrink-0"
           loading={busy === true}
           loadingLabel={busyLabel ?? label}

@@ -14,7 +14,7 @@ export interface StatGroupProps<L extends string = string> {
 
 /**
  * StatGroup (ADR 0036). The reference's stat row: one wide card divided into columns. As many columns as
- * fit at 13rem each, wrapping on a narrow screen. Each cell draws the rule on its leading and top edge,
+ * fit at 11rem each, wrapping on a narrow screen. Each cell draws the rule on its leading and top edge,
  * pulled out by a pixel, and the card clips the rules on its outer edges, so every gap between two
  * figures has a rule and the card's edge has none, whatever the column count.
  */
@@ -25,7 +25,7 @@ export function StatGroup<L extends string>({ label, children, className }: Stat
       aria-label={label}
       data-slot="stat-group"
       className={cn(
-        'grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] overflow-hidden',
+        'grid grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))] overflow-hidden',
         'rounded-lg border border-border bg-surface shadow-sm',
         '[&>*]:-ms-px [&>*]:-mt-px [&>*]:border-s [&>*]:border-t [&>*]:border-border',
         className,
