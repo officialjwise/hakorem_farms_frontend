@@ -80,7 +80,7 @@ describe('login screen', () => {
     await fill(/email or phone number/i, USERS.cashier.identifier);
     await fill(/^password/i, USERS.cashier.password);
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
-    await screen.findByRole('heading', { name: 'Stock' });
+    await screen.findByRole('heading', { name: 'Stock on hand' }, { timeout: 5000 });
     expect(router.state.location.pathname).toBe('/stock');
   });
 
