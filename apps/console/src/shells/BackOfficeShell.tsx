@@ -1,4 +1,4 @@
-import { Menu, ScanBarcode } from 'lucide-react';
+import { Menu, ScanBarcode, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Outlet } from 'react-router';
@@ -78,6 +78,18 @@ export function BackOfficeShell() {
             ) : null}
             <ThemeToggle className="hidden sm:inline-flex" />
             <Notifications />
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              iconOnly
+              aria-label={t('backOffice.settings')}
+              className="hidden sm:inline-flex"
+            >
+              <Link to="/settings">
+                <Settings aria-hidden="true" />
+              </Link>
+            </Button>
             <AccountMenu />
           </div>
         </header>

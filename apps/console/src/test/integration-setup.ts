@@ -22,7 +22,16 @@ export const mock: {
   hold: Promise<void> | null;
   noRows: boolean;
   endlessPages: boolean;
-} = { prefer: null, preferPath: null, hold: null, noRows: false, endlessPages: false };
+  /** Every URL sent to the mock in this test, so a test can check what a screen asked for. */
+  requests: URL[];
+} = {
+  prefer: null,
+  preferPath: null,
+  hold: null,
+  noRows: false,
+  endlessPages: false,
+  requests: [],
+};
 
 /** Holds every response to the mock until the returned function is called. */
 export function holdResponses(): () => void {
@@ -52,6 +61,7 @@ afterEach(() => {
   mock.hold = null;
   mock.noRows = false;
   mock.endlessPages = false;
+  mock.requests = [];
 });
 
 /**
@@ -65,6 +75,7 @@ globalThis.fetch = async (input, init) => {
   const request = new Request(input, init);
   const url = new URL(request.url);
   if (url.port !== '4010') return realFetch(request);
+  mock.requests.push(url);
   if (!request.headers.has('Cookie'))
     request.headers.set('Cookie', '__Host-hk_s_at=integration-test');
   if (

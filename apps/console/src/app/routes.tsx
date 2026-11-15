@@ -209,6 +209,37 @@ export const protectedRoutes: RouteObject[] = [
           },
         ],
       },
+      // F5c: the settings section. Display is anyone's; the business and system settings need aud.setting.read.
+      {
+        path: 'settings',
+        handle: back(null, 'settings'),
+        element: lazyScreen(() =>
+          import('../settings/SettingsScreens').then((m) => m.SettingsLayout),
+        ),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../settings/SettingsScreens').then((m) => m.DisplaySettingsScreen),
+            ),
+            handle: back(null, 'settings'),
+          },
+          {
+            path: 'business',
+            element: lazyScreen(() =>
+              import('../settings/SettingsScreens').then((m) => m.BusinessProfileScreen),
+            ),
+            handle: back('aud.setting.read', 'settingsBusiness'),
+          },
+          {
+            path: 'system',
+            element: lazyScreen(() =>
+              import('../settings/SettingsScreens').then((m) => m.SystemSettingsScreen),
+            ),
+            handle: back('aud.setting.read', 'settingsSystem'),
+          },
+        ],
+      },
       // F4, each loaded on demand so the back office's first load stays in budget (PERFORMANCE_BUDGET).
       {
         path: 'products',
