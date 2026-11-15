@@ -1,50 +1,30 @@
-import { LogOut, Menu, ScanBarcode } from 'lucide-react';
+import { Menu, ScanBarcode } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router';
+import { Link, Outlet } from 'react-router';
 import { Button, Sheet } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
-import { BACK_OFFICE_NAV, POS_NAV } from '../routing/nav';
+import { POS_NAV } from '../routing/nav';
 import { PermissionGate } from '../routing/gates';
 import { Breadcrumbs } from './Breadcrumbs';
+import {
+  AccountMenu,
+  BranchSwitcher,
+  GlobalSearch,
+  Notifications,
+  ThemeToggle,
+} from './header/HeaderTools';
+import { Sidebar, SidebarLinks } from './Sidebar';
 
-const NAV_LINK =
-  'flex h-control-md items-center gap-2 border-s-4 border-transparent px-3 text-control-md text-fg ' +
-  'outline-focus outline-offset-[-2px] focus-visible:outline-2 hover:bg-surface-hover ' +
-  'aria-[current=page]:border-accent aria-[current=page]:bg-accent-subtle aria-[current=page]:font-semibold aria-[current=page]:text-accent-subtle-fg';
-
-/** The back office frame: header, sidebar (a sheet below 64rem), breadcrumbs and a permission-gated main area. */
+/**
+ * The back office frame (F5b): a header with the menu (a sheet below 64rem), the name, breadcrumbs, search,
+ * the branch every screen is scoped to, the till, theme, notifications and the account; a grouped sidebar;
+ * and a permission-gated main area.
+ */
 export function BackOfficeShell() {
   const { t } = useTranslation('shell');
   const auth = useAuth();
-  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
-
-  const items = [...BACK_OFFICE_NAV, POS_NAV].filter(
-    (item) => item.permission === null || auth.can(item.permission),
-  );
-  const links = (
-    <ul className="grid gap-1">
-      {items.map(({ key, path, icon: Icon }) => (
-        <li key={key}>
-          <NavLink
-            to={path}
-            end={path === '/'}
-            className={NAV_LINK}
-            onClick={() => setMenuOpen(false)}
-          >
-            <Icon aria-hidden="true" className="size-icon-md" />
-            {t(`nav.${key}`)}
-          </NavLink>
-        </li>
-      ))}
-    </ul>
-  );
-
-  const signOut = async () => {
-    await auth.logout();
-    navigate('/login', { replace: true });
-  };
 
   return (
     <div data-shell="back-office" className="flex min-h-dvh flex-col">
@@ -54,7 +34,7 @@ export function BackOfficeShell() {
       >
         {t('app.skipToContent')}
       </a>
-      <header className="flex flex-wrap items-center gap-2 border-b border-border bg-surface px-3 py-2">
+      <header className="sticky top-0 z-sticky flex items-center gap-2 border-b border-border bg-surface px-3 py-2">
         <div className="lg:hidden">
           <Sheet
             side="start"
@@ -68,44 +48,45 @@ export function BackOfficeShell() {
               </Button>
             }
           >
-            <nav aria-label={t('backOffice.navLabel')}>{links}</nav>
+            <nav aria-label={t('backOffice.navLabel')}>
+              <SidebarLinks onNavigate={() => setMenuOpen(false)} />
+            </nav>
           </Sheet>
         </div>
-        <Link to="/" className="text-lg font-semibold outline-focus focus-visible:outline-2">
+        <Link
+          to="/"
+          className="hidden shrink-0 text-lg font-semibold text-accent-text outline-focus focus-visible:outline-2 sm:block"
+        >
           {t('app.name')}
         </Link>
-        <div className="ms-auto flex flex-wrap items-center justify-end gap-2">
+        <div className="ms-4 hidden min-w-0 xl:block">
+          <Breadcrumbs />
+        </div>
+        <div className="ms-auto flex min-w-0 items-center justify-end gap-1 sm:gap-2">
+          <GlobalSearch />
+          <BranchSwitcher />
           {auth.can(POS_NAV.permission ?? '') ? (
-            <Button asChild variant="secondary" size="sm">
+            <Button asChild size="sm" className="hidden sm:inline-flex">
               <Link to={POS_NAV.path}>
                 <ScanBarcode aria-hidden="true" />
                 {t('backOffice.openPos')}
               </Link>
             </Button>
           ) : null}
-          <span className="hidden text-sm text-fg-muted sm:inline">
-            {t('backOffice.signedInAs', { name: auth.session?.principal.displayName ?? '' })}
-          </span>
-          <Button variant="ghost" size="sm" onClick={() => void signOut()}>
-            <LogOut aria-hidden="true" />
-            {t('backOffice.signOut')}
-          </Button>
+          <ThemeToggle className="hidden sm:inline-flex" />
+          <Notifications />
+          <AccountMenu />
         </div>
       </header>
       <div className="flex min-h-0 flex-1">
-        <nav
-          aria-label={t('backOffice.navLabel')}
-          className="hidden w-56 shrink-0 border-e border-border bg-surface p-2 lg:block"
-        >
-          {links}
-        </nav>
+        <Sidebar />
         <main
           id="main"
           tabIndex={-1}
           aria-label={t('backOffice.mainLabel')}
           className="min-w-0 flex-1 p-4 outline-none"
         >
-          <div className="mb-4">
+          <div className="mb-3 xl:hidden">
             <Breadcrumbs />
           </div>
           <PermissionGate>

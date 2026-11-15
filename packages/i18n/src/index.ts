@@ -12,6 +12,8 @@ import type audit from '../locales/en/audit.json';
 import type auth from '../locales/en/auth.json';
 import type catalogueNs from '../locales/en/catalogue.json';
 import type stockNs from '../locales/en/stock.json';
+import type dashboardNs from '../locales/en/dashboard.json';
+import type branchesNs from '../locales/en/branches.json';
 import type common from '../locales/en/common.json';
 import type iam from '../locales/en/iam.json';
 import type shell from '../locales/en/shell.json';
@@ -35,6 +37,8 @@ export const NAMESPACES = [
   'audit',
   'catalogue',
   'stock',
+  'dashboard',
+  'branches',
 ] as const;
 export type Namespace = (typeof NAMESPACES)[number];
 
@@ -53,6 +57,8 @@ export const catalogue: Record<
     audit: () => import('../locales/en/audit.json'),
     catalogue: () => import('../locales/en/catalogue.json'),
     stock: () => import('../locales/en/stock.json'),
+    dashboard: () => import('../locales/en/dashboard.json'),
+    branches: () => import('../locales/en/branches.json'),
   },
 };
 
@@ -116,6 +122,8 @@ declare module 'i18next' {
       audit: typeof audit;
       catalogue: typeof catalogueNs;
       stock: typeof stockNs;
+      dashboard: typeof dashboardNs;
+      branches: typeof branchesNs;
     };
   }
 }

@@ -1,0 +1,124 @@
+{
+  "status": {
+    "ACTIVE": "Active",
+    "CLOSED": "Closed"
+  },
+  "list": {
+    "title": "Branches and locations",
+    "description": "The farm and its selling points. Each branch has its own locations, stock and document numbers.",
+    "new": "New branch",
+    "loading": "Loading branches",
+    "empty": "No branches yet",
+    "emptyBody": "Add the farm first, then each selling point.",
+    "error": "Branches could not be loaded",
+    "denied": "You do not have access to branches",
+    "table": "Branches",
+    "pages": "Pages of branches",
+    "test": "Test branch",
+    "columns": {
+      "branch": "Branch",
+      "status": "Status",
+      "address": "Address",
+      "phone": "Phone"
+    }
+  },
+  "form": {
+    "newTitle": "New branch",
+    "newBody": "A farm, shop or selling point with its own stock.",
+    "editTitle": "Edit {{name}}",
+    "editBody": "The code is set when the branch is created and cannot change.",
+    "code": "Code",
+    "codeHint": "Two to five capitals or digits, such as KAS. It appears in document numbers.",
+    "codeRule": "Use two to five capital letters or digits.",
+    "name": "Name",
+    "address": "Address",
+    "phone": "Phone",
+    "phoneHint": "A Ghanaian number, such as 024 412 3456.",
+    "phoneRule": "Enter a phone number, such as 024 412 3456.",
+    "create": "Create branch",
+    "save": "Save changes",
+    "saving": "Saving",
+    "notSaved": "The branch was not saved"
+  },
+  "detail": {
+    "loading": "Loading the branch",
+    "error": "The branch could not be loaded",
+    "edit": "Edit",
+    "close": "Close the branch",
+    "reopen": "Reopen the branch",
+    "closeTitle": "Close {{name}}?",
+    "reopenTitle": "Reopen {{name}}?",
+    "closeBody": "The branch stops trading. Its stock, documents and history stay, and it can be reopened.",
+    "reopenBody": "The branch can trade again.",
+    "closeConsequence": "The server may refuse, for example if this is the last active branch. If it does, its reason appears here.",
+    "notClosed": "The branch was not closed",
+    "notReopened": "The branch was not reopened",
+    "closed": "{{name}} is closed.",
+    "reopened": "{{name}} is open again.",
+    "saved": "{{name}} is saved.",
+    "yes": "Yes",
+    "no": "No",
+    "facts": {
+      "code": "Code",
+      "address": "Address",
+      "phone": "Phone",
+      "test": "Test branch",
+      "updated": "Last changed",
+      "status": "Status"
+    }
+  },
+  "locations": {
+    "title": "Locations in this branch",
+    "description": "Pens, cold rooms, stores and shop floors where stock is held.",
+    "add": "Add a location",
+    "loading": "Loading locations",
+    "empty": "No locations yet",
+    "emptyBody": "Add where stock is held: a pen, the cold room, the shop floor.",
+    "error": "Locations could not be loaded",
+    "denied": "You do not have access to locations",
+    "table": "Locations",
+    "newTitle": "New location at {{branch}}",
+    "newBody": "Where stock is held in this branch. To move a location from another branch, ask for it to be added to the contract (CR-014).",
+    "notAdded": "The location was not added",
+    "added": "{{name}} is added.",
+    "create": "Add location",
+    "fields": {
+      "code": "Code",
+      "name": "Name",
+      "kind": "Kind",
+      "temperature": "Temperature",
+      "sellable": "Stock here can be sold"
+    },
+    "columns": {
+      "location": "Location",
+      "kind": "Kind",
+      "sellable": "Sellable",
+      "temperature": "Temperature"
+    }
+  },
+  "kind": {
+    "SITE": "Site",
+    "PEN": "Pen",
+    "COLD_ROOM": "Cold room",
+    "STORE": "Store",
+    "SHOP_FLOOR": "Shop floor",
+    "VEHICLE": "Vehicle",
+    "RETURNS_HOLD": "Returns hold",
+    "QUARANTINE": "Quarantine",
+    "IN_TRANSIT": "In transit",
+    "SUPPLIER": "Supplier",
+    "CUSTOMER": "Customer",
+    "PRODUCTION": "Production",
+    "PROCESSING": "Processing",
+    "CONSUMPTION": "Consumption",
+    "LOSS": "Loss",
+    "ADJUSTMENT": "Adjustment",
+    "OPENING": "Opening stock"
+  },
+  "temp": {
+    "NONE": "No requirement",
+    "AMBIENT": "Ambient",
+    "CHILLED": "Chilled",
+    "FROZEN": "Frozen"
+  }
+}

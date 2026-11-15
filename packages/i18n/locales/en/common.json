@@ -49,5 +49,10 @@
   "conflict": {
     "title": "Someone else changed this",
     "body": "It changed after you opened it. Reload to see the current version, then make your change again."
+  },
+  "confirm": {
+    "what": "What changes",
+    "before": "Now",
+    "after": "After"
   }
 }
