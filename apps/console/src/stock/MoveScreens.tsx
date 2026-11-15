@@ -8,6 +8,7 @@ import {
   Card,
   CardBody,
   DateRangeMenu,
+  FilterMenu,
   EmptyState,
   IconChip,
   MoneyDisplay,
@@ -48,6 +49,15 @@ import {
   TransferStatusBadge,
 } from './presentation';
 import { ReceiveTransfer } from './ReceiveTransfer';
+import {
+  ANY,
+  FilterSelect,
+  countSet,
+  param,
+  useReasonOptions,
+  useSupplierOptions,
+} from './filters';
+import { useLocations } from './locations';
 import { useUnits } from './units';
 
 type S = components['schemas'];
@@ -149,11 +159,32 @@ function DocName({
 
 const cursorQuery = (cursor: string | undefined) => (cursor === undefined ? {} : { cursor });
 
+const ADJUSTMENT_STATUSES = ['DRAFT', 'PENDING_APPROVAL', 'POSTED', 'REJECTED'] as const;
+const TRANSFER_STATUSES = ['DRAFT', 'DISPATCHED', 'RECEIVED', 'CANCELLED'] as const;
+const RECEIPT_STATUSES = ['DRAFT', 'POSTED', 'CANCELLED'] as const;
+
 export function AdjustmentsScreen() {
-  const { t } = useTranslation('stock');
+  const { t } = useTranslation(['stock', 'common']);
   const auth = useAuth();
   const pages = useCursorPages();
-  const list = useApiQuery('listStockAdjustments', { query: cursorQuery(pages.cursor) });
+  const locations = useLocations();
+  const reasons = useReasonOptions();
+  const [status, setStatus] = useState(ANY);
+  const [locationId, setLocationId] = useState(ANY);
+  const [reasonCode, setReasonCode] = useState(ANY);
+  // Every filter is the API's own (`status`, `locationId`, `reasonCode`).
+  const list = useApiQuery('listStockAdjustments', {
+    query: {
+      ...param('status', status),
+      ...param('locationId', locationId),
+      ...param('reasonCode', reasonCode),
+      ...cursorQuery(pages.cursor),
+    },
+  });
+  const change = (set: (value: string) => void) => (value: string) => {
+    set(value);
+    pages.reset();
+  };
   return (
     <DocList<S['StockAdjustment']>
       area="adjustments"
@@ -161,6 +192,46 @@ export function AdjustmentsScreen() {
       canCreate={auth.can('inv.adjustment.create')}
       query={list}
       pages={pages}
+      toolbar={
+        <FilterMenu
+          label={t('common:table.filter')}
+          active={countSet(status, locationId, reasonCode)}
+          reset={{
+            label: t('common:table.resetFilters'),
+            onReset: () => {
+              setStatus(ANY);
+              setLocationId(ANY);
+              setReasonCode(ANY);
+              pages.reset();
+            },
+          }}
+        >
+          <FilterSelect
+            label={t('filters.status')}
+            anyLabel={t('filters.anyStatus')}
+            value={status}
+            onChange={change(setStatus)}
+            options={ADJUSTMENT_STATUSES.map((value) => ({
+              value,
+              label: t(`adjustmentStatus.${value}`),
+            }))}
+          />
+          <FilterSelect
+            label={t('filters.location')}
+            anyLabel={t('filters.anyLocation')}
+            value={locationId}
+            onChange={change(setLocationId)}
+            options={locations.options}
+          />
+          <FilterSelect
+            label={t('filters.reason')}
+            anyLabel={t('filters.anyReason')}
+            value={reasonCode}
+            onChange={change(setReasonCode)}
+            options={reasons}
+          />
+        </FilterMenu>
+      }
       columns={[
         {
           id: 'document',
@@ -208,10 +279,26 @@ export function AdjustmentsScreen() {
 }
 
 export function TransfersScreen() {
-  const { t } = useTranslation('stock');
+  const { t } = useTranslation(['stock', 'common']);
   const auth = useAuth();
   const pages = useCursorPages();
-  const list = useApiQuery('listStockTransfers', { query: cursorQuery(pages.cursor) });
+  const locations = useLocations();
+  const [status, setStatus] = useState(ANY);
+  const [fromId, setFromId] = useState(ANY);
+  const [toId, setToId] = useState(ANY);
+  // Every filter is the API's own (`status`, `fromLocationId`, `toLocationId`).
+  const list = useApiQuery('listStockTransfers', {
+    query: {
+      ...param('status', status),
+      ...param('fromLocationId', fromId),
+      ...param('toLocationId', toId),
+      ...cursorQuery(pages.cursor),
+    },
+  });
+  const change = (set: (value: string) => void) => (value: string) => {
+    set(value);
+    pages.reset();
+  };
   return (
     <DocList<S['StockTransfer']>
       area="transfers"
@@ -219,6 +306,46 @@ export function TransfersScreen() {
       canCreate={auth.can('inv.transfer.create')}
       query={list}
       pages={pages}
+      toolbar={
+        <FilterMenu
+          label={t('common:table.filter')}
+          active={countSet(status, fromId, toId)}
+          reset={{
+            label: t('common:table.resetFilters'),
+            onReset: () => {
+              setStatus(ANY);
+              setFromId(ANY);
+              setToId(ANY);
+              pages.reset();
+            },
+          }}
+        >
+          <FilterSelect
+            label={t('filters.status')}
+            anyLabel={t('filters.anyStatus')}
+            value={status}
+            onChange={change(setStatus)}
+            options={TRANSFER_STATUSES.map((value) => ({
+              value,
+              label: t(`transferStatus.${value}`),
+            }))}
+          />
+          <FilterSelect
+            label={t('filters.from')}
+            anyLabel={t('filters.anyFrom')}
+            value={fromId}
+            onChange={change(setFromId)}
+            options={locations.options}
+          />
+          <FilterSelect
+            label={t('filters.to')}
+            anyLabel={t('filters.anyTo')}
+            value={toId}
+            onChange={change(setToId)}
+            options={locations.options}
+          />
+        </FilterMenu>
+      }
       columns={[
         {
           id: 'document',
@@ -263,15 +390,25 @@ export function ReceiptsScreen() {
   const auth = useAuth();
   const pages = useCursorPages();
   const rangeWords = useDateRangeWords();
+  const suppliers = useSupplierOptions();
   const [range, setRange] = useState<DateRange>({ from: undefined, to: undefined });
-  // `from` and `to` are dates (format: date): the picked days go as they are.
+  const [status, setStatus] = useState(ANY);
+  const [supplierId, setSupplierId] = useState(ANY);
+  // `from` and `to` are dates (format: date): the picked days go as they are. `status` and `supplierId`
+  // are the API's own filters.
   const list = useApiQuery('listGoodsReceipts', {
     query: {
       ...(range.from === undefined ? {} : { from: range.from }),
       ...(range.to === undefined ? {} : { to: range.to }),
+      ...(status === ANY ? {} : { status: RECEIPT_STATUSES.find((s) => s === status) }),
+      ...param('supplierId', supplierId),
       ...cursorQuery(pages.cursor),
     },
   });
+  const change = (set: (value: string) => void) => (value: string) => {
+    set(value);
+    pages.reset();
+  };
   return (
     <DocList<S['GoodsReceipt']>
       area="receipts"
@@ -280,19 +417,51 @@ export function ReceiptsScreen() {
       query={list}
       pages={pages}
       toolbar={
-        <DateRangeMenu
-          label={t('receipts.dates')}
-          summary={rangeWords(range)}
-          from={range.from}
-          to={range.to}
-          onChange={(next) => {
-            setRange(next);
-            pages.reset();
-          }}
-          fromLabel={t('common:dates.from')}
-          toLabel={t('common:dates.to')}
-          clearLabel={t('common:dates.clear')}
-        />
+        <>
+          <DateRangeMenu
+            label={t('receipts.dates')}
+            summary={rangeWords(range)}
+            from={range.from}
+            to={range.to}
+            onChange={(next) => {
+              setRange(next);
+              pages.reset();
+            }}
+            fromLabel={t('common:dates.from')}
+            toLabel={t('common:dates.to')}
+            clearLabel={t('common:dates.clear')}
+          />
+          <FilterMenu
+            label={t('common:table.filter')}
+            active={countSet(status, supplierId)}
+            reset={{
+              label: t('common:table.resetFilters'),
+              onReset: () => {
+                setStatus(ANY);
+                setSupplierId(ANY);
+                pages.reset();
+              },
+            }}
+          >
+            <FilterSelect
+              label={t('filters.status')}
+              anyLabel={t('filters.anyStatus')}
+              value={status}
+              onChange={change(setStatus)}
+              options={RECEIPT_STATUSES.map((value) => ({
+                value,
+                label: t(`receiptStatus.${value}`),
+              }))}
+            />
+            <FilterSelect
+              label={t('filters.supplier')}
+              anyLabel={t('filters.anySupplier')}
+              value={supplierId}
+              onChange={change(setSupplierId)}
+              options={suppliers}
+            />
+          </FilterMenu>
+        </>
       }
       columns={[
         {

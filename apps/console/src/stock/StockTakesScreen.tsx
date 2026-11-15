@@ -8,6 +8,7 @@ import {
   Dialog,
   DialogActions,
   Field,
+  FilterMenu,
   IconChip,
   MutationFailure,
   Select,
@@ -23,19 +24,37 @@ import { useIntentKey } from '../lib/queries';
 import { useStateLabels } from '../lib/states';
 import { TableCard } from '../lib/TableCard';
 import { useCursorPages } from '../lib/useCursorPages';
+import { ANY, FilterSelect, countSet, param } from './filters';
 import { useLocations } from './locations';
 import { StockTakeStatusBadge } from './presentation';
 
 type Take = components['schemas']['StockTake'];
 
-/** FR-INV stock takes: each count, where, how far along, and its state. */
+const TAKE_STATUSES = [
+  'DRAFT',
+  'COUNTING',
+  'REVIEW',
+  'PENDING_APPROVAL',
+  'POSTED',
+  'CANCELLED',
+] as const;
+
+/** FR-INV stock takes: each count, where, how far along, and its state, filtered by both. */
 export function StockTakesScreen() {
   const { t } = useTranslation(['stock', 'common']);
   const auth = useAuth();
   const pages = useCursorPages();
   const [creating, setCreating] = useState(false);
+  const locations = useLocations();
+  const [status, setStatus] = useState(ANY);
+  const [locationId, setLocationId] = useState(ANY);
+  // `status` and `locationId` are the API's own filters.
   const takes = useApiQuery('listStockTakes', {
-    query: pages.cursor === undefined ? {} : { cursor: pages.cursor },
+    query: {
+      ...param('status', status),
+      ...param('locationId', locationId),
+      ...(pages.cursor === undefined ? {} : { cursor: pages.cursor }),
+    },
   });
   const labels = useStateLabels({
     loading: t('takes.loading'),
@@ -114,6 +133,41 @@ export function StockTakesScreen() {
         tableLabel={t('takes.table')}
         exportName={t('takes.title')}
         pages={{ state: pages, info: (page) => page.page, label: t('takes.pages') }}
+        toolbar={
+          <FilterMenu
+            label={t('common:table.filter')}
+            active={countSet(status, locationId)}
+            reset={{
+              label: t('common:table.resetFilters'),
+              onReset: () => {
+                setStatus(ANY);
+                setLocationId(ANY);
+                pages.reset();
+              },
+            }}
+          >
+            <FilterSelect
+              label={t('filters.status')}
+              anyLabel={t('filters.anyStatus')}
+              value={status}
+              onChange={(value) => {
+                setStatus(value);
+                pages.reset();
+              }}
+              options={TAKE_STATUSES.map((value) => ({ value, label: t(`takeStatus.${value}`) }))}
+            />
+            <FilterSelect
+              label={t('filters.location')}
+              anyLabel={t('filters.anyLocation')}
+              value={locationId}
+              onChange={(value) => {
+                setLocationId(value);
+                pages.reset();
+              }}
+              options={locations.options}
+            />
+          </FilterMenu>
+        }
       />
       {creating ? <NewTake onClose={() => setCreating(false)} /> : null}
     </section>

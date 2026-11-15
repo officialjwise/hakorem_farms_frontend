@@ -236,3 +236,26 @@ describe('the F5 gate: a count is entered page by page, blind, and finished', ()
     expect(await within(dialog).findByRole('alert')).toHaveTextContent(PRISM_500_REFERENCE);
   });
 });
+
+describe('the stock lists send their filters to the API (F5c)', () => {
+  it('a transfer status chosen in the Filter pill goes as `status`, and the pill counts it', async () => {
+    await renderApp('/stock-transfers', await signedIn('owner'));
+    expect(
+      await screen.findByText('TRF-2026-DDW-00009', undefined, { timeout: 5000 }),
+    ).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /^Filter/ }));
+    const popover = await screen.findByRole('dialog', { name: 'Filter' });
+    await userEvent.click(within(popover).getByRole('combobox', { name: 'Status' }));
+    await userEvent.click(await screen.findByRole('option', { name: 'On the way' }));
+    await waitFor(() =>
+      expect(
+        mock.requests.some(
+          (url) =>
+            url.pathname.endsWith('/stock-transfers') &&
+            url.searchParams.get('status') === 'DISPATCHED',
+        ),
+      ).toBe(true),
+    );
+    expect(screen.getByRole('button', { name: /^Filter/ })).toHaveTextContent('1');
+  });
+});

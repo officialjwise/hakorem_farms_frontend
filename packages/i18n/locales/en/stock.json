@@ -355,5 +355,19 @@
     "doneShort_other": "Received. {{count}} lines were short: their loss is booked and stock exceptions were raised. The differences are in the table above.",
     "gapShort": "{{gap}} {{unit}} fewer than sent",
     "gapMore": "{{gap}} {{unit}} more than sent"
+  },
+  "filters": {
+    "status": "Status",
+    "anyStatus": "Any status",
+    "location": "Location",
+    "anyLocation": "Any location",
+    "from": "Sent from",
+    "anyFrom": "Any location",
+    "to": "Sent to",
+    "anyTo": "Any location",
+    "reason": "Reason",
+    "anyReason": "Any reason",
+    "supplier": "Supplier",
+    "anySupplier": "Any supplier"
   }
 }
