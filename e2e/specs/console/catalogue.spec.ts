@@ -121,8 +121,11 @@ test.describe('products', () => {
   }) => {
     await signInWithTotp(page, USERS.owner, '/products');
     await expect(page.getByRole('heading', { name: 'Products', level: 1 })).toBeVisible();
-    await page.getByLabel(/^name, sku or barcode/i).fill('goat');
-    await page.getByRole('button', { name: 'Search' }).click();
+    const search = page.getByRole('searchbox', {
+      name: /^search products by name, sku or barcode/i,
+    });
+    await search.fill('goat');
+    await search.press('Enter');
     await expect
       .poll(() => api.log.filter((e) => e.operationId === 'listProducts').length)
       .toBeGreaterThan(1);

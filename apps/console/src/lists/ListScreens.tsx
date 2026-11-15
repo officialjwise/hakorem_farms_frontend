@@ -1,20 +1,37 @@
-import { CalendarClock, CircleCheck, CircleSlash, CircleX, Hourglass } from 'lucide-react';
-import { useState } from 'react';
+import {
+  ArrowLeftRight,
+  CalendarClock,
+  CircleCheck,
+  CircleSlash,
+  CircleX,
+  Hourglass,
+  Monitor,
+  Package,
+  PawPrint,
+  Truck,
+} from 'lucide-react';
+import { useState, type ComponentType, type ReactNode, type SVGProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { components } from '@hakorem/api-client';
 import {
+  DateRangeMenu,
   Field,
+  FilterMenu,
+  IconChip,
   MoneyDisplay,
   NOT_APPLICABLE,
   QuantityDisplay,
   Select,
   StatusBadge,
+  ToolbarSearch,
   WeightDisplay,
+  type IconChipTone,
 } from '@hakorem/ui';
 import { BranchScopeNote } from '../branch/BranchScopeNote';
 import { useBranchScope } from '../branch/branchScope';
 import { useApiQuery } from '../data/api';
 import { When } from '../iam/presentation';
+import { dayEnd, dayStart, useDateRangeWords, type DateRange } from '../lib/dateRange';
 import { lookup, UNKNOWN } from '../lib/lookup';
 import { useCursorPages } from '../lib/useCursorPages';
 import { useLocations } from '../stock/locations';
@@ -32,11 +49,52 @@ const UNIT_STATUS = {
 } as const;
 
 const EXPIRY = ['ALL', '7', '30'] as const;
+const SUPPLIER_STATUSES = ['ACTIVE', 'BLOCKED'] as const;
 
 /** A movement type code in words: SALE_ISSUE reads "Sale issue". The codes are the API's own. */
 function humanise(code: string): string {
   const words = code.toLowerCase().replaceAll('_', ' ');
   return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+/** A row's name with its icon chip and its code beneath, as the reference lists a row without an image. */
+function NameCell({
+  icon,
+  tone,
+  name,
+  code,
+}: {
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  tone: IconChipTone;
+  name: ReactNode;
+  code: ReactNode;
+}) {
+  return (
+    <span className="flex items-center gap-3">
+      <IconChip icon={icon} tone={tone} size="sm" />
+      <span className="grid min-w-0">
+        <span>{name}</span>
+        <span className="text-control-sm font-normal text-fg-muted">{code}</span>
+      </span>
+    </span>
+  );
+}
+
+/** The toolbar's search: typed words are sent with Enter, and a new search starts at the first page. */
+function useSearch(onSearch: () => void) {
+  const [typed, setTyped] = useState('');
+  const [q, setQ] = useState('');
+  return {
+    q,
+    props: {
+      value: typed,
+      onValueChange: setTyped,
+      onSubmit: (value: string) => {
+        setQ(value);
+        onSearch();
+      },
+    },
+  };
 }
 
 /**
@@ -48,12 +106,14 @@ export function LotsScreen() {
   const { t } = useTranslation(['lists', 'common']);
   const pages = useCursorPages();
   const locations = useLocations();
+  const search = useSearch(pages.reset);
   const [locationId, setLocationId] = useState('ALL');
   const [within, setWithin] = useState<(typeof EXPIRY)[number]>('ALL');
   // Lots on hand are acted on: `live`.
   const lots = useApiQuery('listStockUnits', {
     query: {
       status: 'ACTIVE',
+      ...(search.q === '' ? {} : { q: search.q }),
       ...(locationId === 'ALL' ? {} : { locationId }),
       ...(within === 'ALL' ? {} : { expiringWithinDays: Number(within) }),
       ...(pages.cursor === undefined ? {} : { cursor: pages.cursor }),
@@ -78,9 +138,21 @@ export function LotsScreen() {
       }}
       query={lots}
       pages={pages}
-      filters={
+      toolbar={
         <>
-          <div className="w-full max-w-xs">
+          <ToolbarSearch label={t('lots.search')} {...search.props} />
+          <FilterMenu
+            label={t('common:table.filter')}
+            active={(locationId === 'ALL' ? 0 : 1) + (within === 'ALL' ? 0 : 1)}
+            reset={{
+              label: t('common:table.resetFilters'),
+              onReset: () => {
+                setLocationId('ALL');
+                setWithin('ALL');
+                pages.reset();
+              },
+            }}
+          >
             <Field label={t('lots.location')}>
               <Select
                 value={locationId}
@@ -91,36 +163,46 @@ export function LotsScreen() {
                 options={[{ value: 'ALL', label: t('lots.allLocations') }, ...locations.options]}
               />
             </Field>
-          </div>
-          <div className="w-full max-w-xs">
             <Field label={t('lots.expiring')}>
               <Select
                 value={within}
                 onValueChange={(value) => {
-                  setWithin(value as (typeof EXPIRY)[number]);
+                  setWithin(EXPIRY.find((option) => option === value) ?? 'ALL');
                   pages.reset();
                 }}
                 options={EXPIRY.map((value) => ({ value, label: t(`lots.within.${value}`) }))}
               />
             </Field>
-          </div>
+          </FilterMenu>
         </>
       }
       rowKey={(lot) => lot.id}
-      nameHead={t('lots.columns.lot')}
-      name={(lot) => (
-        <span className="grid">
-          <span>{lot.product.name}</span>
-          <code className="text-control-sm text-fg-muted">{lot.identifier}</code>
-        </span>
-      )}
       columns={[
         {
+          id: 'lot',
+          rowHeader: true,
+          head: t('lots.columns.lot'),
+          sortValue: (lot) => lot.product.name,
+          cell: (lot) => (
+            <NameCell
+              icon={lot.tracking === 'SERIAL' ? PawPrint : Package}
+              tone={lot.tracking === 'SERIAL' ? 'accent' : 'sand'}
+              name={lot.product.name}
+              code={<code>{lot.identifier}</code>}
+            />
+          ),
+        },
+        {
+          id: 'where',
           head: t('lots.columns.where'),
+          sortValue: (lot) => lot.currentLocation?.name,
           cell: (lot) => lot.currentLocation?.name ?? NOT_APPLICABLE,
         },
         {
+          id: 'expires',
           head: t('lots.columns.expires'),
+          // ISO dates sort as text.
+          sortValue: (lot) => lot.expiresOn,
           cell: (lot) =>
             lot.expiresOn === null ? (
               NOT_APPLICABLE
@@ -132,6 +214,7 @@ export function LotsScreen() {
             ),
         },
         {
+          id: 'onHand',
           head: t('lots.columns.onHand'),
           numeric: true,
           cell: (lot) => (
@@ -146,11 +229,15 @@ export function LotsScreen() {
           ),
         },
         {
+          id: 'value',
           head: t('lots.columns.value'),
           numeric: true,
+          // The API's integer pesewas, compared, never added.
+          sortValue: (lot) => lot.valueAtCostPesewas,
           cell: (lot) => <MoneyDisplay pesewas={lot.valueAtCostPesewas} />,
         },
         {
+          id: 'status',
           head: t('lots.columns.status'),
           cell: (lot) => {
             const look = lookup(UNIT_STATUS, lot.status, UNKNOWN);
@@ -158,7 +245,6 @@ export function LotsScreen() {
               <span className="flex flex-wrap gap-1">
                 <StatusBadge
                   tone={look.tone}
-                  icon={look.icon}
                   label={t(`lots.status.${lot.status}`, { defaultValue: lot.status })}
                 />
                 {lot.activeHolds.length > 0 ? (
@@ -181,13 +267,17 @@ export function MovementsScreen() {
   const pages = useCursorPages();
   const units = useUnits();
   const locations = useLocations();
+  const rangeWords = useDateRangeWords();
   const [locationId, setLocationId] = useState('ALL');
+  const [range, setRange] = useState<DateRange>({ from: undefined, to: undefined });
   // A ledger read to answer a question, not acted on: `working`.
   const movements = useApiQuery(
     'listStockMovements',
     {
       query: {
         ...(locationId === 'ALL' ? {} : { locationId }),
+        ...(range.from === undefined ? {} : { from: dayStart(range.from) }),
+        ...(range.to === undefined ? {} : { to: dayEnd(range.to) }),
         ...(pages.cursor === undefined ? {} : { cursor: pages.cursor }),
       },
     },
@@ -211,42 +301,84 @@ export function MovementsScreen() {
       }}
       query={movements}
       pages={pages}
-      filters={
-        <div className="w-full max-w-xs">
-          <Field label={t('movements.location')}>
-            <Select
-              value={locationId}
-              onValueChange={(value) => {
-                setLocationId(value);
+      toolbar={
+        <>
+          <DateRangeMenu
+            label={t('movements.dates')}
+            summary={rangeWords(range)}
+            from={range.from}
+            to={range.to}
+            onChange={(next) => {
+              setRange(next);
+              pages.reset();
+            }}
+            fromLabel={t('common:dates.from')}
+            toLabel={t('common:dates.to')}
+            clearLabel={t('common:dates.clear')}
+          />
+          <FilterMenu
+            label={t('common:table.filter')}
+            active={locationId === 'ALL' ? 0 : 1}
+            reset={{
+              label: t('common:table.resetFilters'),
+              onReset: () => {
+                setLocationId('ALL');
                 pages.reset();
-              }}
-              options={[{ value: 'ALL', label: t('movements.allLocations') }, ...locations.options]}
-            />
-          </Field>
-        </div>
+              },
+            }}
+          >
+            <Field label={t('movements.location')}>
+              <Select
+                value={locationId}
+                onValueChange={(value) => {
+                  setLocationId(value);
+                  pages.reset();
+                }}
+                options={[
+                  { value: 'ALL', label: t('movements.allLocations') },
+                  ...locations.options,
+                ]}
+              />
+            </Field>
+          </FilterMenu>
+        </>
       }
       rowKey={(movement) => movement.id}
-      nameHead={t('movements.columns.what')}
-      name={(movement) => (
-        <span className="grid">
-          <span>{movement.product.name}</span>
-          <span className="text-control-sm text-fg-muted">
-            {humanise(movement.movementType)}
-            {movement.stockUnit === null ? '' : ` · ${movement.stockUnit.identifier}`}
-          </span>
-        </span>
-      )}
       columns={[
         {
+          id: 'what',
+          rowHeader: true,
+          head: t('movements.columns.what'),
+          sortValue: (movement) => movement.product.name,
+          cell: (movement) => (
+            <NameCell
+              icon={ArrowLeftRight}
+              tone="accent"
+              name={movement.product.name}
+              code={
+                <>
+                  {humanise(movement.movementType)}
+                  {movement.stockUnit === null ? '' : ` · ${movement.stockUnit.identifier}`}
+                </>
+              }
+            />
+          ),
+        },
+        {
+          id: 'when',
           head: t('movements.columns.when'),
+          // ISO instants sort as text.
+          sortValue: (movement) => movement.occurredAt,
           cell: (movement) => <When instant={movement.occurredAt} />,
         },
         {
+          id: 'route',
           head: t('movements.columns.route'),
           cell: (movement) =>
             t('movements.route', { from: movement.from.name, to: movement.to.name }),
         },
         {
+          id: 'qty',
           head: t('movements.columns.qty'),
           numeric: true,
           cell: (movement) => (
@@ -258,16 +390,23 @@ export function MovementsScreen() {
           ),
         },
         {
+          id: 'value',
           head: t('movements.columns.value'),
           numeric: true,
+          sortValue: (movement) => movement.valuePesewas,
           cell: (movement) => <MoneyDisplay pesewas={movement.valuePesewas} />,
         },
         {
+          id: 'source',
           head: t('movements.columns.source'),
+          sortValue: (movement) =>
+            movement.sourceDocument.number ?? movement.sourceDocument.docType,
           cell: (movement) => movement.sourceDocument.number ?? movement.sourceDocument.docType,
         },
         {
+          id: 'by',
           head: t('movements.columns.by'),
+          sortValue: (movement) => movement.actor.displayName,
           cell: (movement) => movement.actor.displayName,
         },
       ]}
@@ -281,10 +420,18 @@ export function MovementsScreen() {
 export function SuppliersScreen() {
   const { t } = useTranslation(['lists', 'common']);
   const pages = useCursorPages();
+  const search = useSearch(pages.reset);
+  const [status, setStatus] = useState<(typeof SUPPLIER_STATUSES)[number] | 'ALL'>('ALL');
   // A list people browse: `working`.
   const suppliers = useApiQuery(
     'listSuppliers',
-    { query: pages.cursor === undefined ? {} : { cursor: pages.cursor } },
+    {
+      query: {
+        ...(search.q === '' ? {} : { q: search.q }),
+        ...(status === 'ALL' ? {} : { status }),
+        ...(pages.cursor === undefined ? {} : { cursor: pages.cursor }),
+      },
+    },
     { staleClass: 'working' },
   );
   return (
@@ -300,31 +447,74 @@ export function SuppliersScreen() {
       }}
       query={suppliers}
       pages={pages}
+      toolbar={
+        <>
+          <ToolbarSearch label={t('suppliers.search')} {...search.props} />
+          <FilterMenu
+            label={t('common:table.filter')}
+            active={status === 'ALL' ? 0 : 1}
+            reset={{
+              label: t('common:table.resetFilters'),
+              onReset: () => {
+                setStatus('ALL');
+                pages.reset();
+              },
+            }}
+          >
+            <Field label={t('suppliers.statusFilter')}>
+              <Select
+                value={status}
+                onValueChange={(value) => {
+                  setStatus(SUPPLIER_STATUSES.find((s) => s === value) ?? 'ALL');
+                  pages.reset();
+                }}
+                options={[
+                  { value: 'ALL', label: t('suppliers.allStatuses') },
+                  ...SUPPLIER_STATUSES.map((s) => ({
+                    value: s,
+                    label: t(`suppliers.status.${s}`),
+                  })),
+                ]}
+              />
+            </Field>
+          </FilterMenu>
+        </>
+      }
       rowKey={(supplier) => supplier.id}
-      nameHead={t('suppliers.columns.supplier')}
-      name={(supplier) => (
-        <span className="grid">
-          <span>{supplier.name}</span>
-          <code className="text-control-sm text-fg-muted">{supplier.supplierNo}</code>
-        </span>
-      )}
       columns={[
         {
+          id: 'supplier',
+          rowHeader: true,
+          head: t('suppliers.columns.supplier'),
+          sortValue: (supplier) => supplier.name,
+          cell: (supplier) => (
+            <NameCell
+              icon={Truck}
+              tone="info"
+              name={supplier.name}
+              code={<code>{supplier.supplierNo}</code>}
+            />
+          ),
+        },
+        {
+          id: 'contact',
           head: t('suppliers.columns.contact'),
+          sortValue: (supplier) => supplier.contactName,
           cell: (supplier) =>
             [supplier.contactName, supplier.phone, supplier.email]
               .filter((value) => value !== null && value !== '')
               .join(' · ') || NOT_APPLICABLE,
         },
         {
+          id: 'status',
           head: t('suppliers.columns.status'),
+          sortValue: (supplier) => supplier.status,
           cell: (supplier) =>
             supplier.status === 'ACTIVE' ? (
-              <StatusBadge tone="good" icon={CircleCheck} label={t('suppliers.status.ACTIVE')} />
+              <StatusBadge tone="good" label={t('suppliers.status.ACTIVE')} />
             ) : (
               <StatusBadge
                 tone="critical"
-                icon={CircleX}
                 label={t(`suppliers.status.${supplier.status}`, { defaultValue: supplier.status })}
               />
             ),
@@ -359,23 +549,37 @@ export function RegistersScreen() {
       query={registers}
       pages={pages}
       rowKey={(register) => register.id}
-      nameHead={t('registers.columns.register')}
-      name={(register) => (
-        <span className="grid">
-          <span>{register.name}</span>
-          <code className="text-control-sm text-fg-muted">{register.code}</code>
-        </span>
-      )}
       columns={[
-        { head: t('registers.columns.where'), cell: (register) => register.location.name },
         {
+          id: 'register',
+          rowHeader: true,
+          head: t('registers.columns.register'),
+          sortValue: (register) => register.name,
+          cell: (register) => (
+            <NameCell
+              icon={Monitor}
+              tone="accent"
+              name={register.name}
+              code={<code>{register.code}</code>}
+            />
+          ),
+        },
+        {
+          id: 'where',
+          head: t('registers.columns.where'),
+          sortValue: (register) => register.location.name,
+          cell: (register) => register.location.name,
+        },
+        {
+          id: 'shift',
           head: t('registers.columns.shift'),
+          sortValue: (register) => (register.openShift === null ? 1 : 0),
           cell: (register) =>
             register.openShift === null ? (
-              <StatusBadge tone="slate" icon={CircleSlash} label={t('registers.closed')} />
+              <StatusBadge tone="slate" label={t('registers.closed')} />
             ) : (
-              <span className="grid">
-                <StatusBadge tone="good" icon={CircleCheck} label={t('registers.open')} />
+              <span className="grid justify-items-start gap-1">
+                <StatusBadge tone="good" label={t('registers.open')} />
                 <span className="text-control-sm text-fg-muted">
                   {register.openShift.cashier.displayName} ·{' '}
                   <When instant={register.openShift.openedAt} />
@@ -383,7 +587,13 @@ export function RegistersScreen() {
               </span>
             ),
         },
-        { head: t('registers.columns.devices'), numeric: true, cell: (r) => r.deviceCount },
+        {
+          id: 'devices',
+          head: t('registers.columns.devices'),
+          numeric: true,
+          sortValue: (register) => register.deviceCount,
+          cell: (register) => register.deviceCount,
+        },
       ]}
       tableLabel={t('registers.table')}
       pagesLabel={t('registers.pages')}

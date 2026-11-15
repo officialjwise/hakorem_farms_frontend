@@ -198,3 +198,26 @@ export {
 export { PageHeader, type PageHeaderProps } from './components/page-header/PageHeader';
 export { Barcode, type BarcodeProps } from './components/barcode/Barcode';
 export { isCode128B } from './components/barcode/code128';
+export { IconChip, type IconChipProps, type IconChipTone } from './components/icon-chip/IconChip';
+export {
+  ColumnsMenu,
+  DateRangeMenu,
+  ExportMenu,
+  FilterMenu,
+  SortMenu,
+  TableToolbar,
+  ToolbarSearch,
+  type ColumnsMenuProps,
+  type DateRangeMenuProps,
+  type ExportMenuItem,
+  type ExportMenuProps,
+  type FilterMenuProps,
+  type SortMenuProps,
+  type ToolbarSearchProps,
+} from './components/table-toolbar/TableToolbar';
+export {
+  useTableView,
+  type TableColumn,
+  type TableSort,
+  type TableView,
+} from './components/table-toolbar/useTableView';

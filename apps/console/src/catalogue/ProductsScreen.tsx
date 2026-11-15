@@ -5,37 +5,33 @@ import type { components } from '@hakorem/api-client';
 import {
   Button,
   Field,
-  Input,
-  Pagination,
-  QueryBoundary,
+  FilterMenu,
   Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableHeader,
-  TableLoadingRows,
-  TableRow,
-  TableRowHeader,
+  ToolbarSearch,
+  useTableView,
+  type TableColumn,
 } from '@hakorem/ui';
 import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiQuery } from '../data/api';
 import { useStateLabels } from '../lib/states';
+import { TableCard } from '../lib/TableCard';
 import { useCursorPages } from '../lib/useCursorPages';
-import { ProductStatusBadge } from './presentation';
+import { ProductPicture, ProductStatusBadge } from './presentation';
 
-type Status = components['schemas']['Product']['status'];
+type Product = components['schemas']['Product'];
+type Status = Product['status'];
+type Policy = Product['stockPolicy'];
 const STATUSES: readonly Status[] = ['ACTIVE', 'DRAFT', 'DISCONTINUED'];
-const COLUMNS = 6;
+const POLICIES: readonly Policy[] = ['SERIALISED', 'CATCH_WEIGHT', 'COUNTABLE', 'NON_STOCK'];
 
-/** FR-MDM: the product catalogue, searched by name, SKU or barcode and filtered by status. */
+/** FR-MDM: the product catalogue, searched by name, SKU or barcode and filtered by status and stock policy. */
 export function ProductsScreen() {
   const { t } = useTranslation(['catalogue', 'common']);
   const auth = useAuth();
   const pages = useCursorPages();
   const [status, setStatus] = useState<Status | 'ALL'>('ALL');
+  const [policy, setPolicy] = useState<Policy | 'ALL'>('ALL');
   // The header's search lands here with `?q=`; a new search from the header replaces the current one.
   const [params] = useSearchParams();
   const fromHeader = params.get('q') ?? '';
@@ -54,6 +50,7 @@ export function ProductsScreen() {
     {
       query: {
         ...(status === 'ALL' ? {} : { status }),
+        ...(policy === 'ALL' ? {} : { stockPolicy: policy }),
         ...(q === '' ? {} : { q }),
         ...(pages.cursor === undefined ? {} : { cursor: pages.cursor }),
       },
@@ -67,19 +64,57 @@ export function ProductsScreen() {
     errorTitle: t('products.error'),
     deniedTitle: t('products.denied'),
   });
-
-  const header = (
-    <TableHeader>
-      <TableRow>
-        <TableHead>{t('products.columns.name')}</TableHead>
-        <TableHead>{t('products.columns.category')}</TableHead>
-        <TableHead>{t('products.columns.policy')}</TableHead>
-        <TableHead>{t('products.columns.sold')}</TableHead>
-        <TableHead>{t('products.columns.online')}</TableHead>
-        <TableHead>{t('products.columns.status')}</TableHead>
-      </TableRow>
-    </TableHeader>
-  );
+  const columns: TableColumn<Product>[] = [
+    {
+      id: 'name',
+      rowHeader: true,
+      head: t('products.columns.name'),
+      sortValue: (product) => product.name,
+      cell: (product) => (
+        <span className="flex items-center gap-3">
+          <ProductPicture product={product} />
+          <span className="grid min-w-0">
+            <Link to={`/products/${product.id}`} className="text-accent-text hover:underline">
+              {product.name}
+            </Link>
+            <code className="text-control-sm font-normal text-fg-muted">{product.sku}</code>
+          </span>
+        </span>
+      ),
+    },
+    {
+      id: 'category',
+      head: t('products.columns.category'),
+      sortValue: (product) => product.category.name,
+      cell: (product) => product.category.name,
+    },
+    {
+      id: 'policy',
+      head: t('products.columns.policy'),
+      sortValue: (product) => t(`policy.${product.stockPolicy}`),
+      cell: (product) => t(`policy.${product.stockPolicy}`),
+    },
+    {
+      id: 'sold',
+      head: t('products.columns.sold'),
+      sortValue: (product) => product.saleUom,
+      cell: (product) => t('products.soldAs', { uom: product.saleUom }),
+    },
+    {
+      id: 'online',
+      head: t('products.columns.online'),
+      sortValue: (product) => t(`online.${product.onlineMode}`),
+      cell: (product) => t(`online.${product.onlineMode}`),
+    },
+    {
+      id: 'status',
+      head: t('products.columns.status'),
+      sortValue: (product) => product.status,
+      cell: (product) => <ProductStatusBadge status={product.status} />,
+    },
+  ];
+  const view = useTableView(columns);
+  const active = (status === 'ALL' ? 0 : 1) + (policy === 'ALL' ? 0 : 1);
 
   return (
     <section aria-labelledby="products-title" className="grid gap-4">
@@ -87,117 +122,76 @@ export function ProductsScreen() {
         title={t('products.title')}
         titleId="products-title"
         actions={
+          auth.can('mdm.product.create') ? (
+            <Button asChild>
+              <Link to="/products/new">{t('products.new')}</Link>
+            </Button>
+          ) : undefined
+        }
+      />
+      <TableCard
+        view={view}
+        query={products}
+        labels={labels}
+        rows={(page) => page.data}
+        rowKey={(product) => product.id}
+        tableLabel={t('products.table')}
+        exportName={t('products.title')}
+        pages={{ state: pages, info: (page) => page.page, label: t('products.pages') }}
+        toolbar={
           <>
-            {auth.can('mdm.product.create') ? (
-              <Button asChild>
-                <Link to="/products/new">{t('products.new')}</Link>
-              </Button>
-            ) : null}
+            <ToolbarSearch
+              label={t('products.searchLabel')}
+              placeholder={t('products.searchPlaceholder')}
+              value={typed}
+              onValueChange={setTyped}
+              onSubmit={(value) => {
+                setQ(value);
+                pages.reset();
+              }}
+            />
+            <FilterMenu
+              label={t('common:table.filter')}
+              active={active}
+              reset={{
+                label: t('common:table.resetFilters'),
+                onReset: () => {
+                  setStatus('ALL');
+                  setPolicy('ALL');
+                  pages.reset();
+                },
+              }}
+            >
+              <Field label={t('products.filterStatus')}>
+                <Select
+                  value={status}
+                  onValueChange={(value) => {
+                    setStatus(STATUSES.find((s) => s === value) ?? 'ALL');
+                    pages.reset();
+                  }}
+                  options={[
+                    { value: 'ALL', label: t('products.allStatuses') },
+                    ...STATUSES.map((s) => ({ value: s, label: t(`productStatus.${s}`) })),
+                  ]}
+                />
+              </Field>
+              <Field label={t('products.filterPolicy')}>
+                <Select
+                  value={policy}
+                  onValueChange={(value) => {
+                    setPolicy(POLICIES.find((p) => p === value) ?? 'ALL');
+                    pages.reset();
+                  }}
+                  options={[
+                    { value: 'ALL', label: t('products.allPolicies') },
+                    ...POLICIES.map((p) => ({ value: p, label: t(`policy.${p}`) })),
+                  ]}
+                />
+              </Field>
+            </FilterMenu>
           </>
         }
       />
-      <form
-        role="search"
-        aria-label={t('products.search')}
-        className="flex flex-wrap items-end gap-3"
-        onSubmit={(event) => {
-          event.preventDefault();
-          setQ(typed.trim());
-          pages.reset();
-        }}
-      >
-        <Field
-          label={t('products.searchLabel')}
-          hint={t('products.searchHint')}
-          className="min-w-0 grow sm:max-w-sm"
-        >
-          <Input type="search" value={typed} onChange={(event) => setTyped(event.target.value)} />
-        </Field>
-        <Button type="submit" variant="secondary">
-          {t('products.searchButton')}
-        </Button>
-        <Field label={t('products.filterStatus')} className="w-full sm:w-48">
-          <Select
-            value={status}
-            onValueChange={(value) => {
-              setStatus(STATUSES.find((s) => s === value) ?? 'ALL');
-              pages.reset();
-            }}
-            options={[
-              { value: 'ALL', label: t('products.allStatuses') },
-              ...STATUSES.map((s) => ({ value: s, label: t(`productStatus.${s}`) })),
-            ]}
-          />
-        </Field>
-      </form>
-      <QueryBoundary
-        query={products}
-        labels={labels}
-        isEmpty={(page) => page.data.length === 0}
-        loadingFallback={
-          <TableContainer aria-label={t('products.table')}>
-            <Table>
-              {header}
-              <TableBody>
-                <TableLoadingRows columns={COLUMNS} label={labels.loading} />
-              </TableBody>
-            </Table>
-          </TableContainer>
-        }
-      >
-        {(page) => (
-          <div className="grid gap-3">
-            <TableContainer aria-label={t('products.table')}>
-              <Table>
-                {header}
-                <TableBody>
-                  {page.data.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableRowHeader>
-                        <Link to={`/products/${product.id}`} className="text-accent-text underline">
-                          {product.name}
-                        </Link>
-                        <span className="block text-control-sm text-fg-muted">
-                          <code>{product.sku}</code>
-                        </span>
-                      </TableRowHeader>
-                      <TableCell label={t('products.columns.category')}>
-                        {product.category.name}
-                      </TableCell>
-                      <TableCell label={t('products.columns.policy')}>
-                        {t(`policy.${product.stockPolicy}`)}
-                      </TableCell>
-                      <TableCell label={t('products.columns.sold')}>
-                        {t('products.soldAs', { uom: product.saleUom })}
-                      </TableCell>
-                      <TableCell label={t('products.columns.online')}>
-                        {t(`online.${product.onlineMode}`)}
-                      </TableCell>
-                      <TableCell label={t('products.columns.status')}>
-                        <ProductStatusBadge status={product.status} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            {pages.hasPrevious || page.page.hasMore ? (
-              <Pagination
-                label={t('products.pages')}
-                hasPrevious={pages.hasPrevious}
-                hasNext={page.page.hasMore && page.page.nextCursor !== null}
-                onPrevious={pages.previous}
-                onNext={() => {
-                  if (page.page.nextCursor !== null) pages.next(page.page.nextCursor);
-                }}
-                previousLabel={t('common:pagination.previous')}
-                nextLabel={t('common:pagination.next')}
-                summary={t('common:pagination.page', { page: pages.page })}
-              />
-            ) : null}
-          </div>
-        )}
-      </QueryBoundary>
     </section>
   );
 }

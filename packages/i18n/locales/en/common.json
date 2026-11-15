@@ -17,7 +17,9 @@
   "pagination": {
     "previous": "Previous",
     "next": "Next",
-    "page": "Page {{page}}"
+    "page": "Page {{page}}",
+    "goTo": "Go to page",
+    "pageButton": "Page {{page}}"
   },
   "actions": {
     "cancel": "Cancel",
@@ -54,5 +56,30 @@
     "what": "What changes",
     "before": "Now",
     "after": "After"
+  },
+  "table": {
+    "columns": "Columns",
+    "columnsLegend": "Show columns",
+    "sort": "Sort by",
+    "sortDefault": "As listed",
+    "direction": "Direction",
+    "ascending": "A to Z, low to high, oldest first",
+    "descending": "Z to A, high to low, newest first",
+    "sortScope": "Sorts the rows on this page. Search and filters reach the whole list.",
+    "filter": "Filter",
+    "resetFilters": "Clear filters",
+    "export": "Export",
+    "exportCsv": "This page as CSV",
+    "exportCsvName": "{{name}}, page {{page}}"
+  },
+  "dates": {
+    "label": "Dates",
+    "from": "From",
+    "to": "To",
+    "clear": "Any date",
+    "any": "Any date",
+    "range": "{{from}} to {{to}}",
+    "since": "From {{from}}",
+    "until": "Until {{to}}"
   }
 }

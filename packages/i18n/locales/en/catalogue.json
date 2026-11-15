@@ -5,15 +5,31 @@
     "COUNTABLE": "Counted units",
     "NON_STOCK": "No stock kept"
   },
-  "tracking": { "SERIAL": "Tracked one by one", "LOT": "Tracked by lot", "NONE": "Not tracked" },
+  "tracking": {
+    "SERIAL": "Tracked one by one",
+    "LOT": "Tracked by lot",
+    "NONE": "Not tracked"
+  },
   "online": {
     "HIDDEN": "Not in the online shop",
     "LISTED": "Sold in the online shop",
     "REQUEST_TO_BUY": "Online request to buy (becomes a quote)"
   },
-  "productStatus": { "DRAFT": "Draft", "ACTIVE": "Active", "DISCONTINUED": "Discontinued" },
-  "storage": { "AMBIENT": "Room temperature", "CHILLED": "Chilled", "FROZEN": "Frozen" },
-  "uomKind": { "COUNT": "Counted", "WEIGHT": "Weight", "VOLUME": "Volume" },
+  "productStatus": {
+    "DRAFT": "Draft",
+    "ACTIVE": "Active",
+    "DISCONTINUED": "Discontinued"
+  },
+  "storage": {
+    "AMBIENT": "Room temperature",
+    "CHILLED": "Chilled",
+    "FROZEN": "Frozen"
+  },
+  "uomKind": {
+    "COUNT": "Counted",
+    "WEIGHT": "Weight",
+    "VOLUME": "Volume"
+  },
   "line": {
     "LIVE": "Live animals",
     "MEAT": "Meat",
@@ -44,7 +60,11 @@
     "WHOLESALE": "Wholesale",
     "QUOTE": "Quotes"
   },
-  "basis": { "PER_HEAD": "per head", "PER_KG": "per kg", "PER_UNIT": "per unit" },
+  "basis": {
+    "PER_HEAD": "per head",
+    "PER_KG": "per kg",
+    "PER_UNIT": "per unit"
+  },
   "versionStatus": {
     "DRAFT": "Draft",
     "PENDING_APPROVAL": "Awaiting approval",
@@ -58,14 +78,14 @@
     "removed": "Line dropped",
     "unchanged": "No change"
   },
-  "band": { "range": "{{code}}, {{min}} to {{max}} kg" },
+  "band": {
+    "range": "{{code}}, {{min}} to {{max}} kg"
+  },
   "products": {
     "title": "Products",
     "new": "New product",
     "search": "Find products",
-    "searchLabel": "Name, SKU or barcode",
-    "searchHint": "Press Search or Enter.",
-    "searchButton": "Search",
+    "searchLabel": "Search products by name, SKU or barcode",
     "filterStatus": "Status",
     "allStatuses": "All statuses",
     "table": "Products",
@@ -83,7 +103,10 @@
       "sold": "Sold",
       "online": "Online",
       "status": "Status"
-    }
+    },
+    "filterPolicy": "Stock kept as",
+    "allPolicies": "Any way of keeping stock",
+    "searchPlaceholder": "Search products"
   },
   "product": {
     "back": "Back to products",
@@ -229,7 +252,11 @@
     "emptyBody": "The system has no units of measure yet.",
     "error": "Units could not be loaded",
     "denied": "You do not have access to units",
-    "columns": { "name": "Unit", "code": "Code", "kind": "Measures" }
+    "columns": {
+      "name": "Unit",
+      "code": "Code",
+      "kind": "Measures"
+    }
   },
   "species": {
     "title": "Species, grades and bands",
@@ -280,7 +307,11 @@
     "saving": "Saving the grade",
     "saved": "{{name}} saved",
     "notSaved": "The grade was not saved",
-    "fields": { "code": "Code", "name": "Name", "description": "Description" },
+    "fields": {
+      "code": "Code",
+      "name": "Name",
+      "description": "Description"
+    },
     "columns": {
       "name": "Grade",
       "description": "Description",
@@ -320,7 +351,12 @@
       "minKg": "From (kg, included)",
       "maxKg": "Up to (kg, not included)"
     },
-    "columns": { "code": "Band", "from": "From", "to": "Up to", "actions": "Actions" }
+    "columns": {
+      "code": "Band",
+      "from": "From",
+      "to": "Up to",
+      "actions": "Actions"
+    }
   },
   "priceLists": {
     "title": "Price lists",
