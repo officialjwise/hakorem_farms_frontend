@@ -30,7 +30,8 @@
     "IN_STOCK": "In stock",
     "PICKED": "Picked",
     "SOLD": "Sold",
-    "WRITTEN_OFF": "Written off"
+    "WRITTEN_OFF": "Written off",
+    "REVERSED": "Reversed"
   },
   "yield": {
     "title": "Weights and yield",
@@ -288,8 +289,22 @@
     "action_other": "Print {{count}} labels",
     "pending": "Preparing labels",
     "failed": "The labels were not prepared",
-    "open": "Open the labels",
-    "expires": "The link works until"
+    "print": "Print the sheet",
+    "sheet": "Pack labels",
+    "reprint": "Reprint",
+    "barcode": "Pack barcode: lot and weight",
+    "cannot": "This label's code, {{code}}, cannot be drawn as a barcode",
+    "lines": {
+      "weight": "Weight",
+      "produced": "Produced",
+      "expires": "Use by",
+      "storage": "Keep"
+    },
+    "storage": {
+      "AMBIENT": "At room temperature",
+      "CHILLED": "Chilled",
+      "FROZEN": "Frozen"
+    }
   },
   "pickers": {
     "products": "Matching products",

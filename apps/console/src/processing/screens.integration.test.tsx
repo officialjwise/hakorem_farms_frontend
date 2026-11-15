@@ -5,6 +5,7 @@
  * in the e2e spec, where the fake API can give an order each status.
  */
 import { screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { queryClient } from '../data/api';
 import { renderApp, signedIn } from '../test/harness';
@@ -75,6 +76,23 @@ describe('processing orders', () => {
     // A completed order offers no lifecycle write.
     expect(screen.queryByRole('button', { name: 'Complete the order' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Cancel the order' })).toBeNull();
+  });
+
+  it('pack labels are drawn from the API’s label data, each with its barcode, a reprint marked', async () => {
+    const user = userEvent.setup();
+    await renderApp(`/processing-orders/${ANY_ID}`, await signedIn('owner'));
+    await user.click(await screen.findByRole('button', { name: /^Print \d+ labels?$/ }));
+    // printPackLabels answers PackLabelSheet (contract 1.26.0): the client draws it.
+    const sheet = await screen.findByRole('list', { name: 'Pack labels' });
+    const labels = within(sheet).getAllByRole('listitem');
+    expect(labels).toHaveLength(2);
+    expect(labels[0]).toHaveTextContent('PRC-261114-3f2a91c4-01 · 15.000 kg');
+    expect(labels[0]).toHaveTextContent('Reprint');
+    expect(labels[1]).not.toHaveTextContent('Reprint');
+    expect(
+      within(labels[1] as HTMLElement).getByRole('img', { name: /Pack barcode/ }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Print the sheet' })).toBeInTheDocument();
   });
 
   it('a lot links back to the order it came from, which opens on its animal', async () => {

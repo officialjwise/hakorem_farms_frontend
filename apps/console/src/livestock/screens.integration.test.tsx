@@ -75,7 +75,8 @@ describe('one animal: the F6 gate', () => {
     expect(screen.getByText('6 events, newest first')).toBeInTheDocument();
     // Newest first: the last weighing, then back to the day it was bought.
     expect(events[0]).toHaveTextContent('Weighed');
-    expect(events[0]).toHaveTextContent('average daily gain 0.161 kg');
+    // 1.25.0 recomputed the example's daily gain from its own weighings: 0.159, not 0.161.
+    expect(events[0]).toHaveTextContent('average daily gain 0.159 kg');
     expect(events[5]).toHaveTextContent('Received');
     expect(events[5]).toHaveTextContent('Bought from Kpone Livestock Traders');
     expect(events[5]).toHaveTextContent('520.00');
@@ -186,8 +187,9 @@ describe('the records behind an animal', () => {
 
   it('breeding: matings, due dates and births, and one record with its young', async () => {
     await renderApp('/breeding', await signedIn('owner'));
-    expect((await screen.findAllByRole('link', { name: 'Dam G-0118' })).length).toBe(2);
-    expect(screen.getByRole('table')).toHaveTextContent('Mated');
+    // 1.25.0: each record names its own dam, and G-0122's mating that did not take is listed.
+    expect(await screen.findByRole('link', { name: 'Dam G-0118' })).toBeInTheDocument();
+    expect(screen.getByRole('table')).toHaveTextContent('Did not take');
     queryClient.clear();
     await renderApp(`/breeding/${ANY_ID}`, await signedIn('owner'));
     expect(
