@@ -32,7 +32,8 @@
     "screenshots": "HK_API_BASE_URL=/mock pnpm build:console && pnpm build:storefront && pnpm --filter @hakorem/e2e screenshots",
     "test:e2e:quarantine": "HK_API_BASE_URL=/mock pnpm build:console && pnpm build:storefront && pnpm --filter @hakorem/e2e test:quarantine",
     "sync-contract": "./scripts/sync-contract.sh",
-    "sync-contract:check": "./scripts/sync-contract.sh --check"
+    "sync-contract:check": "./scripts/sync-contract.sh --check",
+    "sync-contract:github": "./scripts/sync-contract.sh --github"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

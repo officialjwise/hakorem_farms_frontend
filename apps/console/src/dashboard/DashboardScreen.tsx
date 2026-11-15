@@ -6,7 +6,10 @@ import {
   CircleAlert,
   CircleSlash,
   HandCoins,
+  PackageMinus,
+  PawPrint,
   Printer,
+  Truck,
   ScanBarcode,
   Wallet,
   type LucideIcon,
@@ -41,7 +44,7 @@ import { When } from '../iam/presentation';
 import { lookup } from '../lib/lookup';
 import { useStateLabels } from '../lib/states';
 import { useUnits } from '../stock/units';
-import { isAvailable, UNAVAILABLE, type FigureKey, type OwnerDashboard } from './figures';
+import { isAvailable, unavailable, type FigureKey, type OwnerDashboard } from './figures';
 
 /** A card with a heading, as the dashboard's panels are. */
 function Panel({
@@ -88,9 +91,10 @@ function isConsoleRoute(link: string): boolean {
 }
 
 /**
- * The owner dashboard (FR-RPT, F5b). One read, `getOwnerDashboard`, scoped to the branch chosen in the
- * header. Every figure comes from the API; a figure the contract does not carry yet is shown as
- * unavailable in words, never as zero (`figures.ts`, CR-013). Each tile links to the screen behind it.
+ * The owner dashboard (FR-RPT, F5b, wired to contract 1.24.0 in F6). One read, `getOwnerDashboard`, scoped
+ * to the branch chosen in the header. Every figure comes from the API; a figure the response does not carry
+ * (`pendingFigures`, or not in the contract at all) is named in words, never shown as zero (`figures.ts`).
+ * Each tile links to the screen behind it, and a figure with a series behind it draws it as a sparkline.
  */
 export function DashboardScreen() {
   const { t } = useTranslation(['dashboard', 'common']);
@@ -110,46 +114,6 @@ export function DashboardScreen() {
     scope.branchId === null
       ? t('allBranches')
       : (scope.branches.find((branch) => branch.id === scope.branchId)?.name ?? '');
-
-  const tile = (
-    key: FigureKey,
-    props: {
-      label: string;
-      icon: LucideIcon;
-      tone?: IconChipTone;
-      value?: ReactNode;
-      detail?: ReactNode;
-      trend?: StatTrend;
-      to?: string;
-    },
-  ) => {
-    // A figure with no data source is in the strip below the row, not an empty cell in it.
-    if (!isAvailable(key)) return null;
-    const { to, tone, ...rest } = props;
-    const common = { ...rest, iconTone: tone, variant: 'cell' as const };
-    return to === undefined ? (
-      <StatTile {...common} />
-    ) : (
-      <StatTile {...common} asChild>
-        <Link to={to} />
-      </StatTile>
-    );
-  };
-
-  const salesTrend = (d: OwnerDashboard): StatTrend => {
-    // A comparison of two integers from the API, never a computed change (CR-013 asks for the change).
-    const direction =
-      d.salesTodayPesewas > d.salesYesterdayPesewas
-        ? 'up'
-        : d.salesTodayPesewas < d.salesYesterdayPesewas
-          ? 'down'
-          : 'flat';
-    return {
-      direction,
-      tone: direction === 'up' ? 'good' : direction === 'down' ? 'critical' : 'neutral',
-      label: t('yesterday', { amount: formatMoney(d.salesYesterdayPesewas) }),
-    };
-  };
 
   const header = (asOf: string | null) => (
     <PageHeader
@@ -200,10 +164,14 @@ export function DashboardScreen() {
         labels={labels}
         denied={!allowed}
         isEmpty={(d) =>
-          d.salesTodayPesewas === 0 &&
+          // Nothing has happened: no stock, no animals, no purchases, and no sales or alerts where the
+          // server sends them (a figure it does not send yet says nothing either way).
           d.stockValueAtCostPesewas === 0 &&
-          d.topMovers.length === 0 &&
-          d.alerts.length === 0
+          d.animalsOnHand.total === 0 &&
+          d.purchases.receiptCount === 0 &&
+          (d.salesTodayPesewas === null || d.salesTodayPesewas === 0) &&
+          (d.topMovers === null || d.topMovers.length === 0) &&
+          (d.alerts === null || d.alerts.length === 0)
         }
         emptyAction={
           auth.can('inv.goods_receipt.create') ? (
@@ -225,157 +193,343 @@ export function DashboardScreen() {
           </StatGroup>
         }
       >
-        {(d) => (
-          <div className="grid gap-4">
-            {/* The stat row: how today is going, one card divided into columns (the reference's). */}
-            <StatGroup label={t('glance')}>
-              {tile('salesToday', {
-                label: t('tiles.salesToday'),
-                icon: Banknote,
-                value: <MoneyDisplay pesewas={d.salesTodayPesewas} />,
-                trend: salesTrend(d),
-              })}
-              {tile('salesMonthToDate', {
-                label: t('series.salesMonthToDate'),
-                icon: CalendarRange,
-                tone: 'sand',
-                value: <MoneyDisplay pesewas={d.salesMonthToDatePesewas} />,
-              })}
-              {tile('stockValue', {
-                label: t('tiles.stockValue'),
-                icon: Boxes,
-                tone: 'info',
-                value: <MoneyDisplay pesewas={d.stockValueAtCostPesewas} />,
-                detail: t('tiles.atCost'),
-                to: auth.can('inv.stock.read') ? '/stock' : undefined,
-              })}
-              {tile('receivables', {
-                label: t('tiles.receivables'),
-                icon: HandCoins,
-                tone: 'warning',
-                value: <MoneyDisplay pesewas={d.receivablesOutstandingPesewas} />,
-                detail: t('tiles.overdue', { amount: formatMoney(d.receivablesOverduePesewas) }),
-              })}
-              {tile('cash', {
-                label: t('tiles.cash'),
-                icon: Wallet,
-                tone: 'good',
-                value: <MoneyDisplay pesewas={d.cash.totalPesewas} />,
-                detail: t('tiles.cashDetail'),
-              })}
-            </StatGroup>
-
-            {/* Every figure with no data source yet, in one strip, saying what it arrives with. */}
-            <PendingFigures />
-
-            <div className="grid gap-4 lg:grid-cols-2">
-              <Panel id="dash-movers" title={t('movers.title')}>
-                <TopMovers movers={d.topMovers} />
-              </Panel>
-
-              <Panel id="dash-channels" title={t('channels.title')}>
-                <Donut
-                  title={t('channels.title')}
-                  hideTitle
-                  segments={d.salesByChannel.map((row) => ({
-                    label: t(`channels.${row.channel}`, { defaultValue: row.channel }),
-                    value: row.amountPesewas,
-                    formatted: t('channels.figure', {
-                      amount: formatMoney(row.amountPesewas),
-                      count: row.count,
-                    }),
-                  }))}
-                  centre={
-                    <span className="grid">
-                      <span className="text-xs font-semibold">
-                        <MoneyDisplay pesewas={d.salesTodayPesewas} />
-                      </span>
-                      <span className="text-xs text-fg-muted">{t('channels.today')}</span>
-                    </span>
-                  }
-                />
-              </Panel>
-
-              <Panel id="dash-attention" title={t('attention.title')}>
-                {d.alerts.length === 0 ? (
-                  <p className="text-sm text-fg-muted">{t('attention.none')}</p>
-                ) : (
-                  <ul className="grid gap-1">
-                    {d.alerts.map((alert, index) => {
-                      const look = lookup(SEVERITY, alert.severity, SEVERITY.INFO);
-                      const row = {
-                        icon: look.icon,
-                        tone: look.tone,
-                        title: alert.summary,
-                        status: (
-                          <StatusBadge
-                            tone={look.tone}
-                            label={t(`attention.severity.${alert.severity}`, {
-                              defaultValue: alert.severity,
-                            })}
-                          />
-                        ),
-                      };
-                      return (
-                        <li key={`${alert.kind}-${index}`}>
-                          {alert.link !== null && isConsoleRoute(alert.link) ? (
-                            <AlertRow {...row} asChild>
-                              <Link to={alert.link} />
-                            </AlertRow>
-                          ) : (
-                            <AlertRow {...row} />
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-                <p className="text-control-sm text-fg-muted">
-                  {t('attention.exceptions', { count: d.exceptionsToday })}
-                </p>
-              </Panel>
-
-              <Panel id="dash-cash" title={t('cash.title')}>
-                <dl className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5 text-sm">
-                  {(
-                    [
-                      ['tills', d.cash.tillsPesewas],
-                      ['safe', d.cash.safePesewas],
-                      ['drivers', d.cash.driversPesewas],
-                      ['mobileMoney', d.cash.mobileMoneyPesewas],
-                      ['bank', d.cash.bankPesewas],
-                    ] as const
-                  ).map(([key, pesewas]) => (
-                    <div key={key} className="contents">
-                      <dt className="text-fg-muted">{t(`cash.${key}`)}</dt>
-                      <dd className="text-end tabular-nums">
-                        <MoneyDisplay pesewas={pesewas} />
-                      </dd>
-                    </div>
-                  ))}
-                  <div className="contents font-semibold">
-                    <dt className="border-t border-border pt-1.5">{t('cash.total')}</dt>
-                    <dd className="border-t border-border pt-1.5 text-end tabular-nums">
-                      <MoneyDisplay pesewas={d.cash.totalPesewas} strong />
-                    </dd>
-                  </div>
-                </dl>
-              </Panel>
-            </div>
-          </div>
-        )}
+        {(d) => <Figures d={d} />}
       </QueryBoundary>
     </section>
   );
 }
 
-/** Each figure with no data source yet, by the words it is known by on this screen. */
-const PENDING_LABEL = {
+/** What the response carries, figure by figure: the value when available, otherwise null (`figures.ts`). */
+function liveFigures(d: OwnerDashboard) {
+  const pick = <T,>(key: FigureKey, value: T | null): T | null =>
+    isAvailable(key, d) ? value : null;
+  return {
+    salesToday: pick('salesToday', d.salesTodayPesewas),
+    salesSeries: pick('salesSeries', d.salesSeries),
+    salesMonthToDate: pick('salesMonthToDate', d.salesMonthToDatePesewas),
+    purchasesToday: pick('purchasesToday', d.purchasesTodayPesewas),
+    purchasesSeries: pick('purchasesSeries', d.purchases),
+    stockValue: pick('stockValue', d.stockValueAtCostPesewas),
+    lowStock: pick('lowStock', d.lowStockCount),
+    animalsOnHand: pick('animalsOnHand', d.animalsOnHand),
+    receivables: pick('receivables', d.receivablesOutstandingPesewas),
+    cash: pick('cash', d.cash),
+    salesByChannel: pick('salesByChannel', d.salesByChannel),
+    topMovers: pick('topMovers', d.topMovers),
+    alerts: pick('alerts', d.alerts),
+    exceptionsToday: pick('exceptionsToday', d.exceptionsToday),
+  };
+}
+
+/** The dashboard's figures once the read has answered: the stat row, the pending strip and the panels. */
+function Figures({ d }: { d: OwnerDashboard }) {
+  const { t } = useTranslation(['dashboard', 'common']);
+  const auth = useAuth();
+  const live = liveFigures(d);
+
+  const tile = (props: {
+    label: string;
+    icon: LucideIcon;
+    tone?: IconChipTone;
+    value?: ReactNode;
+    detail?: ReactNode;
+    trend?: StatTrend;
+    to?: string;
+    series?: { values: readonly number[]; label: string };
+  }) => {
+    const { to, tone, ...rest } = props;
+    const common = { ...rest, iconTone: tone, variant: 'cell' as const };
+    return to === undefined ? (
+      <StatTile {...common} />
+    ) : (
+      <StatTile {...common} asChild>
+        <Link to={to} />
+      </StatTile>
+    );
+  };
+
+  /**
+   * Today against yesterday: a comparison of two integers from the API, never a computed change (CR-013
+   * asks for the change). `rising` says which way is good: more sales is good, more spending is neutral.
+   */
+  const dayTrend = (today: number, yesterday: number, rising: 'good' | 'neutral'): StatTrend => {
+    const direction = today > yesterday ? 'up' : today < yesterday ? 'down' : 'flat';
+    return {
+      direction,
+      tone:
+        direction === 'flat'
+          ? 'neutral'
+          : rising === 'neutral'
+            ? 'neutral'
+            : direction === 'up'
+              ? 'good'
+              : 'critical',
+      label: t('yesterday', { amount: formatMoney(yesterday) }),
+    };
+  };
+
+  /** The API's points behind a figure, oldest first, as a sparkline, with the dates it covers in words. */
+  const seriesOf = <P,>(
+    series: { from: string; to: string; points: readonly P[] } | null,
+    value: (point: P) => number,
+    label: 'tiles.salesSeries' | 'tiles.purchasesSeries',
+  ) =>
+    series === null
+      ? undefined
+      : { values: series.points.map(value), label: t(label, { from: series.from, to: series.to }) };
+
+  return (
+    <div className="grid gap-4">
+      {/* The stat rows, each one card divided into columns (the reference's): how today's trading and
+          money stand, then stock and animals. Four to a row, so a figure in cedis is never cut. A row
+          the server sends nothing for yet is not drawn: its figures are in the pending strip. */}
+      <TileRow label={t('glance')}>
+        {live.salesToday === null
+          ? null
+          : tile({
+              label: t('tiles.salesToday'),
+              icon: Banknote,
+              value: <MoneyDisplay pesewas={live.salesToday} />,
+              trend:
+                d.salesYesterdayPesewas === null
+                  ? undefined
+                  : dayTrend(live.salesToday, d.salesYesterdayPesewas, 'good'),
+              series: seriesOf(
+                live.salesSeries,
+                (point) => point.salesPesewas,
+                'tiles.salesSeries',
+              ),
+            })}
+        {live.salesMonthToDate === null
+          ? null
+          : tile({
+              label: t('series.salesMonthToDate'),
+              icon: CalendarRange,
+              tone: 'sand',
+              value: <MoneyDisplay pesewas={live.salesMonthToDate} />,
+            })}
+        {live.receivables === null
+          ? null
+          : tile({
+              label: t('tiles.receivables'),
+              icon: HandCoins,
+              tone: 'warning',
+              value: <MoneyDisplay pesewas={live.receivables} />,
+              detail:
+                d.receivablesOverduePesewas === null
+                  ? undefined
+                  : t('tiles.overdue', { amount: formatMoney(d.receivablesOverduePesewas) }),
+            })}
+        {live.cash === null
+          ? null
+          : tile({
+              label: t('tiles.cash'),
+              icon: Wallet,
+              tone: 'good',
+              value: <MoneyDisplay pesewas={live.cash.totalPesewas} />,
+              detail: t('tiles.cashDetail'),
+            })}
+      </TileRow>
+      <TileRow label={t('stockRow')}>
+        {live.purchasesToday === null
+          ? null
+          : tile({
+              label: t('tiles.purchasesToday'),
+              icon: Truck,
+              tone: 'slate',
+              value: <MoneyDisplay pesewas={live.purchasesToday} />,
+              detail:
+                live.purchasesSeries === null
+                  ? t('tiles.atCost')
+                  : t('tiles.purchasesPeriod', {
+                      amount: formatMoney(live.purchasesSeries.totalPesewas),
+                      count: live.purchasesSeries.receiptCount,
+                    }),
+              trend: dayTrend(live.purchasesToday, d.purchasesYesterdayPesewas, 'neutral'),
+              series: seriesOf(
+                live.purchasesSeries,
+                (point) => point.valueAtCostPesewas,
+                'tiles.purchasesSeries',
+              ),
+              to: auth.can('inv.goods_receipt.read') ? '/goods-receipts' : undefined,
+            })}
+        {live.stockValue === null
+          ? null
+          : tile({
+              label: t('tiles.stockValue'),
+              icon: Boxes,
+              tone: 'info',
+              value: <MoneyDisplay pesewas={live.stockValue} />,
+              detail: t('tiles.atCost'),
+              to: auth.can('inv.stock.read') ? '/stock' : undefined,
+            })}
+        {live.lowStock === null
+          ? null
+          : tile({
+              label: t('tiles.lowStock'),
+              icon: PackageMinus,
+              tone: live.lowStock === 0 ? 'good' : 'warning',
+              value: t('tiles.lowStockValue', { count: live.lowStock }),
+              detail: t('tiles.lowStockDetail'),
+              to: auth.can('inv.stock.read') ? '/stock' : undefined,
+            })}
+        {live.animalsOnHand === null
+          ? null
+          : tile({
+              label: t('tiles.animals'),
+              icon: PawPrint,
+              tone: 'sand',
+              value: t('tiles.animalsValue', { count: live.animalsOnHand.total }),
+              detail:
+                live.animalsOnHand.bySpecies.length === 0
+                  ? undefined
+                  : live.animalsOnHand.bySpecies
+                      .map((row) =>
+                        t('tiles.speciesCount', {
+                          species: row.species?.name ?? t('tiles.speciesUnknown'),
+                          count: row.count,
+                        }),
+                      )
+                      .join(' · '),
+              to: auth.can('liv.animal.read') ? '/animals' : undefined,
+            })}
+      </TileRow>
+
+      {/* Every figure the response does not carry, in one strip, never as a zero. */}
+      <PendingFigures pending={unavailable(d)} />
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {live.topMovers === null ? null : (
+          <Panel id="dash-movers" title={t('movers.title')}>
+            <TopMovers movers={live.topMovers} />
+          </Panel>
+        )}
+
+        {live.salesByChannel === null ? null : (
+          <Panel id="dash-channels" title={t('channels.title')}>
+            <Donut
+              title={t('channels.title')}
+              hideTitle
+              segments={live.salesByChannel.map((row) => ({
+                label: t(`channels.${row.channel}`, { defaultValue: row.channel }),
+                value: row.amountPesewas,
+                formatted: t('channels.figure', {
+                  amount: formatMoney(row.amountPesewas),
+                  count: row.count,
+                }),
+              }))}
+              centre={
+                live.salesToday === null ? undefined : (
+                  <span className="grid">
+                    <span className="text-xs font-semibold">
+                      <MoneyDisplay pesewas={live.salesToday} />
+                    </span>
+                    <span className="text-xs text-fg-muted">{t('channels.today')}</span>
+                  </span>
+                )
+              }
+            />
+          </Panel>
+        )}
+
+        {live.alerts === null ? null : (
+          <Panel id="dash-attention" title={t('attention.title')}>
+            {live.alerts.length === 0 ? (
+              <p className="text-sm text-fg-muted">{t('attention.none')}</p>
+            ) : (
+              <ul className="grid gap-1">
+                {live.alerts.map((alert, index) => {
+                  const look = lookup(SEVERITY, alert.severity, SEVERITY.INFO);
+                  const row = {
+                    icon: look.icon,
+                    tone: look.tone,
+                    title: alert.summary,
+                    status: (
+                      <StatusBadge
+                        tone={look.tone}
+                        label={t(`attention.severity.${alert.severity}`, {
+                          defaultValue: alert.severity,
+                        })}
+                      />
+                    ),
+                  };
+                  return (
+                    <li key={`${alert.kind}-${index}`}>
+                      {alert.link !== null && isConsoleRoute(alert.link) ? (
+                        <AlertRow {...row} asChild>
+                          <Link to={alert.link} />
+                        </AlertRow>
+                      ) : (
+                        <AlertRow {...row} />
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            {live.exceptionsToday === null ? null : (
+              <p className="text-control-sm text-fg-muted">
+                {t('attention.exceptions', { count: live.exceptionsToday })}
+              </p>
+            )}
+          </Panel>
+        )}
+
+        {live.cash === null ? null : (
+          <Panel id="dash-cash" title={t('cash.title')}>
+            <dl className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5 text-sm">
+              {(
+                [
+                  ['tills', live.cash.tillsPesewas],
+                  ['safe', live.cash.safePesewas],
+                  ['drivers', live.cash.driversPesewas],
+                  ['mobileMoney', live.cash.mobileMoneyPesewas],
+                  ['bank', live.cash.bankPesewas],
+                ] as const
+              ).map(([key, pesewas]) => (
+                <div key={key} className="contents">
+                  <dt className="text-fg-muted">{t(`cash.${key}`)}</dt>
+                  <dd className="text-end tabular-nums">
+                    <MoneyDisplay pesewas={pesewas} />
+                  </dd>
+                </div>
+              ))}
+              <div className="contents font-semibold">
+                <dt className="border-t border-border pt-1.5">{t('cash.total')}</dt>
+                <dd className="border-t border-border pt-1.5 text-end tabular-nums">
+                  <MoneyDisplay pesewas={live.cash.totalPesewas} strong />
+                </dd>
+              </div>
+            </dl>
+          </Panel>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** A StatGroup that is drawn only when at least one of its tiles is (`null` children are figures not sent). */
+function TileRow({ label, children }: { label: string; children: ReactNode[] }) {
+  if (children.every((child) => child === null)) return null;
+  return <StatGroup label={label}>{children}</StatGroup>;
+}
+
+/** Each figure, by the words it is known by on this screen, for the pending strip. */
+const FIGURE_LABEL = {
+  salesToday: 'tiles.salesToday',
+  salesSeries: 'pending.salesSeries',
+  salesMonthToDate: 'series.salesMonthToDate',
   purchasesToday: 'tiles.purchasesToday',
+  purchasesSeries: 'pending.purchasesSeries',
+  stockValue: 'tiles.stockValue',
   lowStock: 'tiles.lowStock',
   animalsOnHand: 'tiles.animals',
-  series: 'pending.series',
-  purchasesPeriod: 'series.purchasesMonthToDate',
+  receivables: 'tiles.receivables',
+  cash: 'tiles.cash',
+  salesByChannel: 'channels.title',
+  topMovers: 'movers.title',
+  alerts: 'attention.title',
+  exceptionsToday: 'pending.exceptionsToday',
   stockHealth: 'health.title',
   stockByCategory: 'categories.title',
   stockAlerts: 'lists.stockAlerts',
@@ -385,16 +539,16 @@ const PENDING_LABEL = {
   invoices: 'invoices.title',
   recentPayments: 'payments.title',
   paymentSplit: 'pending.paymentSplit',
-} as const satisfies Partial<Record<FigureKey, string>>;
+} as const satisfies Record<FigureKey, string>;
 
 /**
- * The figures the server does not send yet (`figures.ts`), in one compact strip instead of a dozen empty
- * boxes: what each is, and what it arrives with. A figure leaves the strip the moment its field is wired.
- * Never a number: nothing here is a figure.
+ * The figures this response does not carry (`figures.ts`): those the server lists in `pendingFigures` and
+ * those the contract has no field for. One compact strip instead of a dozen empty boxes, saying what each
+ * is. A figure leaves the strip the moment the server sends it. Never a number: nothing here is a figure.
  */
-function PendingFigures() {
+function PendingFigures({ pending }: { pending: readonly FigureKey[] }) {
   const { t } = useTranslation('dashboard');
-  if (UNAVAILABLE.length === 0) return null;
+  if (pending.length === 0) return null;
   return (
     <section
       aria-labelledby="dash-pending"
@@ -410,13 +564,13 @@ function PendingFigures() {
           <p className="text-control-sm text-fg-muted">{t('pending.body')}</p>
         </div>
         <ul aria-label={t('pending.list')} className="flex flex-wrap gap-1.5">
-          {UNAVAILABLE.map((key) => (
+          {pending.map((key) => (
             <li
               key={key}
               data-slot="pending-figure"
               className="rounded-full bg-slate-subtle px-2.5 py-0.5 text-control-sm text-slate-fg"
             >
-              {key in PENDING_LABEL ? t(PENDING_LABEL[key as keyof typeof PENDING_LABEL]) : key}
+              {t(FIGURE_LABEL[key])}
             </li>
           ))}
         </ul>
@@ -429,7 +583,7 @@ function PendingFigures() {
  * Today's best sellers. Its own component so the unit names it needs (a reference read) are asked for only
  * when there is a dashboard to show, never for a role that cannot see it.
  */
-function TopMovers({ movers }: { movers: OwnerDashboard['topMovers'] }) {
+function TopMovers({ movers }: { movers: NonNullable<OwnerDashboard['topMovers']> }) {
   const { t } = useTranslation('dashboard');
   const auth = useAuth();
   const units = useUnits();

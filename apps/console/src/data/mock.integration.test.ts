@@ -28,7 +28,9 @@ async function ask(method: string, path: string): Promise<Response> {
 
 describe('the Prism mock covers the whole contract', () => {
   it('lists the operations it is going to ask for', () => {
-    expect(operations.length).toBe(600);
+    // 611 published in contract 1.24.0 (CONTRACT_CHANGELOG): 600 in 1.17.0; 1.21.0 adds eight tiles and two
+    // label reads (610); 1.23.0 adds the price list preview.
+    expect(operations.length).toBe(611);
     expect(reads.length).toBeGreaterThan(250);
   });
 

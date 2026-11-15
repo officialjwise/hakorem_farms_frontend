@@ -30,19 +30,27 @@ for (const scheme of ['light', 'dark'] as const) {
     await expect(page.getByText(/Livestock, meat and produce trading at/)).toBeVisible();
     await expect(page.getByRole('region', { name: 'Selling best today' })).toContainText('Goat');
     // How today is going: sales against yesterday, stock, money owed, where the cash is.
-    await expect(page.getByRole('link', { name: /Stock value/ })).toContainText('78,117.30');
+    await expect(page.getByRole('link', { name: /Stock value/ })).toContainText('15,955.01');
     await expect(page.getByText('Sales today')).toBeVisible();
-    await expect(page.getByText(/Yesterday GH/)).toBeVisible();
+    await expect(
+      page.locator('[data-slot="stat-tile"]', { hasText: 'Sales today' }).getByText(/Yesterday GH/),
+    ).toBeVisible();
     await expect(page.getByRole('region', { name: 'Where the cash is' })).toContainText(
       '94,410.00',
     );
     // One read for the whole dashboard (owner, 2026-11-15), not one per tile.
     expect(api.log.filter((e) => e.operationId === 'getOwnerDashboard')).toHaveLength(1);
+    // Contract 1.21.0's figures are tiles now (F6), each with its series where it has one.
+    await expect(page.getByRole('link', { name: /Purchases today/ })).toContainText('6 receipts');
+    await expect(page.getByRole('link', { name: /Low stock/ })).toContainText('1 product');
+    await expect(page.getByText('Goat 4 · Sheep 2')).toBeVisible();
+    await expect(page.getByRole('img', { name: /Sales per day/ })).toBeVisible();
     // A figure with no data source is words, never a number, in one strip (F5c).
     const pending = page.getByRole('region', { name: 'Figures still to come from the server' });
-    for (const label of ['Purchases today', 'Low stock', 'Animals on hand']) {
+    for (const label of ['Stock health', 'Invoices']) {
       await expect(pending.getByText(label)).toBeVisible();
     }
+    await expect(pending.getByText('Animals on hand')).toHaveCount(0);
     await expect(pending).not.toContainText(/\d/);
     await expectNoAxeViolations(page);
     await expectNoHorizontalScroll(page);
@@ -83,7 +91,7 @@ test('a branch close the server refuses stays in the confirmation, in the server
   await expectNoAxeViolations(page);
   await dialog.getByRole('button', { name: 'Close the branch' }).click();
   await expect(dialog.getByRole('alert')).toContainText('The branch was not closed');
-  await expect(dialog.getByRole('alert')).toContainText('veterinary withdrawal period');
+  await expect(dialog.getByRole('alert')).toContainText('This branch cannot be closed.');
   expect(api.log.filter((e) => e.operationId === 'updateBranch')).toHaveLength(1);
 });
 
@@ -152,7 +160,7 @@ test.describe('the shell at 1280 px', () => {
   }) => {
     await signInWithTotp(page, USERS.owner, '/');
     const nav = page.getByRole('navigation', { name: 'Main navigation' });
-    const stockGroup = nav.getByRole('button', { name: 'Stock' });
+    const stockGroup = nav.getByRole('button', { name: 'Stock', exact: true });
     await stockGroup.focus();
     await page.keyboard.press('Enter');
     await expect(stockGroup).toHaveAttribute('aria-expanded', 'false');

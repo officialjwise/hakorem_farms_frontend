@@ -15,6 +15,8 @@ export const USERS = {
   manager: { identifier: 'kwabena.owusu@hakoremfarms.com', password: 'Mango-Season-2026!' },
   cashier: { identifier: 'adwoa.darko@hakoremfarms.com', password: 'Mango-Season-2026!' },
   storekeeper: { identifier: 'yaw.boateng@hakoremfarms.com', password: 'Mango-Season-2026!' },
+  /** Farm hand (F6, A-158): records weights, health, feed and deaths; reads only weights. */
+  farmHand: { identifier: 'kofi.adjei@hakoremfarms.com', password: 'Mango-Season-2026!' },
   temp: { identifier: 'new.staff@hakoremfarms.com', password: 'Temp-8841-Farm' },
 } as const;
 
@@ -56,6 +58,8 @@ export async function renderApp(
       'lists',
       'reports',
       'settings',
+      'livestock',
+      'processing',
     ],
   });
   const router = createMemoryRouter(routes, {

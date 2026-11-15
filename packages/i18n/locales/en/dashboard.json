@@ -25,11 +25,21 @@
     "lowStock": "Low stock",
     "animals": "Animals on hand",
     "cash": "Cash on hand",
-    "cashDetail": "Tills, safe, drivers, mobile money and bank"
+    "cashDetail": "Tills, safe, drivers, mobile money and bank",
+    "salesSeries": "Sales per day, {{from}} to {{to}}",
+    "purchasesSeries": "Purchases per day at cost, {{from}} to {{to}}",
+    "purchasesPeriod_one": "{{amount}} over the week, {{count}} receipt",
+    "purchasesPeriod_other": "{{amount}} over the week, {{count}} receipts",
+    "lowStockValue_one": "{{count}} product",
+    "lowStockValue_other": "{{count}} products",
+    "lowStockDetail": "At or below the reorder point",
+    "animalsValue_one": "{{count}} head",
+    "animalsValue_other": "{{count}} head",
+    "speciesCount": "{{species}} {{count}}",
+    "speciesUnknown": "Species not recorded"
   },
   "series": {
-    "salesMonthToDate": "Sales this month",
-    "purchasesMonthToDate": "Purchases this month"
+    "salesMonthToDate": "Sales this month"
   },
   "health": {
     "title": "Stock health"
@@ -87,9 +97,12 @@
   "glance": "Today at a glance",
   "pending": {
     "title": "Figures still to come from the server",
-    "body": "The server does not send these figures yet. They arrive with its next dashboard update, and each one appears here as soon as it is sent, never as a zero.",
+    "body": "The server does not have a source for these figures yet. Each one appears on this page as soon as the server sends it, never as a zero.",
     "list": "Figures still to come",
-    "series": "Sales and purchases chart",
-    "paymentSplit": "Payments by method"
-  }
+    "paymentSplit": "Payments by method",
+    "salesSeries": "Sales per day",
+    "purchasesSeries": "Purchases per day",
+    "exceptionsToday": "Exceptions recorded today"
+  },
+  "stockRow": "Stock and animals"
 }

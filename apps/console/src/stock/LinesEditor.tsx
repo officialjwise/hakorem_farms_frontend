@@ -14,7 +14,7 @@ import {
 import { useApiQuery } from '../data/api';
 import { toQuantity, useUnits } from './units';
 
-type ProductRef = Pick<components['schemas']['Product'], 'id' | 'name' | 'sku' | 'baseUom'>;
+export type ProductRef = Pick<components['schemas']['Product'], 'id' | 'name' | 'sku' | 'baseUom'>;
 export type LineKind = 'adjustment' | 'transfer' | 'receipt';
 
 /** One line being entered: the product, the quantity as typed, and what the kind of document adds. */
@@ -47,16 +47,19 @@ export function lineProblems(lines: DraftLine[], kind: LineKind): Record<string,
 }
 
 /** A product found by name, SKU or barcode as the person types (at least two characters). */
-function ProductPicker({
+export function ProductPicker({
   value,
   onChange,
   label,
   error,
+  required = true,
 }: {
   value: ProductRef | null;
   onChange: (product: ProductRef | null) => void;
   label: string;
   error?: string;
+  /** A line's product always is; a medicine on a health event is not (F6). */
+  required?: boolean;
 }) {
   const { t } = useTranslation(['stock', 'common']);
   const [text, setText] = useState(value?.name ?? '');
@@ -71,7 +74,13 @@ function ProductPicker({
     .filter((p, i, all) => all.findIndex((q) => q.id === p.id) === i)
     .map((p) => ({ value: p.id, label: `${p.name} (${p.sku})` }));
   return (
-    <Field label={label} required requiredLabel={t('common:field.required')} error={error}>
+    <Field
+      label={label}
+      {...(required
+        ? { required: true as const, requiredLabel: t('common:field.required') }
+        : { required: false as const })}
+      error={error}
+    >
       <Combobox
         options={options}
         value={value?.id ?? null}

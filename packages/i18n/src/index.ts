@@ -18,6 +18,8 @@ import type labelsNs from '../locales/en/labels.json';
 import type listsNs from '../locales/en/lists.json';
 import type reportsNs from '../locales/en/reports.json';
 import type settingsNs from '../locales/en/settings.json';
+import type livestockNs from '../locales/en/livestock.json';
+import type processingNs from '../locales/en/processing.json';
 import type common from '../locales/en/common.json';
 import type iam from '../locales/en/iam.json';
 import type shell from '../locales/en/shell.json';
@@ -47,6 +49,8 @@ export const NAMESPACES = [
   'lists',
   'reports',
   'settings',
+  'livestock',
+  'processing',
 ] as const;
 export type Namespace = (typeof NAMESPACES)[number];
 
@@ -71,6 +75,8 @@ export const catalogue: Record<
     lists: () => import('../locales/en/lists.json'),
     reports: () => import('../locales/en/reports.json'),
     settings: () => import('../locales/en/settings.json'),
+    livestock: () => import('../locales/en/livestock.json'),
+    processing: () => import('../locales/en/processing.json'),
   },
 };
 
@@ -140,6 +146,8 @@ declare module 'i18next' {
       lists: typeof listsNs;
       reports: typeof reportsNs;
       settings: typeof settingsNs;
+      livestock: typeof livestockNs;
+      processing: typeof processingNs;
     };
   }
 }

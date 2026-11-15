@@ -1,5 +1,12 @@
 import {
   ArrowLeftRight,
+  Beef,
+  HeartCrack,
+  HeartPulse,
+  Percent,
+  Scale,
+  Syringe,
+  Wheat,
   BadgeCent,
   ChartColumn,
   Boxes,
@@ -37,7 +44,16 @@ export interface NavItem {
 }
 
 export type NavGroupKey =
-  'overview' | 'selling' | 'stock' | 'catalogue' | 'business' | 'reports' | 'people' | 'settings';
+  | 'overview'
+  | 'selling'
+  | 'stock'
+  | 'livestock'
+  | 'processing'
+  | 'catalogue'
+  | 'business'
+  | 'reports'
+  | 'people'
+  | 'settings';
 
 export interface NavGroup {
   key: NavGroupKey;
@@ -99,6 +115,40 @@ export const BACK_OFFICE_GROUPS: readonly NavGroup[] = [
       },
       { key: 'movements', path: '/movements', permission: 'inv.movement.read', icon: History },
       { key: 'labels', path: '/labels', permission: 'mdm.product.read', icon: Printer },
+    ],
+  },
+  {
+    // F6: the animals themselves and what happens to them, then turning them into meat.
+    key: 'livestock',
+    items: [
+      { key: 'animals', path: '/animals', permission: 'liv.animal.read', icon: PawPrint },
+      { key: 'weights', path: '/weights', permission: 'liv.weight.read', icon: Scale },
+      {
+        key: 'healthEvents',
+        path: '/health-events',
+        permission: 'liv.health.read',
+        icon: Syringe,
+      },
+      { key: 'breeding', path: '/breeding', permission: 'liv.breeding.read', icon: HeartPulse },
+      { key: 'mortality', path: '/mortality', permission: 'liv.mortality.read', icon: HeartCrack },
+      { key: 'feed', path: '/feed', permission: 'liv.feed.read', icon: Wheat },
+    ],
+  },
+  {
+    key: 'processing',
+    items: [
+      {
+        key: 'processingOrders',
+        path: '/processing-orders',
+        permission: 'prc.order.read',
+        icon: Beef,
+      },
+      {
+        key: 'yieldStandards',
+        path: '/yield-standards',
+        permission: 'prc.yield_standard.read',
+        icon: Percent,
+      },
     ],
   },
   {

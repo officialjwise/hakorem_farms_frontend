@@ -274,6 +274,38 @@ PHASES.F05c = [
   { name: 'settings-system', path: '/settings/system', ready: 'tax.registered' },
 ];
 
+/** F6: the dashboard on contract 1.24.0, then the livestock and processing screens. */
+PHASES.F06 = [
+  { name: 'dashboard', path: '/', ready: 'Animals on hand' },
+  { name: 'dashboard-dark', path: '/', ready: 'Animals on hand', theme: 'dark' },
+  {
+    // What the API answers today (1.21.1): sales, money and alerts named as pending, never as zero.
+    name: 'dashboard-before-sales',
+    path: '/',
+    ready: 'Figures still to come from the server',
+    prepare: (api) => api.prefer('getOwnerDashboard', 'example=beforeSalesAndBilling'),
+  },
+  { name: 'animals', path: '/animals', ready: 'G-0157' },
+  { name: 'animal', path: `/animals/${ID}`, ready: 'Bought from Kpone Livestock Traders' },
+  {
+    name: 'animal-dark',
+    path: `/animals/${ID}`,
+    ready: 'Bought from Kpone Livestock Traders',
+    theme: 'dark',
+  },
+  { name: 'weights', path: '/weights', ready: 'BRL-2610-01' },
+  { name: 'health', path: '/health-events', ready: 'Every animal in Broiler house 1' },
+  { name: 'breeding', path: '/breeding', ready: 'Dam G-0122' },
+  { name: 'mortality', path: '/mortality', ready: 'G-0171' },
+  { name: 'mortality-record', path: `/mortality/${ID}`, ready: 'Death of G-0171' },
+  { name: 'feed', path: '/feed', ready: 'Layer house' },
+  { name: 'processing-orders', path: '/processing-orders', ready: 'G-0104' },
+  { name: 'processing-order', path: `/processing-orders/${ID}`, ready: 'PRC-261109-3a247e03-01' },
+  { name: 'processing-order-new', path: '/processing-orders/new', ready: 'Planning an order' },
+  { name: 'yield-standards', path: '/yield-standards', ready: 'Broiler chicken' },
+  { name: 'lots-came-from', path: '/lots', ready: 'Came from' },
+];
+
 const WIDTHS = [1280, 360] as const;
 
 for (const [phase, shots] of Object.entries(PHASES)) {

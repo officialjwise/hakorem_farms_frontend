@@ -46,7 +46,8 @@ pnpm screenshots       # builds both apps, then writes docs/screenshots/<phase>/
 pnpm budget:console    # after build:console: fails if the till's or back office's initial load is over budget
 pnpm icons:check       # fails if the console icons or manifest are stale
 pnpm sync-contract     # copy ../backend/contract, regenerate packages/api-client, typecheck everything
-pnpm sync-contract:check  # CI: fails if the committed client is stale
+pnpm sync-contract:github [ref]  # the same from GitHub at one commit (default main), no clone; use it in cloud sessions (ADR 0018)
+pnpm sync-contract:check  # CI: fails if the contract was hand-edited or the committed client is stale
 pnpm dev:mock          # Prism on 4010, from contract/openapi.yaml
 pnpm test:integration  # screens and the data layer against the real Prism (starts it itself)
 ```

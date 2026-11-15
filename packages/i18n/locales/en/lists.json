@@ -31,9 +31,16 @@
       "expires": "Expires",
       "onHand": "On hand",
       "value": "Value at cost",
-      "status": "Status"
+      "status": "Status",
+      "source": "Came from"
     },
-    "search": "Search lots and animals"
+    "search": "Search lots and animals",
+    "sourceKind": {
+      "PROCESSING_ORDER": "Processing order, not numbered",
+      "GOODS_RECEIPT": "Goods receipt, not numbered",
+      "OPENING_STOCK": "Opening stock",
+      "BIRTH": "Birth"
+    }
   },
   "movements": {
     "title": "Stock movements",

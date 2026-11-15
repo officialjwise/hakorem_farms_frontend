@@ -37,6 +37,30 @@ test.describe('the F5 gate: a stock take completed on a phone in the cold room',
       lossValuePesewas: finished() ? 97100 : null,
     }));
     api.prefer('submitStockTake', 'code=202');
+    // Since CR-012 (contract 1.20.0) the lines example is the take while counting, blind, so in review the
+    // differences are served here: contract 1.17.0's own example values, by SKU. CR-020 asks for a named
+    // in-review example, which would replace this table.
+    const REVIEW: Record<string, [string, string, number, 'GAIN' | 'LOSS' | 'NONE']> = {
+      'PRD-YAM': ['40.000', '-6.000', 12000, 'LOSS'],
+      'PRD-CABBAGE': ['26.000', '4.000', 3200, 'GAIN'],
+      'EGG-BIG': ['48.000', '-2.000', 8000, 'LOSS'],
+      'MEAT-GOAT': ['29.750', '0.000', 0, 'NONE'],
+      'MEAT-CHK-FULL': ['97.800', '0.000', 0, 'NONE'],
+      'PRD-TOMATO': ['12.000', '-1.000', 51500, 'LOSS'],
+    };
+    api.rewrite('listStockTakeLines', (body) => {
+      const page = body as { data: { product: { sku: string } }[] };
+      if (!finished()) return page;
+      return {
+        ...page,
+        data: page.data.map((line) => {
+          const review = REVIEW[line.product.sku];
+          if (review === undefined) return line;
+          const [expectedQty, varianceQty, varianceValuePesewas, varianceDirection] = review;
+          return { ...line, expectedQty, varianceQty, varianceValuePesewas, varianceDirection };
+        }),
+      };
+    });
 
     await signIn(page, USERS.storekeeper, `/stock-takes/${TAKE}`);
     await expect(page.getByRole('heading', { name: /^Cold room/, level: 1 })).toBeVisible();
@@ -123,7 +147,12 @@ test.describe('stock documents', () => {
     };
     await pick(/^location/i, 'Goat pen 1');
     await pick(/^reason/i, 'Past expiry date');
-    await page.getByRole('combobox', { name: /^product 1/i }).fill('Goat');
+    // Into the field first, as a person does: the reason list hands focus back to its own button as it
+    // closes, and typing before that lands would close the product list again.
+    const product = page.getByRole('combobox', { name: /^product 1/i });
+    await product.click();
+    await expect(product).toBeFocused();
+    await product.fill('Goat');
     await page
       .getByRole('option', { name: /^Goat \(LIV-GOAT\)/ })
       .first()

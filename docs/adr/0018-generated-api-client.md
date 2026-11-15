@@ -30,3 +30,16 @@ Option 3.
 - `schema.ts` is about 90,000 lines. It type checks in about a second, and it is a build input, not something anyone reads.
 - A breaking contract change is fixed by following the type errors; nobody pins to an old contract.
 - Revisit if `openapi-fetch` stops being maintained: `call()` is the only consumer, so replacing it is a one-file change.
+
+## Amendment, 2026-11-15 (F6): the contract can come from GitHub at a named commit
+
+- Status: accepted (owner, 2026-11-15, at the start of F6)
+
+Cloud sessions have no sibling `../backend`, and cloning the backend there was refused by the session's permission classifier at the start of F6. The owner authorised fetching the contract instead, from the public backend repository, and asked for it to be the permanent route.
+
+- `./scripts/sync-contract.sh --github [ref]` (`pnpm sync-contract:github [ref]`) resolves `ref` (a branch, a tag or a full commit; default `main`) to one 40-character commit with `git ls-remote`, then fetches exactly two files at that commit from `raw.githubusercontent.com`: `contract/openapi.yaml` and `docs/CONTRACT_CHANGELOG.md`. They land in `.contract-upstream/` (gitignored), with the commit in `.contract-upstream/COMMIT`. Nothing else in the backend is fetched, and nothing is cloned. A failed fetch changes nothing.
+- Every sync, from GitHub or from `../backend`, writes three YAML comment lines at the top of `contract/openapi.yaml`, each starting `# hakorem-contract-sync:`: that the file is generated, its source (`github:officialjwise/hakorem_farms_backend@<commit> contract/openapi.yaml`), and the sha256 of every byte below the header. The bytes below the header are the backend's file, unchanged.
+- `--check` stays offline. It now also fails when the header is missing or the digest of the body differs from the header's, so a hand edit to the contract fails CI, then regenerates in memory and compares the committed client as before.
+- The sibling mode still works where `../backend` exists, and records `../backend`'s commit when its contract has no uncommitted changes.
+
+Consequences: a cloud session syncs without a clone, and the commit a client was generated from is in the repository. Revisit if the backend repository becomes private: the fetch would then need a credential for `raw.githubusercontent.com`.

@@ -11,7 +11,9 @@ import {
   Truck,
 } from 'lucide-react';
 import { useState, type ComponentType, type ReactNode, type SVGProps } from 'react';
+import { Link, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { documentHref } from '../lib/documents';
 import type { components } from '@hakorem/api-client';
 import {
   DateRangeMenu,
@@ -82,8 +84,10 @@ function NameCell({
 
 /** The toolbar's search: typed words are sent with Enter, and a new search starts at the first page. */
 function useSearch(onSearch: () => void) {
-  const [typed, setTyped] = useState('');
-  const [q, setQ] = useState('');
+  // A link can open a list already searched (`/lots?q=PRC-…`, from a processing order's output, F6).
+  const [params] = useSearchParams();
+  const [typed, setTyped] = useState(() => params.get('q') ?? '');
+  const [q, setQ] = useState(() => (params.get('q') ?? '').trim());
   return {
     q,
     props: {
@@ -191,6 +195,28 @@ export function LotsScreen() {
               code={<code>{lot.identifier}</code>}
             />
           ),
+        },
+        {
+          // Where the lot came from, as a link: a meat lot opens its processing order, whose inputs open the
+          // animal it was cut from (the brief's B6/F6 trace: a lot to its animal in a few clicks).
+          id: 'source',
+          head: t('lots.columns.source'),
+          sortValue: (lot) => lot.sourceDocument.number ?? lot.sourceDocument.docType,
+          cell: (lot) => {
+            const href = documentHref(lot.sourceDocument);
+            const words =
+              lot.sourceDocument.number ??
+              t(`lots.sourceKind.${lot.sourceDocument.docType}`, {
+                defaultValue: lot.sourceDocument.docType,
+              });
+            return href === undefined ? (
+              words
+            ) : (
+              <Link to={href} className="text-accent-text underline">
+                {words}
+              </Link>
+            );
+          },
         },
         {
           id: 'where',
