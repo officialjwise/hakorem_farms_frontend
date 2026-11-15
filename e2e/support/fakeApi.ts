@@ -71,6 +71,22 @@ export class FakeApi {
   readonly log: { method: string; path: string; operationId: string | null; outcome: Outcome }[] =
     [];
 
+  private readonly rewrites = new Map<string, (body: unknown, path: string) => unknown>();
+  private readonly prefers = new Map<string, string>();
+
+  /**
+   * Rewrites Prism's answer to one operation for this test only, for a state the contract's single
+   * example cannot show (for example a draft whose prices differ from the version in force).
+   */
+  rewrite(operationId: string, change: (body: unknown, path: string) => unknown): void {
+    this.rewrites.set(operationId, change);
+  }
+
+  /** Asks Prism for one of the operation's own documented answers, for example `code=202`. */
+  prefer(operationId: string, value: string): void {
+    this.prefers.set(operationId, value);
+  }
+
   async install(context: BrowserContext): Promise<void> {
     await context.route(`**${API_PATH}/**`, (route) => this.answer(route));
   }
@@ -140,18 +156,22 @@ export class FakeApi {
       });
     }
     record('prism');
+    const preferred = operation === undefined ? undefined : this.prefers.get(operation.id);
+    if (preferred !== undefined) {
+      return route.continue({ headers: { ...request.headers(), prefer: preferred } });
+    }
+    const change = this.rewrites.get(operation.id);
     const cursor = url.searchParams.get('cursor');
-    if (method !== 'GET' || cursor === null) return route.continue();
+    if (change === undefined && (method !== 'GET' || cursor === null)) return route.continue();
     const response = await route.fetch();
-    const body = response.ok()
-      ? ((await response.json().catch(() => null)) as {
-          page?: { nextCursor?: string | null };
-        } | null)
-      : null;
-    if (body?.page?.nextCursor !== cursor) return route.fulfill({ response });
-    return route.fulfill({
-      response,
-      json: { ...body, page: { ...body.page, nextCursor: null, hasMore: false } },
-    });
+    if (!response.ok()) return route.fulfill({ response });
+    let body = (await response.json().catch(() => null)) as {
+      page?: { nextCursor?: string | null; hasMore?: boolean };
+    } | null;
+    // Prism answers every page with the same cursor: the page asked for with it is the last one.
+    if (cursor !== null && body?.page?.nextCursor === cursor) {
+      body = { ...body, page: { ...body.page, nextCursor: null, hasMore: false } };
+    }
+    return route.fulfill({ response, json: change === undefined ? body : change(body, path) });
   }
 }

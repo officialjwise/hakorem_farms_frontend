@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "playwright test --grep-invert @quarantine",
-    "test:quarantine": "playwright test --grep @quarantine"
+    "test": "playwright test --grep-invert \"@quarantine|@screenshots\"",
+    "test:quarantine": "playwright test --grep @quarantine",
+    "screenshots": "playwright test --grep @screenshots --workers 1"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
