@@ -20,6 +20,7 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-014 | 2026-11-15 | Open                     |
 | CR-015 | 2026-11-15 | Open                     |
 | CR-016 | 2026-11-15 | Open                     |
+| CR-017 | 2026-11-15 | Open                     |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -242,3 +243,13 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 **Request:** `POST /labels` with `{ productIds?, stockUnitIds?, copies, format }`, answered with a `SignedUrl` to a PDF, so label printing is server rendered, archived and audited like every other document.
 
 **Until this lands:** the labels screen draws each label in the browser from `Product.barcode` (or `sku`) and `StockUnit.identifier` as a Code 128 barcode, and prints with the browser's print dialog. Nothing is written to the API.
+
+## CR-017. Name the refusals for closing a branch (clarification)
+
+- **Raised by:** frontend F5b, closing a branch (`/branches/:id`)
+- **Contract read first:** `updateBranch` with `status: CLOSED` answers 422 with the generic `BusinessRuleViolation` example (a goat on a withdrawal hold). No code is named for closing a branch.
+- **The owner's rule (2026-11-15):** closing can be refused, for example when it is the last active branch. The client must not pre-empt that; it shows the server's refusal.
+
+**Request:** list the 422 codes `updateBranch` returns when closing, such as `LAST_ACTIVE_BRANCH`, `BRANCH_HAS_OPEN_SHIFTS` and `BRANCH_HOLDS_STOCK`, each with an example, so the mock can show the real refusal.
+
+**Until this lands:** the confirmation shows whatever the server sends, its `message` and its reference. Nothing is checked in the client.

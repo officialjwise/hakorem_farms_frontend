@@ -36,6 +36,10 @@ archive.mutate({ path: { id }, body: { version: p.version, reason } });
 
 The input is `{ path?, query?, body? }`, typed from the contract. The client adds `Idempotency-Key` and `X-CSRF-Token` itself. A reply is the 2xx body (`undefined` for a 204; a 202 `ApprovalPending` is part of the type, so handle it). Anything else throws an `ApiError`.
 
+## Branch scope
+
+The header's branch (ADR 0034) reaches a screen only through `useBranchScope()`. A read whose operation takes `branchId` spreads `scope.query` into its input, so its query key changes with the choice and it re-reads; "all branches" sends no `branchId`. A list whose operation has no `branchId` (CR-015) shows `BranchScopeNote` under its title instead of pretending to be narrowed. Location pickers (`useLocations`) are scoped the same way.
+
 ## Query keys
 
 `[operationId, input]`, derived by `queryKey(operationId, input)`, never typed. `['listProducts']` invalidates every call of the operation. Two screens asking the same question share one cache entry.
