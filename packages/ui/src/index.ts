@@ -165,3 +165,36 @@ export {
   type QueryBoundaryProps,
   type QueryLike,
 } from './components/query-boundary/QueryBoundary';
+export { Alert, type AlertProps } from './components/alert/Alert';
+export { SEVERITY, severityRole, type Severity } from './lib/severity';
+export {
+  StatTile,
+  type StatTileProps,
+  type StatTrend,
+  type TrendDirection,
+  type TrendTone,
+} from './components/stat-tile/StatTile';
+export {
+  BarChart,
+  LineChart,
+  type BarChartProps,
+  type BarTone,
+  type ChartSeries,
+  type LineChartProps,
+} from './components/chart/Chart';
+export { Donut, type DonutProps, type DonutSegment } from './components/donut/Donut';
+export {
+  ProgressList,
+  type ProgressItem,
+  type ProgressListProps,
+} from './components/progress-list/ProgressList';
+export { AlertRow, type AlertRowProps } from './components/alert-row/AlertRow';
+export { Unavailable, type UnavailableProps } from './components/unavailable/Unavailable';
+export {
+  ConfirmChanges,
+  type ChangeRow,
+  type ConfirmChangesProps,
+} from './components/confirm-changes/ConfirmChanges';
+export { PageHeader, type PageHeaderProps } from './components/page-header/PageHeader';
+export { Barcode, type BarcodeProps } from './components/barcode/Barcode';
+export { isCode128B } from './components/barcode/code128';

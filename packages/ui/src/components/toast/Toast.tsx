@@ -1,14 +1,14 @@
 'use client';
 
 import * as ToastPrimitive from '@radix-ui/react-toast';
-import { CircleAlert, CircleCheck, Info, TriangleAlert, X } from 'lucide-react';
-import type { ComponentType, SVGProps } from 'react';
+import { X } from 'lucide-react';
 import { cn } from '../../lib/cn';
+import { SEVERITY, type Severity } from '../../lib/severity';
 
 /** Rejects an empty string literal at compile time. Dynamic blank strings are rejected at render. */
 type NonEmpty<T extends string> = T extends '' ? never : T;
 
-export type ToastTone = 'good' | 'warning' | 'critical' | 'info';
+export type ToastTone = Severity;
 
 /** What a screen passes to `useToast().show`. Every string is already translated. */
 export interface ToastInput<T extends string = string> {
@@ -27,23 +27,8 @@ export interface ToastInput<T extends string = string> {
 
 export const TOAST_AUTO_DISMISS_MS = 6000;
 
-const TONES: Record<
-  ToastTone,
-  { box: string; icon: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }
-> = {
-  good: { box: 'bg-good-subtle text-good-fg border-good', icon: 'stroke-good', Icon: CircleCheck },
-  warning: {
-    box: 'bg-warning-subtle text-warning-fg border-warning',
-    icon: 'stroke-warning',
-    Icon: TriangleAlert,
-  },
-  critical: {
-    box: 'bg-critical-subtle text-critical-fg border-critical',
-    icon: 'stroke-critical',
-    Icon: CircleAlert,
-  },
-  info: { box: 'bg-info-subtle text-info-fg border-info', icon: 'stroke-info', Icon: Info },
-};
+/** Shared with Alert and AlertRow, so a severity looks the same wherever it appears. */
+const TONES = SEVERITY;
 
 export function toastDuration({ tone, persistent }: Pick<ToastInput, 'tone' | 'persistent'>) {
   return persistent === true || tone === 'critical' || tone === 'warning'
