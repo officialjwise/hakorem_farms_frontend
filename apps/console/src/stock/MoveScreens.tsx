@@ -39,6 +39,7 @@ import {
   ReceiptStatusBadge,
   TransferStatusBadge,
 } from './presentation';
+import { ReceiveTransfer } from './ReceiveTransfer';
 import { useUnits } from './units';
 
 type S = components['schemas'];
@@ -555,7 +556,6 @@ export function TransferScreen() {
   const units = useUnits();
   const transfer = useApiQuery('getStockTransfer', { path: { id } });
   const dispatch = useApiMutation('dispatchStockTransfer', { invalidates: ['listStockOnHand'] });
-  const receive = useApiMutation('receiveStockTransfer', { invalidates: ['listStockOnHand'] });
   const keyFor = useIntentKey();
   return (
     <DocDetail
@@ -622,6 +622,10 @@ export function TransferScreen() {
                   numeric: true,
                   cell: (l) => qty(l.varianceQty, l.uom),
                 },
+                {
+                  head: t('transfers.columns.reason'),
+                  cell: (l) => l.varianceReasonCode ?? NOT_APPLICABLE,
+                },
               ]}
             />
             {x.status === 'DRAFT' && auth.can('inv.transfer.dispatch') ? (
@@ -645,32 +649,7 @@ export function TransferScreen() {
               />
             ) : null}
             {x.status === 'DISPATCHED' && auth.can('inv.transfer.receive') ? (
-              <DraftAction
-                label={t('transfers.receive')}
-                title={t('transfers.receiveTitle')}
-                body={t('transfers.receiveBody')}
-                pendingLabel={t('move.sending')}
-                failedTitle={t('transfers.notReceived')}
-                done={t('transfers.receivedDone')}
-                awaiting={t('transfers.awaiting')}
-                summary={summary}
-                error={receive.error}
-                pending={receive.isPending}
-                run={() => {
-                  // Everything that was sent arrived (A-F5-06): a shortfall is a line edit, not built yet.
-                  const body = {
-                    lines: x.lines.flatMap((l) =>
-                      l.qtyDispatched === null
-                        ? []
-                        : [{ lineId: l.id, qtyReceived: l.qtyDispatched }],
-                    ),
-                  };
-                  return receive.mutateAsync(
-                    { path: { id: x.id }, body },
-                    { idempotencyKey: keyFor(body) },
-                  );
-                }}
-              />
+              <ReceiveTransfer transfer={x} />
             ) : null}
           </>
         );

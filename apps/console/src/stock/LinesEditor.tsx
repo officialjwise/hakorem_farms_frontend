@@ -146,7 +146,7 @@ export function LinesEditor({
                 }
                 required
                 requiredLabel={required}
-                error={wrong.includes('qty') ? t('lines.qtyInvalid', { places }) : undefined}
+                error={wrong.includes('qty') ? t('lines.qtyInvalid', { count: places }) : undefined}
               >
                 <NumberInput
                   decimals={places}

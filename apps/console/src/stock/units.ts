@@ -18,14 +18,26 @@ export function toQuantity(typed: string): string | null {
 }
 
 /**
- * Display precision and name per unit code. Until CR-003 puts `displayDecimals` on the unit, a COUNT unit
- * shows whole numbers and a WEIGHT or VOLUME unit three places; an unknown code shows three, so a stray
- * fraction is never hidden (CR-003, "Until this lands").
+ * Which of two contract quantities is larger, by comparing their digits as integers of thousandths. Both
+ * are three-place strings (`Quantity`), so this is a comparison of the API's own figures, never arithmetic
+ * on them: nothing is added, subtracted or rounded.
  */
-export function placesFor(kind: 'COUNT' | 'WEIGHT' | 'VOLUME' | undefined): QuantityPlaces {
-  return kind === 'COUNT' ? 0 : 3;
+export function compareQuantity(a: string, b: string): -1 | 0 | 1 {
+  const x = BigInt(a.replace('.', ''));
+  const y = BigInt(b.replace('.', ''));
+  return x < y ? -1 : x > y ? 1 : 0;
 }
 
+/** A display precision the unit declares (`Uom.displayDecimals`, CR-003), as `QuantityDisplay` takes it. */
+export function asPlaces(decimals: number | undefined): QuantityPlaces {
+  return decimals === 0 || decimals === 1 || decimals === 2 ? decimals : 3;
+}
+
+/**
+ * Display precision and name per unit code, from the unit list. The precision is the unit's own
+ * `displayDecimals` (CR-003, contract 1.7.0); a stock line that carries `uomDisplayDecimals` uses that
+ * instead. An unknown code shows three places, so a stray fraction is never hidden.
+ */
 export function useUnits() {
   // Seeded and short (ADR 0028): `reference`.
   const units = useApiAllPages(
@@ -35,7 +47,7 @@ export function useUnits() {
   );
   const byCode = new Map((units.data?.items ?? []).map((unit) => [unit.code, unit]));
   return {
-    places: (code: string): QuantityPlaces => placesFor(byCode.get(code)?.kind),
+    places: (code: string): QuantityPlaces => asPlaces(byCode.get(code)?.displayDecimals),
     name: (code: string): string => byCode.get(code)?.name ?? code,
   };
 }

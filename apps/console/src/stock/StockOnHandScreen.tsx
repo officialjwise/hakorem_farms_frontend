@@ -25,7 +25,7 @@ import { When } from '../iam/presentation';
 import { useStateLabels } from '../lib/states';
 import { useCursorPages } from '../lib/useCursorPages';
 import { useLocations } from './locations';
-import { useUnits } from './units';
+import { asPlaces, useUnits } from './units';
 
 const ALL = 'ALL';
 const COLUMNS = 7;
@@ -118,7 +118,8 @@ export function StockOnHandScreen() {
                 <TableBody>
                   {page.data.map((line, index) => {
                     const unit = units.name(line.uom);
-                    const places = units.places(line.uom);
+                    // The line carries its unit's precision (CR-003, contract 1.16.0).
+                    const places = asPlaces(line.uomDisplayDecimals);
                     return (
                       <TableRow
                         key={`${line.product.id}-${line.location.id}-${line.stockUnit?.id ?? ''}-${index}`}

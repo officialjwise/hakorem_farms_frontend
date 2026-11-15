@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { placesFor, toQuantity } from './units';
+import { asPlaces, compareQuantity, toQuantity } from './units';
 
 describe('toQuantity', () => {
   it('pads what was typed to the contract’s three places, as a string', () => {
@@ -16,11 +16,22 @@ describe('toQuantity', () => {
   });
 });
 
-describe('placesFor', () => {
-  it('counts in whole numbers and weighs in three places, and an unknown unit shows three', () => {
-    expect(placesFor('COUNT')).toBe(0);
-    expect(placesFor('WEIGHT')).toBe(3);
-    expect(placesFor('VOLUME')).toBe(3);
-    expect(placesFor(undefined)).toBe(3);
+describe('asPlaces', () => {
+  it('takes the unit’s declared precision, and shows three places when it is missing or out of range', () => {
+    expect(asPlaces(0)).toBe(0);
+    expect(asPlaces(2)).toBe(2);
+    expect(asPlaces(3)).toBe(3);
+    expect(asPlaces(undefined)).toBe(3);
+    expect(asPlaces(7)).toBe(3);
+  });
+});
+
+describe('compareQuantity', () => {
+  it('compares two contract quantities exactly, without arithmetic', () => {
+    expect(compareQuantity('18.000', '20.000')).toBe(-1);
+    expect(compareQuantity('20.000', '20.000')).toBe(0);
+    expect(compareQuantity('20.001', '20.000')).toBe(1);
+    expect(compareQuantity('9.999', '10.000')).toBe(-1);
+    expect(compareQuantity('0.000', '0.000')).toBe(0);
   });
 });

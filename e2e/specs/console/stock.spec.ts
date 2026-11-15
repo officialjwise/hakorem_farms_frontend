@@ -145,22 +145,63 @@ test.describe('stock documents', () => {
     ).toBe(true);
   });
 
-  test('a transfer on the way is received in full after its lines are shown', async ({
+  test('a transfer arrives short: what arrived is counted, the shortfall needs a reason, and the API gets both', async ({
     page,
     api,
   }) => {
-    api.rewrite('getStockTransfer', (body) => ({
-      ...(body as object),
-      status: 'DISPATCHED',
-      receivedAt: null,
-    }));
+    // The contract's example is already received; here it is on the way, its line not yet answered.
+    api.rewrite('getStockTransfer', (body) => {
+      const transfer = body as { lines: Record<string, unknown>[] };
+      return {
+        ...transfer,
+        status: 'DISPATCHED',
+        receivedAt: null,
+        receivedBy: null,
+        lines: transfer.lines.map((l) => ({
+          ...l,
+          qtyReceived: null,
+          varianceQty: null,
+          varianceReasonCode: null,
+        })),
+      };
+    });
+    const sent: unknown[] = [];
+    page.on('request', (request) => {
+      if (request.method() === 'POST' && request.url().endsWith('/receive')) {
+        sent.push(request.postDataJSON());
+      }
+    });
     await signIn(page, USERS.storekeeper, `/stock-transfers/${ANY}`);
     await expect(page.getByText('On the way', { exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Receive everything sent' }).click();
-    const confirm = page.getByRole('dialog', { name: 'Receive this stock?' });
-    await expect(confirm).toContainText('Goat meat, 15 kg pack');
-    await confirm.getByRole('button', { name: 'Receive everything sent' }).click();
-    await expect(page.getByRole('status').filter({ hasText: 'Received.' })).toBeVisible();
+    const form = page.getByRole('form', { name: 'What arrived, line by line' });
+    const arrived = form.getByLabel(/^Goat meat, 15 kg pack: quantity that arrived/);
+    await expect(arrived).toHaveValue('');
+    await arrived.fill('29.750');
+    await expect(form.getByText('Short', { exact: true })).toBeVisible();
+    await form.getByRole('button', { name: 'Check and receive' }).click();
+    await expect(form.getByText('Choose a reason for the shortfall.')).toBeVisible();
+    const reason = form.getByRole('combobox', { name: /^Why Goat meat, 15 kg pack is short/ });
+    await reason.focus();
+    await page.keyboard.press('Enter');
+    await page.getByRole('option', { name: 'Earlier count was wrong' }).press('Enter');
+    await expectNoAxeViolations(page);
+    await expectNoHorizontalScroll(page);
+    await form.getByRole('button', { name: 'Check and receive' }).click();
+    const confirm = page.getByRole('dialog', { name: 'Receive this transfer?' });
+    await expect(confirm).toContainText('1 line is short');
+    await confirm.getByRole('button', { name: 'Receive' }).click();
+    await expect(page.getByRole('status').filter({ hasText: '1 line was short' })).toBeVisible();
+    expect(sent).toEqual([
+      {
+        lines: [
+          {
+            lineId: '019a7ab6-85b6-7485-a9bd-5121ae87c9ff',
+            qtyReceived: '29.750',
+            varianceReasonCode: 'COUNT_ERROR',
+          },
+        ],
+      },
+    ]);
   });
 
   test('a goods receipt is posted only after its lines and total at cost are shown', async ({

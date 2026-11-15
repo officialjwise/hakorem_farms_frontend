@@ -271,7 +271,11 @@ function CountLines({ take }: { take: StockTake }) {
                               unit,
                             })
                       }
-                      error={invalid.includes(line.id) ? t('count.invalid', { places }) : undefined}
+                      error={
+                        invalid.includes(line.id)
+                          ? t('count.invalid', { count: places })
+                          : undefined
+                      }
                     >
                       <NumberInput
                         size="lg"
