@@ -10,12 +10,17 @@ import { signInWithTotp, USERS } from '../../support/helpers';
  * writes `docs/screenshots/<phase>/<screen>-<width>.png`.
  */
 
+/** Any id: the mock answers a record read with its example. */
+const ID = '019a7a86-3046-711a-a652-1a7389f79351';
+
 interface Shot {
   name: string;
   path: string;
   /** Something on the screen once its data is in, so the shot is not of a loading state. */
   ready: string;
   theme?: 'light' | 'dark';
+  /** Rewrites for a state the contract's examples cannot show by themselves. */
+  prepare?: (api: FakeApi) => void;
 }
 
 const PHASES: Record<string, Shot[]> = {
@@ -45,7 +50,22 @@ const PHASES: Record<string, Shot[]> = {
       name: 'price-list-version-preview',
       path: '/price-list-versions/019a7aa3-e9f0-71af-86e7-23c27a0d9ca0',
       ready: 'Preview before it takes effect',
+      prepare: previewWithChanges,
     },
+  ],
+  F05: [
+    { name: 'stock-on-hand', path: '/stock', ready: 'Stock value at cost' },
+    { name: 'stock-takes', path: '/stock-takes', ready: 'Feed and produce store' },
+    { name: 'stock-take-counting', path: `/stock-takes/${ID}`, ready: 'Save counts on this page' },
+    { name: 'adjustments', path: '/stock-adjustments', ready: 'ADJ-2026-DDW-000038' },
+    { name: 'adjustment', path: `/stock-adjustments/${ID}`, ready: 'Yam, tuber' },
+    { name: 'adjustment-new', path: '/stock-adjustments/new', ready: 'Save the draft' },
+    { name: 'transfers', path: '/stock-transfers', ready: 'TRF-2026-DDW-00009' },
+    { name: 'transfer', path: `/stock-transfers/${ID}`, ready: 'Goat meat, 15 kg pack' },
+    { name: 'transfer-new', path: '/stock-transfers/new', ready: 'Save the draft' },
+    { name: 'goods-receipts', path: '/goods-receipts', ready: 'GRN-2026-DDW-000072' },
+    { name: 'goods-receipt', path: `/goods-receipts/${ID}`, ready: 'Total at cost' },
+    { name: 'goods-receipt-new', path: '/goods-receipts/new', ready: 'Save the draft' },
   ],
 };
 
@@ -55,7 +75,7 @@ for (const [phase, shots] of Object.entries(PHASES)) {
   for (const shot of shots) {
     for (const width of WIDTHS) {
       test(`@screenshots ${phase} ${shot.name} at ${width}`, async ({ page, api }) => {
-        if (shot.name === 'price-list-version-preview') previewWithChanges(api);
+        shot.prepare?.(api);
         await page.emulateMedia({ colorScheme: shot.theme ?? 'light' });
         await page.setViewportSize({ width, height: width === 360 ? 800 : 900 });
         await signInWithTotp(page, USERS.owner, shot.path);
