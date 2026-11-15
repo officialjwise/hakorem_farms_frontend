@@ -15,7 +15,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "json"
   },
   "activateNotificationTemplate": {
     "method": "post",
@@ -23,7 +24,8 @@ export const operationManifest = {
     "permission": "ntf.template.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "activateTemplateVersion": {
     "method": "post",
@@ -31,7 +33,8 @@ export const operationManifest = {
     "permission": "doc.template.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "addCartLine": {
     "method": "post",
@@ -39,7 +42,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "optional",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "addInvestorDocument": {
     "method": "post",
@@ -47,7 +51,8 @@ export const operationManifest = {
     "permission": "cap.investor.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "addProcessingCost": {
     "method": "post",
@@ -55,7 +60,8 @@ export const operationManifest = {
     "permission": "prc.order.process",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "addProductImage": {
     "method": "post",
@@ -63,7 +69,8 @@ export const operationManifest = {
     "permission": "mdm.product.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "addSupplierDocument": {
     "method": "post",
@@ -71,7 +78,8 @@ export const operationManifest = {
     "permission": "pur.supplier.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "allocatePayment": {
     "method": "post",
@@ -79,7 +87,8 @@ export const operationManifest = {
     "permission": "pay.payment.allocate",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "answerMyOrderConsent": {
     "method": "post",
@@ -87,7 +96,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "applyCartCoupon": {
     "method": "put",
@@ -95,7 +105,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "optional",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "applyImportJob": {
     "method": "post",
@@ -103,7 +114,8 @@ export const operationManifest = {
     "permission": "mdm.import.apply",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "approveRequest": {
     "method": "post",
@@ -111,7 +123,8 @@ export const operationManifest = {
     "permission": "the approving permission named by the approval policy for the kind",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "approveShiftClose": {
     "method": "post",
@@ -119,7 +132,8 @@ export const operationManifest = {
     "permission": "pos.shift.close.approve",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "approveSupplierInvoice": {
     "method": "post",
@@ -127,7 +141,8 @@ export const operationManifest = {
     "permission": "pur.supplier_invoice.approve",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "archiveCategory": {
     "method": "post",
@@ -135,7 +150,8 @@ export const operationManifest = {
     "permission": "mdm.category.archive",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "archiveCustomer": {
     "method": "post",
@@ -143,7 +159,8 @@ export const operationManifest = {
     "permission": "mdm.customer.archive",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "archiveCustomerAddress": {
     "method": "post",
@@ -151,7 +168,8 @@ export const operationManifest = {
     "permission": "mdm.customer.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "archiveGrade": {
     "method": "post",
@@ -159,7 +177,8 @@ export const operationManifest = {
     "permission": "mdm.grade.archive",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "archiveLocation": {
     "method": "post",
@@ -167,7 +186,8 @@ export const operationManifest = {
     "permission": "mdm.location.archive",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "archiveMyAddress": {
     "method": "post",
@@ -175,7 +195,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "archivePriceList": {
     "method": "post",
@@ -183,7 +204,8 @@ export const operationManifest = {
     "permission": "mdm.price_list.archive",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "archiveProduct": {
     "method": "post",
@@ -191,7 +213,8 @@ export const operationManifest = {
     "permission": "mdm.product.archive",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "archiveSupplier": {
     "method": "post",
@@ -199,7 +222,8 @@ export const operationManifest = {
     "permission": "mdm.supplier.archive",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "archiveUomConversion": {
     "method": "post",
@@ -207,7 +231,8 @@ export const operationManifest = {
     "permission": "mdm.uom_conversion.archive",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "archiveWeightBand": {
     "method": "post",
@@ -215,7 +240,8 @@ export const operationManifest = {
     "permission": "mdm.weight_band.archive",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "assignCustomerPriceList": {
     "method": "put",
@@ -223,7 +249,8 @@ export const operationManifest = {
     "permission": "mdm.price_list.assign",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "assignDelivery": {
     "method": "post",
@@ -231,7 +258,8 @@ export const operationManifest = {
     "permission": "del.delivery.assign",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "calculateTax": {
     "method": "post",
@@ -239,7 +267,8 @@ export const operationManifest = {
     "permission": "mdm.tax.calculate",
     "idempotent": false,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "cancelApprovalRequest": {
     "method": "post",
@@ -247,7 +276,8 @@ export const operationManifest = {
     "permission": "iam.approval.cancel.own",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "cancelDelivery": {
     "method": "post",
@@ -255,7 +285,8 @@ export const operationManifest = {
     "permission": "del.delivery.assign",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "cancelFulfilment": {
     "method": "post",
@@ -263,7 +294,8 @@ export const operationManifest = {
     "permission": "ord.fulfilment.pick",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "cancelGoodsReceipt": {
     "method": "post",
@@ -271,7 +303,8 @@ export const operationManifest = {
     "permission": "inv.goods_receipt.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "cancelImportJob": {
     "method": "post",
@@ -279,7 +312,8 @@ export const operationManifest = {
     "permission": "mdm.import.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "cancelOrder": {
     "method": "post",
@@ -287,7 +321,8 @@ export const operationManifest = {
     "permission": "ord.order.cancel",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "cancelProcessingOrder": {
     "method": "post",
@@ -295,7 +330,8 @@ export const operationManifest = {
     "permission": "prc.order.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "cancelPurchaseOrder": {
     "method": "post",
@@ -303,7 +339,8 @@ export const operationManifest = {
     "permission": "pur.purchase_order.close",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "cancelQuote": {
     "method": "post",
@@ -311,7 +348,8 @@ export const operationManifest = {
     "permission": "quo.quote.issue",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "cancelStockTake": {
     "method": "post",
@@ -319,7 +357,8 @@ export const operationManifest = {
     "permission": "inv.stock_take.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "cancelStockTransfer": {
     "method": "post",
@@ -327,7 +366,8 @@ export const operationManifest = {
     "permission": "inv.transfer.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "cancelSupplierInvoice": {
     "method": "post",
@@ -335,7 +375,8 @@ export const operationManifest = {
     "permission": "pur.supplier_invoice.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "cancelSupplierPayment": {
     "method": "post",
@@ -343,7 +384,8 @@ export const operationManifest = {
     "permission": "pur.supplier_payment.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "changePassword": {
     "method": "post",
@@ -351,7 +393,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "optional",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "checkPaymentStatus": {
     "method": "post",
@@ -359,7 +402,8 @@ export const operationManifest = {
     "permission": "pay.payment.read",
     "idempotent": false,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "clearCheque": {
     "method": "post",
@@ -367,7 +411,8 @@ export const operationManifest = {
     "permission": "pay.payment.clear_cheque",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "closeAccountingPeriod": {
     "method": "post",
@@ -375,7 +420,8 @@ export const operationManifest = {
     "permission": "fin.period.close",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "closeBatch": {
     "method": "post",
@@ -383,7 +429,8 @@ export const operationManifest = {
     "permission": "liv.batch.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "closeCareBatch": {
     "method": "post",
@@ -391,7 +438,8 @@ export const operationManifest = {
     "permission": "liv.batch.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "closePurchaseOrder": {
     "method": "post",
@@ -399,7 +447,8 @@ export const operationManifest = {
     "permission": "pur.purchase_order.close",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "closeShift": {
     "method": "post",
@@ -407,7 +456,8 @@ export const operationManifest = {
     "permission": "pos.shift.close",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "closeStockTakeCounting": {
     "method": "post",
@@ -415,7 +465,8 @@ export const operationManifest = {
     "permission": "inv.stock_take.count",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "collectFulfilment": {
     "method": "post",
@@ -423,7 +474,8 @@ export const operationManifest = {
     "permission": "ord.fulfilment.dispatch",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "completeCounterSale": {
     "method": "post",
@@ -431,7 +483,8 @@ export const operationManifest = {
     "permission": "pos.sale.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "completeProcessingOrder": {
     "method": "post",
@@ -439,7 +492,8 @@ export const operationManifest = {
     "permission": "prc.order.process",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "confirmOrder": {
     "method": "post",
@@ -447,7 +501,8 @@ export const operationManifest = {
     "permission": "ord.order.confirm",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "confirmTotpEnrolment": {
     "method": "post",
@@ -455,7 +510,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "optional",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "convertPurchaseRequisition": {
     "method": "post",
@@ -463,7 +519,8 @@ export const operationManifest = {
     "permission": "pur.purchase_order.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "convertQuote": {
     "method": "post",
@@ -471,7 +528,8 @@ export const operationManifest = {
     "permission": "quo.quote.convert",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createAccount": {
     "method": "post",
@@ -479,7 +537,8 @@ export const operationManifest = {
     "permission": "fin.account.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createAccountDetermination": {
     "method": "post",
@@ -487,7 +546,8 @@ export const operationManifest = {
     "permission": "fin.posting_rule.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createAccountingExport": {
     "method": "post",
@@ -495,7 +555,8 @@ export const operationManifest = {
     "permission": "api.accounting_export.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createApiCredential": {
     "method": "post",
@@ -503,7 +564,8 @@ export const operationManifest = {
     "permission": "iam.api_credential.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createBankAccount": {
     "method": "post",
@@ -511,7 +573,8 @@ export const operationManifest = {
     "permission": "fin.bank_account.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createBatch": {
     "method": "post",
@@ -519,7 +582,8 @@ export const operationManifest = {
     "permission": "liv.batch.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createBranch": {
     "method": "post",
@@ -527,7 +591,8 @@ export const operationManifest = {
     "permission": "mdm.branch.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createBreedingRecord": {
     "method": "post",
@@ -535,7 +600,8 @@ export const operationManifest = {
     "permission": "liv.breeding.record",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createBusinessAccount": {
     "method": "post",
@@ -543,7 +609,8 @@ export const operationManifest = {
     "permission": "whl.account.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createCareBatch": {
     "method": "post",
@@ -551,7 +618,8 @@ export const operationManifest = {
     "permission": "liv.batch.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createCart": {
     "method": "post",
@@ -559,7 +627,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "optional",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "createCategory": {
     "method": "post",
@@ -567,7 +636,8 @@ export const operationManifest = {
     "permission": "mdm.category.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createCoupon": {
     "method": "post",
@@ -575,7 +645,8 @@ export const operationManifest = {
     "permission": "mdm.promotion.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createCustomer": {
     "method": "post",
@@ -583,7 +654,8 @@ export const operationManifest = {
     "permission": "mdm.customer.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createCustomerAddress": {
     "method": "post",
@@ -591,7 +663,8 @@ export const operationManifest = {
     "permission": "mdm.customer.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createCustomerTier": {
     "method": "post",
@@ -599,7 +672,8 @@ export const operationManifest = {
     "permission": "mdm.customer.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createDataSubjectRequest": {
     "method": "post",
@@ -607,7 +681,8 @@ export const operationManifest = {
     "permission": "aud.data_request.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createDeliveryZone": {
     "method": "post",
@@ -615,7 +690,8 @@ export const operationManifest = {
     "permission": "mdm.delivery_zone.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createDepreciationRun": {
     "method": "post",
@@ -623,7 +699,8 @@ export const operationManifest = {
     "permission": "fin.fixed_asset.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createDistributionRun": {
     "method": "post",
@@ -631,7 +708,8 @@ export const operationManifest = {
     "permission": "cap.distribution.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createDriverCashReconciliation": {
     "method": "post",
@@ -639,7 +717,8 @@ export const operationManifest = {
     "permission": "del.cash_reconciliation.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createExportJob": {
     "method": "post",
@@ -647,7 +726,8 @@ export const operationManifest = {
     "permission": "mdm.export.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createFileSignedUrl": {
     "method": "post",
@@ -655,7 +735,8 @@ export const operationManifest = {
     "permission": "platform.file.read",
     "idempotent": false,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "createFinancing": {
     "method": "post",
@@ -663,7 +744,8 @@ export const operationManifest = {
     "permission": "cap.financing.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createFixedAsset": {
     "method": "post",
@@ -671,7 +753,8 @@ export const operationManifest = {
     "permission": "fin.fixed_asset.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createFulfilment": {
     "method": "post",
@@ -679,7 +762,8 @@ export const operationManifest = {
     "permission": "ord.fulfilment.pick",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createGoodsReceipt": {
     "method": "post",
@@ -687,7 +771,8 @@ export const operationManifest = {
     "permission": "inv.goods_receipt.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createGrade": {
     "method": "post",
@@ -695,7 +780,8 @@ export const operationManifest = {
     "permission": "mdm.grade.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createGrant": {
     "method": "post",
@@ -703,7 +789,8 @@ export const operationManifest = {
     "permission": "iam.grant.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createImportJob": {
     "method": "post",
@@ -711,7 +798,8 @@ export const operationManifest = {
     "permission": "mdm.import.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createIntegration": {
     "method": "post",
@@ -719,7 +807,8 @@ export const operationManifest = {
     "permission": "api.integration.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createInvestor": {
     "method": "post",
@@ -727,7 +816,8 @@ export const operationManifest = {
     "permission": "cap.investor.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createLocation": {
     "method": "post",
@@ -735,7 +825,8 @@ export const operationManifest = {
     "permission": "mdm.location.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createManualJournal": {
     "method": "post",
@@ -743,7 +834,8 @@ export const operationManifest = {
     "permission": "fin.journal.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createMyAddress": {
     "method": "post",
@@ -751,7 +843,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createMyDataRequest": {
     "method": "post",
@@ -759,7 +852,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createNotificationTemplate": {
     "method": "post",
@@ -767,7 +861,8 @@ export const operationManifest = {
     "permission": "ntf.template.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createOrder": {
     "method": "post",
@@ -775,7 +870,8 @@ export const operationManifest = {
     "permission": "ord.order.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createOverheadAllocation": {
     "method": "post",
@@ -783,7 +879,8 @@ export const operationManifest = {
     "permission": "cst.allocation.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createPacks": {
     "method": "post",
@@ -791,7 +888,8 @@ export const operationManifest = {
     "permission": "prc.order.process",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createPostingRule": {
     "method": "post",
@@ -799,7 +897,8 @@ export const operationManifest = {
     "permission": "fin.posting_rule.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createPriceList": {
     "method": "post",
@@ -807,7 +906,8 @@ export const operationManifest = {
     "permission": "mdm.price_list.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createPriceListVersion": {
     "method": "post",
@@ -815,7 +915,8 @@ export const operationManifest = {
     "permission": "mdm.price_list.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createProcessingOrder": {
     "method": "post",
@@ -823,7 +924,8 @@ export const operationManifest = {
     "permission": "prc.order.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createProduct": {
     "method": "post",
@@ -831,7 +933,8 @@ export const operationManifest = {
     "permission": "mdm.product.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createPromotion": {
     "method": "post",
@@ -839,7 +942,8 @@ export const operationManifest = {
     "permission": "mdm.promotion.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createPurchaseOrder": {
     "method": "post",
@@ -847,7 +951,8 @@ export const operationManifest = {
     "permission": "pur.purchase_order.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createPurchaseRequisition": {
     "method": "post",
@@ -855,7 +960,8 @@ export const operationManifest = {
     "permission": "pur.requisition.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createQuote": {
     "method": "post",
@@ -863,7 +969,8 @@ export const operationManifest = {
     "permission": "quo.quote.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createRation": {
     "method": "post",
@@ -871,7 +978,8 @@ export const operationManifest = {
     "permission": "liv.feed.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createRegister": {
     "method": "post",
@@ -879,7 +987,8 @@ export const operationManifest = {
     "permission": "pos.register.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createReorderRule": {
     "method": "post",
@@ -887,7 +996,8 @@ export const operationManifest = {
     "permission": "inv.reorder_rule.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createReportSchedule": {
     "method": "post",
@@ -895,7 +1005,8 @@ export const operationManifest = {
     "permission": "rpt.schedule.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createReturn": {
     "method": "post",
@@ -903,7 +1014,8 @@ export const operationManifest = {
     "permission": "ord.return.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createRfq": {
     "method": "post",
@@ -911,7 +1023,8 @@ export const operationManifest = {
     "permission": "quo.rfq.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createRole": {
     "method": "post",
@@ -919,7 +1032,8 @@ export const operationManifest = {
     "permission": "iam.role.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createRoute": {
     "method": "post",
@@ -927,7 +1041,8 @@ export const operationManifest = {
     "permission": "del.route.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createSpecies": {
     "method": "post",
@@ -935,7 +1050,8 @@ export const operationManifest = {
     "permission": "mdm.species.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createStandingOrder": {
     "method": "post",
@@ -943,7 +1059,8 @@ export const operationManifest = {
     "permission": "whl.standing_order.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createStatement": {
     "method": "post",
@@ -951,7 +1068,8 @@ export const operationManifest = {
     "permission": "whl.statement.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createStockAdjustment": {
     "method": "post",
@@ -959,7 +1077,8 @@ export const operationManifest = {
     "permission": "inv.adjustment.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createStockHold": {
     "method": "post",
@@ -967,7 +1086,8 @@ export const operationManifest = {
     "permission": "inv.hold.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createStockTake": {
     "method": "post",
@@ -975,7 +1095,8 @@ export const operationManifest = {
     "permission": "inv.stock_take.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createStockTransfer": {
     "method": "post",
@@ -983,7 +1104,8 @@ export const operationManifest = {
     "permission": "inv.transfer.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createSupplier": {
     "method": "post",
@@ -991,7 +1113,8 @@ export const operationManifest = {
     "permission": "mdm.supplier.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createSupplierInvoice": {
     "method": "post",
@@ -999,7 +1122,8 @@ export const operationManifest = {
     "permission": "pur.supplier_invoice.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createSupplierPayment": {
     "method": "post",
@@ -1007,7 +1131,8 @@ export const operationManifest = {
     "permission": "pur.supplier_payment.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createTaxCategory": {
     "method": "post",
@@ -1015,7 +1140,8 @@ export const operationManifest = {
     "permission": "mdm.tax.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createTaxLevy": {
     "method": "post",
@@ -1023,7 +1149,8 @@ export const operationManifest = {
     "permission": "mdm.tax.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createTaxSchemeVersion": {
     "method": "post",
@@ -1031,7 +1158,8 @@ export const operationManifest = {
     "permission": "mdm.tax.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createTemplateVersion": {
     "method": "post",
@@ -1039,7 +1167,8 @@ export const operationManifest = {
     "permission": "doc.template.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createUomConversion": {
     "method": "post",
@@ -1047,7 +1176,8 @@ export const operationManifest = {
     "permission": "mdm.uom_conversion.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createUser": {
     "method": "post",
@@ -1055,7 +1185,8 @@ export const operationManifest = {
     "permission": "iam.user.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createWebhookEndpoint": {
     "method": "post",
@@ -1063,7 +1194,8 @@ export const operationManifest = {
     "permission": "api.webhook.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createWeightBand": {
     "method": "post",
@@ -1071,7 +1203,8 @@ export const operationManifest = {
     "permission": "mdm.weight_band.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "createYieldStandard": {
     "method": "post",
@@ -1079,7 +1212,8 @@ export const operationManifest = {
     "permission": "prc.yield_standard.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "declineQuote": {
     "method": "post",
@@ -1087,7 +1221,8 @@ export const operationManifest = {
     "permission": "quo.quote.issue",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "declineQuoteByLink": {
     "method": "post",
@@ -1095,7 +1230,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "json"
   },
   "disableUser": {
     "method": "post",
@@ -1103,7 +1239,8 @@ export const operationManifest = {
     "permission": "iam.user.disable",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "dispatchFulfilment": {
     "method": "post",
@@ -1111,7 +1248,8 @@ export const operationManifest = {
     "permission": "ord.fulfilment.dispatch",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "dispatchStockTransfer": {
     "method": "post",
@@ -1119,7 +1257,8 @@ export const operationManifest = {
     "permission": "inv.transfer.dispatch",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "disposeFixedAsset": {
     "method": "post",
@@ -1127,7 +1266,8 @@ export const operationManifest = {
     "permission": "fin.fixed_asset.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "downloadArchivedDocument": {
     "method": "post",
@@ -1135,7 +1275,8 @@ export const operationManifest = {
     "permission": "doc.document.read",
     "idempotent": false,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "downloadMyDocument": {
     "method": "post",
@@ -1143,7 +1284,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "downloadMyInvestorDocument": {
     "method": "post",
@@ -1151,7 +1293,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "enableUser": {
     "method": "post",
@@ -1159,7 +1302,8 @@ export const operationManifest = {
     "permission": "iam.user.disable",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "endPromotion": {
     "method": "post",
@@ -1167,7 +1311,8 @@ export const operationManifest = {
     "permission": "mdm.promotion.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "endStandingOrder": {
     "method": "post",
@@ -1175,7 +1320,8 @@ export const operationManifest = {
     "permission": "whl.standing_order.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "enrolDevice": {
     "method": "post",
@@ -1183,7 +1329,8 @@ export const operationManifest = {
     "permission": "pos.device.enrol",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "failBreedingRecord": {
     "method": "post",
@@ -1191,7 +1338,8 @@ export const operationManifest = {
     "permission": "liv.breeding.record",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "forceCloseShift": {
     "method": "post",
@@ -1199,7 +1347,8 @@ export const operationManifest = {
     "permission": "pos.shift.force_close",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "generateDeliverySlots": {
     "method": "post",
@@ -1207,7 +1356,8 @@ export const operationManifest = {
     "permission": "del.slot.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "getAgeingReport": {
     "method": "get",
@@ -1215,7 +1365,8 @@ export const operationManifest = {
     "permission": "whl.ageing.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getAnimal": {
     "method": "get",
@@ -1223,7 +1374,8 @@ export const operationManifest = {
     "permission": "liv.animal.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getAnimalsOnHandTile": {
     "method": "get",
@@ -1231,7 +1383,8 @@ export const operationManifest = {
     "permission": "rpt.tile.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getApproval": {
     "method": "get",
@@ -1239,7 +1392,8 @@ export const operationManifest = {
     "permission": "iam.approval.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getArchivedDocument": {
     "method": "get",
@@ -1247,7 +1401,8 @@ export const operationManifest = {
     "permission": "doc.document.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getAuditEvent": {
     "method": "get",
@@ -1255,7 +1410,8 @@ export const operationManifest = {
     "permission": "aud.audit.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getAuditIntegrity": {
     "method": "get",
@@ -1263,7 +1419,8 @@ export const operationManifest = {
     "permission": "aud.audit.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getBalanceSheet": {
     "method": "get",
@@ -1271,7 +1428,8 @@ export const operationManifest = {
     "permission": "fin.report.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getBankStatement": {
     "method": "get",
@@ -1279,7 +1437,8 @@ export const operationManifest = {
     "permission": "pay.reconciliation.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getBatch": {
     "method": "get",
@@ -1287,7 +1446,8 @@ export const operationManifest = {
     "permission": "liv.batch.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getBillingDocument": {
     "method": "get",
@@ -1295,7 +1455,8 @@ export const operationManifest = {
     "permission": "bil.document.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getBranch": {
     "method": "get",
@@ -1303,7 +1464,8 @@ export const operationManifest = {
     "permission": "mdm.branch.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getBreakEven": {
     "method": "get",
@@ -1311,7 +1473,8 @@ export const operationManifest = {
     "permission": "cst.margin.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getBreedingRecord": {
     "method": "get",
@@ -1319,7 +1482,8 @@ export const operationManifest = {
     "permission": "liv.breeding.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getBusinessAccount": {
     "method": "get",
@@ -1327,7 +1491,8 @@ export const operationManifest = {
     "permission": "whl.account.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getBusinessProfile": {
     "method": "get",
@@ -1335,7 +1500,8 @@ export const operationManifest = {
     "permission": "aud.setting.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getCapitalRegister": {
     "method": "get",
@@ -1343,7 +1509,8 @@ export const operationManifest = {
     "permission": "cap.capital.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getCapitalTransaction": {
     "method": "get",
@@ -1351,7 +1518,8 @@ export const operationManifest = {
     "permission": "cap.capital.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getCareAnimal": {
     "method": "get",
@@ -1359,7 +1527,8 @@ export const operationManifest = {
     "permission": "liv.care.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getCareBatch": {
     "method": "get",
@@ -1367,7 +1536,8 @@ export const operationManifest = {
     "permission": "liv.care.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getCareHealthEvent": {
     "method": "get",
@@ -1375,7 +1545,8 @@ export const operationManifest = {
     "permission": "liv.care.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getCart": {
     "method": "get",
@@ -1383,7 +1554,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getCashFlow": {
     "method": "get",
@@ -1391,7 +1563,8 @@ export const operationManifest = {
     "permission": "fin.report.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getCashPositionTile": {
     "method": "get",
@@ -1399,7 +1572,8 @@ export const operationManifest = {
     "permission": "rpt.tile.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getCatalogueProduct": {
     "method": "get",
@@ -1407,7 +1581,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "none"
   },
   "getCategory": {
     "method": "get",
@@ -1415,7 +1590,8 @@ export const operationManifest = {
     "permission": "mdm.category.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getCheckout": {
     "method": "get",
@@ -1423,7 +1599,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getCostObject": {
     "method": "get",
@@ -1431,7 +1608,8 @@ export const operationManifest = {
     "permission": "cst.cost.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getCurrentSession": {
     "method": "get",
@@ -1439,7 +1617,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getCustomer": {
     "method": "get",
@@ -1447,7 +1626,8 @@ export const operationManifest = {
     "permission": "mdm.customer.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getCustomerStoreCredit": {
     "method": "get",
@@ -1455,7 +1635,8 @@ export const operationManifest = {
     "permission": "pay.store_credit.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getDailyExceptionReport": {
     "method": "get",
@@ -1463,7 +1644,8 @@ export const operationManifest = {
     "permission": "rpt.exceptions.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getDailySales": {
     "method": "get",
@@ -1471,7 +1653,8 @@ export const operationManifest = {
     "permission": "rpt.sales.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getDataSubjectRequest": {
     "method": "get",
@@ -1479,7 +1662,8 @@ export const operationManifest = {
     "permission": "aud.data_request.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getDelivery": {
     "method": "get",
@@ -1487,7 +1671,8 @@ export const operationManifest = {
     "permission": "del.delivery.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getDeliveryZone": {
     "method": "get",
@@ -1495,7 +1680,8 @@ export const operationManifest = {
     "permission": "mdm.delivery_zone.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getDepreciationRun": {
     "method": "get",
@@ -1503,7 +1689,8 @@ export const operationManifest = {
     "permission": "fin.fixed_asset.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getDistributionRun": {
     "method": "get",
@@ -1511,7 +1698,8 @@ export const operationManifest = {
     "permission": "cap.distribution.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getDistributionSchedule": {
     "method": "post",
@@ -1519,7 +1707,8 @@ export const operationManifest = {
     "permission": "cap.distribution.read",
     "idempotent": false,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getDocumentTemplate": {
     "method": "get",
@@ -1527,7 +1716,8 @@ export const operationManifest = {
     "permission": "doc.template.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getDriverCashReconciliation": {
     "method": "get",
@@ -1535,7 +1725,8 @@ export const operationManifest = {
     "permission": "del.cash_reconciliation.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getFeedConsumption": {
     "method": "get",
@@ -1543,7 +1734,8 @@ export const operationManifest = {
     "permission": "liv.feed.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getFile": {
     "method": "get",
@@ -1551,7 +1743,8 @@ export const operationManifest = {
     "permission": "platform.file.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getFinancing": {
     "method": "get",
@@ -1559,7 +1752,8 @@ export const operationManifest = {
     "permission": "cap.financing.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getFixedAsset": {
     "method": "get",
@@ -1567,7 +1761,8 @@ export const operationManifest = {
     "permission": "fin.fixed_asset.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getFulfilment": {
     "method": "get",
@@ -1575,7 +1770,8 @@ export const operationManifest = {
     "permission": "ord.fulfilment.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getGoodsReceipt": {
     "method": "get",
@@ -1583,7 +1779,8 @@ export const operationManifest = {
     "permission": "inv.goods_receipt.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getGrade": {
     "method": "get",
@@ -1591,7 +1788,8 @@ export const operationManifest = {
     "permission": "mdm.grade.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getHealth": {
     "method": "get",
@@ -1599,7 +1797,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "none"
   },
   "getHealthEvent": {
     "method": "get",
@@ -1607,7 +1806,8 @@ export const operationManifest = {
     "permission": "liv.health.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getImportJob": {
     "method": "get",
@@ -1615,7 +1815,8 @@ export const operationManifest = {
     "permission": "mdm.import.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getIntegration": {
     "method": "get",
@@ -1623,7 +1824,8 @@ export const operationManifest = {
     "permission": "api.integration.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getInvestor": {
     "method": "get",
@@ -1631,7 +1833,8 @@ export const operationManifest = {
     "permission": "cap.investor.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getInvestorReturns": {
     "method": "get",
@@ -1639,7 +1842,8 @@ export const operationManifest = {
     "permission": "cap.investor.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getJournalEntry": {
     "method": "get",
@@ -1647,7 +1851,8 @@ export const operationManifest = {
     "permission": "fin.journal.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getLocation": {
     "method": "get",
@@ -1655,7 +1860,8 @@ export const operationManifest = {
     "permission": "mdm.location.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getLowStockTile": {
     "method": "get",
@@ -1663,7 +1869,8 @@ export const operationManifest = {
     "permission": "rpt.tile.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getManualJournal": {
     "method": "get",
@@ -1671,7 +1878,8 @@ export const operationManifest = {
     "permission": "fin.journal.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getMortalityRecord": {
     "method": "get",
@@ -1679,7 +1887,8 @@ export const operationManifest = {
     "permission": "liv.mortality.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getMyCashSummary": {
     "method": "get",
@@ -1687,7 +1896,8 @@ export const operationManifest = {
     "permission": "del.delivery.read.assigned",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getMyDelivery": {
     "method": "get",
@@ -1695,7 +1905,8 @@ export const operationManifest = {
     "permission": "del.delivery.read.assigned",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getMyInvestorStatement": {
     "method": "get",
@@ -1703,7 +1914,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getMyInvestorSummary": {
     "method": "get",
@@ -1711,7 +1923,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getMyNotificationPreferences": {
     "method": "get",
@@ -1719,7 +1932,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getMyOrder": {
     "method": "get",
@@ -1727,7 +1941,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getMyProfile": {
     "method": "get",
@@ -1735,7 +1950,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getMyRoute": {
     "method": "get",
@@ -1743,7 +1959,8 @@ export const operationManifest = {
     "permission": "del.delivery.read.assigned",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getMyStoreCredit": {
     "method": "get",
@@ -1751,7 +1968,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getNotificationMessage": {
     "method": "get",
@@ -1759,7 +1977,8 @@ export const operationManifest = {
     "permission": "ntf.message.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getNotificationTemplate": {
     "method": "get",
@@ -1767,7 +1986,8 @@ export const operationManifest = {
     "permission": "ntf.template.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getOfflinePack": {
     "method": "get",
@@ -1775,7 +1995,8 @@ export const operationManifest = {
     "permission": "pos.sale.create",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getOrder": {
     "method": "get",
@@ -1783,7 +2004,8 @@ export const operationManifest = {
     "permission": "ord.order.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getOverallReturns": {
     "method": "get",
@@ -1791,7 +2013,8 @@ export const operationManifest = {
     "permission": "cap.capital.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getOverheadAllocation": {
     "method": "get",
@@ -1799,7 +2022,8 @@ export const operationManifest = {
     "permission": "cst.allocation.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getOwnerDashboard": {
     "method": "get",
@@ -1807,7 +2031,8 @@ export const operationManifest = {
     "permission": "rpt.dashboard.owner",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getPayment": {
     "method": "get",
@@ -1815,7 +2040,8 @@ export const operationManifest = {
     "permission": "pay.payment.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getPriceList": {
     "method": "get",
@@ -1823,7 +2049,8 @@ export const operationManifest = {
     "permission": "mdm.price_list.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getPriceListVersion": {
     "method": "get",
@@ -1831,7 +2058,8 @@ export const operationManifest = {
     "permission": "mdm.price_list.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getProcessingOrder": {
     "method": "get",
@@ -1839,7 +2067,8 @@ export const operationManifest = {
     "permission": "prc.order.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getProduct": {
     "method": "get",
@@ -1847,7 +2076,8 @@ export const operationManifest = {
     "permission": "mdm.product.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getProductLabel": {
     "method": "get",
@@ -1855,7 +2085,8 @@ export const operationManifest = {
     "permission": "mdm.product.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getProfitAndLoss": {
     "method": "get",
@@ -1863,7 +2094,8 @@ export const operationManifest = {
     "permission": "fin.report.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getPromotion": {
     "method": "get",
@@ -1871,7 +2103,8 @@ export const operationManifest = {
     "permission": "mdm.promotion.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getPurchaseOrder": {
     "method": "get",
@@ -1879,7 +2112,8 @@ export const operationManifest = {
     "permission": "pur.purchase_order.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getPurchaseRequisition": {
     "method": "get",
@@ -1887,7 +2121,8 @@ export const operationManifest = {
     "permission": "pur.requisition.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getPurchasesSeries": {
     "method": "get",
@@ -1895,7 +2130,8 @@ export const operationManifest = {
     "permission": "rpt.tile.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getQuote": {
     "method": "get",
@@ -1903,7 +2139,8 @@ export const operationManifest = {
     "permission": "quo.quote.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getQuotePipeline": {
     "method": "get",
@@ -1911,7 +2148,8 @@ export const operationManifest = {
     "permission": "quo.report.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getReceivablesTile": {
     "method": "get",
@@ -1919,7 +2157,8 @@ export const operationManifest = {
     "permission": "rpt.tile.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getReconciliationBreak": {
     "method": "get",
@@ -1927,7 +2166,8 @@ export const operationManifest = {
     "permission": "pay.reconciliation.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getRefund": {
     "method": "get",
@@ -1935,7 +2175,8 @@ export const operationManifest = {
     "permission": "pay.refund.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getReportRun": {
     "method": "get",
@@ -1943,7 +2184,8 @@ export const operationManifest = {
     "permission": "rpt.report.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getReturn": {
     "method": "get",
@@ -1951,7 +2193,8 @@ export const operationManifest = {
     "permission": "ord.return.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getRfq": {
     "method": "get",
@@ -1959,7 +2202,8 @@ export const operationManifest = {
     "permission": "quo.rfq.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getRole": {
     "method": "get",
@@ -1967,7 +2211,8 @@ export const operationManifest = {
     "permission": "iam.role.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getRoute": {
     "method": "get",
@@ -1975,7 +2220,8 @@ export const operationManifest = {
     "permission": "del.route.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getSalesSeries": {
     "method": "get",
@@ -1983,7 +2229,8 @@ export const operationManifest = {
     "permission": "rpt.tile.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getSalesTodayTile": {
     "method": "get",
@@ -1991,7 +2238,8 @@ export const operationManifest = {
     "permission": "rpt.tile.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getSettlementReport": {
     "method": "get",
@@ -1999,7 +2247,8 @@ export const operationManifest = {
     "permission": "pay.reconciliation.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getShift": {
     "method": "get",
@@ -2007,7 +2256,8 @@ export const operationManifest = {
     "permission": "pos.shift.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getShiftXReport": {
     "method": "get",
@@ -2015,7 +2265,8 @@ export const operationManifest = {
     "permission": "pos.shift.report",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getShiftZReport": {
     "method": "get",
@@ -2023,7 +2274,8 @@ export const operationManifest = {
     "permission": "pos.shift.report",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getSpecies": {
     "method": "get",
@@ -2031,7 +2283,8 @@ export const operationManifest = {
     "permission": "mdm.species.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getStandingOrder": {
     "method": "get",
@@ -2039,7 +2292,8 @@ export const operationManifest = {
     "permission": "whl.standing_order.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getStatement": {
     "method": "get",
@@ -2047,7 +2301,8 @@ export const operationManifest = {
     "permission": "whl.statement.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getStockAdjustment": {
     "method": "get",
@@ -2055,7 +2310,8 @@ export const operationManifest = {
     "permission": "inv.adjustment.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getStockException": {
     "method": "get",
@@ -2063,7 +2319,8 @@ export const operationManifest = {
     "permission": "inv.exception.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getStockMovement": {
     "method": "get",
@@ -2071,7 +2328,8 @@ export const operationManifest = {
     "permission": "inv.movement.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getStockTake": {
     "method": "get",
@@ -2079,7 +2337,8 @@ export const operationManifest = {
     "permission": "inv.stock_take.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getStockTransfer": {
     "method": "get",
@@ -2087,7 +2346,8 @@ export const operationManifest = {
     "permission": "inv.transfer.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getStockUnit": {
     "method": "get",
@@ -2095,7 +2355,8 @@ export const operationManifest = {
     "permission": "inv.stock.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getStockUnitLabel": {
     "method": "get",
@@ -2103,7 +2364,8 @@ export const operationManifest = {
     "permission": "inv.stock.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getStockValueTile": {
     "method": "get",
@@ -2111,7 +2373,8 @@ export const operationManifest = {
     "permission": "rpt.tile.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getSupplier": {
     "method": "get",
@@ -2119,7 +2382,8 @@ export const operationManifest = {
     "permission": "mdm.supplier.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getSupplierInvoice": {
     "method": "get",
@@ -2127,7 +2391,8 @@ export const operationManifest = {
     "permission": "pur.supplier_invoice.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getSupplierPayment": {
     "method": "get",
@@ -2135,7 +2400,8 @@ export const operationManifest = {
     "permission": "pur.supplier_payment.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getSupplierProfile": {
     "method": "get",
@@ -2143,7 +2409,8 @@ export const operationManifest = {
     "permission": "pur.supplier.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getTaxSchemeVersion": {
     "method": "get",
@@ -2151,7 +2418,8 @@ export const operationManifest = {
     "permission": "mdm.tax.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getTemplateVersion": {
     "method": "get",
@@ -2159,7 +2427,8 @@ export const operationManifest = {
     "permission": "doc.template.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getTrialBalance": {
     "method": "get",
@@ -2167,7 +2436,8 @@ export const operationManifest = {
     "permission": "fin.report.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getUser": {
     "method": "get",
@@ -2175,7 +2445,8 @@ export const operationManifest = {
     "permission": "iam.user.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "getWeightBand": {
     "method": "get",
@@ -2183,7 +2454,8 @@ export const operationManifest = {
     "permission": "mdm.weight_band.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "holdBusinessAccount": {
     "method": "post",
@@ -2191,7 +2463,8 @@ export const operationManifest = {
     "permission": "whl.account.hold",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "holdSale": {
     "method": "post",
@@ -2199,7 +2472,8 @@ export const operationManifest = {
     "permission": "pos.sale.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "importBankStatement": {
     "method": "post",
@@ -2207,7 +2481,8 @@ export const operationManifest = {
     "permission": "pay.reconciliation.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "importSettlementReport": {
     "method": "post",
@@ -2215,7 +2490,8 @@ export const operationManifest = {
     "permission": "pay.reconciliation.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "initiateMobileMoneyCharge": {
     "method": "post",
@@ -2223,7 +2499,8 @@ export const operationManifest = {
     "permission": "pay.payment.initiate",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "issueCreditNote": {
     "method": "post",
@@ -2231,7 +2508,8 @@ export const operationManifest = {
     "permission": "bil.credit_note.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "issueDebitNote": {
     "method": "post",
@@ -2239,7 +2517,8 @@ export const operationManifest = {
     "permission": "bil.debit_note.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "issueProforma": {
     "method": "post",
@@ -2247,7 +2526,8 @@ export const operationManifest = {
     "permission": "bil.proforma.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "issueQuoteVersion": {
     "method": "post",
@@ -2255,7 +2535,8 @@ export const operationManifest = {
     "permission": "quo.quote.issue",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "listAccountActivity": {
     "method": "get",
@@ -2263,7 +2544,8 @@ export const operationManifest = {
     "permission": "fin.journal.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listAccountDeterminations": {
     "method": "get",
@@ -2271,7 +2553,8 @@ export const operationManifest = {
     "permission": "fin.posting_rule.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listAccountingExports": {
     "method": "get",
@@ -2279,7 +2562,8 @@ export const operationManifest = {
     "permission": "api.accounting_export.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listAccountingPeriods": {
     "method": "get",
@@ -2287,7 +2571,8 @@ export const operationManifest = {
     "permission": "fin.period.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listAccounts": {
     "method": "get",
@@ -2295,7 +2580,8 @@ export const operationManifest = {
     "permission": "fin.account.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listAnimalTimeline": {
     "method": "get",
@@ -2303,7 +2589,8 @@ export const operationManifest = {
     "permission": "liv.animal.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listAnimals": {
     "method": "get",
@@ -2311,7 +2598,8 @@ export const operationManifest = {
     "permission": "liv.animal.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listApiCredentials": {
     "method": "get",
@@ -2319,7 +2607,8 @@ export const operationManifest = {
     "permission": "iam.api_credential.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listApprovalPolicies": {
     "method": "get",
@@ -2327,7 +2616,8 @@ export const operationManifest = {
     "permission": "iam.approval_policy.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listApprovals": {
     "method": "get",
@@ -2335,7 +2625,8 @@ export const operationManifest = {
     "permission": "iam.approval.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listArchivedDocuments": {
     "method": "get",
@@ -2343,7 +2634,8 @@ export const operationManifest = {
     "permission": "doc.document.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listAuditEvents": {
     "method": "get",
@@ -2351,7 +2643,8 @@ export const operationManifest = {
     "permission": "aud.audit.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listBankAccounts": {
     "method": "get",
@@ -2359,7 +2652,8 @@ export const operationManifest = {
     "permission": "fin.bank_account.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listBankStatements": {
     "method": "get",
@@ -2367,7 +2661,8 @@ export const operationManifest = {
     "permission": "pay.reconciliation.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listBatches": {
     "method": "get",
@@ -2375,7 +2670,8 @@ export const operationManifest = {
     "permission": "liv.batch.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listBillingDocumentReprints": {
     "method": "get",
@@ -2383,7 +2679,8 @@ export const operationManifest = {
     "permission": "bil.document.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listBillingDocuments": {
     "method": "get",
@@ -2391,7 +2688,8 @@ export const operationManifest = {
     "permission": "bil.document.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listBranches": {
     "method": "get",
@@ -2399,7 +2697,8 @@ export const operationManifest = {
     "permission": "mdm.branch.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listBreedingRecords": {
     "method": "get",
@@ -2407,7 +2706,8 @@ export const operationManifest = {
     "permission": "liv.breeding.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listBusinessAccounts": {
     "method": "get",
@@ -2415,7 +2715,8 @@ export const operationManifest = {
     "permission": "whl.account.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listCapitalTransactions": {
     "method": "get",
@@ -2423,7 +2724,8 @@ export const operationManifest = {
     "permission": "cap.capital.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listCareAnimals": {
     "method": "get",
@@ -2431,7 +2733,8 @@ export const operationManifest = {
     "permission": "liv.care.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listCareBatches": {
     "method": "get",
@@ -2439,7 +2742,8 @@ export const operationManifest = {
     "permission": "liv.care.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listCareHealthEvents": {
     "method": "get",
@@ -2447,7 +2751,8 @@ export const operationManifest = {
     "permission": "liv.care.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listCareRations": {
     "method": "get",
@@ -2455,7 +2760,8 @@ export const operationManifest = {
     "permission": "liv.care.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listCatalogue": {
     "method": "get",
@@ -2463,7 +2769,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "none"
   },
   "listCategories": {
     "method": "get",
@@ -2471,7 +2778,8 @@ export const operationManifest = {
     "permission": "mdm.category.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listCoupons": {
     "method": "get",
@@ -2479,7 +2787,8 @@ export const operationManifest = {
     "permission": "mdm.promotion.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listCreditOverrides": {
     "method": "get",
@@ -2487,7 +2796,8 @@ export const operationManifest = {
     "permission": "whl.account.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listCustomerAddresses": {
     "method": "get",
@@ -2495,7 +2805,8 @@ export const operationManifest = {
     "permission": "mdm.customer.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listCustomerTiers": {
     "method": "get",
@@ -2503,7 +2814,8 @@ export const operationManifest = {
     "permission": "mdm.customer.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listCustomers": {
     "method": "get",
@@ -2511,7 +2823,8 @@ export const operationManifest = {
     "permission": "mdm.customer.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listDataSubjectRequests": {
     "method": "get",
@@ -2519,7 +2832,8 @@ export const operationManifest = {
     "permission": "aud.data_request.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listDeliveries": {
     "method": "get",
@@ -2527,7 +2841,8 @@ export const operationManifest = {
     "permission": "del.delivery.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listDeliverySlotOptions": {
     "method": "get",
@@ -2535,7 +2850,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "none"
   },
   "listDeliverySlots": {
     "method": "get",
@@ -2543,7 +2859,8 @@ export const operationManifest = {
     "permission": "del.slot.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listDeliveryZones": {
     "method": "get",
@@ -2551,7 +2868,8 @@ export const operationManifest = {
     "permission": "mdm.delivery_zone.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listDepreciationRuns": {
     "method": "get",
@@ -2559,7 +2877,8 @@ export const operationManifest = {
     "permission": "fin.fixed_asset.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listDistributionRuns": {
     "method": "get",
@@ -2567,7 +2886,8 @@ export const operationManifest = {
     "permission": "cap.distribution.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listDocumentTemplates": {
     "method": "get",
@@ -2575,7 +2895,8 @@ export const operationManifest = {
     "permission": "doc.template.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listDriverCashReconciliations": {
     "method": "get",
@@ -2583,7 +2904,8 @@ export const operationManifest = {
     "permission": "del.cash_reconciliation.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listDunningLevels": {
     "method": "get",
@@ -2591,7 +2913,8 @@ export const operationManifest = {
     "permission": "whl.dunning.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listDunningNotices": {
     "method": "get",
@@ -2599,7 +2922,8 @@ export const operationManifest = {
     "permission": "whl.dunning.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listEventTypes": {
     "method": "get",
@@ -2607,7 +2931,8 @@ export const operationManifest = {
     "permission": "api.integration.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listExceptions": {
     "method": "get",
@@ -2615,7 +2940,8 @@ export const operationManifest = {
     "permission": "rpt.exceptions.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listFeedConsumption": {
     "method": "get",
@@ -2623,7 +2949,8 @@ export const operationManifest = {
     "permission": "liv.feed.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listFinancing": {
     "method": "get",
@@ -2631,7 +2958,8 @@ export const operationManifest = {
     "permission": "cap.financing.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listFixedAssets": {
     "method": "get",
@@ -2639,7 +2967,8 @@ export const operationManifest = {
     "permission": "fin.fixed_asset.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listFulfilments": {
     "method": "get",
@@ -2647,7 +2976,8 @@ export const operationManifest = {
     "permission": "ord.fulfilment.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listGoodsReceipts": {
     "method": "get",
@@ -2655,7 +2985,8 @@ export const operationManifest = {
     "permission": "inv.goods_receipt.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listGrades": {
     "method": "get",
@@ -2663,7 +2994,8 @@ export const operationManifest = {
     "permission": "mdm.grade.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listGrants": {
     "method": "get",
@@ -2671,7 +3003,8 @@ export const operationManifest = {
     "permission": "iam.grant.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listGrowth": {
     "method": "get",
@@ -2679,7 +3012,8 @@ export const operationManifest = {
     "permission": "liv.report.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listHealthEvents": {
     "method": "get",
@@ -2687,7 +3021,8 @@ export const operationManifest = {
     "permission": "liv.health.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listHeldSales": {
     "method": "get",
@@ -2695,7 +3030,8 @@ export const operationManifest = {
     "permission": "pos.sale.create",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listImportErrors": {
     "method": "get",
@@ -2703,7 +3039,8 @@ export const operationManifest = {
     "permission": "mdm.import.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listImportJobs": {
     "method": "get",
@@ -2711,7 +3048,8 @@ export const operationManifest = {
     "permission": "mdm.import.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listIntegrations": {
     "method": "get",
@@ -2719,7 +3057,8 @@ export const operationManifest = {
     "permission": "api.integration.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listInvestorDocuments": {
     "method": "get",
@@ -2727,7 +3066,8 @@ export const operationManifest = {
     "permission": "cap.investor.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listInvestors": {
     "method": "get",
@@ -2735,7 +3075,8 @@ export const operationManifest = {
     "permission": "cap.investor.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listJournalEntries": {
     "method": "get",
@@ -2743,7 +3084,8 @@ export const operationManifest = {
     "permission": "fin.journal.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listLocations": {
     "method": "get",
@@ -2751,7 +3093,8 @@ export const operationManifest = {
     "permission": "mdm.location.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listLosses": {
     "method": "get",
@@ -2759,7 +3102,8 @@ export const operationManifest = {
     "permission": "cst.margin.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listManualJournals": {
     "method": "get",
@@ -2767,7 +3111,8 @@ export const operationManifest = {
     "permission": "fin.journal.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listMargins": {
     "method": "get",
@@ -2775,7 +3120,8 @@ export const operationManifest = {
     "permission": "cst.margin.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listMortalityRecords": {
     "method": "get",
@@ -2783,7 +3129,8 @@ export const operationManifest = {
     "permission": "liv.mortality.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listMovementTypes": {
     "method": "get",
@@ -2791,7 +3138,8 @@ export const operationManifest = {
     "permission": "inv.stock.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listMyAddresses": {
     "method": "get",
@@ -2799,7 +3147,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listMyCapitalTransactions": {
     "method": "get",
@@ -2807,7 +3156,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listMyDistributions": {
     "method": "get",
@@ -2815,7 +3165,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listMyDocuments": {
     "method": "get",
@@ -2823,7 +3174,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listMyInvestorDocuments": {
     "method": "get",
@@ -2831,7 +3183,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listMyNotifications": {
     "method": "get",
@@ -2839,7 +3192,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listMyOrders": {
     "method": "get",
@@ -2847,7 +3201,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listMyQuotes": {
     "method": "get",
@@ -2855,7 +3210,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listNotificationMessages": {
     "method": "get",
@@ -2863,7 +3219,8 @@ export const operationManifest = {
     "permission": "ntf.message.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listNotificationTemplates": {
     "method": "get",
@@ -2871,7 +3228,8 @@ export const operationManifest = {
     "permission": "ntf.template.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listNotificationTriggers": {
     "method": "get",
@@ -2879,7 +3237,8 @@ export const operationManifest = {
     "permission": "ntf.template.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listNumberSeries": {
     "method": "get",
@@ -2887,7 +3246,8 @@ export const operationManifest = {
     "permission": "aud.number_series.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listOpenItems": {
     "method": "get",
@@ -2895,7 +3255,8 @@ export const operationManifest = {
     "permission": "pay.receivable.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listOptOuts": {
     "method": "get",
@@ -2903,7 +3264,8 @@ export const operationManifest = {
     "permission": "ntf.message.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listOrderHistory": {
     "method": "get",
@@ -2911,7 +3273,8 @@ export const operationManifest = {
     "permission": "ord.order.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listOrders": {
     "method": "get",
@@ -2919,7 +3282,8 @@ export const operationManifest = {
     "permission": "ord.order.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listOverheadAllocations": {
     "method": "get",
@@ -2927,7 +3291,8 @@ export const operationManifest = {
     "permission": "cst.allocation.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listPacks": {
     "method": "get",
@@ -2935,7 +3300,8 @@ export const operationManifest = {
     "permission": "prc.order.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listPaymentMethods": {
     "method": "get",
@@ -2943,7 +3309,8 @@ export const operationManifest = {
     "permission": "mdm.payment_method.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listPayments": {
     "method": "get",
@@ -2951,7 +3318,8 @@ export const operationManifest = {
     "permission": "pay.payment.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listPermissions": {
     "method": "get",
@@ -2959,7 +3327,8 @@ export const operationManifest = {
     "permission": "iam.role.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listPostingEventTypes": {
     "method": "get",
@@ -2967,7 +3336,8 @@ export const operationManifest = {
     "permission": "fin.posting_rule.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listPostingRules": {
     "method": "get",
@@ -2975,7 +3345,8 @@ export const operationManifest = {
     "permission": "fin.posting_rule.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listPriceListEntries": {
     "method": "get",
@@ -2983,7 +3354,8 @@ export const operationManifest = {
     "permission": "mdm.price_list.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listPriceListVersions": {
     "method": "get",
@@ -2991,7 +3363,8 @@ export const operationManifest = {
     "permission": "mdm.price_list.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listPriceLists": {
     "method": "get",
@@ -2999,7 +3372,8 @@ export const operationManifest = {
     "permission": "mdm.price_list.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listProcessingOrders": {
     "method": "get",
@@ -3007,7 +3381,8 @@ export const operationManifest = {
     "permission": "prc.order.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listProducts": {
     "method": "get",
@@ -3015,7 +3390,8 @@ export const operationManifest = {
     "permission": "mdm.product.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listPromotions": {
     "method": "get",
@@ -3023,7 +3399,8 @@ export const operationManifest = {
     "permission": "mdm.promotion.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listPurchaseOrders": {
     "method": "get",
@@ -3031,7 +3408,8 @@ export const operationManifest = {
     "permission": "pur.purchase_order.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listPurchaseRequisitions": {
     "method": "get",
@@ -3039,7 +3417,8 @@ export const operationManifest = {
     "permission": "pur.requisition.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listQuoteVersions": {
     "method": "get",
@@ -3047,7 +3426,8 @@ export const operationManifest = {
     "permission": "quo.quote.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listQuotes": {
     "method": "get",
@@ -3055,7 +3435,8 @@ export const operationManifest = {
     "permission": "quo.quote.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listRations": {
     "method": "get",
@@ -3063,7 +3444,8 @@ export const operationManifest = {
     "permission": "liv.feed.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listReasonCodes": {
     "method": "get",
@@ -3071,7 +3453,8 @@ export const operationManifest = {
     "permission": "mdm.reason_code.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listReconciliationBreaks": {
     "method": "get",
@@ -3079,7 +3462,8 @@ export const operationManifest = {
     "permission": "pay.reconciliation.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listRefunds": {
     "method": "get",
@@ -3087,7 +3471,8 @@ export const operationManifest = {
     "permission": "pay.refund.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listRegisterDevices": {
     "method": "get",
@@ -3095,7 +3480,8 @@ export const operationManifest = {
     "permission": "pos.device.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listRegisters": {
     "method": "get",
@@ -3103,7 +3489,8 @@ export const operationManifest = {
     "permission": "pos.register.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listReorderRules": {
     "method": "get",
@@ -3111,7 +3498,8 @@ export const operationManifest = {
     "permission": "inv.reorder_rule.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listReportDefinitions": {
     "method": "get",
@@ -3119,7 +3507,8 @@ export const operationManifest = {
     "permission": "rpt.report.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listReportRuns": {
     "method": "get",
@@ -3127,7 +3516,8 @@ export const operationManifest = {
     "permission": "rpt.report.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listReportSchedules": {
     "method": "get",
@@ -3135,7 +3525,8 @@ export const operationManifest = {
     "permission": "rpt.schedule.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listRetentionPolicies": {
     "method": "get",
@@ -3143,7 +3534,8 @@ export const operationManifest = {
     "permission": "aud.retention.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listReturns": {
     "method": "get",
@@ -3151,7 +3543,8 @@ export const operationManifest = {
     "permission": "ord.return.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listRfqs": {
     "method": "get",
@@ -3159,7 +3552,8 @@ export const operationManifest = {
     "permission": "quo.rfq.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listRoles": {
     "method": "get",
@@ -3167,7 +3561,8 @@ export const operationManifest = {
     "permission": "iam.role.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listRoutes": {
     "method": "get",
@@ -3175,7 +3570,8 @@ export const operationManifest = {
     "permission": "del.route.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listSessions": {
     "method": "get",
@@ -3183,7 +3579,8 @@ export const operationManifest = {
     "permission": "iam.session.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listSettings": {
     "method": "get",
@@ -3191,7 +3588,8 @@ export const operationManifest = {
     "permission": "aud.setting.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listSettlementReports": {
     "method": "get",
@@ -3199,7 +3597,8 @@ export const operationManifest = {
     "permission": "pay.reconciliation.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listShiftCashMovements": {
     "method": "get",
@@ -3207,7 +3606,8 @@ export const operationManifest = {
     "permission": "pos.shift.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listShifts": {
     "method": "get",
@@ -3215,7 +3615,8 @@ export const operationManifest = {
     "permission": "pos.shift.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listShopCategories": {
     "method": "get",
@@ -3223,7 +3624,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "none"
   },
   "listSpeciesList": {
     "method": "get",
@@ -3231,7 +3633,8 @@ export const operationManifest = {
     "permission": "mdm.species.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listStandingOrderRuns": {
     "method": "get",
@@ -3239,7 +3642,8 @@ export const operationManifest = {
     "permission": "whl.standing_order.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listStandingOrders": {
     "method": "get",
@@ -3247,7 +3651,8 @@ export const operationManifest = {
     "permission": "whl.standing_order.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listStatements": {
     "method": "get",
@@ -3255,7 +3660,8 @@ export const operationManifest = {
     "permission": "whl.statement.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listStockAdjustments": {
     "method": "get",
@@ -3263,7 +3669,8 @@ export const operationManifest = {
     "permission": "inv.adjustment.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listStockAlerts": {
     "method": "get",
@@ -3271,7 +3678,8 @@ export const operationManifest = {
     "permission": "inv.stock.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listStockAvailability": {
     "method": "get",
@@ -3279,7 +3687,8 @@ export const operationManifest = {
     "permission": "inv.stock.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listStockExceptions": {
     "method": "get",
@@ -3287,7 +3696,8 @@ export const operationManifest = {
     "permission": "inv.exception.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listStockHolds": {
     "method": "get",
@@ -3295,7 +3705,8 @@ export const operationManifest = {
     "permission": "inv.hold.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listStockMovements": {
     "method": "get",
@@ -3303,7 +3714,8 @@ export const operationManifest = {
     "permission": "inv.movement.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listStockOnHand": {
     "method": "get",
@@ -3311,7 +3723,8 @@ export const operationManifest = {
     "permission": "inv.stock.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listStockReservations": {
     "method": "get",
@@ -3319,7 +3732,8 @@ export const operationManifest = {
     "permission": "inv.reservation.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listStockTakeLines": {
     "method": "get",
@@ -3327,7 +3741,8 @@ export const operationManifest = {
     "permission": "inv.stock_take.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listStockTakes": {
     "method": "get",
@@ -3335,7 +3750,8 @@ export const operationManifest = {
     "permission": "inv.stock_take.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listStockTransfers": {
     "method": "get",
@@ -3343,7 +3759,8 @@ export const operationManifest = {
     "permission": "inv.transfer.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listStockUnitMovements": {
     "method": "get",
@@ -3351,7 +3768,8 @@ export const operationManifest = {
     "permission": "inv.movement.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listStockUnits": {
     "method": "get",
@@ -3359,7 +3777,8 @@ export const operationManifest = {
     "permission": "inv.stock.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listSupplierDocuments": {
     "method": "get",
@@ -3367,7 +3786,8 @@ export const operationManifest = {
     "permission": "pur.supplier.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listSupplierInvoices": {
     "method": "get",
@@ -3375,7 +3795,8 @@ export const operationManifest = {
     "permission": "pur.supplier_invoice.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listSupplierPayments": {
     "method": "get",
@@ -3383,7 +3804,8 @@ export const operationManifest = {
     "permission": "pur.supplier_payment.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listSupplierScores": {
     "method": "get",
@@ -3391,7 +3813,8 @@ export const operationManifest = {
     "permission": "pur.supplier.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listSuppliers": {
     "method": "get",
@@ -3399,7 +3822,8 @@ export const operationManifest = {
     "permission": "mdm.supplier.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listTaxCategories": {
     "method": "get",
@@ -3407,7 +3831,8 @@ export const operationManifest = {
     "permission": "mdm.tax.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listTaxLevies": {
     "method": "get",
@@ -3415,7 +3840,8 @@ export const operationManifest = {
     "permission": "mdm.tax.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listTaxSchemeVersions": {
     "method": "get",
@@ -3423,7 +3849,8 @@ export const operationManifest = {
     "permission": "mdm.tax.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listTemperatureReadings": {
     "method": "get",
@@ -3431,7 +3858,8 @@ export const operationManifest = {
     "permission": "inv.cold_chain.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listTemplateVersions": {
     "method": "get",
@@ -3439,7 +3867,8 @@ export const operationManifest = {
     "permission": "doc.template.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listUnitsOfMeasure": {
     "method": "get",
@@ -3447,7 +3876,8 @@ export const operationManifest = {
     "permission": "mdm.product.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listUnmatchedPayments": {
     "method": "get",
@@ -3455,7 +3885,8 @@ export const operationManifest = {
     "permission": "pay.payment.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listUomConversions": {
     "method": "get",
@@ -3463,7 +3894,8 @@ export const operationManifest = {
     "permission": "mdm.product.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listUsers": {
     "method": "get",
@@ -3471,7 +3903,8 @@ export const operationManifest = {
     "permission": "iam.user.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listWebhookDeliveries": {
     "method": "get",
@@ -3479,7 +3912,8 @@ export const operationManifest = {
     "permission": "api.webhook.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listWebhookEndpoints": {
     "method": "get",
@@ -3487,7 +3921,8 @@ export const operationManifest = {
     "permission": "api.webhook.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listWeightBands": {
     "method": "get",
@@ -3495,7 +3930,8 @@ export const operationManifest = {
     "permission": "mdm.weight_band.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listWeightRecords": {
     "method": "get",
@@ -3503,7 +3939,8 @@ export const operationManifest = {
     "permission": "liv.weight.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "listYieldStandards": {
     "method": "get",
@@ -3511,7 +3948,8 @@ export const operationManifest = {
     "permission": "prc.yield_standard.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "lockAccountingPeriod": {
     "method": "post",
@@ -3519,7 +3957,8 @@ export const operationManifest = {
     "permission": "fin.period.lock",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "loginCustomer": {
     "method": "post",
@@ -3527,7 +3966,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "json"
   },
   "loginInvestor": {
     "method": "post",
@@ -3535,7 +3975,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "json"
   },
   "loginStaff": {
     "method": "post",
@@ -3543,7 +3984,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "json"
   },
   "logout": {
     "method": "post",
@@ -3551,7 +3993,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "markNotificationRead": {
     "method": "post",
@@ -3559,7 +4002,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "markOnTheWay": {
     "method": "post",
@@ -3567,7 +4011,8 @@ export const operationManifest = {
     "permission": "del.delivery.update.assigned",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "markRefundPaid": {
     "method": "post",
@@ -3575,7 +4020,8 @@ export const operationManifest = {
     "permission": "pay.refund.pay",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "markSupplierPaymentPaid": {
     "method": "post",
@@ -3583,7 +4029,8 @@ export const operationManifest = {
     "permission": "pur.supplier_payment.pay",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "matchBankStatement": {
     "method": "post",
@@ -3591,7 +4038,8 @@ export const operationManifest = {
     "permission": "pay.reconciliation.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "matchBankStatementLine": {
     "method": "post",
@@ -3599,7 +4047,8 @@ export const operationManifest = {
     "permission": "pay.reconciliation.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "matchSettlementReport": {
     "method": "post",
@@ -3607,7 +4056,8 @@ export const operationManifest = {
     "permission": "pay.reconciliation.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "matchSupplierInvoice": {
     "method": "post",
@@ -3615,7 +4065,8 @@ export const operationManifest = {
     "permission": "pur.supplier_invoice.match",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "moveAnimal": {
     "method": "post",
@@ -3623,7 +4074,8 @@ export const operationManifest = {
     "permission": "liv.animal.move",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "moveCareAnimal": {
     "method": "post",
@@ -3631,7 +4083,8 @@ export const operationManifest = {
     "permission": "liv.animal.move",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "openShift": {
     "method": "post",
@@ -3639,7 +4092,8 @@ export const operationManifest = {
     "permission": "pos.shift.open",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "packFulfilment": {
     "method": "post",
@@ -3647,7 +4101,8 @@ export const operationManifest = {
     "permission": "ord.fulfilment.pick",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "pauseStandingOrder": {
     "method": "post",
@@ -3655,7 +4110,8 @@ export const operationManifest = {
     "permission": "whl.standing_order.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "placeOrder": {
     "method": "post",
@@ -3663,7 +4119,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "optional",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "postDepreciationRun": {
     "method": "post",
@@ -3671,7 +4128,8 @@ export const operationManifest = {
     "permission": "fin.fixed_asset.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "postDistributionRun": {
     "method": "post",
@@ -3679,7 +4137,8 @@ export const operationManifest = {
     "permission": "cap.distribution.post",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "postDriverCashReconciliation": {
     "method": "post",
@@ -3687,7 +4146,8 @@ export const operationManifest = {
     "permission": "del.cash_reconciliation.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "postGoodsReceipt": {
     "method": "post",
@@ -3695,7 +4155,8 @@ export const operationManifest = {
     "permission": "inv.goods_receipt.post",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "postOverheadAllocation": {
     "method": "post",
@@ -3703,7 +4164,8 @@ export const operationManifest = {
     "permission": "cst.allocation.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "previewNotificationTemplate": {
     "method": "post",
@@ -3711,7 +4173,8 @@ export const operationManifest = {
     "permission": "ntf.template.read",
     "idempotent": false,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "previewPriceListVersion": {
     "method": "get",
@@ -3719,7 +4182,8 @@ export const operationManifest = {
     "permission": "mdm.price_list.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "previewTemplateVersion": {
     "method": "post",
@@ -3727,7 +4191,8 @@ export const operationManifest = {
     "permission": "doc.template.read",
     "idempotent": false,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "printPackLabels": {
     "method": "post",
@@ -3735,7 +4200,8 @@ export const operationManifest = {
     "permission": "prc.order.process",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "processDataSubjectRequest": {
     "method": "post",
@@ -3743,7 +4209,8 @@ export const operationManifest = {
     "permission": "aud.data_request.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "proposeSubstitution": {
     "method": "post",
@@ -3751,7 +4218,8 @@ export const operationManifest = {
     "permission": "ord.fulfilment.pick",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "quoteDelivery": {
     "method": "post",
@@ -3759,7 +4227,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recallHeldSale": {
     "method": "delete",
@@ -3767,7 +4236,8 @@ export const operationManifest = {
     "permission": "pos.sale.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "receiveMessagingWebhook": {
     "method": "post",
@@ -3775,7 +4245,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "json"
   },
   "receivePaymentWebhook": {
     "method": "post",
@@ -3783,7 +4254,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "json"
   },
   "receiveStockTransfer": {
     "method": "post",
@@ -3791,7 +4263,8 @@ export const operationManifest = {
     "permission": "inv.transfer.receive",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recomputeDistributionRun": {
     "method": "post",
@@ -3799,7 +4272,8 @@ export const operationManifest = {
     "permission": "cap.distribution.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "recordBirth": {
     "method": "post",
@@ -3807,7 +4281,8 @@ export const operationManifest = {
     "permission": "liv.breeding.record",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordCapitalTransaction": {
     "method": "post",
@@ -3815,7 +4290,8 @@ export const operationManifest = {
     "permission": "cap.capital.record",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordCareFeedConsumption": {
     "method": "post",
@@ -3823,7 +4299,8 @@ export const operationManifest = {
     "permission": "liv.feed.record",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordCareHealthEvent": {
     "method": "post",
@@ -3831,7 +4308,8 @@ export const operationManifest = {
     "permission": "liv.health.record",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordCashMovement": {
     "method": "post",
@@ -3839,7 +4317,8 @@ export const operationManifest = {
     "permission": "pos.cash.move",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordCustomerConsent": {
     "method": "post",
@@ -3847,7 +4326,8 @@ export const operationManifest = {
     "permission": "ord.order.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordDistributionPayment": {
     "method": "post",
@@ -3855,7 +4335,8 @@ export const operationManifest = {
     "permission": "cap.distribution.pay",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordFailedDelivery": {
     "method": "post",
@@ -3863,7 +4344,8 @@ export const operationManifest = {
     "permission": "del.delivery.update.assigned",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordFeedConsumption": {
     "method": "post",
@@ -3871,7 +4353,8 @@ export const operationManifest = {
     "permission": "liv.feed.record",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordHealthEvent": {
     "method": "post",
@@ -3879,7 +4362,8 @@ export const operationManifest = {
     "permission": "liv.health.record",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordPayment": {
     "method": "post",
@@ -3887,7 +4371,8 @@ export const operationManifest = {
     "permission": "pay.payment.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordPicks": {
     "method": "post",
@@ -3895,7 +4380,8 @@ export const operationManifest = {
     "permission": "ord.fulfilment.pick",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordProcessingOutputs": {
     "method": "put",
@@ -3903,7 +4389,8 @@ export const operationManifest = {
     "permission": "prc.order.process",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordProofOfDelivery": {
     "method": "post",
@@ -3911,7 +4398,8 @@ export const operationManifest = {
     "permission": "del.proof.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordQuoteAcceptance": {
     "method": "post",
@@ -3919,7 +4407,8 @@ export const operationManifest = {
     "permission": "quo.quote.issue",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordRepayment": {
     "method": "post",
@@ -3927,7 +4416,8 @@ export const operationManifest = {
     "permission": "cap.financing.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordStockTakeCounts": {
     "method": "put",
@@ -3935,7 +4425,8 @@ export const operationManifest = {
     "permission": "inv.stock_take.count",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordTemperatureReading": {
     "method": "post",
@@ -3943,7 +4434,8 @@ export const operationManifest = {
     "permission": "inv.cold_chain.record",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "recordWeights": {
     "method": "post",
@@ -3951,7 +4443,8 @@ export const operationManifest = {
     "permission": "liv.weight.record",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "redeliverWebhook": {
     "method": "post",
@@ -3959,7 +4452,8 @@ export const operationManifest = {
     "permission": "api.webhook.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "refreshSession": {
     "method": "post",
@@ -3967,7 +4461,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "none"
   },
   "registerCustomer": {
     "method": "post",
@@ -3975,7 +4470,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "json"
   },
   "rejectDataSubjectRequest": {
     "method": "post",
@@ -3983,7 +4479,8 @@ export const operationManifest = {
     "permission": "aud.data_request.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "rejectPurchaseRequisition": {
     "method": "post",
@@ -3991,7 +4488,8 @@ export const operationManifest = {
     "permission": "pur.requisition.approve",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "rejectRequest": {
     "method": "post",
@@ -3999,7 +4497,8 @@ export const operationManifest = {
     "permission": "the approving permission named by the approval policy for the kind",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "releaseBusinessAccount": {
     "method": "post",
@@ -4007,7 +4506,8 @@ export const operationManifest = {
     "permission": "whl.account.hold",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "releaseStockHold": {
     "method": "post",
@@ -4015,7 +4515,8 @@ export const operationManifest = {
     "permission": "inv.hold.release",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "releaseStockReservation": {
     "method": "post",
@@ -4023,7 +4524,8 @@ export const operationManifest = {
     "permission": "inv.reservation.release",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "removeCartCoupon": {
     "method": "delete",
@@ -4031,7 +4533,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "optional",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "removeCartLine": {
     "method": "delete",
@@ -4039,7 +4542,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "optional",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "removeProductImage": {
     "method": "delete",
@@ -4047,7 +4551,8 @@ export const operationManifest = {
     "permission": "mdm.product.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "reopenAccountingPeriod": {
     "method": "post",
@@ -4055,7 +4560,8 @@ export const operationManifest = {
     "permission": "fin.period.reopen",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "reorderMyOrder": {
     "method": "post",
@@ -4063,7 +4569,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "reorderRouteStops": {
     "method": "put",
@@ -4071,7 +4578,8 @@ export const operationManifest = {
     "permission": "del.route.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "replaceDunningLevels": {
     "method": "put",
@@ -4079,7 +4587,8 @@ export const operationManifest = {
     "permission": "whl.dunning.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "replaceMyNotificationPreferences": {
     "method": "put",
@@ -4087,7 +4596,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "replacePriceListEntries": {
     "method": "put",
@@ -4095,7 +4605,8 @@ export const operationManifest = {
     "permission": "mdm.price_list.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "replaceTaxSchemeCells": {
     "method": "put",
@@ -4103,7 +4614,8 @@ export const operationManifest = {
     "permission": "mdm.tax.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "reportCareMortality": {
     "method": "post",
@@ -4111,7 +4623,8 @@ export const operationManifest = {
     "permission": "liv.mortality.report",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "reportMortality": {
     "method": "post",
@@ -4119,7 +4632,8 @@ export const operationManifest = {
     "permission": "liv.mortality.report",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "reprintBillingDocument": {
     "method": "post",
@@ -4127,7 +4641,8 @@ export const operationManifest = {
     "permission": "bil.document.reprint",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "requestPasswordReset": {
     "method": "post",
@@ -4135,7 +4650,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "json"
   },
   "requestRefund": {
     "method": "post",
@@ -4143,7 +4659,8 @@ export const operationManifest = {
     "permission": "pay.refund.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "rescheduleDelivery": {
     "method": "post",
@@ -4151,7 +4668,8 @@ export const operationManifest = {
     "permission": "del.delivery.assign",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "resetPassword": {
     "method": "post",
@@ -4159,7 +4677,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "json"
   },
   "resetUserPassword": {
     "method": "post",
@@ -4167,7 +4686,8 @@ export const operationManifest = {
     "permission": "iam.user.reset_password",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "resolvePrices": {
     "method": "post",
@@ -4175,7 +4695,8 @@ export const operationManifest = {
     "permission": "mdm.price.resolve",
     "idempotent": false,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "resolveReconciliationBreak": {
     "method": "post",
@@ -4183,7 +4704,8 @@ export const operationManifest = {
     "permission": "pay.reconciliation.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "resolveStockException": {
     "method": "post",
@@ -4191,7 +4713,8 @@ export const operationManifest = {
     "permission": "inv.exception.resolve",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "resumeIntegration": {
     "method": "post",
@@ -4199,7 +4722,8 @@ export const operationManifest = {
     "permission": "api.integration.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "resumeStandingOrder": {
     "method": "post",
@@ -4207,7 +4731,8 @@ export const operationManifest = {
     "permission": "whl.standing_order.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "retryNotificationMessage": {
     "method": "post",
@@ -4215,7 +4740,8 @@ export const operationManifest = {
     "permission": "ntf.message.retry",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "retryRefund": {
     "method": "post",
@@ -4223,7 +4749,8 @@ export const operationManifest = {
     "permission": "pay.refund.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "returnDeliveryToStock": {
     "method": "post",
@@ -4231,7 +4758,8 @@ export const operationManifest = {
     "permission": "del.delivery.return",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "reversePayment": {
     "method": "post",
@@ -4239,7 +4767,8 @@ export const operationManifest = {
     "permission": "pay.payment.reverse",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "reverseStockMovement": {
     "method": "post",
@@ -4247,7 +4776,8 @@ export const operationManifest = {
     "permission": "inv.movement.reverse",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "reviseQuote": {
     "method": "post",
@@ -4255,7 +4785,8 @@ export const operationManifest = {
     "permission": "quo.quote.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "revokeApiCredential": {
     "method": "post",
@@ -4263,7 +4794,8 @@ export const operationManifest = {
     "permission": "iam.api_credential.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "revokeDevice": {
     "method": "post",
@@ -4271,7 +4803,8 @@ export const operationManifest = {
     "permission": "pos.device.enrol",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "revokeGrant": {
     "method": "post",
@@ -4279,7 +4812,8 @@ export const operationManifest = {
     "permission": "iam.grant.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "revokeSession": {
     "method": "post",
@@ -4287,7 +4821,8 @@ export const operationManifest = {
     "permission": "iam.session.revoke",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "rotateApiCredential": {
     "method": "post",
@@ -4295,7 +4830,8 @@ export const operationManifest = {
     "permission": "iam.api_credential.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "runReport": {
     "method": "post",
@@ -4303,7 +4839,8 @@ export const operationManifest = {
     "permission": "rpt.report.read, plus rpt.report.export for PDF or XLSX",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "sendBillingDocument": {
     "method": "post",
@@ -4311,7 +4848,8 @@ export const operationManifest = {
     "permission": "bil.document.send",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "sendPurchaseOrder": {
     "method": "post",
@@ -4319,7 +4857,8 @@ export const operationManifest = {
     "permission": "pur.purchase_order.send",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "sendStatement": {
     "method": "post",
@@ -4327,7 +4866,8 @@ export const operationManifest = {
     "permission": "whl.statement.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "startCheckout": {
     "method": "post",
@@ -4335,7 +4875,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "optional",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "startProcessingOrder": {
     "method": "post",
@@ -4343,7 +4884,8 @@ export const operationManifest = {
     "permission": "prc.order.process",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "startRoute": {
     "method": "post",
@@ -4351,7 +4893,8 @@ export const operationManifest = {
     "permission": "del.route.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "startStockTake": {
     "method": "post",
@@ -4359,7 +4902,8 @@ export const operationManifest = {
     "permission": "inv.stock_take.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "startTotpEnrolment": {
     "method": "post",
@@ -4367,7 +4911,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "optional",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "stepUp": {
     "method": "post",
@@ -4375,7 +4920,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "submitCareMortalityRecord": {
     "method": "post",
@@ -4383,7 +4929,8 @@ export const operationManifest = {
     "permission": "liv.mortality.report",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "submitDistributionRun": {
     "method": "post",
@@ -4391,7 +4938,8 @@ export const operationManifest = {
     "permission": "cap.distribution.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "submitManualJournal": {
     "method": "post",
@@ -4399,7 +4947,8 @@ export const operationManifest = {
     "permission": "fin.journal.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "submitMortalityRecord": {
     "method": "post",
@@ -4407,7 +4956,8 @@ export const operationManifest = {
     "permission": "liv.mortality.report",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "submitPriceListVersion": {
     "method": "post",
@@ -4415,7 +4965,8 @@ export const operationManifest = {
     "permission": "mdm.price_list.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "submitPromotion": {
     "method": "post",
@@ -4423,7 +4974,8 @@ export const operationManifest = {
     "permission": "mdm.promotion.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "submitPurchaseOrder": {
     "method": "post",
@@ -4431,7 +4983,8 @@ export const operationManifest = {
     "permission": "pur.purchase_order.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "submitPurchaseRequisition": {
     "method": "post",
@@ -4439,7 +4992,8 @@ export const operationManifest = {
     "permission": "pur.requisition.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "submitQuoteRequest": {
     "method": "post",
@@ -4447,7 +5001,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "optional",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "submitReturn": {
     "method": "post",
@@ -4455,7 +5010,8 @@ export const operationManifest = {
     "permission": "ord.return.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "submitStockAdjustment": {
     "method": "post",
@@ -4463,7 +5019,8 @@ export const operationManifest = {
     "permission": "inv.adjustment.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "submitStockTake": {
     "method": "post",
@@ -4471,7 +5028,8 @@ export const operationManifest = {
     "permission": "inv.stock_take.post",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "submitSupplierPayment": {
     "method": "post",
@@ -4479,7 +5037,8 @@ export const operationManifest = {
     "permission": "pur.supplier_payment.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "submitTaxSchemeVersion": {
     "method": "post",
@@ -4487,7 +5046,8 @@ export const operationManifest = {
     "permission": "mdm.tax.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "suspendIntegration": {
     "method": "post",
@@ -4495,7 +5055,8 @@ export const operationManifest = {
     "permission": "api.integration.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "syncDriverEvents": {
     "method": "post",
@@ -4503,7 +5064,8 @@ export const operationManifest = {
     "permission": "del.proof.create",
     "idempotent": false,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "syncOfflineSales": {
     "method": "post",
@@ -4511,7 +5073,8 @@ export const operationManifest = {
     "permission": "pos.sale.create",
     "idempotent": false,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "testWebhookEndpoint": {
     "method": "post",
@@ -4519,7 +5082,8 @@ export const operationManifest = {
     "permission": "api.webhook.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "traceStockUnit": {
     "method": "get",
@@ -4527,7 +5091,8 @@ export const operationManifest = {
     "permission": "inv.trace.read",
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "none"
   },
   "trackOrder": {
     "method": "get",
@@ -4535,7 +5100,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "none"
   },
   "unallocatePayment": {
     "method": "post",
@@ -4543,7 +5109,8 @@ export const operationManifest = {
     "permission": "pay.payment.allocate",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "unlockUser": {
     "method": "post",
@@ -4551,7 +5118,8 @@ export const operationManifest = {
     "permission": "iam.user.unlock",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateAccount": {
     "method": "patch",
@@ -4559,7 +5127,8 @@ export const operationManifest = {
     "permission": "fin.account.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateAnimal": {
     "method": "patch",
@@ -4567,7 +5136,8 @@ export const operationManifest = {
     "permission": "liv.animal.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateApprovalPolicy": {
     "method": "patch",
@@ -4575,7 +5145,8 @@ export const operationManifest = {
     "permission": "iam.approval_policy.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateBankAccount": {
     "method": "patch",
@@ -4583,7 +5154,8 @@ export const operationManifest = {
     "permission": "fin.bank_account.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateBatch": {
     "method": "patch",
@@ -4591,7 +5163,8 @@ export const operationManifest = {
     "permission": "liv.batch.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateBranch": {
     "method": "patch",
@@ -4599,7 +5172,8 @@ export const operationManifest = {
     "permission": "mdm.branch.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateBreedingRecord": {
     "method": "patch",
@@ -4607,7 +5181,8 @@ export const operationManifest = {
     "permission": "liv.breeding.record",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateBusinessAccount": {
     "method": "patch",
@@ -4615,7 +5190,8 @@ export const operationManifest = {
     "permission": "whl.account.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateBusinessProfile": {
     "method": "put",
@@ -4623,7 +5199,8 @@ export const operationManifest = {
     "permission": "aud.setting.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateCareAnimal": {
     "method": "patch",
@@ -4631,7 +5208,8 @@ export const operationManifest = {
     "permission": "liv.animal.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateCareBatch": {
     "method": "patch",
@@ -4639,7 +5217,8 @@ export const operationManifest = {
     "permission": "liv.batch.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateCartLine": {
     "method": "patch",
@@ -4647,7 +5226,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "optional",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateCategory": {
     "method": "patch",
@@ -4655,7 +5235,8 @@ export const operationManifest = {
     "permission": "mdm.category.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateCheckout": {
     "method": "patch",
@@ -4663,7 +5244,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "optional",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateCustomer": {
     "method": "patch",
@@ -4671,7 +5253,8 @@ export const operationManifest = {
     "permission": "mdm.customer.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateCustomerAddress": {
     "method": "patch",
@@ -4679,7 +5262,8 @@ export const operationManifest = {
     "permission": "mdm.customer.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateDeliverySlot": {
     "method": "patch",
@@ -4687,7 +5271,8 @@ export const operationManifest = {
     "permission": "del.slot.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateDeliveryZone": {
     "method": "patch",
@@ -4695,7 +5280,8 @@ export const operationManifest = {
     "permission": "mdm.delivery_zone.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateFixedAsset": {
     "method": "patch",
@@ -4703,7 +5289,8 @@ export const operationManifest = {
     "permission": "fin.fixed_asset.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateGoodsReceipt": {
     "method": "patch",
@@ -4711,7 +5298,8 @@ export const operationManifest = {
     "permission": "inv.goods_receipt.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateGrade": {
     "method": "patch",
@@ -4719,7 +5307,8 @@ export const operationManifest = {
     "permission": "mdm.grade.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateIntegration": {
     "method": "patch",
@@ -4727,7 +5316,8 @@ export const operationManifest = {
     "permission": "api.integration.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateInvestor": {
     "method": "patch",
@@ -4735,7 +5325,8 @@ export const operationManifest = {
     "permission": "cap.investor.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateLocation": {
     "method": "patch",
@@ -4743,7 +5334,8 @@ export const operationManifest = {
     "permission": "mdm.location.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateManualJournal": {
     "method": "patch",
@@ -4751,7 +5343,8 @@ export const operationManifest = {
     "permission": "fin.journal.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateMyAddress": {
     "method": "patch",
@@ -4759,7 +5352,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateMyProfile": {
     "method": "patch",
@@ -4767,7 +5361,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateNotificationTrigger": {
     "method": "patch",
@@ -4775,7 +5370,8 @@ export const operationManifest = {
     "permission": "ntf.template.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateNumberSeries": {
     "method": "patch",
@@ -4783,7 +5379,8 @@ export const operationManifest = {
     "permission": "aud.number_series.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updatePaymentMethod": {
     "method": "patch",
@@ -4791,7 +5388,8 @@ export const operationManifest = {
     "permission": "mdm.payment_method.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updatePriceList": {
     "method": "patch",
@@ -4799,7 +5397,8 @@ export const operationManifest = {
     "permission": "mdm.price_list.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateProcessingOrder": {
     "method": "patch",
@@ -4807,7 +5406,8 @@ export const operationManifest = {
     "permission": "prc.order.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateProduct": {
     "method": "patch",
@@ -4815,7 +5415,8 @@ export const operationManifest = {
     "permission": "mdm.product.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updatePromotion": {
     "method": "patch",
@@ -4823,7 +5424,8 @@ export const operationManifest = {
     "permission": "mdm.promotion.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updatePurchaseOrder": {
     "method": "patch",
@@ -4831,7 +5433,8 @@ export const operationManifest = {
     "permission": "pur.purchase_order.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updatePurchaseRequisition": {
     "method": "patch",
@@ -4839,7 +5442,8 @@ export const operationManifest = {
     "permission": "pur.requisition.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateQuoteVersion": {
     "method": "put",
@@ -4847,7 +5451,8 @@ export const operationManifest = {
     "permission": "quo.quote.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateRation": {
     "method": "patch",
@@ -4855,7 +5460,8 @@ export const operationManifest = {
     "permission": "liv.feed.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateRegister": {
     "method": "patch",
@@ -4863,7 +5469,8 @@ export const operationManifest = {
     "permission": "pos.register.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateReorderRule": {
     "method": "patch",
@@ -4871,7 +5478,8 @@ export const operationManifest = {
     "permission": "inv.reorder_rule.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateReportSchedule": {
     "method": "patch",
@@ -4879,7 +5487,8 @@ export const operationManifest = {
     "permission": "rpt.schedule.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateRetentionPolicy": {
     "method": "patch",
@@ -4887,7 +5496,8 @@ export const operationManifest = {
     "permission": "aud.retention.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateRfq": {
     "method": "patch",
@@ -4895,7 +5505,8 @@ export const operationManifest = {
     "permission": "quo.rfq.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateRole": {
     "method": "patch",
@@ -4903,7 +5514,8 @@ export const operationManifest = {
     "permission": "iam.role.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateSetting": {
     "method": "put",
@@ -4911,7 +5523,8 @@ export const operationManifest = {
     "permission": "aud.setting.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateSpecies": {
     "method": "patch",
@@ -4919,7 +5532,8 @@ export const operationManifest = {
     "permission": "mdm.species.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateStandingOrder": {
     "method": "patch",
@@ -4927,7 +5541,8 @@ export const operationManifest = {
     "permission": "whl.standing_order.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateSupplier": {
     "method": "patch",
@@ -4935,7 +5550,8 @@ export const operationManifest = {
     "permission": "mdm.supplier.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateSupplierInvoice": {
     "method": "patch",
@@ -4943,7 +5559,8 @@ export const operationManifest = {
     "permission": "pur.supplier_invoice.create",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateSupplierProfile": {
     "method": "put",
@@ -4951,7 +5568,8 @@ export const operationManifest = {
     "permission": "pur.supplier.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateUser": {
     "method": "patch",
@@ -4959,7 +5577,8 @@ export const operationManifest = {
     "permission": "iam.user.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateWebhookEndpoint": {
     "method": "patch",
@@ -4967,7 +5586,8 @@ export const operationManifest = {
     "permission": "api.webhook.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateWeightBand": {
     "method": "patch",
@@ -4975,7 +5595,8 @@ export const operationManifest = {
     "permission": "mdm.weight_band.update",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "updateYieldStandard": {
     "method": "patch",
@@ -4983,7 +5604,8 @@ export const operationManifest = {
     "permission": "prc.yield_standard.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "uploadFile": {
     "method": "post",
@@ -4991,7 +5613,8 @@ export const operationManifest = {
     "permission": "platform.file.upload",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "multipart"
   },
   "validateCoupon": {
     "method": "post",
@@ -4999,7 +5622,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "verifyCustomerPhone": {
     "method": "post",
@@ -5007,7 +5631,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "json"
   },
   "verifyDataSubjectIdentity": {
     "method": "post",
@@ -5015,7 +5640,8 @@ export const operationManifest = {
     "permission": "aud.data_request.manage",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "verifyTotp": {
     "method": "post",
@@ -5023,7 +5649,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "json"
   },
   "viewQuoteByLink": {
     "method": "get",
@@ -5031,7 +5658,8 @@ export const operationManifest = {
     "permission": null,
     "idempotent": false,
     "csrf": "none",
-    "public": true
+    "public": true,
+    "body": "none"
   },
   "voidOrder": {
     "method": "post",
@@ -5039,7 +5667,8 @@ export const operationManifest = {
     "permission": "ord.order.void",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   },
   "writeOffBadDebt": {
     "method": "post",
@@ -5047,6 +5676,7 @@ export const operationManifest = {
     "permission": "whl.bad_debt.write_off",
     "idempotent": true,
     "csrf": "required",
-    "public": false
+    "public": false,
+    "body": "json"
   }
 } as const;

@@ -11439,7 +11439,7 @@ export interface components {
              * Format: binary
              * @description The file. Type is checked by content sniffing; the size cap depends on the purpose.
              */
-            file: string;
+            file: Blob;
             purpose: components["schemas"]["FilePurpose"];
         };
         StoredFile: {

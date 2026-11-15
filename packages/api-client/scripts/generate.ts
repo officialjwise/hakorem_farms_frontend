@@ -6,6 +6,9 @@
  *                  requires (Idempotency-Key, X-CSRF-Token). The data layer derives query keys and
  *                  mutation headers from this table, so nothing about an operation is written by hand.
  *
+ * A `format: binary` property is typed `Blob`, and each row says whether its body is JSON or
+ * `multipart/form-data`, so `call()` can send a file (ADR 0037).
+ *
  * `--check` regenerates in memory and fails if the committed files differ, so a stale client cannot
  * merge. Nothing here is hand-edited, and `generated/` is ignored by Prettier and ESLint.
  */
@@ -14,6 +17,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import openapiTS, { astToString } from 'openapi-typescript';
+import ts from 'typescript';
 import { parse } from 'yaml';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -28,6 +32,7 @@ interface RawOperation {
   'x-permission'?: string;
   parameters?: { $ref?: string }[];
   security?: Record<string, unknown>[];
+  requestBody?: { content?: Record<string, unknown> };
 }
 
 interface RawDocument {
@@ -43,7 +48,19 @@ interface ManifestRow {
   csrf: 'required' | 'optional' | 'none';
   /** The operation declares `security: []`: it needs no session, so a 401 from it is not an expired session. */
   public: boolean;
+  /** How the request body travels: JSON, `multipart/form-data` (a file upload), or no body at all. */
+  body: 'json' | 'multipart' | 'none';
 }
+
+function bodyOf(operation: RawOperation): ManifestRow['body'] {
+  const content = operation.requestBody?.content ?? {};
+  if ('multipart/form-data' in content) return 'multipart';
+  if ('application/json' in content) return 'json';
+  return 'none';
+}
+
+/** A file in a multipart body: the browser's `Blob` (a `File` is one), not the string the bytes travel as. */
+const BLOB = ts.factory.createTypeReferenceNode(ts.factory.createIdentifier('Blob'));
 
 function csrfOf(parameters: { $ref?: string }[]): ManifestRow['csrf'] {
   const refs = parameters.map((p) => p.$ref);
@@ -70,6 +87,7 @@ function buildManifest(document: RawDocument): Record<string, ManifestRow> {
         idempotent: parameters.some((p) => p.$ref === '#/components/parameters/IdempotencyKey'),
         csrf: csrfOf(parameters),
         public: Array.isArray(operation.security) && operation.security.length === 0,
+        body: bodyOf(operation),
       };
     }
   }
@@ -93,7 +111,9 @@ export async function generate(): Promise<Record<string, string>> {
   const document = parse(source.toString('utf8')) as RawDocument;
   const head = header(document.info.version, digest);
 
-  const ast = await openapiTS(pathToFileURL(contractPath));
+  const ast = await openapiTS(pathToFileURL(contractPath), {
+    transform: (schema) => (schema.format === 'binary' ? BLOB : undefined),
+  });
   const schema = `${head}${astToString(ast)}`;
 
   const manifest = buildManifest(document);

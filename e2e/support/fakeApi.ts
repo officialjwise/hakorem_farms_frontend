@@ -109,7 +109,9 @@ export class FakeApi {
     if (!url.pathname.startsWith(`${API_PATH}/`)) return route.continue();
     const path = url.pathname.slice(API_PATH.length);
     const method = request.method();
-    const text = request.postData() ?? '';
+    // A file upload (multipart/form-data) is not the fake's business and is not JSON: only JSON is parsed.
+    const isJson = (request.headers()['content-type'] ?? '').startsWith('application/json');
+    const text = isJson ? (request.postData() ?? '') : '';
 
     const answer = this.server.handle(
       {

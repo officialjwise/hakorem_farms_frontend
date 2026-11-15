@@ -34,22 +34,31 @@ type QueryInput<Op extends OperationId> = [QueryOf<Op>] extends [never]
     ? { query?: QueryOf<Op> }
     : { query: QueryOf<Op> };
 
-type JsonBodyOf<Op extends OperationId> =
-  NonNullable<OperationShapes[Op]['requestBody']> extends {
-    content: { 'application/json': infer Body };
-  }
-    ? Body
+type ContentOf<Op extends OperationId> =
+  NonNullable<OperationShapes[Op]['requestBody']> extends { content: infer Content }
+    ? Content
     : never;
 
-/** `{ body }`, required when the contract requires a body, absent when there is none (or it is not JSON). */
-type BodyInput<Op extends OperationId> = [JsonBodyOf<Op>] extends [never]
+/**
+ * The body a caller passes: the JSON body, or for a `multipart/form-data` operation (`uploadFile`) its
+ * fields as an object, a file as a `Blob` (ADR 0037). `call()` turns that object into `FormData`.
+ */
+type BodyOf<Op extends OperationId> =
+  ContentOf<Op> extends { 'application/json': infer Body }
+    ? Body
+    : ContentOf<Op> extends { 'multipart/form-data': infer Body }
+      ? Body
+      : never;
+
+/** `{ body }`, required when the contract requires a body, absent when there is none. */
+type BodyInput<Op extends OperationId> = [BodyOf<Op>] extends [never]
   ? unknown
   : undefined extends OperationShapes[Op]['requestBody']
-    ? { body?: JsonBodyOf<Op> }
-    : { body: JsonBodyOf<Op> };
+    ? { body?: BodyOf<Op> }
+    : { body: BodyOf<Op> };
 
 /**
- * What a caller passes for an operation: its path and query parameters and its JSON body, exactly as the
+ * What a caller passes for an operation: its path and query parameters and its body, exactly as the
  * contract types them. The headers the contract requires (`Idempotency-Key`, `X-CSRF-Token`) are not part
  * of it: the client adds them, so a screen cannot forget one.
  */
