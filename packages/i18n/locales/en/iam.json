@@ -8,11 +8,11 @@
     "title": "Users",
     "new": "New user",
     "table": "Users",
+    "searchLabel": "Search users by name, email or phone",
+    "searchPlaceholder": "Search users",
     "filters": {
-      "label": "Find users",
       "status": "Status",
-      "anyStatus": "Any status",
-      "search": "Name, email or phone"
+      "anyStatus": "Any status"
     },
     "columns": {
       "name": "Name",
@@ -146,7 +146,6 @@
     "table": "Roles",
     "columns": {
       "name": "Role",
-      "code": "Code",
       "kind": "Kind",
       "totp": "Two-step sign-in",
       "permissions": "Permissions",

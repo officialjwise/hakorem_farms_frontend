@@ -1,40 +1,40 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import {
+  Avatar,
   Button,
   Field,
-  Input,
-  Pagination,
-  QueryBoundary,
+  FilterMenu,
   Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableHeader,
-  TableLoadingRows,
-  TableRow,
-  TableRowHeader,
+  ToolbarSearch,
+  useTableView,
+  type TableColumn,
 } from '@hakorem/ui';
 import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiQuery } from '../data/api';
 import { useStateLabels } from '../lib/states';
+import { TableCard } from '../lib/TableCard';
 import { useCursorPages } from '../lib/useCursorPages';
-import { contactOf, rolesOf, UserStatusBadge, When, type UserStatus } from './presentation';
+import {
+  contactOf,
+  rolesOf,
+  UserStatusBadge,
+  When,
+  type UserAccount,
+  type UserStatus,
+} from './presentation';
 
 const STATUSES: readonly UserStatus[] = ['ACTIVE', 'LOCKED', 'DISABLED'];
 const ANY = 'ANY';
-const COLUMNS = 5;
 
 /** FR-IAM-001, 015, 017: the staff accounts, filtered by status and a search, a page at a time. */
 export function UsersScreen() {
   const { t } = useTranslation(['iam', 'common']);
   const auth = useAuth();
   const pages = useCursorPages();
-  const [status, setStatus] = useState<string>(ANY);
+  const [status, setStatus] = useState<UserStatus | typeof ANY>(ANY);
   const [draft, setDraft] = useState('');
   const [search, setSearch] = useState('');
 
@@ -44,7 +44,7 @@ export function UsersScreen() {
     {
       query: {
         realm: 'STAFF',
-        ...(status === ANY ? {} : { status: status as UserStatus }),
+        ...(status === ANY ? {} : { status }),
         ...(search === '' ? {} : { q: search }),
         ...(pages.cursor === undefined ? {} : { cursor: pages.cursor }),
       },
@@ -60,23 +60,50 @@ export function UsersScreen() {
     deniedTitle: t('users.denied'),
   });
 
-  const onSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setSearch(draft.trim());
-    pages.reset();
-  };
-
-  const header = (
-    <TableHeader>
-      <TableRow>
-        <TableHead>{t('users.columns.name')}</TableHead>
-        <TableHead>{t('users.columns.contact')}</TableHead>
-        <TableHead>{t('users.columns.roles')}</TableHead>
-        <TableHead>{t('users.columns.status')}</TableHead>
-        <TableHead>{t('users.columns.lastLogin')}</TableHead>
-      </TableRow>
-    </TableHeader>
-  );
+  const columns: TableColumn<UserAccount>[] = [
+    {
+      id: 'name',
+      rowHeader: true,
+      head: t('users.columns.name'),
+      sortValue: (user) => user.displayName,
+      cell: (user) => (
+        <span className="flex items-center gap-3">
+          <Avatar name={user.displayName} size="sm" />
+          <Link to={`/users/${user.id}`} className="min-w-0 text-accent-text hover:underline">
+            {user.displayName}
+          </Link>
+        </span>
+      ),
+    },
+    {
+      id: 'contact',
+      head: t('users.columns.contact'),
+      sortValue: (user) => contactOf(user),
+      cell: (user) => contactOf(user),
+    },
+    {
+      id: 'roles',
+      head: t('users.columns.roles'),
+      cell: (user) => {
+        const roles = rolesOf(user.grants);
+        return roles.length === 0 ? t('users.noRole') : roles.join(', ');
+      },
+    },
+    {
+      id: 'status',
+      head: t('users.columns.status'),
+      sortValue: (user) => user.status,
+      cell: (user) => <UserStatusBadge status={user.status} />,
+    },
+    {
+      id: 'lastLogin',
+      head: t('users.columns.lastLogin'),
+      // ISO instants sort as text.
+      sortValue: (user) => user.lastLoginAt,
+      cell: (user) => <When instant={user.lastLoginAt} empty={t('common:time.never')} />,
+    },
+  ];
+  const view = useTableView(columns);
 
   return (
     <section aria-labelledby="users-title" className="grid gap-4">
@@ -93,97 +120,55 @@ export function UsersScreen() {
           </>
         }
       />
-
-      <form
-        role="search"
-        aria-label={t('users.filters.label')}
-        onSubmit={onSearch}
-        className="grid gap-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_auto] sm:items-end"
-      >
-        <Field label={t('users.filters.status')}>
-          <Select
-            value={status}
-            onValueChange={(value) => {
-              setStatus(value);
-              pages.reset();
-            }}
-            options={[
-              { value: ANY, label: t('users.filters.anyStatus') },
-              ...STATUSES.map((value) => ({ value, label: t(`status.${value}`) })),
-            ]}
-          />
-        </Field>
-        <Field label={t('users.filters.search')}>
-          <Input type="search" value={draft} onChange={(event) => setDraft(event.target.value)} />
-        </Field>
-        <Button type="submit" variant="secondary">
-          {t('common:actions.search')}
-        </Button>
-      </form>
-
-      <QueryBoundary
+      <TableCard
+        view={view}
         query={users}
         labels={labels}
-        isEmpty={(page) => page.data.length === 0}
-        loadingFallback={
-          <TableContainer aria-label={t('users.table')}>
-            <Table>
-              {header}
-              <TableBody>
-                <TableLoadingRows columns={COLUMNS} label={labels.loading} />
-              </TableBody>
-            </Table>
-          </TableContainer>
+        rows={(page) => page.data}
+        rowKey={(user) => user.id}
+        tableLabel={t('users.table')}
+        exportName={t('users.title')}
+        pages={{ state: pages, info: (page) => page.page, label: t('users.pages') }}
+        toolbar={
+          <>
+            <ToolbarSearch
+              label={t('users.searchLabel')}
+              placeholder={t('users.searchPlaceholder')}
+              value={draft}
+              onValueChange={setDraft}
+              onSubmit={(value) => {
+                setSearch(value);
+                pages.reset();
+              }}
+            />
+            <FilterMenu
+              label={t('common:table.filter')}
+              active={status === ANY ? 0 : 1}
+              reset={{
+                label: t('common:table.resetFilters'),
+                onReset: () => {
+                  setStatus(ANY);
+                  pages.reset();
+                },
+              }}
+            >
+              <Field label={t('users.filters.status')}>
+                <Select
+                  value={status}
+                  onValueChange={(value) => {
+                    setStatus(STATUSES.find((s) => s === value) ?? ANY);
+                    pages.reset();
+                  }}
+                  options={[
+                    { value: ANY, label: t('users.filters.anyStatus') },
+                    ...STATUSES.map((value) => ({ value, label: t(`status.${value}`) })),
+                  ]}
+                />
+              </Field>
+            </FilterMenu>
+          </>
         }
-      >
-        {(page) => (
-          <div className="grid gap-3">
-            <TableContainer aria-label={t('users.table')}>
-              <Table>
-                {header}
-                <TableBody>
-                  {page.data.map((user) => {
-                    const roles = rolesOf(user.grants);
-                    return (
-                      <TableRow key={user.id}>
-                        <TableRowHeader>
-                          <Link to={`/users/${user.id}`} className="text-accent-text underline">
-                            {user.displayName}
-                          </Link>
-                        </TableRowHeader>
-                        <TableCell label={t('users.columns.contact')}>{contactOf(user)}</TableCell>
-                        <TableCell label={t('users.columns.roles')}>
-                          {roles.length === 0 ? t('users.noRole') : roles.join(', ')}
-                        </TableCell>
-                        <TableCell label={t('users.columns.status')}>
-                          <UserStatusBadge status={user.status} />
-                        </TableCell>
-                        <TableCell label={t('users.columns.lastLogin')}>
-                          <When instant={user.lastLoginAt} empty={t('common:time.never')} />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            {pages.hasPrevious || page.page.hasMore ? (
-              <Pagination
-                label={t('users.pages')}
-                hasPrevious={pages.hasPrevious}
-                hasNext={page.page.hasMore && page.page.nextCursor !== null}
-                onPrevious={pages.previous}
-                onNext={() => {
-                  if (page.page.nextCursor !== null) pages.next(page.page.nextCursor);
-                }}
-                previousLabel={t('common:pagination.previous')}
-                nextLabel={t('common:pagination.next')}
-                summary={t('common:pagination.page', { page: pages.page })}
-              />
-            ) : null}
-          </div>
-        )}
-      </QueryBoundary>
+      />
     </section>
   );
 }

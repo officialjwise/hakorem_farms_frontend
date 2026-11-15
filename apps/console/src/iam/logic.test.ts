@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { changeRows, dayEnd, dayStart, show } from '../audit/presentation';
+import { changeRows, show } from '../audit/presentation';
+import { dayEnd, dayStart } from '../lib/dateRange';
 import { bothQueries, uniqueById } from '../lib/queries';
 import { groupPermissions, type Permission } from './permissions';
 import { contactOf, rolesOf } from './presentation';

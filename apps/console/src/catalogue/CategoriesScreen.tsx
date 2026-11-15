@@ -1,31 +1,25 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Beef, Drumstick, Egg, Package, PawPrint, Tag, Wheat, Wrench } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import type { components, OperationInput } from '@hakorem/api-client';
 import {
+  Alert,
   Button,
   Checkbox,
   Dialog,
   Form,
   FormField,
   FormSubmitButton,
+  IconChip,
   Input,
   NumberInput,
-  Pagination,
-  QueryBoundary,
   Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableHeader,
-  TableLoadingRows,
-  TableRow,
-  TableRowHeader,
-  Alert,
+  useTableView,
+  type IconChipTone,
+  type TableColumn,
 } from '@hakorem/ui';
 import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
@@ -33,6 +27,8 @@ import { useApiAllPages, useApiMutation, useApiQuery } from '../data/api';
 import { uniqueById, useIntentKey } from '../lib/queries';
 import { ReasonDialog } from '../lib/ReasonDialog';
 import { useStateLabels } from '../lib/states';
+import { lookup } from '../lib/lookup';
+import { TableCard } from '../lib/TableCard';
 import { useCursorPages } from '../lib/useCursorPages';
 import { useWriteFailure, WriteFailureView, type WriteFailure } from '../lib/writeFailure';
 
@@ -57,7 +53,18 @@ const GL_GROUPS = [
   'SUPPLIES',
   'SERVICE',
 ] as const satisfies readonly GlGroup[];
-const COLUMNS = 6;
+
+/** Each product line's icon and tint, matching the products' accounting groups (ProductPicture). */
+const LINE_LOOK = {
+  LIVE: { icon: PawPrint, tone: 'accent' },
+  MEAT: { icon: Beef, tone: 'clay' },
+  PRODUCE: { icon: Egg, tone: 'sand' },
+  BY_PRODUCT: { icon: Drumstick, tone: 'plum' },
+  FEED: { icon: Wheat, tone: 'good' },
+  SUPPLY: { icon: Package, tone: 'info' },
+  SERVICE: { icon: Wrench, tone: 'violet' },
+} as const satisfies Record<ProductLine, { icon: typeof Tag; tone: IconChipTone }>;
+const OTHER_LINE = { icon: Tag, tone: 'slate' } as const;
 
 /** FR-MDM: product categories, the product line and ledger group each carries, and its tax category. */
 export function CategoriesScreen() {
@@ -91,20 +98,88 @@ export function CategoriesScreen() {
   const canUpdate = auth.can('mdm.category.update');
   const canArchive = auth.can('mdm.category.archive');
 
-  const header = (
-    <TableHeader>
-      <TableRow>
-        <TableHead>{t('categories.columns.name')}</TableHead>
-        <TableHead>{t('categories.columns.line')}</TableHead>
-        <TableHead>{t('categories.columns.tax')}</TableHead>
-        <TableHead>{t('categories.columns.online')}</TableHead>
-        <TableHead numeric>{t('categories.columns.products')}</TableHead>
-        <TableHead>
-          <span className="sr-only">{t('categories.columns.actions')}</span>
-        </TableHead>
-      </TableRow>
-    </TableHeader>
-  );
+  const columns: TableColumn<Category>[] = [
+    {
+      id: 'name',
+      rowHeader: true,
+      head: t('categories.columns.name'),
+      sortValue: (category) => category.name,
+      cell: (category) => {
+        const look = lookup(LINE_LOOK, category.productLine, OTHER_LINE);
+        return (
+          <span className="flex items-center gap-3">
+            <IconChip icon={look.icon} tone={look.tone} size="sm" />
+            <span className="grid min-w-0">
+              <span>{category.name}</span>
+              <code className="text-control-sm font-normal text-fg-muted">{category.code}</code>
+            </span>
+          </span>
+        );
+      },
+    },
+    {
+      id: 'line',
+      head: t('categories.columns.line'),
+      sortValue: (category) => t(`line.${category.productLine}`),
+      cell: (category) => t(`line.${category.productLine}`),
+    },
+    {
+      id: 'tax',
+      head: t('categories.columns.tax'),
+      sortValue: (category) => category.taxCategory.name,
+      cell: (category) => category.taxCategory.name,
+    },
+    {
+      id: 'online',
+      head: t('categories.columns.online'),
+      sortValue: (category) => (category.isOnlineVisible ? 0 : 1),
+      cell: (category) =>
+        category.isOnlineVisible ? t('categories.shown') : t('categories.hidden'),
+    },
+    {
+      id: 'products',
+      head: t('categories.columns.products'),
+      numeric: true,
+      sortValue: (category) => category.productCount,
+      cell: (category) => category.productCount,
+    },
+    {
+      id: 'actions',
+      head: t('categories.columns.actions'),
+      cell: (category) => (
+        <span className="flex flex-wrap gap-2">
+          {canUpdate ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              aria-label={t('categories.editFor', { name: category.name })}
+              onClick={() => {
+                setNotice(null);
+                setEditing(category);
+              }}
+            >
+              {t('categories.edit')}
+            </Button>
+          ) : null}
+          {canArchive ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              aria-label={t('categories.archiveFor', { name: category.name })}
+              onClick={() => {
+                archive.reset();
+                setNotice(null);
+                setArchiving(category);
+              }}
+            >
+              {t('categories.archive')}
+            </Button>
+          ) : null}
+        </span>
+      ),
+    },
+  ];
+  const view = useTableView(columns);
 
   return (
     <section aria-labelledby="categories-title" className="grid gap-4">
@@ -127,100 +202,16 @@ export function CategoriesScreen() {
         }
       />
       {notice !== null ? <Alert severity={'good'} title={notice} /> : null}
-      <QueryBoundary
+      <TableCard
+        view={view}
         query={categories}
         labels={labels}
-        isEmpty={(page) => page.data.length === 0}
-        loadingFallback={
-          <TableContainer aria-label={t('categories.table')}>
-            <Table>
-              {header}
-              <TableBody>
-                <TableLoadingRows columns={COLUMNS} label={labels.loading} />
-              </TableBody>
-            </Table>
-          </TableContainer>
-        }
-      >
-        {(page) => (
-          <div className="grid gap-3">
-            <TableContainer aria-label={t('categories.table')}>
-              <Table>
-                {header}
-                <TableBody>
-                  {page.data.map((category) => (
-                    <TableRow key={category.id}>
-                      <TableRowHeader>
-                        {category.name}
-                        <span className="block text-control-sm text-fg-muted">
-                          <code>{category.code}</code>
-                        </span>
-                      </TableRowHeader>
-                      <TableCell label={t('categories.columns.line')}>
-                        {t(`line.${category.productLine}`)}
-                      </TableCell>
-                      <TableCell label={t('categories.columns.tax')}>
-                        {category.taxCategory.name}
-                      </TableCell>
-                      <TableCell label={t('categories.columns.online')}>
-                        {category.isOnlineVisible ? t('categories.shown') : t('categories.hidden')}
-                      </TableCell>
-                      <TableCell numeric label={t('categories.columns.products')}>
-                        {category.productCount}
-                      </TableCell>
-                      <TableCell label={t('categories.columns.actions')}>
-                        <span className="flex flex-wrap gap-2">
-                          {canUpdate ? (
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              aria-label={t('categories.editFor', { name: category.name })}
-                              onClick={() => {
-                                setNotice(null);
-                                setEditing(category);
-                              }}
-                            >
-                              {t('categories.edit')}
-                            </Button>
-                          ) : null}
-                          {canArchive ? (
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              aria-label={t('categories.archiveFor', { name: category.name })}
-                              onClick={() => {
-                                archive.reset();
-                                setNotice(null);
-                                setArchiving(category);
-                              }}
-                            >
-                              {t('categories.archive')}
-                            </Button>
-                          ) : null}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            {pages.hasPrevious || page.page.hasMore ? (
-              <Pagination
-                label={t('categories.pages')}
-                hasPrevious={pages.hasPrevious}
-                hasNext={page.page.hasMore && page.page.nextCursor !== null}
-                onPrevious={pages.previous}
-                onNext={() => {
-                  if (page.page.nextCursor !== null) pages.next(page.page.nextCursor);
-                }}
-                previousLabel={t('common:pagination.previous')}
-                nextLabel={t('common:pagination.next')}
-                summary={t('common:pagination.page', { page: pages.page })}
-              />
-            ) : null}
-          </div>
-        )}
-      </QueryBoundary>
+        rows={(page) => page.data}
+        rowKey={(category) => category.id}
+        tableLabel={t('categories.table')}
+        exportName={t('categories.title')}
+        pages={{ state: pages, info: (page) => page.page, label: t('categories.pages') }}
+      />
       {editing !== null ? (
         <CategoryDialog
           category={editing === 'new' ? null : editing}

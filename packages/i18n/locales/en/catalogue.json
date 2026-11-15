@@ -254,7 +254,6 @@
     "denied": "You do not have access to units",
     "columns": {
       "name": "Unit",
-      "code": "Code",
       "kind": "Measures"
     }
   },

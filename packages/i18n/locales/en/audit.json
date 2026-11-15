@@ -11,9 +11,8 @@
       "anyAction": "Any action",
       "entityType": "Record type",
       "entityTypeHint": "For example user, product or invoice.",
-      "from": "From",
-      "to": "To",
-      "invalidRange": "The end date is before the start date"
+      "invalidRange": "The end date is before the start date",
+      "apply": "Apply filters"
     },
     "columns": {
       "when": "When",

@@ -21,8 +21,6 @@ export const AUDIT_ACTIONS: readonly AuditAction[] = [
   'POST',
 ];
 
-export { dayEnd, dayStart } from '../lib/dateRange';
-
 export interface ChangeRow {
   field: string;
   before: string | null;

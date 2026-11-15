@@ -1,19 +1,13 @@
+import { Ruler } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import {
-  QueryBoundary,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableHeader,
-  TableLoadingRows,
-  TableRow,
-  TableRowHeader,
-} from '@hakorem/ui';
+import type { components } from '@hakorem/api-client';
+import { IconChip, useTableView, type TableColumn } from '@hakorem/ui';
 import { PageHeader } from '../lib/ScreenHeader';
 import { useApiAllPages } from '../data/api';
 import { useStateLabels } from '../lib/states';
+import { TableCard } from '../lib/TableCard';
+
+type Unit = components['schemas']['Uom'];
 
 /**
  * FR-MDM units of measure. Read only: contract 1.1.0 lists units (`listUnitsOfMeasure`) but has no way to add
@@ -35,55 +29,43 @@ export function UnitsScreen() {
     errorTitle: t('units.error'),
     deniedTitle: t('units.denied'),
   });
-  const header = (
-    <TableHeader>
-      <TableRow>
-        <TableHead>{t('units.columns.name')}</TableHead>
-        <TableHead>{t('units.columns.code')}</TableHead>
-        <TableHead>{t('units.columns.kind')}</TableHead>
-      </TableRow>
-    </TableHeader>
-  );
+  const columns: TableColumn<Unit>[] = [
+    {
+      id: 'name',
+      rowHeader: true,
+      head: t('units.columns.name'),
+      sortValue: (unit) => unit.name,
+      cell: (unit) => (
+        <span className="flex items-center gap-3">
+          <IconChip icon={Ruler} tone="slate" size="sm" />
+          <span className="grid min-w-0">
+            <span>{unit.name}</span>
+            <code className="text-control-sm font-normal text-fg-muted">{unit.code}</code>
+          </span>
+        </span>
+      ),
+    },
+    {
+      id: 'kind',
+      head: t('units.columns.kind'),
+      sortValue: (unit) => t(`uomKind.${unit.kind}`),
+      cell: (unit) => t(`uomKind.${unit.kind}`),
+    },
+  ];
+  const view = useTableView(columns);
   return (
     <section aria-labelledby="units-title" className="grid gap-4">
       <PageHeader title={t('units.title')} titleId="units-title" />
       <p className="text-fg-muted">{t('units.intro')}</p>
-      <QueryBoundary
+      <TableCard
+        view={view}
         query={units}
         labels={labels}
-        isEmpty={(all) => all.items.length === 0}
-        loadingFallback={
-          <TableContainer aria-label={t('units.table')}>
-            <Table>
-              {header}
-              <TableBody>
-                <TableLoadingRows columns={3} label={labels.loading} />
-              </TableBody>
-            </Table>
-          </TableContainer>
-        }
-      >
-        {(all) => (
-          <TableContainer aria-label={t('units.table')}>
-            <Table>
-              {header}
-              <TableBody>
-                {all.items.map((unit) => (
-                  <TableRow key={unit.code}>
-                    <TableRowHeader>{unit.name}</TableRowHeader>
-                    <TableCell label={t('units.columns.code')}>
-                      <code>{unit.code}</code>
-                    </TableCell>
-                    <TableCell label={t('units.columns.kind')}>
-                      {t(`uomKind.${unit.kind}`)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-      </QueryBoundary>
+        rows={(all) => all.items}
+        rowKey={(unit) => unit.code}
+        tableLabel={t('units.table')}
+        exportName={t('units.title')}
+      />
     </section>
   );
 }
