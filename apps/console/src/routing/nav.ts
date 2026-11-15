@@ -1,6 +1,7 @@
 import {
   ArrowLeftRight,
   BadgeCent,
+  ChartColumn,
   Boxes,
   Building2,
   CalendarClock,
@@ -34,7 +35,8 @@ export interface NavItem {
   icon: LucideIcon;
 }
 
-export type NavGroupKey = 'overview' | 'selling' | 'stock' | 'catalogue' | 'business' | 'people';
+export type NavGroupKey =
+  'overview' | 'selling' | 'stock' | 'catalogue' | 'business' | 'reports' | 'people';
 
 export interface NavGroup {
   key: NavGroupKey;
@@ -119,6 +121,10 @@ export const BACK_OFFICE_GROUPS: readonly NavGroup[] = [
       { key: 'branches', path: '/branches', permission: 'mdm.branch.read', icon: Building2 },
       { key: 'suppliers', path: '/suppliers', permission: 'mdm.supplier.read', icon: Truck },
     ],
+  },
+  {
+    key: 'reports',
+    items: [{ key: 'reports', path: '/reports', permission: 'rpt.report.read', icon: ChartColumn }],
   },
   {
     key: 'people',

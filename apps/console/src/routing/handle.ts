@@ -56,7 +56,9 @@ export type NavKey =
   | 'lots'
   | 'movements'
   | 'suppliers'
-  | 'registers';
+  | 'registers'
+  | 'reports'
+  | 'report';
 
 export function isRouteHandle(value: unknown): value is RouteHandle {
   return (

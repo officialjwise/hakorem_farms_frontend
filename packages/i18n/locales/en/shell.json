@@ -95,7 +95,9 @@
     "lots": "Lots and expiry",
     "movements": "Stock movements",
     "suppliers": "Suppliers",
-    "registers": "Cash registers"
+    "registers": "Cash registers",
+    "reports": "Reports",
+    "report": "Report"
   },
   "placeholder": {
     "title": "This area is built in a later session",
@@ -138,7 +140,8 @@
     "stock": "Stock",
     "catalogue": "Catalogue",
     "business": "Business",
-    "people": "People and access"
+    "people": "People and access",
+    "reports": "Reports"
   },
   "branch": {
     "label": "Scope every screen to a branch",

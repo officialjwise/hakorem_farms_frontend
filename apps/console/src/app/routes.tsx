@@ -189,6 +189,26 @@ export const protectedRoutes: RouteObject[] = [
         element: lazyScreen(() => import('../lists/ListScreens').then((m) => m.RegistersScreen)),
         handle: back('pos.register.read', 'registers'),
       },
+      {
+        path: 'reports',
+        handle: back('rpt.report.read', 'reports'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../reports/ReportScreens').then((m) => m.ReportsScreen),
+            ),
+            handle: back('rpt.report.read', 'reports'),
+          },
+          {
+            path: ':report',
+            element: lazyScreen(() =>
+              import('../reports/ReportScreens').then((m) => m.ReportScreen),
+            ),
+            handle: back('rpt.report.read', 'report'),
+          },
+        ],
+      },
       // F4, each loaded on demand so the back office's first load stays in budget (PERFORMANCE_BUDGET).
       {
         path: 'products',

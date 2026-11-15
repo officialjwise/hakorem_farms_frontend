@@ -179,6 +179,9 @@ const OWNER_F5B_PERMISSIONS = [
   'mdm.supplier.read',
   'inv.movement.read',
   'pos.register.read',
+  'rpt.report.read',
+  'rpt.report.export',
+  'fin.report.read',
 ];
 
 /** Keyed by lower-case email. Permission codes are the contract's `x-permission` values. */
