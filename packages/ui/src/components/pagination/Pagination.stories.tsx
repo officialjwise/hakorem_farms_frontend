@@ -36,6 +36,19 @@ export const Last: Story = {
   args: { hasNext: false, summary: '9 items on this page' },
 };
 
+/** Three pages reached: a button per page, this one marked, and "Go to page" for the rest. */
+export const GoToPage: Story = {
+  parameters: { matrix: true },
+  args: {
+    summary: 'Page 2',
+    page: 2,
+    reached: 3,
+    onGoTo: fn(),
+    goToLabel: 'Go to page',
+    pageLabel: (n: number) => `Page ${n}`,
+  },
+};
+
 /** While the next page loads both buttons stay focusable and ignore clicks. */
 export const Loading: Story = {
   parameters: { matrix: true },
