@@ -126,3 +126,37 @@ The panel and the second series stay. Re-run: 219 contrast tests pass. On the pa
 - **Not a JavaScript cost.** The bundle budget does not count it.
 
 **The light grey page.** The same pass moved the page off cream so that white cards stand out; see "Amendment (F5c): a light grey page and white cards" below.
+
+### Amendment, 2026-11-15 (F5c): a light grey page and white cards
+
+**Why.** The owner asked for a light grey page with white cards, in both themes, so that every card stands out as it does in the reference. On the cream page (`bg` `#F7F4EC`, `surface` `#FFFCF6`) a card was only one step lighter than the page.
+
+**Values changed.** Text, accent, status and categorical tokens are unchanged.
+
+| Token            | Light, was → now      | Dark, was → now       |
+| ---------------- | --------------------- | --------------------- |
+| `bg`             | `#F7F4EC` → `#F2F4F3` | `#13120E` → `#0F1110` |
+| `surface`        | `#FFFCF6` → `#FFFFFF` | `#1C1A15` → `#1C1F1D` |
+| `surface-sunken` | `#EEE8DB` → `#EBEFED` | `#0D0C09` → `#0B0D0C` |
+| `surface-hover`  | `#F2ECE0` → `#F1F4F3` | `#2A2720` → `#272B29` |
+| `border`         | `#D6CDBA` → `#DCE2DF` | `#332F26` → `#313633` |
+| `border-strong`  | unchanged             | `#7A7262` → `#878070` |
+
+- **The light page** is a grey with a trace of the pine accent, so it sits with the accent rather than against it.
+- **The dark theme** follows the same rule: the page is darker than the cards, and a card is one clear step lighter.
+- **Dark `border-strong`** was lifted because the new dark hover surface left a control boundary on a hovered row at 3.01:1. It is now 3.66:1.
+
+**Re-run, 2026-11-15:** `pnpm --filter @hakorem/ui exec vitest run --project unit src/tokens`, 219 tests, all passed. The tightest pairs on the changed neutrals:
+
+| Pair                                | Theme | Ratio | Minimum |
+| ----------------------------------- | ----- | ----- | ------- |
+| `border-strong` on `surface-hover`  | dark  | 3.66  | 3       |
+| `border-strong` on `surface-sunken` | light | 3.84  | 3       |
+| `good` on `bg`                      | light | 3.91  | 3       |
+| `border-strong` on `bg`             | light | 4.03  | 3       |
+| `accent-text` on `surface-sunken`   | light | 6.76  | 4.5     |
+| `accent-text` on `surface-hover`    | dark  | 6.81  | 4.5     |
+| `fg-muted` on `surface-hover`       | dark  | 6.97  | 4.5     |
+| `fg` on every page surface          | both  | ≥ 7   | 7       |
+
+**Scope.** The neutrals are shared, so the storefront's page also turns grey with white cards. Its F1 shell has no marketing surfaces yet, and the marketing tokens are untouched.

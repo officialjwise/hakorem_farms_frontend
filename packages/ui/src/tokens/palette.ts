@@ -40,17 +40,22 @@ const MARK = ['line', 'glyph'] as const;
 
 export const colors = {
   // Neutrals
-  bg: { light: '#F7F4EC', dark: '#13120E', roles: ['surface'], use: 'Page background' },
-  surface: { light: '#FFFCF6', dark: '#1C1A15', roles: ['surface'], use: 'Cards, tables, inputs' },
+  bg: {
+    light: '#F2F4F3',
+    dark: '#0F1110',
+    roles: ['surface'],
+    use: 'Page background: light grey, so white cards stand out',
+  },
+  surface: { light: '#FFFFFF', dark: '#1C1F1D', roles: ['surface'], use: 'Cards, tables, inputs' },
   'surface-sunken': {
-    light: '#EEE8DB',
-    dark: '#0D0C09',
+    light: '#EBEFED',
+    dark: '#0B0D0C',
     roles: ['surface'],
     use: 'Table header, recessed wells, skeletons',
   },
   'surface-hover': {
-    light: '#F2ECE0',
-    dark: '#2A2720',
+    light: '#F1F4F3',
+    dark: '#272B29',
     roles: ['surface'],
     use: 'Hover on rows and quiet buttons. Darker in light, lighter in dark: hover lifts, it never sinks.',
   },
@@ -61,14 +66,14 @@ export const colors = {
     use: 'Backdrop behind Dialog and Sheet. The alpha is in the value (#RRGGBBAA) because opacity modifiers are banned. Nothing is written on it.',
   },
   border: {
-    light: '#D6CDBA',
-    dark: '#332F26',
+    light: '#DCE2DF',
+    dark: '#313633',
     roles: ['line'],
     use: 'Decorative rules and card edges. Not for identifying a control.',
   },
   'border-strong': {
     light: '#827661',
-    dark: '#7A7262',
+    dark: '#878070',
     roles: ['line'],
     use: 'Input and control boundaries (3:1, WCAG 1.4.11)',
   },
