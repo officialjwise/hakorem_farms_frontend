@@ -100,4 +100,16 @@ describe('Field', () => {
     ).toThrow(/requiredLabel/);
     spy.mockRestore();
   });
+
+  it('marks a required field with an asterisk in a modal, and keeps the words for a screen reader', () => {
+    render(
+      <Field label="Branch name" required requiredLabel="Required" requiredMark="asterisk">
+        <input />
+      </Field>,
+    );
+    const input = screen.getByRole('textbox', { name: /^Branch name\s*Required$/ });
+    expect(input).toBeRequired();
+    expect(screen.getByText('*')).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getByText('Required')).toHaveClass('sr-only');
+  });
 });

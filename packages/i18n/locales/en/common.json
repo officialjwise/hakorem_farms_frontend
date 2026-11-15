@@ -1,6 +1,7 @@
 {
   "field": {
-    "required": "Required"
+    "required": "Required",
+    "requiredNote": "Required field"
   },
   "error": {
     "reference": "Reference",

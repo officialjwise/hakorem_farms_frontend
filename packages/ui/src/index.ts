@@ -108,7 +108,12 @@ export { AnimalTag, type AnimalTagProps } from './components/animal-tag/AnimalTa
 export { LotBadge, type LotBadgeProps, type LotExpiry } from './components/lot-badge/LotBadge';
 export { Select, type SelectOption, type SelectProps } from './components/select/Select';
 export { Combobox, type ComboboxOption, type ComboboxProps } from './components/combobox/Combobox';
-export { Dialog, type DialogProps } from './components/dialog/Dialog';
+export {
+  Dialog,
+  DialogActions,
+  type DialogActionsProps,
+  type DialogProps,
+} from './components/dialog/Dialog';
 export { Sheet, sheetVariants, type SheetProps, type SheetSide } from './components/sheet/Sheet';
 export { Popover, type PopoverProps } from './components/popover/Popover';
 export { Tooltip, type TooltipProps } from './components/tooltip/Tooltip';

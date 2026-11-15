@@ -2,9 +2,10 @@
 
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
-import type { ReactElement, ReactNode } from 'react';
+import type { ComponentType, ReactElement, ReactNode, SVGProps } from 'react';
 import { cn } from '../../lib/cn';
 import { Button } from '../button/Button';
+import { IconChip, type IconChipTone } from '../icon-chip/IconChip';
 import { usePortalContainer } from '../ui-provider/UIProvider';
 
 /** Rejects an empty string literal at compile time. Dynamic blank strings are rejected at render. */
@@ -24,8 +25,16 @@ export type DialogProps<T extends string = string, C extends string = string> = 
   /** Required. The accessible name of the close button, for example "Close". */
   closeLabel: NonEmpty<C>;
   children?: ReactNode;
-  /** Buttons for the action row. A failed action also puts words in `children`, so it persists (ADR 0006). */
+  /** Buttons for the action row: DialogActions. A failed action also puts words in `children`, so it persists (ADR 0006). */
   footer?: ReactNode;
+  /** A decorative icon on a tinted chip beside the title, as the reference's modals carry. */
+  icon?: ComponentType<SVGProps<SVGSVGElement>>;
+  iconTone?: IconChipTone;
+  /**
+   * What the red asterisk means, for a dialog whose fields use `requiredMark="asterisk"`, for example
+   * "Required field". Shown once under the title, after an asterisk.
+   */
+  requiredNote?: string;
   className?: string;
 };
 
@@ -51,6 +60,9 @@ export function Dialog<T extends string, C extends string>({
   closeLabel,
   children,
   footer,
+  icon,
+  iconTone,
+  requiredNote,
   className,
 }: DialogProps<T, C>) {
   const container = usePortalContainer();
@@ -76,6 +88,7 @@ export function Dialog<T extends string, C extends string>({
             )}
           >
             <div className="flex items-start gap-3 px-5 pt-5 pb-3">
+              {icon === undefined ? null : <IconChip icon={icon} tone={iconTone} />}
               <div className="grid min-w-0 flex-1 gap-1">
                 <DialogPrimitive.Title className="text-xl font-bold text-balance">
                   {title}
@@ -85,6 +98,14 @@ export function Dialog<T extends string, C extends string>({
                     {description}
                   </DialogPrimitive.Description>
                 ) : null}
+                {requiredNote === undefined ? null : (
+                  <p className="text-control-sm text-fg-muted">
+                    <span aria-hidden="true" className="me-1 text-critical-fg">
+                      *
+                    </span>
+                    {requiredNote}
+                  </p>
+                )}
               </div>
               <DialogPrimitive.Close asChild>
                 <Button
@@ -98,13 +119,45 @@ export function Dialog<T extends string, C extends string>({
                 </Button>
               </DialogPrimitive.Close>
             </div>
-            {children ? <div className="min-h-0 overflow-auto px-5 py-2">{children}</div> : null}
-            {footer ? (
-              <div className="flex flex-wrap justify-end gap-2 p-4 pt-2">{footer}</div>
+            {children ? (
+              <div className="min-h-0 overflow-auto px-5 pt-2 pb-5">{children}</div>
             ) : null}
+            {footer ? <div className="px-5 pb-4">{footer}</div> : null}
           </DialogPrimitive.Content>
         </DialogPrimitive.Portal>
       ) : null}
     </DialogPrimitive.Root>
+  );
+}
+
+export interface DialogActionsProps {
+  /** Cancel's words, for example "Cancel". It closes the dialog with its X icon, on the left. */
+  cancelLabel: string;
+  onCancel: () => void;
+  /** The primary action (and any second action), on the right, each with its icon. */
+  children: ReactNode;
+  className?: string;
+}
+
+/**
+ * DialogActions (ADR 0036). The reference's modal footer: a rule across the dialog, Cancel on the left with
+ * its icon, the primary action on the right. Put it last in the dialog's body (inside a form, so the
+ * primary can submit) or in Dialog's `footer`.
+ */
+export function DialogActions({ cancelLabel, onCancel, children, className }: DialogActionsProps) {
+  return (
+    <div
+      data-slot="dialog-actions"
+      className={cn(
+        '-mx-5 mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border px-5 pt-4',
+        className,
+      )}
+    >
+      <Button type="button" variant="secondary" onClick={onCancel}>
+        <X aria-hidden="true" />
+        {cancelLabel}
+      </Button>
+      <div className="flex flex-wrap items-center justify-end gap-2">{children}</div>
+    </div>
   );
 }

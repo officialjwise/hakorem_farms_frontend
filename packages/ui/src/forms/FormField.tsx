@@ -9,13 +9,10 @@ import {
   type FieldPath,
   type FieldValues,
 } from 'react-hook-form';
-import { Field } from '../components/field/Field';
+import { Field, type RequiredProps } from '../components/field/Field';
 
 /** Rejects an empty string literal at compile time. Dynamic blank strings are rejected at render. */
 type NonEmpty<T extends string> = T extends '' ? never : T;
-
-type RequiredProps =
-  { required?: false; requiredLabel?: never } | { required: true; requiredLabel: string };
 
 export type FormFieldProps<
   TValues extends FieldValues,
@@ -58,12 +55,19 @@ export function FormField<
   hint,
   required,
   requiredLabel,
+  requiredMark,
   className,
   children,
 }: FormFieldProps<TValues, TName, L>) {
   const context = useFormContext<TValues>();
   const requiredProps = (
-    required ? { required: true, requiredLabel: requiredLabel ?? '' } : {}
+    required
+      ? {
+          required: true,
+          requiredLabel: requiredLabel ?? '',
+          requiredMark: requiredMark ?? 'words',
+        }
+      : {}
   ) as RequiredProps;
 
   return (
