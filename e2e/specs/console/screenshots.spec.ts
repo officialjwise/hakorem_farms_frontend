@@ -285,6 +285,25 @@ PHASES.F06 = [
     ready: 'Figures still to come from the server',
     prepare: (api) => api.prefer('getOwnerDashboard', 'example=beforeSalesAndBilling'),
   },
+  { name: 'animals', path: '/animals', ready: 'G-0157' },
+  { name: 'animal', path: `/animals/${ID}`, ready: 'Bought from Kpone Livestock Traders' },
+  {
+    name: 'animal-dark',
+    path: `/animals/${ID}`,
+    ready: 'Bought from Kpone Livestock Traders',
+    theme: 'dark',
+  },
+  { name: 'weights', path: '/weights', ready: 'BRL-2610-01' },
+  { name: 'health', path: '/health-events', ready: 'Every animal in Broiler house 1' },
+  { name: 'breeding', path: '/breeding', ready: 'Dam G-0122' },
+  { name: 'mortality', path: '/mortality', ready: 'G-0171' },
+  { name: 'mortality-record', path: `/mortality/${ID}`, ready: 'Death of G-0171' },
+  { name: 'feed', path: '/feed', ready: 'Layer house' },
+  { name: 'processing-orders', path: '/processing-orders', ready: 'G-0104' },
+  { name: 'processing-order', path: `/processing-orders/${ID}`, ready: 'PRC-261109-3a247e03-01' },
+  { name: 'processing-order-new', path: '/processing-orders/new', ready: 'Planning an order' },
+  { name: 'yield-standards', path: '/yield-standards', ready: 'Broiler chicken' },
+  { name: 'lots-came-from', path: '/lots', ready: 'Came from' },
 ];
 
 const WIDTHS = [1280, 360] as const;
