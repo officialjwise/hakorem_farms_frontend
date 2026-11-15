@@ -116,7 +116,9 @@ export function StatTile<L extends string>({
         <Skeleton label={loadingLabel} shape="line" className="h-8" />
       ) : (
         <>
-          <span className="text-2xl font-semibold tabular-nums">{value}</span>
+          <span className="text-xl font-semibold break-words tabular-nums sm:text-2xl">
+            {value}
+          </span>
           {detail === undefined ? null : (
             <span className="text-control-sm text-fg-muted">{detail}</span>
           )}
@@ -125,7 +127,7 @@ export function StatTile<L extends string>({
               data-trend={trend.direction}
               data-tone={trend.tone}
               className={cn(
-                'inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-control-sm font-semibold',
+                'inline-flex w-fit max-w-full flex-wrap items-center gap-1 rounded-full px-2 py-0.5 text-control-sm font-semibold',
                 TONE[trend.tone].text,
               )}
             >

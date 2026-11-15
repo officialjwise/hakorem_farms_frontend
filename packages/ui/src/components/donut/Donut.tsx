@@ -58,8 +58,8 @@ export function Donut<T extends string>({
   return (
     <figure data-slot="donut" aria-label={title} className={cn('grid min-w-0 gap-3', className)}>
       <figcaption className={cn('font-semibold', hideTitle && 'sr-only')}>{title}</figcaption>
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="relative size-36 shrink-0">
+      <div className="grid justify-items-center gap-4">
+        <div className="relative size-40 shrink-0">
           <svg
             viewBox="0 0 42 42"
             className="size-full -rotate-90"
@@ -101,7 +101,7 @@ export function Donut<T extends string>({
             <div className="absolute inset-0 grid place-content-center text-center">{centre}</div>
           )}
         </div>
-        <ul className="grid min-w-0 flex-1 gap-1.5">
+        <ul className="grid w-full min-w-0 gap-1.5">
           {shown.map((segment, index) => (
             <li
               key={segment.label}
@@ -116,8 +116,8 @@ export function Donut<T extends string>({
               >
                 <path d={LOOKS[index]?.marker} className={LOOKS[index]?.fill} />
               </svg>
-              <span className="min-w-0 flex-1 truncate">{segment.label}</span>
-              <span className="tabular-nums">{segment.formatted}</span>
+              <span className="min-w-0 flex-1 break-words">{segment.label}</span>
+              <span className="text-end tabular-nums">{segment.formatted}</span>
             </li>
           ))}
         </ul>

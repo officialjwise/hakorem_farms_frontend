@@ -73,7 +73,7 @@ export function AlertRow<T extends string>({
         />
       </span>
       <span className="grid min-w-0 flex-1">
-        <span className="truncate font-semibold">{title}</span>
+        <span className="font-semibold break-words">{title}</span>
         {meta === undefined ? null : (
           <span className="truncate text-control-sm text-fg-muted">{meta}</span>
         )}

@@ -56,11 +56,11 @@ export function ProgressList<T extends string>({
           <li key={item.id} className="grid gap-1">
             <span className="flex items-baseline justify-between gap-2 text-sm">
               {item.href === undefined ? (
-                <span className="min-w-0 truncate">{item.label}</span>
+                <span className="min-w-0 break-words">{item.label}</span>
               ) : (
-                renderLink(item.href, item.label, cn('min-w-0 truncate text-fg', LINK))
+                renderLink(item.href, item.label, cn('min-w-0 break-words text-fg', LINK))
               )}
-              <span className="shrink-0 font-semibold tabular-nums">{item.formatted}</span>
+              <span className="shrink-0 text-end font-semibold tabular-nums">{item.formatted}</span>
             </span>
             <span
               aria-hidden="true"
