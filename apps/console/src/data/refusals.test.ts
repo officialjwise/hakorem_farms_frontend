@@ -59,6 +59,19 @@ describe('refusals in words (ADR 0038)', () => {
     expect(said.details).toHaveLength(2);
   });
 
+  it('says a known rule even when its detail names a field the screen does not have', () => {
+    const said = inWords(
+      refusal('BRANCH_INVALID', 'Refused.', [
+        { field: '/status', code: 'FARM_BRANCH', message: 'farm' },
+        { field: '/status', code: 'HOLDS_STOCK', message: 'stock' },
+      ]),
+      say,
+    );
+    expect(said.message).toBe(
+      'This branch cannot be closed. It is the farm, where the animals are kept. It still holds stock: move or sell it first.',
+    );
+  });
+
   it('leaves a detail on a field to the field, in the server’s words', () => {
     const detail = { field: '/name', code: 'MIN_LENGTH', message: 'At least two letters.' };
     const said = inWords(refusal('VALIDATION_FAILED', 'Invalid.', [detail]), say);

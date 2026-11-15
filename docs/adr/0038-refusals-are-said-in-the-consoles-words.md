@@ -18,9 +18,9 @@ The contract lists every code an operation can refuse with (`x-error-codes`, 83 
 
 - **The words live in `common:refusals`.** `codes.<CODE>` is the code's sentence, and `rules.<CODE>` is a broken rule's sentence. `common` loads with both documents, so the words are there before any write.
 - **`data/refusals.ts`, `inWords(error)`,** rebuilds the `ApiError` with:
-  - the message set to the code's words, followed by the words of each `details[]` entry that names no field. A rule without words adds the server's sentence for that detail;
+  - the message set to the code's words, followed by the words of each broken rule in `details[]`, whether or not its detail names a field. A confirmation often has no field to hold a rule: closing a branch names `/status`, which no form on that screen has. A rule without words adds the server's sentence only when its detail names no field;
   - the code, status, reference, `retryAfter` and details unchanged, so a screen still branches on the code (`STEP_UP_REQUIRED`, a 409).
-- **What is left alone:** a detail that names a field keeps the server's sentence, which `mapServerErrors` puts on that field. A code with no words keeps the server's message, which the contract marks safe to show. A network failure is left as it is, and the screen says it in its own words.
+- **What is left alone:** a detail without words that names a field keeps the server's sentence, which `mapServerErrors` puts on that field. A code with no words keeps the server's message, which the contract marks safe to show. A network failure is left as it is, and the screen says it in its own words.
 - **The client applies it.** `data/api.ts` wraps `call()`, and `DataProvider` attaches the catalogue lookup, as it attaches the session (`attachRefusalWords`).
 - **A unit test reads `contract/openapi.yaml`** and fails if any code in any `x-error-codes` has no words. A synced contract that adds a code fails it until the code is worded. A user never sees a blank: the fallback still holds.
 - **The auth screens keep their own mapping** (`failure.tsx`). Their client does not go through the data layer (ADR 0024).

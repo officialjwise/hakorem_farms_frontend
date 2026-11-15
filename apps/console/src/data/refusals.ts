@@ -6,9 +6,9 @@ import { ApiError, NetworkError, type ApiErrorDetail } from '@hakorem/api-client
  * says each in its own words, from `common:refusals`:
  *
  * - the code's words replace the server's sentence: `refusals.codes.<CODE>`;
- * - each detail that names no field and whose rule has words adds them, after the code's words:
- *   `refusals.rules.<CODE>`. A detail that names a field keeps the server's sentence, which lands on that
- *   field (`mapServerErrors`);
+ * - each broken rule with words adds them, after the code's words: `refusals.rules.<CODE>`, whether or
+ *   not its detail names a field (a confirmation has no field to hold it). A detail without words that
+ *   names a field keeps the server's sentence, which lands on that field (`mapServerErrors`);
  * - a code the build does not know keeps the server's sentence, which the contract says is safe to show.
  *   A rule the build does not know adds the server's sentence for that detail.
  *
@@ -28,20 +28,31 @@ export function attachRefusalWords(next: RefusalWords): () => void {
   };
 }
 
-function ruleWords(detail: ApiErrorDetail, say: RefusalWords): string | null {
-  if (detail.field !== null) return null;
-  return (
-    say(`refusals.rules.${detail.code}`) ?? (detail.message.trim() === '' ? null : detail.message)
-  );
+/**
+ * A broken rule's words. A rule the console has words for is said whether or not its detail names a
+ * field: a confirmation often has no field to hold it (closing a branch names `/status`, which no form on
+ * that screen has). A rule without words adds the server's sentence only when it names no field; one that
+ * names a field is left to that field (`mapServerErrors`), so a validation detail is not said twice.
+ */
+function ruleWords(detail: ApiErrorDetail, say: RefusalWords, known: boolean): string | null {
+  const words = say(`refusals.rules.${detail.code}`);
+  if (words !== null) return words;
+  if (!known || detail.field !== null || detail.message.trim() === '') return null;
+  return detail.message;
 }
 
 /** The same refusal, said in the console's words where it has them. */
 export function inWords(error: ApiError, say: RefusalWords | null = words): ApiError {
   if (say === null || error instanceof NetworkError || error.status === 0) return error;
   const codeWords = say(`refusals.codes.${error.code}`);
-  const rules = error.details
-    .map((detail) => (codeWords === null && detail.field === null ? null : ruleWords(detail, say)))
-    .filter((line): line is string => line !== null);
+  // A code the build does not know keeps the server's sentence, with only the rules it has words for.
+  const rules = [
+    ...new Set(
+      error.details
+        .map((detail) => ruleWords(detail, say, codeWords !== null))
+        .filter((line): line is string => line !== null),
+    ),
+  ];
   if (codeWords === null && rules.length === 0) return error;
   const message = [codeWords ?? error.message, ...rules].join(' ');
   return new ApiError({
