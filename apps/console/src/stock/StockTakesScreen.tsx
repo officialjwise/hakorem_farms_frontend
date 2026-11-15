@@ -1,23 +1,17 @@
+import { ClipboardCheck } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
+import type { components } from '@hakorem/api-client';
 import {
   Button,
   Dialog,
   Field,
+  IconChip,
   MutationFailure,
-  Pagination,
-  QueryBoundary,
   Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableHeader,
-  TableLoadingRows,
-  TableRow,
-  TableRowHeader,
+  useTableView,
+  type TableColumn,
 } from '@hakorem/ui';
 import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
@@ -26,11 +20,12 @@ import { useApiMutation, useApiQuery } from '../data/api';
 import { When } from '../iam/presentation';
 import { useIntentKey } from '../lib/queries';
 import { useStateLabels } from '../lib/states';
+import { TableCard } from '../lib/TableCard';
 import { useCursorPages } from '../lib/useCursorPages';
 import { useLocations } from './locations';
 import { StockTakeStatusBadge } from './presentation';
 
-const COLUMNS = 4;
+type Take = components['schemas']['StockTake'];
 
 /** FR-INV stock takes: each count, where, how far along, and its state. */
 export function StockTakesScreen() {
@@ -48,16 +43,53 @@ export function StockTakesScreen() {
     errorTitle: t('takes.error'),
     deniedTitle: t('takes.denied'),
   });
-  const header = (
-    <TableHeader>
-      <TableRow>
-        <TableHead>{t('takes.columns.take')}</TableHead>
-        <TableHead>{t('takes.columns.status')}</TableHead>
-        <TableHead numeric>{t('takes.columns.progress')}</TableHead>
-        <TableHead>{t('takes.columns.created')}</TableHead>
-      </TableRow>
-    </TableHeader>
-  );
+  const columns: TableColumn<Take>[] = [
+    {
+      id: 'take',
+      rowHeader: true,
+      head: t('takes.columns.take'),
+      sortValue: (take) => take.location.name,
+      cell: (take) => (
+        <span className="flex items-center gap-3">
+          <IconChip icon={ClipboardCheck} tone="info" size="sm" />
+          <span className="grid min-w-0">
+            <Link to={`/stock-takes/${take.id}`} className="text-accent-text underline">
+              {take.location.name}
+            </Link>
+            <span className="text-control-sm font-normal text-fg-muted">
+              {take.stockTakeNo ?? t('take.unnumbered')} · {t(`scope.${take.scope}`)}
+            </span>
+          </span>
+        </span>
+      ),
+    },
+    {
+      id: 'status',
+      head: t('takes.columns.status'),
+      sortValue: (take) => take.status,
+      cell: (take) => <StockTakeStatusBadge status={take.status} />,
+    },
+    {
+      id: 'progress',
+      head: t('takes.columns.progress'),
+      numeric: true,
+      // The API's count of lines counted, compared as it is.
+      sortValue: (take) => take.countedLineCount,
+      cell: (take) => t('take.progress', { counted: take.countedLineCount, total: take.lineCount }),
+    },
+    {
+      id: 'created',
+      head: t('takes.columns.created'),
+      // ISO instants sort as text.
+      sortValue: (take) => take.createdAt,
+      cell: (take) => (
+        <>
+          {take.createdBy.displayName} · <When instant={take.createdAt} />
+        </>
+      ),
+    },
+  ];
+  const view = useTableView(columns);
   return (
     <section aria-labelledby="takes-title" className="grid gap-4">
       <PageHeader
@@ -72,71 +104,16 @@ export function StockTakesScreen() {
           </>
         }
       />
-      <QueryBoundary
+      <TableCard
+        view={view}
         query={takes}
         labels={labels}
-        isEmpty={(page) => page.data.length === 0}
-        loadingFallback={
-          <TableContainer aria-label={t('takes.table')}>
-            <Table>
-              {header}
-              <TableBody>
-                <TableLoadingRows columns={COLUMNS} label={labels.loading} />
-              </TableBody>
-            </Table>
-          </TableContainer>
-        }
-      >
-        {(page) => (
-          <div className="grid gap-3">
-            <TableContainer aria-label={t('takes.table')}>
-              <Table>
-                {header}
-                <TableBody>
-                  {page.data.map((take) => (
-                    <TableRow key={take.id}>
-                      <TableRowHeader>
-                        <Link to={`/stock-takes/${take.id}`} className="text-accent-text underline">
-                          {take.location.name}
-                        </Link>
-                        <span className="block text-control-sm text-fg-muted">
-                          {take.stockTakeNo ?? t('take.unnumbered')} · {t(`scope.${take.scope}`)}
-                        </span>
-                      </TableRowHeader>
-                      <TableCell label={t('takes.columns.status')}>
-                        <StockTakeStatusBadge status={take.status} />
-                      </TableCell>
-                      <TableCell numeric label={t('takes.columns.progress')}>
-                        {t('take.progress', {
-                          counted: take.countedLineCount,
-                          total: take.lineCount,
-                        })}
-                      </TableCell>
-                      <TableCell label={t('takes.columns.created')}>
-                        {take.createdBy.displayName} · <When instant={take.createdAt} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            {pages.hasPrevious || page.page.hasMore ? (
-              <Pagination
-                label={t('takes.pages')}
-                hasPrevious={pages.hasPrevious}
-                hasNext={page.page.hasMore && page.page.nextCursor !== null}
-                onPrevious={pages.previous}
-                onNext={() => {
-                  if (page.page.nextCursor !== null) pages.next(page.page.nextCursor);
-                }}
-                previousLabel={t('common:pagination.previous')}
-                nextLabel={t('common:pagination.next')}
-                summary={t('common:pagination.page', { page: pages.page })}
-              />
-            ) : null}
-          </div>
-        )}
-      </QueryBoundary>
+        rows={(page) => page.data}
+        rowKey={(take) => take.id}
+        tableLabel={t('takes.table')}
+        exportName={t('takes.title')}
+        pages={{ state: pages, info: (page) => page.page, label: t('takes.pages') }}
+      />
       {creating ? <NewTake onClose={() => setCreating(false)} /> : null}
     </section>
   );

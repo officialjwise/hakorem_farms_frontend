@@ -1,36 +1,33 @@
+import { Package, PawPrint } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { components } from '@hakorem/api-client';
 import {
   Field,
+  FilterMenu,
+  IconChip,
   MoneyDisplay,
   NOT_APPLICABLE,
-  Pagination,
   PriceBandDisplay,
   QuantityDisplay,
-  QueryBoundary,
   Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableHeader,
-  TableLoadingRows,
-  TableRow,
-  TableRowHeader,
+  useTableView,
   WeightDisplay,
+  type TableColumn,
 } from '@hakorem/ui';
 import { PageHeader } from '../lib/ScreenHeader';
 import { useBranchScope } from '../branch/branchScope';
 import { useApiQuery } from '../data/api';
 import { When } from '../iam/presentation';
 import { useStateLabels } from '../lib/states';
+import { TableCard } from '../lib/TableCard';
 import { useCursorPages } from '../lib/useCursorPages';
 import { useLocations } from './locations';
 import { asPlaces, useUnits } from './units';
 
+type Line = components['schemas']['StockOnHandLine'];
+
 const ALL = 'ALL';
-const COLUMNS = 7;
 
 /**
  * FR-INV stock on hand, derived by the API from the movement ledger. Cost and selling price are separate
@@ -59,154 +56,163 @@ export function StockOnHandScreen() {
     errorTitle: t('onHand.error'),
     deniedTitle: t('onHand.denied'),
   });
-  const header = (
-    <TableHeader>
-      <TableRow>
-        <TableHead>{t('onHand.columns.product')}</TableHead>
-        <TableHead>{t('onHand.columns.location')}</TableHead>
-        <TableHead numeric>{t('onHand.columns.onHand')}</TableHead>
-        <TableHead numeric>{t('onHand.columns.available')}</TableHead>
-        <TableHead numeric>{t('onHand.columns.cost')}</TableHead>
-        <TableHead numeric>{t('onHand.columns.value')}</TableHead>
-        <TableHead>{t('onHand.columns.price')}</TableHead>
-      </TableRow>
-    </TableHeader>
-  );
+  // Quantities are in each line's own unit, so they are shown, never compared: only the API's single
+  // figures (names, integer pesewas) sort.
+  const columns: TableColumn<Line>[] = [
+    {
+      id: 'product',
+      rowHeader: true,
+      head: t('onHand.columns.product'),
+      sortValue: (line) => line.product.name,
+      cell: (line) => {
+        const animal = line.stockUnit?.tracking === 'SERIAL';
+        return (
+          <span className="flex items-center gap-3">
+            <IconChip
+              icon={animal ? PawPrint : Package}
+              tone={animal ? 'accent' : 'sand'}
+              size="sm"
+            />
+            <span className="grid min-w-0">
+              <span>{line.product.name}</span>
+              <code className="text-control-sm font-normal text-fg-muted">
+                {line.stockUnit?.identifier ?? line.product.sku}
+              </code>
+              {line.expiresOn === null ? null : (
+                <span className="text-control-sm font-normal text-fg-muted">
+                  {t('onHand.expires', { date: line.expiresOn })}
+                </span>
+              )}
+            </span>
+          </span>
+        );
+      },
+    },
+    {
+      id: 'location',
+      head: t('onHand.columns.location'),
+      sortValue: (line) => line.location.name,
+      cell: (line) => line.location.name,
+    },
+    {
+      id: 'onHand',
+      head: t('onHand.columns.onHand'),
+      numeric: true,
+      cell: (line) => (
+        <span className="grid justify-items-end">
+          <QuantityDisplay
+            quantity={line.onHandQty}
+            unit={units.name(line.uom)}
+            // The line carries its unit's precision (CR-003, contract 1.16.0).
+            places={asPlaces(line.uomDisplayDecimals)}
+          />
+          {line.onHandWeightKg === null ? null : <WeightDisplay kilograms={line.onHandWeightKg} />}
+        </span>
+      ),
+    },
+    {
+      id: 'available',
+      head: t('onHand.columns.available'),
+      numeric: true,
+      cell: (line) => (
+        <QuantityDisplay
+          quantity={line.availableQty}
+          unit={units.name(line.uom)}
+          places={asPlaces(line.uomDisplayDecimals)}
+        />
+      ),
+    },
+    {
+      id: 'cost',
+      head: t('onHand.columns.cost'),
+      numeric: true,
+      // The API's integer pesewas, compared, never added.
+      sortValue: (line) => line.unitCostPesewas,
+      cell: (line) => (
+        <span className="grid justify-items-end">
+          <MoneyDisplay pesewas={line.unitCostPesewas} />
+          <span className="text-control-sm text-fg-muted">
+            {t(`valuation.${line.valuationMethod}`)}
+          </span>
+        </span>
+      ),
+    },
+    {
+      id: 'value',
+      head: t('onHand.columns.value'),
+      numeric: true,
+      sortValue: (line) => line.valueAtCostPesewas,
+      cell: (line) => <MoneyDisplay pesewas={line.valueAtCostPesewas} />,
+    },
+    {
+      id: 'price',
+      head: t('onHand.columns.price'),
+      cell: (line) =>
+        line.priceBand === null ? (
+          NOT_APPLICABLE
+        ) : (
+          <PriceBandDisplay
+            band={line.priceBand}
+            basisLabel={t(`basis.${line.priceBand.basis}`)}
+            toLabel={t('onHand.to')}
+            listPriceLabel={t('onHand.listPrice')}
+          />
+        ),
+    },
+  ];
+  const view = useTableView(columns);
 
   return (
     <section aria-labelledby="on-hand-title" className="grid gap-4">
       <PageHeader title={t('onHand.title')} titleId="on-hand-title" />
-      <div className="max-w-xs">
-        <Field label={t('onHand.location')}>
-          <Select
-            value={locationId}
-            onValueChange={(value) => {
-              setLocationId(value);
-              pages.reset();
-            }}
-            options={[{ value: ALL, label: t('onHand.allLocations') }, ...locations.options]}
-          />
-        </Field>
-      </div>
-      <QueryBoundary
+      <TableCard
+        view={view}
         query={stock}
         labels={labels}
-        isEmpty={(page) => page.data.length === 0}
-        loadingFallback={
-          <TableContainer aria-label={t('onHand.table')}>
-            <Table>
-              {header}
-              <TableBody>
-                <TableLoadingRows columns={COLUMNS} label={labels.loading} />
-              </TableBody>
-            </Table>
-          </TableContainer>
+        rows={(page) => page.data}
+        rowKey={(line, index) =>
+          `${line.product.id}-${line.location.id}-${line.stockUnit?.id ?? ''}-${index}`
         }
-      >
-        {(page) => (
-          <div className="grid gap-3">
-            <div className="grid gap-1 rounded-md border border-border p-3">
-              <p className="text-fg-muted">{t('onHand.total')}</p>
-              <p className="text-xl">
-                <MoneyDisplay pesewas={page.totalValueAtCostPesewas} strong />
-              </p>
-              <p className="text-control-sm text-fg-muted">
-                {t('onHand.asOf')} <When instant={page.asOf} /> · {t('common:time.zone')}
-              </p>
-            </div>
-            <TableContainer aria-label={t('onHand.table')}>
-              <Table>
-                {header}
-                <TableBody>
-                  {page.data.map((line, index) => {
-                    const unit = units.name(line.uom);
-                    // The line carries its unit's precision (CR-003, contract 1.16.0).
-                    const places = asPlaces(line.uomDisplayDecimals);
-                    return (
-                      <TableRow
-                        key={`${line.product.id}-${line.location.id}-${line.stockUnit?.id ?? ''}-${index}`}
-                      >
-                        <TableRowHeader>
-                          <span className="grid">
-                            <span>{line.product.name}</span>
-                            {line.stockUnit === null ? null : (
-                              <code className="text-control-sm">{line.stockUnit.identifier}</code>
-                            )}
-                            {line.expiresOn === null ? null : (
-                              <span className="text-control-sm text-fg-muted">
-                                {t('onHand.expires', { date: line.expiresOn })}
-                              </span>
-                            )}
-                          </span>
-                        </TableRowHeader>
-                        <TableCell label={t('onHand.columns.location')}>
-                          {line.location.name}
-                        </TableCell>
-                        <TableCell numeric label={t('onHand.columns.onHand')}>
-                          <span className="grid justify-items-end">
-                            <QuantityDisplay
-                              quantity={line.onHandQty}
-                              unit={unit}
-                              places={places}
-                            />
-                            {line.onHandWeightKg === null ? null : (
-                              <WeightDisplay kilograms={line.onHandWeightKg} />
-                            )}
-                          </span>
-                        </TableCell>
-                        <TableCell numeric label={t('onHand.columns.available')}>
-                          <QuantityDisplay
-                            quantity={line.availableQty}
-                            unit={unit}
-                            places={places}
-                          />
-                        </TableCell>
-                        <TableCell numeric label={t('onHand.columns.cost')}>
-                          <span className="grid justify-items-end">
-                            <MoneyDisplay pesewas={line.unitCostPesewas} />
-                            <span className="text-control-sm text-fg-muted">
-                              {t(`valuation.${line.valuationMethod}`)}
-                            </span>
-                          </span>
-                        </TableCell>
-                        <TableCell numeric label={t('onHand.columns.value')}>
-                          <MoneyDisplay pesewas={line.valueAtCostPesewas} />
-                        </TableCell>
-                        <TableCell label={t('onHand.columns.price')}>
-                          {line.priceBand === null ? (
-                            NOT_APPLICABLE
-                          ) : (
-                            <PriceBandDisplay
-                              band={line.priceBand}
-                              basisLabel={t(`basis.${line.priceBand.basis}`)}
-                              toLabel={t('onHand.to')}
-                              listPriceLabel={t('onHand.listPrice')}
-                            />
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            {pages.hasPrevious || page.page.hasMore ? (
-              <Pagination
-                label={t('onHand.pages')}
-                hasPrevious={pages.hasPrevious}
-                hasNext={page.page.hasMore && page.page.nextCursor !== null}
-                onPrevious={pages.previous}
-                onNext={() => {
-                  if (page.page.nextCursor !== null) pages.next(page.page.nextCursor);
+        tableLabel={t('onHand.table')}
+        exportName={t('onHand.title')}
+        pages={{ state: pages, info: (page) => page.page, label: t('onHand.pages') }}
+        toolbar={
+          <FilterMenu
+            label={t('common:table.filter')}
+            active={locationId === ALL ? 0 : 1}
+            reset={{
+              label: t('common:table.resetFilters'),
+              onReset: () => {
+                setLocationId(ALL);
+                pages.reset();
+              },
+            }}
+          >
+            <Field label={t('onHand.location')}>
+              <Select
+                value={locationId}
+                onValueChange={(value) => {
+                  setLocationId(value);
+                  pages.reset();
                 }}
-                previousLabel={t('common:pagination.previous')}
-                nextLabel={t('common:pagination.next')}
-                summary={t('common:pagination.page', { page: pages.page })}
+                options={[{ value: ALL, label: t('onHand.allLocations') }, ...locations.options]}
               />
-            ) : null}
+            </Field>
+          </FilterMenu>
+        }
+        // The API's total for every line this filter matches, not a sum of this page.
+        footer={(page) => (
+          <div className="grid gap-1 border-t border-border p-4">
+            <p className="text-fg-muted">{t('onHand.total')}</p>
+            <p className="text-xl">
+              <MoneyDisplay pesewas={page.totalValueAtCostPesewas} strong />
+            </p>
+            <p className="text-control-sm text-fg-muted">
+              {t('onHand.asOf')} <When instant={page.asOf} /> · {t('common:time.zone')}
+            </p>
           </div>
         )}
-      </QueryBoundary>
+      />
     </section>
   );
 }

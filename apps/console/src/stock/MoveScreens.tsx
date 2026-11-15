@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react';
+import { ArrowLeftRight, PackageCheck, SlidersHorizontal } from 'lucide-react';
+import { useState, type ComponentType, type ReactNode, type SVGProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 import type { components } from '@hakorem/api-client';
@@ -6,10 +7,11 @@ import {
   Button,
   Card,
   CardBody,
+  DateRangeMenu,
   EmptyState,
+  IconChip,
   MoneyDisplay,
   NOT_APPLICABLE,
-  Pagination,
   QuantityDisplay,
   QueryBoundary,
   Skeleton,
@@ -19,11 +21,12 @@ import {
   TableContainer,
   TableHead,
   TableHeader,
-  TableLoadingRows,
   TableRow,
   TableRowHeader,
+  useTableView,
   type FailureLike,
   type QueryLike,
+  type TableColumn,
   Alert,
 } from '@hakorem/ui';
 import { PageHeader } from '../lib/ScreenHeader';
@@ -33,8 +36,10 @@ import { useApiMutation, useApiQuery } from '../data/api';
 import { When } from '../iam/presentation';
 import { isApprovalPending } from '../lib/approval';
 import { ConfirmDialog } from '../lib/ConfirmDialog';
+import { useDateRangeWords, type DateRange } from '../lib/dateRange';
 import { useIntentKey } from '../lib/queries';
 import { useStateLabels } from '../lib/states';
+import { TableCard } from '../lib/TableCard';
 import { useCursorPages } from '../lib/useCursorPages';
 import {
   AdjustmentStatusBadge,
@@ -56,14 +61,17 @@ interface Paged<T> {
   page: { hasMore: boolean; nextCursor: string | null };
 }
 
-/** A list of stock documents: the four states, a table that stacks at 360 px, cursor pages. */
+/**
+ * A list of stock documents: the page header with its action, and the reference's table card (ADR 0036):
+ * the toolbar, sortable columns, the four states, a table that stacks at 360 px, cursor pages.
+ */
 function DocList<T extends { id: string }>({
   area,
   newPath,
   canCreate,
   query,
   pages,
-  name,
+  toolbar,
   columns,
 }: {
   area: 'adjustments' | 'transfers' | 'receipts';
@@ -71,8 +79,10 @@ function DocList<T extends { id: string }>({
   canCreate: boolean;
   query: QueryLike<Paged<T>, FailureLike>;
   pages: ReturnType<typeof useCursorPages>;
-  name: (row: T) => ReactNode;
-  columns: Column<T>[];
+  /** Only the controls the operation's query parameters honour. */
+  toolbar?: ReactNode;
+  /** The first column names the document (`rowHeader`). */
+  columns: TableColumn<T>[];
 }) {
   const { t } = useTranslation(['stock', 'common']);
   const labels = useStateLabels({
@@ -82,18 +92,7 @@ function DocList<T extends { id: string }>({
     errorTitle: t(`${area}.error`),
     deniedTitle: t(`${area}.denied`),
   });
-  const header = (
-    <TableHeader>
-      <TableRow>
-        <TableHead>{t(`${area}.columns.document`)}</TableHead>
-        {columns.map((c) => (
-          <TableHead key={c.head} numeric={c.numeric ?? false}>
-            {c.head}
-          </TableHead>
-        ))}
-      </TableRow>
-    </TableHeader>
-  );
+  const view = useTableView(columns);
   return (
     <section aria-labelledby={`${area}-title`} className="grid gap-4">
       <PageHeader
@@ -108,58 +107,43 @@ function DocList<T extends { id: string }>({
           ) : undefined
         }
       />
-      <QueryBoundary
+      <TableCard
+        view={view}
         query={query}
         labels={labels}
-        isEmpty={(page) => page.data.length === 0}
-        loadingFallback={
-          <TableContainer aria-label={t(`${area}.table`)}>
-            <Table>
-              {header}
-              <TableBody>
-                <TableLoadingRows columns={columns.length + 1} label={labels.loading} />
-              </TableBody>
-            </Table>
-          </TableContainer>
-        }
-      >
-        {(page) => (
-          <div className="grid gap-3">
-            <TableContainer aria-label={t(`${area}.table`)}>
-              <Table>
-                {header}
-                <TableBody>
-                  {page.data.map((row) => (
-                    <TableRow key={row.id}>
-                      <TableRowHeader>{name(row)}</TableRowHeader>
-                      {columns.map((c) => (
-                        <TableCell key={c.head} numeric={c.numeric ?? false} label={c.head}>
-                          {c.cell(row)}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            {pages.hasPrevious || page.page.hasMore ? (
-              <Pagination
-                label={t(`${area}.pages`)}
-                hasPrevious={pages.hasPrevious}
-                hasNext={page.page.hasMore && page.page.nextCursor !== null}
-                onPrevious={pages.previous}
-                onNext={() => {
-                  if (page.page.nextCursor !== null) pages.next(page.page.nextCursor);
-                }}
-                previousLabel={t('common:pagination.previous')}
-                nextLabel={t('common:pagination.next')}
-                summary={t('common:pagination.page', { page: pages.page })}
-              />
-            ) : null}
-          </div>
-        )}
-      </QueryBoundary>
+        rows={(page) => page.data}
+        rowKey={(row) => row.id}
+        tableLabel={t(`${area}.table`)}
+        exportName={t(`${area}.title`)}
+        pages={{ state: pages, info: (page) => page.page, label: t(`${area}.pages`) }}
+        toolbar={toolbar}
+      />
     </section>
+  );
+}
+
+/** A document's number, linked, with its icon chip and a line beneath, as the reference lists a row. */
+function DocName({
+  icon,
+  to,
+  name,
+  beneath,
+}: {
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  to: string;
+  name: ReactNode;
+  beneath: ReactNode;
+}) {
+  return (
+    <span className="flex items-center gap-3">
+      <IconChip icon={icon} tone="accent" size="sm" />
+      <span className="grid min-w-0">
+        <Link to={to} className="text-accent-text underline">
+          {name}
+        </Link>
+        <span className="text-control-sm font-normal text-fg-muted">{beneath}</span>
+      </span>
+    </span>
   );
 }
 
@@ -171,27 +155,51 @@ export function AdjustmentsScreen() {
   const pages = useCursorPages();
   const list = useApiQuery('listStockAdjustments', { query: cursorQuery(pages.cursor) });
   return (
-    <DocList
+    <DocList<S['StockAdjustment']>
       area="adjustments"
       newPath="/stock-adjustments/new"
       canCreate={auth.can('inv.adjustment.create')}
       query={list}
       pages={pages}
-      name={(a: S['StockAdjustment']) => (
-        <Link to={`/stock-adjustments/${a.id}`} className="text-accent-text underline">
-          {a.adjustmentNo ?? t('move.unnumbered', { location: a.location.name })}
-        </Link>
-      )}
       columns={[
         {
+          id: 'document',
+          rowHeader: true,
+          head: t('adjustments.columns.document'),
+          sortValue: (a) => a.adjustmentNo,
+          cell: (a) => (
+            <DocName
+              icon={SlidersHorizontal}
+              to={`/stock-adjustments/${a.id}`}
+              name={a.adjustmentNo ?? t('move.unnumbered', { location: a.location.name })}
+              beneath={<When instant={a.createdAt} />}
+            />
+          ),
+        },
+        {
+          id: 'status',
           head: t('adjustments.columns.status'),
+          sortValue: (a) => a.status,
           cell: (a) => <AdjustmentStatusBadge status={a.status} />,
         },
-        { head: t('adjustments.columns.location'), cell: (a) => a.location.name },
-        { head: t('adjustments.columns.reason'), cell: (a) => a.reasonCode },
         {
+          id: 'location',
+          head: t('adjustments.columns.location'),
+          sortValue: (a) => a.location.name,
+          cell: (a) => a.location.name,
+        },
+        {
+          id: 'reason',
+          head: t('adjustments.columns.reason'),
+          sortValue: (a) => a.reasonCode,
+          cell: (a) => a.reasonCode,
+        },
+        {
+          id: 'value',
           head: t('adjustments.columns.value'),
           numeric: true,
+          // The API's integer pesewas, compared, never added.
+          sortValue: (a) => a.totalValuePesewas,
           cell: (a) => <MoneyDisplay pesewas={a.totalValuePesewas} />,
         },
       ]}
@@ -205,60 +213,133 @@ export function TransfersScreen() {
   const pages = useCursorPages();
   const list = useApiQuery('listStockTransfers', { query: cursorQuery(pages.cursor) });
   return (
-    <DocList
+    <DocList<S['StockTransfer']>
       area="transfers"
       newPath="/stock-transfers/new"
       canCreate={auth.can('inv.transfer.create')}
       query={list}
       pages={pages}
-      name={(x: S['StockTransfer']) => (
-        <Link to={`/stock-transfers/${x.id}`} className="text-accent-text underline">
-          {x.transferNo ?? t('move.unnumbered', { location: x.from.name })}
-        </Link>
-      )}
       columns={[
         {
+          id: 'document',
+          rowHeader: true,
+          head: t('transfers.columns.document'),
+          sortValue: (x) => x.transferNo,
+          cell: (x) => (
+            <DocName
+              icon={ArrowLeftRight}
+              to={`/stock-transfers/${x.id}`}
+              name={x.transferNo ?? t('move.unnumbered', { location: x.from.name })}
+              beneath={<When instant={x.createdAt} />}
+            />
+          ),
+        },
+        {
+          id: 'status',
           head: t('transfers.columns.status'),
+          sortValue: (x) => x.status,
           cell: (x) => <TransferStatusBadge status={x.status} />,
         },
         {
+          id: 'route',
           head: t('transfers.columns.route'),
+          sortValue: (x) => t('transfers.route', { from: x.from.name, to: x.to.name }),
           cell: (x) => t('transfers.route', { from: x.from.name, to: x.to.name }),
         },
-        { head: t('transfers.columns.lines'), numeric: true, cell: (x) => x.lines.length },
+        {
+          id: 'lines',
+          head: t('transfers.columns.lines'),
+          numeric: true,
+          sortValue: (x) => x.lines.length,
+          cell: (x) => x.lines.length,
+        },
       ]}
     />
   );
 }
 
 export function ReceiptsScreen() {
-  const { t } = useTranslation('stock');
+  const { t } = useTranslation(['stock', 'common']);
   const auth = useAuth();
   const pages = useCursorPages();
-  const list = useApiQuery('listGoodsReceipts', { query: cursorQuery(pages.cursor) });
+  const rangeWords = useDateRangeWords();
+  const [range, setRange] = useState<DateRange>({ from: undefined, to: undefined });
+  // `from` and `to` are dates (format: date): the picked days go as they are.
+  const list = useApiQuery('listGoodsReceipts', {
+    query: {
+      ...(range.from === undefined ? {} : { from: range.from }),
+      ...(range.to === undefined ? {} : { to: range.to }),
+      ...cursorQuery(pages.cursor),
+    },
+  });
   return (
-    <DocList
+    <DocList<S['GoodsReceipt']>
       area="receipts"
       newPath="/goods-receipts/new"
       canCreate={auth.can('inv.goods_receipt.create')}
       query={list}
       pages={pages}
-      name={(r: S['GoodsReceipt']) => (
-        <Link to={`/goods-receipts/${r.id}`} className="text-accent-text underline">
-          {r.receiptNo ?? t('move.unnumbered', { location: r.location.name })}
-        </Link>
-      )}
+      toolbar={
+        <DateRangeMenu
+          label={t('receipts.dates')}
+          summary={rangeWords(range)}
+          from={range.from}
+          to={range.to}
+          onChange={(next) => {
+            setRange(next);
+            pages.reset();
+          }}
+          fromLabel={t('common:dates.from')}
+          toLabel={t('common:dates.to')}
+          clearLabel={t('common:dates.clear')}
+        />
+      }
       columns={[
         {
+          id: 'document',
+          rowHeader: true,
+          head: t('receipts.columns.document'),
+          sortValue: (r) => r.receiptNo,
+          cell: (r) => (
+            <DocName
+              icon={PackageCheck}
+              to={`/goods-receipts/${r.id}`}
+              name={r.receiptNo ?? t('move.unnumbered', { location: r.location.name })}
+              beneath={r.location.name}
+            />
+          ),
+        },
+        {
+          id: 'status',
           head: t('receipts.columns.status'),
+          sortValue: (r) => r.status,
           cell: (r) => <ReceiptStatusBadge status={r.status} />,
         },
-        { head: t('receipts.columns.kind'), cell: (r) => t(`receiptKind.${r.kind}`) },
-        { head: t('receipts.columns.from'), cell: (r) => r.supplier?.name ?? NOT_APPLICABLE },
-        { head: t('receipts.columns.received'), cell: (r) => <When instant={r.receivedAt} /> },
         {
+          id: 'kind',
+          head: t('receipts.columns.kind'),
+          sortValue: (r) => t(`receiptKind.${r.kind}`),
+          cell: (r) => t(`receiptKind.${r.kind}`),
+        },
+        {
+          id: 'from',
+          head: t('receipts.columns.from'),
+          sortValue: (r) => r.supplier?.name,
+          cell: (r) => r.supplier?.name ?? NOT_APPLICABLE,
+        },
+        {
+          id: 'received',
+          head: t('receipts.columns.received'),
+          // ISO instants sort as text.
+          sortValue: (r) => r.receivedAt,
+          cell: (r) => <When instant={r.receivedAt} />,
+        },
+        {
+          id: 'value',
           head: t('receipts.columns.value'),
           numeric: true,
+          // The API's integer pesewas, compared, never added.
+          sortValue: (r) => r.totalValuePesewas,
           cell: (r) => <MoneyDisplay pesewas={r.totalValuePesewas} />,
         },
       ]}
