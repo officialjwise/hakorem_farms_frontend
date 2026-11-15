@@ -38,13 +38,12 @@ for (const scheme of ['light', 'dark'] as const) {
     );
     // One read for the whole dashboard (owner, 2026-11-15), not one per tile.
     expect(api.log.filter((e) => e.operationId === 'getOwnerDashboard')).toHaveLength(1);
-    // A figure with no data source is words, never a number.
+    // A figure with no data source is words, never a number, in one strip (F5c).
+    const pending = page.getByRole('region', { name: 'Not on the dashboard yet' });
     for (const label of ['Purchases today', 'Low stock', 'Animals on hand']) {
-      const tile = page.locator('[data-slot="stat-tile"]', { hasText: label });
-      await expect(tile).toHaveAttribute('data-state', 'unavailable');
-      await expect(tile).toContainText('No data source yet');
-      await expect(tile).not.toContainText(/\d/);
+      await expect(pending.getByText(label)).toBeVisible();
     }
+    await expect(pending).not.toContainText(/\d/);
     await expectNoAxeViolations(page);
     await expectNoHorizontalScroll(page);
   });

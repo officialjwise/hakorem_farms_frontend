@@ -42,13 +42,17 @@ describe('the dashboard against the Prism mock', () => {
     expect(sales).toHaveTextContent('16,223.00');
     expect(sales).toHaveTextContent('Yesterday');
     expect(screen.getByText('Goat')).toBeInTheDocument();
-    // Not in the contract yet: the tile says so and carries no figure.
+    // Not in the contract yet: named in the one strip that says what they arrive with, with no figure.
+    const pending = screen.getByRole('region', { name: 'Not on the dashboard yet' });
+    expect(pending).toHaveTextContent('next dashboard update');
     for (const label of ['Purchases today', 'Low stock', 'Animals on hand']) {
-      const tile = screen.getByText(label).closest('[data-slot="stat-tile"]') as HTMLElement;
-      expect(tile).toHaveAttribute('data-state', 'unavailable');
-      expect(tile).toHaveTextContent('No data source yet');
-      expect(tile.textContent).not.toMatch(/\d/);
+      const item = within(pending).getByText(label);
+      expect(item).toHaveAttribute('data-slot', 'pending-figure');
     }
+    expect(pending.textContent).not.toMatch(/\d/);
+    // And never as an empty cell in the stat row.
+    const row = screen.getByRole('region', { name: 'Today at a glance' });
+    expect(within(row).queryByText('Purchases today')).toBeNull();
     expect(UNAVAILABLE).toContain('animalsOnHand');
   });
 
@@ -56,10 +60,6 @@ describe('the dashboard against the Prism mock', () => {
     await renderApp('/', await signedIn('owner'));
     const stock = await screen.findByRole('link', { name: /Stock value/ });
     expect(stock).toHaveAttribute('href', '/stock');
-    expect(screen.getByRole('link', { name: /Purchases today/ })).toHaveAttribute(
-      'href',
-      '/goods-receipts',
-    );
   });
 
   it('error: what failed, the reference from the mock, and a retry', async () => {
