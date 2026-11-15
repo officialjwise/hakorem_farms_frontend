@@ -1,0 +1,6 @@
+/* Stories show the console's UI face, as the console does (ADR 0001, amended in F5c). */
+:root {
+  --font-sans:
+    'HaKorem Cedi', 'HaKorem UI', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans',
+    'Helvetica Neue', Arial, sans-serif;
+}

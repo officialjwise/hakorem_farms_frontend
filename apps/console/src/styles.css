@@ -1,2 +1,12 @@
 @import '@hakorem/ui/styles.css';
 @source '.';
+
+/*
+ * The console sets its type in the UI face (ADR 0001, amended in F5c). The cedi face stays first so GH₵
+ * always draws; the system stack follows, so text shows at once and stays if the face never arrives.
+ */
+@theme {
+  --font-sans:
+    'HaKorem Cedi', 'HaKorem UI', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans',
+    'Helvetica Neue', Arial, sans-serif;
+}

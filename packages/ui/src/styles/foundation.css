@@ -22,6 +22,24 @@
   font-display: swap;
 }
 
+/*
+ * The console's UI face (ADR 0001, amended in F5c): Plus Jakarta Sans (OFL), variable, weight 400 to 700,
+ * Latin only, 17.9 KB, subset by scripts/build-cedi-font.ts. Declared here and used only where an app puts
+ * 'HaKorem UI' in its stack (the console does; the storefront keeps the system stack). font-display: swap
+ * paints text in the system face at once and swaps when the file lands, so a 3G connection never shows a
+ * blank screen. The face has no U+20B5: 'HaKorem Cedi', first in the stack, still draws the cedi sign.
+ */
+@font-face {
+  font-family: 'HaKorem UI';
+  src: url('./fonts/hakorem-ui.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153, U+2013-2014, U+2018-201A, U+201C-201E, U+2022,
+    U+2026, U+2039-203A, U+20AC, U+2122, U+2190-2193, U+2212;
+}
+
 @theme {
   --color-*: initial;
   --shadow-*: initial;

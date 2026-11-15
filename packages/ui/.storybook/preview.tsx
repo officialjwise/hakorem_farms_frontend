@@ -2,6 +2,7 @@ import type { Decorator, Preview } from '@storybook/react-vite';
 import { UIProvider } from '../src/components/ui-provider/UIProvider';
 import { toastLabels } from '../src/test/toastLabels';
 import '../src/styles/index.css';
+import './console-type.css';
 
 type Theme = 'light' | 'dark';
 type Density = 'comfortable' | 'compact';
