@@ -1,6 +1,6 @@
 # 0036. Every list is a table card with one row of pill controls
 
-- Status: proposed
+- Status: accepted (owner, 2026-11-15)
 - Date: 2026-11-15
 - Session: F5c
 
