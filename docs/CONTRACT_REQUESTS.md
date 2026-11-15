@@ -21,6 +21,7 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-015 | 2026-11-15 | Open                     |
 | CR-016 | 2026-11-15 | Open                     |
 | CR-017 | 2026-11-15 | Open                     |
+| CR-018 | 2026-11-15 | Open                     |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -253,3 +254,16 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 **Request:** list the 422 codes `updateBranch` returns when closing, such as `LAST_ACTIVE_BRANCH`, `BRANCH_HAS_OPEN_SHIFTS` and `BRANCH_HOLDS_STOCK`, each with an example, so the mock can show the real refusal.
 
 **Until this lands:** the confirmation shows whatever the server sends, its `message` and its reference. Nothing is checked in the client.
+
+## CR-018. Report codes for the five owner reports (additive)
+
+- **Raised by:** frontend F5b, the reports section (`/reports`)
+- **Contract read first:** `runReport` (`POST /reports/{code}/run`) runs any report by code, with SCREEN, PDF or XLSX output and a `TabularResult` carrying the API's own `totals`. The `listReportDefinitions` example names STOCK_ON_HAND, AGEING_STOCK, EXPIRING_LOTS, MORTALITY_RATE, FEED_CONVERSION, DELIVERY_PERFORMANCE, SALES_BY_CASHIER and CUSTOMER_LIST. It has no sales summary and no purchases report. Profit and loss is `getProfitAndLoss`.
+
+**Request:**
+
+- Define a `SALES_SUMMARY` report (sales by day, channel and payment method, with totals) and a `PURCHASES` report (goods received and supplier invoices in a period, with totals).
+- Confirm that STOCK_ON_HAND and EXPIRING_LOTS take `from`, `to` and `branchId`.
+- Give `runReport` an example per code, so the mock shows each report's own columns. Today every code answers with the MORTALITY_RATE example.
+
+**Until this lands:** sales uses SALES_BY_CASHIER and purchases asks for PURCHASES. Against the mock, every report shows the mortality example's columns, and the report says nothing it does not have.

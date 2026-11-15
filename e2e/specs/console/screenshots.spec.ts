@@ -121,6 +121,36 @@ PHASES.F05b = [
   { name: 'users', path: '/users', ready: 'Akua Mensah' },
   { name: 'roles', path: '/roles', ready: 'Cashier' },
   { name: 'sessions', path: '/sessions', ready: 'This device' },
+  { name: 'reports', path: '/reports', ready: 'Stock valuation' },
+  { name: 'report-sales', path: '/reports/sales', ready: 'Run report' },
+  {
+    name: 'report-stock-valuation',
+    path: '/reports/stock-valuation',
+    ready: 'Run report',
+  },
+  {
+    name: 'report-profit-and-loss',
+    path: '/reports/profit-and-loss',
+    ready: 'Sales, live animals',
+  },
+  {
+    name: 'branch-new-modal',
+    path: '/branches',
+    ready: 'HaKorem Farms, Dodowa',
+    act: async (page) => {
+      await page.getByRole('button', { name: 'New branch' }).click();
+      await page.getByRole('dialog').waitFor();
+    },
+  },
+  {
+    name: 'branch-close-modal',
+    path: `/branches/${ID}`,
+    ready: 'Locations in this branch',
+    act: async (page) => {
+      await page.getByRole('button', { name: 'Close the branch' }).click();
+      await page.getByRole('dialog').waitFor();
+    },
+  },
   { name: 'stock-takes', path: '/stock-takes', ready: 'Feed and produce store' },
   { name: 'goods-receipts', path: '/goods-receipts', ready: 'GRN-2026-DDW-000072' },
   { name: 'price-lists', path: '/price-lists', ready: 'Royal Palm Hotel contract prices' },
