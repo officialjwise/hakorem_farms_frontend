@@ -95,6 +95,18 @@ describe('processing orders', () => {
     expect(screen.getByRole('button', { name: 'Print the sheet' })).toBeInTheDocument();
   });
 
+  it('reversing a completed order names its cost and outputs first, then says it is reversed', async () => {
+    const user = userEvent.setup();
+    await renderApp(`/processing-orders/${ANY_ID}`, await signedIn('owner'));
+    await user.click(await screen.findByRole('button', { name: 'Reverse the order' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Reverse this completed order?' });
+    expect(dialog).toHaveTextContent('GH₵721.00');
+    expect(dialog).toHaveTextContent('14.200');
+    await user.type(within(dialog).getByRole('textbox'), 'Weighed on the wrong scale');
+    await user.click(within(dialog).getByRole('button', { name: 'Reverse the order' }));
+    expect(await screen.findByText(/The order was reversed/)).toBeInTheDocument();
+  });
+
   it('a lot links back to the order it came from, which opens on its animal', async () => {
     await renderApp('/lots', await signedIn('owner'));
     await waitFor(() =>

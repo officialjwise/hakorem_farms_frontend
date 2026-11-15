@@ -1,4 +1,4 @@
-import { CirclePlay, CircleX, PackageCheck } from 'lucide-react';
+import { CirclePlay, CircleX, PackageCheck, Undo2 } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -21,7 +21,8 @@ import { useStateLabels } from '../lib/states';
 import { COST_KINDS, SetAtCompletion, type CostKind, type Order } from './presentation';
 
 /** What a lifecycle action tells the page once the API has answered. */
-export type Notice = 'started' | 'completed' | 'cancelled' | 'costAdded' | 'outputsSaved';
+export type Notice =
+  'started' | 'completed' | 'cancelled' | 'reversed' | 'costAdded' | 'outputsSaved';
 
 /** `ProcessingCostCreate.description`: the contract sets no limit, so the form keeps to a line. */
 const DESCRIPTION_MAX = 200;
@@ -29,7 +30,9 @@ const DESCRIPTION_MAX = 200;
 /**
  * The order's lifecycle by status and permission (completeProcessingOrder's description): a PLANNED order
  * is started (`prc.order.process`), an IN_PROGRESS one completed, and either cancelled with a reason
- * (`prc.order.create`). None of these operations can answer 202, so there is no approval to wait for.
+ * (`prc.order.create`). A COMPLETED order is reversed by the same cancel, which then also needs
+ * `prc.order.reverse` (contract 1.26.0). None of these operations can answer 202, so there is no approval
+ * to wait for (CR-022 asks whether a reversal should have one).
  */
 export function OrderActions({
   order,
@@ -43,6 +46,20 @@ export function OrderActions({
   const canProcess = auth.can('prc.order.process');
   const canCancel = auth.can('prc.order.create');
   const open = order.status === 'PLANNED' || order.status === 'IN_PROGRESS';
+  if (order.status === 'COMPLETED' && order.reversal === null && canCancel) {
+    if (!auth.can('prc.order.reverse')) return null;
+    return (
+      <Card>
+        <CardBody className="grid gap-3">
+          <h2 className="text-lg font-semibold">{t('reverse.heading')}</h2>
+          <p className="text-fg-muted">{t('reverse.hint')}</p>
+          <div>
+            <ReverseOrder order={order} onDone={() => onNotice('reversed')} />
+          </div>
+        </CardBody>
+      </Card>
+    );
+  }
   if (!open || (!canProcess && !canCancel)) return null;
   return (
     <Card>
@@ -276,6 +293,78 @@ function CancelOrder({ order, onDone }: { order: Order; onDone: () => void }) {
           await cancel.mutateAsync(
             { path: { id: order.id }, body },
             { idempotencyKey: keyFor({ cancel: order.id, ...body }) },
+          );
+          setOpen(false);
+          onDone();
+        }}
+      />
+    </>
+  );
+}
+
+/**
+ * Reverses a completed order (FR-PRC-011): every movement its completion posted is undone, the animal back
+ * in its pen at its prior cost and the output lots emptied. It writes stock and cost back, so the dialog
+ * names the order's total cost and every output's weight before it is sent. A refusal (an output sold,
+ * reserved or changed) stays on screen in the dialog, in words.
+ */
+function ReverseOrder({ order, onDone }: { order: Order; onDone: () => void }) {
+  const { t } = useTranslation(['processing', 'common']);
+  const [open, setOpen] = useState(false);
+  const reverse = useApiMutation('cancelProcessingOrder');
+  const keyFor = useIntentKey();
+  const failure = useStateLabels({
+    loading: t('reverse.pending'),
+    emptyTitle: t('reverse.failed'),
+    errorTitle: t('reverse.failed'),
+    deniedTitle: t('reverse.failed'),
+  });
+  return (
+    <>
+      <Button
+        variant="secondary"
+        onClick={() => {
+          reverse.reset();
+          setOpen(true);
+        }}
+      >
+        <Undo2 aria-hidden="true" />
+        {t('reverse.action')}
+      </Button>
+      <ReasonDialog
+        open={open}
+        onOpenChange={setOpen}
+        title={t('reverse.title')}
+        body={t('reverse.body')}
+        submitLabel={t('reverse.action')}
+        error={reverse.error}
+        failureLabels={failure}
+        destructive
+        warning={
+          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+            <dt className="text-fg-muted">{t('reverse.totalCost')}</dt>
+            <dd>
+              {order.totalCostPesewas === null ? (
+                t('facts.notYet')
+              ) : (
+                <MoneyDisplay pesewas={order.totalCostPesewas} />
+              )}
+            </dd>
+            {order.outputs.map((output) => (
+              <div key={output.lineNo} className="contents">
+                <dt className="text-fg-muted">{output.product.name}</dt>
+                <dd>
+                  <WeightDisplay kilograms={output.weightKg} />
+                </dd>
+              </div>
+            ))}
+          </dl>
+        }
+        onConfirm={async (reason) => {
+          const body = { reason };
+          await reverse.mutateAsync(
+            { path: { id: order.id }, body },
+            { idempotencyKey: keyFor({ reverse: order.id, ...body }) },
           );
           setOpen(false);
           onDone();
