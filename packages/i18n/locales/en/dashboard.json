@@ -103,5 +103,6 @@
     "salesSeries": "Sales per day",
     "purchasesSeries": "Purchases per day",
     "exceptionsToday": "Exceptions recorded today"
-  }
+  },
+  "stockRow": "Stock and animals"
 }

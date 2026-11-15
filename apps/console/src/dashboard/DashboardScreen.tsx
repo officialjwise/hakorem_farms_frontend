@@ -280,8 +280,10 @@ function Figures({ d }: { d: OwnerDashboard }) {
 
   return (
     <div className="grid gap-4">
-      {/* The stat row: how today is going, one card divided into columns (the reference's). */}
-      <StatGroup label={t('glance')}>
+      {/* The stat rows, each one card divided into columns (the reference's): how today's trading and
+          money stand, then stock and animals. Four to a row, so a figure in cedis is never cut. A row
+          the server sends nothing for yet is not drawn: its figures are in the pending strip. */}
+      <TileRow label={t('glance')}>
         {live.salesToday === null
           ? null
           : tile({
@@ -306,6 +308,29 @@ function Figures({ d }: { d: OwnerDashboard }) {
               tone: 'sand',
               value: <MoneyDisplay pesewas={live.salesMonthToDate} />,
             })}
+        {live.receivables === null
+          ? null
+          : tile({
+              label: t('tiles.receivables'),
+              icon: HandCoins,
+              tone: 'warning',
+              value: <MoneyDisplay pesewas={live.receivables} />,
+              detail:
+                d.receivablesOverduePesewas === null
+                  ? undefined
+                  : t('tiles.overdue', { amount: formatMoney(d.receivablesOverduePesewas) }),
+            })}
+        {live.cash === null
+          ? null
+          : tile({
+              label: t('tiles.cash'),
+              icon: Wallet,
+              tone: 'good',
+              value: <MoneyDisplay pesewas={live.cash.totalPesewas} />,
+              detail: t('tiles.cashDetail'),
+            })}
+      </TileRow>
+      <TileRow label={t('stockRow')}>
         {live.purchasesToday === null
           ? null
           : tile({
@@ -368,28 +393,7 @@ function Figures({ d }: { d: OwnerDashboard }) {
                       .join(' · '),
               to: auth.can('liv.animal.read') ? '/animals' : undefined,
             })}
-        {live.receivables === null
-          ? null
-          : tile({
-              label: t('tiles.receivables'),
-              icon: HandCoins,
-              tone: 'warning',
-              value: <MoneyDisplay pesewas={live.receivables} />,
-              detail:
-                d.receivablesOverduePesewas === null
-                  ? undefined
-                  : t('tiles.overdue', { amount: formatMoney(d.receivablesOverduePesewas) }),
-            })}
-        {live.cash === null
-          ? null
-          : tile({
-              label: t('tiles.cash'),
-              icon: Wallet,
-              tone: 'good',
-              value: <MoneyDisplay pesewas={live.cash.totalPesewas} />,
-              detail: t('tiles.cashDetail'),
-            })}
-      </StatGroup>
+      </TileRow>
 
       {/* Every figure the response does not carry, in one strip, never as a zero. */}
       <PendingFigures pending={unavailable(d)} />
@@ -502,6 +506,12 @@ function Figures({ d }: { d: OwnerDashboard }) {
       </div>
     </div>
   );
+}
+
+/** A StatGroup that is drawn only when at least one of its tiles is (`null` children are figures not sent). */
+function TileRow({ label, children }: { label: string; children: ReactNode[] }) {
+  if (children.every((child) => child === null)) return null;
+  return <StatGroup label={label}>{children}</StatGroup>;
 }
 
 /** Each figure, by the words it is known by on this screen, for the pending strip. */

@@ -274,6 +274,19 @@ PHASES.F05c = [
   { name: 'settings-system', path: '/settings/system', ready: 'tax.registered' },
 ];
 
+/** F6: the dashboard on contract 1.24.0, then the livestock and processing screens. */
+PHASES.F06 = [
+  { name: 'dashboard', path: '/', ready: 'Animals on hand' },
+  { name: 'dashboard-dark', path: '/', ready: 'Animals on hand', theme: 'dark' },
+  {
+    // What the API answers today (1.21.1): sales, money and alerts named as pending, never as zero.
+    name: 'dashboard-before-sales',
+    path: '/',
+    ready: 'Figures still to come from the server',
+    prepare: (api) => api.prefer('getOwnerDashboard', 'example=beforeSalesAndBilling'),
+  },
+];
+
 const WIDTHS = [1280, 360] as const;
 
 for (const [phase, shots] of Object.entries(PHASES)) {

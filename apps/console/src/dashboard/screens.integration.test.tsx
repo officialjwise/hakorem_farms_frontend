@@ -87,9 +87,9 @@ describe('the dashboard against the Prism mock', () => {
     }
     expect(pending.textContent).not.toMatch(/\d/);
     // The row carries only what the server sent; nothing pending appears there, as zero or otherwise.
-    const row = screen.getByRole('region', { name: 'Today at a glance' });
-    expect(within(row).queryByText('Sales today')).toBeNull();
-    expect(within(row).queryByText('Cash on hand')).toBeNull();
+    // The sales and money row has nothing to show, so it is not drawn at all.
+    expect(screen.queryByRole('region', { name: 'Today at a glance' })).toBeNull();
+    const row = screen.getByRole('region', { name: 'Stock and animals' });
     expect(within(row).getByText('Stock value')).toBeInTheDocument();
     expect(within(row).getByText('Animals on hand')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Where the cash is' })).toBeNull();
