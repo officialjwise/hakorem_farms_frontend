@@ -1,5 +1,9 @@
 import {
   Boxes,
+  BadgeCent,
+  FolderTree,
+  Ruler,
+  PawPrint,
   LayoutDashboard,
   MonitorSmartphone,
   ScanBarcode,
@@ -20,11 +24,15 @@ export interface NavItem {
   icon: LucideIcon;
 }
 
-/** The back office sidebar. Stock, products and orders are placeholders until their own sessions build them. */
+/** The back office sidebar. Stock and orders are placeholders until their own sessions build them. */
 export const BACK_OFFICE_NAV: readonly NavItem[] = [
   { key: 'dashboard', path: '/', permission: null, icon: LayoutDashboard },
   { key: 'stock', path: '/stock', permission: 'inv.stock.read', icon: Boxes },
   { key: 'products', path: '/products', permission: 'mdm.product.read', icon: Tag },
+  { key: 'categories', path: '/categories', permission: 'mdm.category.read', icon: FolderTree },
+  { key: 'units', path: '/units', permission: 'mdm.product.read', icon: Ruler },
+  { key: 'species', path: '/species', permission: 'mdm.species.read', icon: PawPrint },
+  { key: 'priceLists', path: '/price-lists', permission: 'mdm.price_list.read', icon: BadgeCent },
   { key: 'orders', path: '/orders', permission: 'ord.order.read', icon: ShoppingBasket },
   { key: 'users', path: '/users', permission: 'iam.user.read', icon: Users },
   { key: 'roles', path: '/roles', permission: 'iam.role.read', icon: ShieldCheck },

@@ -42,6 +42,7 @@ pnpm dev:storefront    # Next.js on port 3000
 pnpm dev:console       # Vite on port 5173
 pnpm test:e2e          # builds both apps (console on HK_API_BASE_URL=/mock), then Playwright with axe
 pnpm test:e2e:quarantine  # only the quarantined specs (tag @quarantine, each with its issue)
+pnpm screenshots       # builds both apps, then writes docs/screenshots/<phase>/<screen>-<width>.png (tag @screenshots)
 pnpm budget:console    # after build:console: fails if the till's or back office's initial load is over budget
 pnpm icons:check       # fails if the console icons or manifest are stale
 pnpm sync-contract     # copy ../backend/contract, regenerate packages/api-client, typecheck everything

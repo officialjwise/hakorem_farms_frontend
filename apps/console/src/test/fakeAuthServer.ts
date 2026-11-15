@@ -99,6 +99,29 @@ const OWNER_PERMISSIONS = [
   'aud.audit.read',
 ];
 
+/** What the owner holds for the F4 screens: the catalogue, its reference data and price lists. */
+const OWNER_CATALOGUE_PERMISSIONS = [
+  'mdm.product.create',
+  'mdm.product.update',
+  'mdm.product.archive',
+  'mdm.category.read',
+  'mdm.category.create',
+  'mdm.category.update',
+  'mdm.category.archive',
+  'mdm.tax.read',
+  'mdm.species.read',
+  'mdm.grade.read',
+  'mdm.grade.create',
+  'mdm.grade.update',
+  'mdm.grade.archive',
+  'mdm.weight_band.read',
+  'mdm.weight_band.create',
+  'mdm.weight_band.update',
+  'mdm.weight_band.archive',
+  'mdm.price_list.read',
+  'mdm.price_list.update',
+];
+
 /** Keyed by lower-case email. Permission codes are the contract's `x-permission` values. */
 export const FAKE_USERS: Record<string, FakeUser> = {
   'ama.mensah@hakoremfarms.com': {
@@ -109,7 +132,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
     mustChangePassword: false,
     roleCode: 'OWNER',
     roleName: 'Owner',
-    permissions: OWNER_PERMISSIONS,
+    permissions: [...OWNER_PERMISSIONS, ...OWNER_CATALOGUE_PERMISSIONS],
   },
   'kwabena.owusu@hakoremfarms.com': {
     id: '019a7a86-4f35-7afd-b035-b8ab03a83188',

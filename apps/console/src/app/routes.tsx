@@ -12,6 +12,7 @@ import { NotFoundScreen } from '../screens/NotFoundScreen';
 import { PlaceholderScreen } from '../screens/PlaceholderScreen';
 import { BackOfficeShell } from '../shells/BackOfficeShell';
 import { appRoutes } from './appRoutes';
+import { lazyScreen } from './LazyScreen';
 import { authRoutes } from './authRoutes';
 import { OtherDocument } from './OtherDocument';
 
@@ -41,10 +42,93 @@ export const protectedRoutes: RouteObject[] = [
         element: <PlaceholderScreen area="stock" />,
         handle: back('inv.stock.read', 'stock'),
       },
+      // F4, each loaded on demand so the back office's first load stays in budget (PERFORMANCE_BUDGET).
       {
         path: 'products',
-        element: <PlaceholderScreen area="products" />,
         handle: back('mdm.product.read', 'products'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../catalogue/ProductsScreen').then((m) => m.ProductsScreen),
+            ),
+            handle: back('mdm.product.read', 'products'),
+          },
+          {
+            path: 'new',
+            element: lazyScreen(() =>
+              import('../catalogue/ProductCreateScreen').then((m) => m.ProductCreateScreen),
+            ),
+            handle: back('mdm.product.create', 'productNew'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../catalogue/ProductScreen').then((m) => m.ProductScreen),
+            ),
+            handle: back('mdm.product.read', 'productDetail'),
+          },
+        ],
+      },
+      {
+        path: 'categories',
+        element: lazyScreen(() =>
+          import('../catalogue/CategoriesScreen').then((m) => m.CategoriesScreen),
+        ),
+        handle: back('mdm.category.read', 'categories'),
+      },
+      {
+        // `listUnitsOfMeasure` is read with `mdm.product.read`.
+        path: 'units',
+        element: lazyScreen(() => import('../catalogue/UnitsScreen').then((m) => m.UnitsScreen)),
+        handle: back('mdm.product.read', 'units'),
+      },
+      {
+        path: 'species',
+        handle: back('mdm.species.read', 'species'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../catalogue/SpeciesScreen').then((m) => m.SpeciesScreen),
+            ),
+            handle: back('mdm.species.read', 'species'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../catalogue/SpeciesDetailScreen').then((m) => m.SpeciesDetailScreen),
+            ),
+            handle: back('mdm.species.read', 'speciesDetail'),
+          },
+        ],
+      },
+      {
+        path: 'price-lists',
+        handle: back('mdm.price_list.read', 'priceLists'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../pricing/PriceListsScreen').then((m) => m.PriceListsScreen),
+            ),
+            handle: back('mdm.price_list.read', 'priceLists'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../pricing/PriceListScreen').then((m) => m.PriceListScreen),
+            ),
+            handle: back('mdm.price_list.read', 'priceListDetail'),
+          },
+        ],
+      },
+      {
+        path: 'price-list-versions/:id',
+        element: lazyScreen(() =>
+          import('../pricing/PriceListVersionScreen').then((m) => m.PriceListVersionScreen),
+        ),
+        handle: back('mdm.price_list.read', 'priceListVersion'),
       },
       {
         path: 'orders',
