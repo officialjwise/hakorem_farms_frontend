@@ -127,6 +127,84 @@ Production build on the mock, signed in as the owner, light theme. Twelve screen
 - **Added to `docs/CONTRACT_REQUESTS.md`:** CR-012 (the counting example carries `expectedQty`). CR-001 marked **answered in 1.1.0**, for the owner to close.
 - **Still open:** CR-003 to CR-012.
 
+## After the report: the owner's answers (2026-11-15)
+
+The owner approved ADR 0032 (now accepted), the 500-line preview cap with CR-009 as the real fix, deferred cycle counts, the missing supplier picker, read-only units and the second-person rule; CR-001 is closed. Four things were asked before F6, then two more:
+
+| #   | Asked                                                                                                                                          | Done                                                                                                                                                                                                                                                                                                                                |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | A-F5-06 is a control gap, not a deferral: record what arrived per line against what was despatched, show the variance, raise a stock exception | **Built** (`2b666f4`). See "Transfer shortfalls" below. A-F5-06 is marked resolved, not deferred.                                                                                                                                                                                                                                   |
+| 2   | Re-run the full e2e suite after the "Stock" link fix                                                                                           | **188 passed** with `pnpm test:e2e` and the committed config (exit 0), after the transfer fix.                                                                                                                                                                                                                                      |
+| 3   | Add the backend, run its setup, run F3's real-API gate on localhost                                                                            | **Gate met.** See "F3's real-API gate" below.                                                                                                                                                                                                                                                                                       |
+| 4   | Install the pinned Playwright Chromium in the environment's setup script                                                                       | **Done**, on a new personal environment `hakorem_farms_frontend` that allows `cdn.playwright.dev` (the Default allowed no host for it; this session moved onto it). The committed config now runs with no override; the untracked local config is deleted. The script is unproven until a fresh session starts on that environment. |
+| 5   | Re-sync the contract (1.17.0) and read the changelog                                                                                           | **Synced** (`33cb279`): additive, everything compiles unchanged.                                                                                                                                                                                                                                                                    |
+| 6   | Build the receiving screen with the variance                                                                                                   | The same work as item 1.                                                                                                                                                                                                                                                                                                            |
+
+### Transfer shortfalls (FR-INV-011)
+
+- **What arrived is counted, never assumed.** Every dispatched line takes the quantity that arrived. The field starts empty, so nothing is received by confirming a figure nobody checked. An individual animal (`SERIAL`) is "arrived" or "did not arrive"; a lot is entered like any line.
+- **Short means a reason.** A line short of what was sent shows "Short" and needs a reason from the stock adjustment or wastage list, as the contract requires. More than was sent is refused in words.
+- **The confirmation lists sent against arrived** for every line.
+- **What the API does:** `receiveStockTransfer` books the shortfall from in-transit as a loss and raises a `TRANSFER_VARIANCE` stock exception. The posted lines then show the API's variance and its reason (a new column).
+- **One choice for the owner to check:** while entering, the screen says a line is short and shows sent beside received, but does not subtract them itself. The variance figure is the API's, shown once posted, under the no-calculation rule. "Short" and "more than sent" are comparisons of the two three-place strings (`compareQuantity`, unit-tested), never arithmetic.
+- **Tests:**
+  - An integration test posts eighteen of twenty crates with a reason to the real Prism, which validates the body against the contract, and checks that more than was sent is refused.
+  - The e2e test asserts the exact body sent (`qtyReceived: "29.750"`, `varianceReasonCode: "COUNT_ERROR"`), with axe and 360 px.
+- **Found on the way:** three plural validation messages (count, receive, line quantity) passed `places` where i18next needs `count`, so they would have shown their key. Fixed; the receive test now covers one.
+- **CR-003 answered:** precision now comes from `Uom.displayDecimals` and the stock line's `uomDisplayDecimals` (A-F5-05 resolved).
+
+![Receiving a transfer at 1280](../screenshots/F05/transfer-receive-1280.png) ![Receiving a transfer at 360](../screenshots/F05/transfer-receive-360.png)
+
+### F3's real-API gate: met (2026-11-15)
+
+**Against:** the backend's `main` at `e47ae8f` (B05 continued 2, contract 1.17.0), set up with `pnpm run setup` and run on this machine.
+
+- **Setup:** steps 1 to 7 passed (packages, `.env`, PostgreSQL, Redis and the object store in Docker, migrations, seed). Step 8, the API's Docker image, failed: the image build cannot reach the Alpine package mirror (`apk upgrade`), because builds inside Docker do not go through this session's proxy.
+- **So the API and worker ran on the host** with the backend's own `pnpm dev`, against the same containers. Health: OK on all five checks.
+- **The console:** its production build with `HK_API_BASE_URL=http://localhost:3000/v1`, served on `http://localhost:4173` (an allowed origin).
+- **The Owner's authenticator:** the seeded Owner enrols one at first login, and the console's enrolment screen is not built (A-F3-13). It was enrolled through the API (`startTotpEnrolment` and `confirmTotpEnrolment` with the challenge). The console then signed in with a code from that secret.
+- **The script:** `e2e/real-api/gate.mjs`, run at 360 px.
+
+| Check                                                                                                                              | Result                                                                                                                                                                                                                                                             |
+| ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Owner signs in through the console: password, then TOTP code                                                                       | PASS                                                                                                                                                                                                                                                               |
+| Owner reads the real session list (`listSessions`)                                                                                 | PASS                                                                                                                                                                                                                                                               |
+| Owner revokes another of their sessions with a reason: the console sent `X-CSRF-Token` and `Idempotency-Key`, the API answered 204 | PASS                                                                                                                                                                                                                                                               |
+| Owner reads real products (`listProducts`)                                                                                         | PASS                                                                                                                                                                                                                                                               |
+| No page error in the Owner's session                                                                                               | PASS                                                                                                                                                                                                                                                               |
+| Cashier signs in with password only                                                                                                | PASS                                                                                                                                                                                                                                                               |
+| Cashier on `/users`, `/roles`, `/audit`: denied in words, same URL, no request for those operations                                | PASS                                                                                                                                                                                                                                                               |
+| Cashier on `/sessions`                                                                                                             | **Opens, showing only the cashier's own sessions.** The real Cashier role holds `iam.session.read` and `iam.session.revoke`, so this is the right answer. The old gate's "denied on /sessions" came from the test fake's role map, which gave the cashier neither. |
+| Step-up (`POST /auth/step-up`, by HTTP with the Owner's session)                                                                   | PASS: 200, `steppedUpAt` advanced; a wrong code is `TOTP_INVALID`                                                                                                                                                                                                  |
+| A write with no CSRF token                                                                                                         | PASS: 403 `CSRF_TOKEN_INVALID`                                                                                                                                                                                                                                     |
+| A write from a foreign origin                                                                                                      | PASS: 403 `ORIGIN_NOT_ALLOWED`                                                                                                                                                                                                                                     |
+
+**Not shown, said plainly:**
+
+- **A write refused for step-up, then repeated from the console:** no live operation requires step-up yet (the flag sits on operations B5 onward will implement).
+- **The login limit is real:** repeated runs met it (20 per address per 15 minutes). The console showed it in words with a reference ("Too many attempts. Wait a moment, then try again."), which is the right behaviour.
+- **TOTP enrolment in the console:** still not built. CR-006 is answered (`challengeToken`, `qrCodeDataUri`), so it can be.
+
+**Not done, and carried:** task 2, issue #4 (the quarantined session-expiry spec rewritten against the real refresh, ten loaded full suites). It was conditional on task 1 and is now due. It is task 1 of the next opening message, with TOTP enrolment.
+
+**The fake's role map is now known to differ from the real seed** (Cashier holds `iam.session.read` and `iam.session.revoke`). The next session aligns `fakeAuthServer.ts` with the real roles before relying on it.
+
+### Contract 1.17.0: what moved
+
+- **162 operations answer from the real API:** users, roles, grants, approvals, the catalogue, units, species, grades, bands, pricing writes, tax, promotions, parties and locations, files and product images, import and export, goods receipts, stock on hand, transfers, adjustments and movements. Stock takes are not live yet.
+- **Screens that can now run against the real API:**
+  - every F3 screen
+  - every F4 screen but the price preview's approval
+  - stock on hand, goods receipts, transfers and adjustments
+- **Screens actually moved off the mock:** none, as before. `HK_API_BASE_URL` decides at build time, and CI and e2e still build against `/mock` (the fake's role map must match the real one first).
+- **Contract requests answered:**
+  - CR-003 (`displayDecimals`, `uomDisplayDecimals`)
+  - CR-004 (challenge on the password change; reset error codes)
+  - CR-006 (enrolment by challenge; `qrCodeDataUri`)
+  - CR-007 (`x-requires-step-up`)
+  - CR-008 (unique example rows)
+- **Still open:** CR-005, and CR-009 to CR-012.
+
 ## Opening message for the next session (F6, then F7 and F8)
 
 ```text
@@ -136,14 +214,19 @@ docs/sessions/ (F05-stock.md). Do not reopen decisions in docs/adr/ (0001 to 003
 proposed and stands until the owner answers).
 
 Start on a branch created off f05-stock, named f06-livestock. Each phase branches off the
-previous and gets a stacked PR. Merge nothing.
+previous and gets a stacked PR. Merge nothing. F3's real-API gate is MET (F05 report, "After the
+report"); do not re-run it.
 
-TASK 1 (REQUIRED, first): the deferred real-API half of F3's gate, unchanged since F4.
-- Point HK_API_BASE_URL at the B3 API. Sign in as an owner and as a cashier.
-- As the cashier, confirm the denied state in words, on the same URL, on /users, /roles,
-  /sessions and /audit. Check step-up and the CSRF origin rule against the real server.
-- If it cannot be reached, attempt it and record what you tried: UNMET, not skipped.
-TASK 2, only if task 1 passed: issue #4.
+The backend runs locally: clone officialjwise/hakorem_farms_backend beside the frontend as
+../backend, run `pnpm run setup` there (its Docker image step fails here; run `pnpm dev` for the API
+on the host instead), and point HK_API_BASE_URL at http://localhost:3000/v1 for real-API checks.
+Run ./scripts/sync-contract.sh first and read ../backend/docs/CONTRACT_CHANGELOG.md after 1.17.0.
+
+TASK 1 (first): align apps/console/src/test/fakeAuthServer.ts with the real seeded roles (the real
+Cashier holds iam.session.read and iam.session.revoke), then issue #4: rewrite the quarantined
+session-expiry spec against the real refresh, run ten loaded full suites with traces kept, and take
+it out of quarantine only if all are green. Then build TOTP enrolment (CR-006 is answered: the
+challenge in the body, qrCodeDataUri for the QR code, secretBase32 kept on screen).
 
 Then F6: animal register, weights, health, breeding, mortality, feed, processing orders. Gate:
 one animal's full history reads on one screen without scrolling to find it. Then F7

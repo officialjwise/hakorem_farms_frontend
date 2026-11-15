@@ -2,20 +2,20 @@
 
 Things the frontend needs that `contract/openapi.yaml` does not yet offer, or must offer in a specific shape. The backend track reads this file at the start of each session and either implements each request or explains in its report why not. Each entry names the screen that needs it.
 
-| Id     | Date       | Status                                          |
-| ------ | ---------- | ----------------------------------------------- |
-| CR-001 | 2026-11-13 | Answered in 1.1.0 (found in F5); owner to close |
-| CR-002 | 2026-11-13 | Closed                                          |
-| CR-003 | 2026-11-14 | Open                                            |
-| CR-004 | 2026-11-14 | Open                                            |
-| CR-005 | 2026-11-14 | Open                                            |
-| CR-006 | 2026-11-14 | Open                                            |
-| CR-007 | 2026-11-14 | Open                                            |
-| CR-008 | 2026-11-14 | Open                                            |
-| CR-009 | 2026-11-15 | Open                                            |
-| CR-010 | 2026-11-15 | Open                                            |
-| CR-011 | 2026-11-15 | Open                                            |
-| CR-012 | 2026-11-15 | Open                                            |
+| Id     | Date       | Status                   |
+| ------ | ---------- | ------------------------ |
+| CR-001 | 2026-11-13 | Closed                   |
+| CR-002 | 2026-11-13 | Closed                   |
+| CR-003 | 2026-11-14 | Answered (1.7.0, 1.16.0) |
+| CR-004 | 2026-11-14 | Answered (1.2.0, 1.11.0) |
+| CR-005 | 2026-11-14 | Open                     |
+| CR-006 | 2026-11-14 | Answered (1.2.0, 1.4.0)  |
+| CR-007 | 2026-11-14 | Answered (1.3.0)         |
+| CR-008 | 2026-11-14 | Answered (1.3.0)         |
+| CR-009 | 2026-11-15 | Open                     |
+| CR-010 | 2026-11-15 | Open                     |
+| CR-011 | 2026-11-15 | Open                     |
+| CR-012 | 2026-11-15 | Open                     |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
