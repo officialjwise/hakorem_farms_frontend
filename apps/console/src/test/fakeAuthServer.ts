@@ -70,7 +70,13 @@ export interface FakeUser {
   permissions: readonly string[];
 }
 
+/**
+ * The real seed's Cashier (backend main at e47ae8f, read by signing in on localhost in F5). It holds its own
+ * sessions: `iam.session.read` and `iam.session.revoke` answer only for the caller's own devices.
+ */
 const CASHIER_PERMISSIONS = [
+  'iam.session.read',
+  'iam.session.revoke',
   'pos.sale.create',
   'pos.shift.open',
   'pos.shift.close',
@@ -93,8 +99,6 @@ const OWNER_PERMISSIONS = [
   'iam.role.manage',
   'iam.grant.read',
   'iam.grant.manage',
-  'iam.session.read',
-  'iam.session.revoke',
   'mdm.branch.read',
   'aud.audit.read',
 ];

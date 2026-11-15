@@ -44,7 +44,6 @@ const CASHIER_DENIED: { path: string; permission: string }[] = [
   { path: '/roles', permission: 'iam.role.read' },
   { path: '/roles/new', permission: 'iam.role.manage' },
   { path: `/roles/${AKUA}`, permission: 'iam.role.read' },
-  { path: '/sessions', permission: 'iam.session.read' },
   { path: '/audit', permission: 'aud.audit.read' },
   { path: `/audit/${EVENT}`, permission: 'aud.audit.read' },
 ];
@@ -78,6 +77,18 @@ for (const scheme of ['light', 'dark'] as const) {
         expect(errors).toEqual([]);
       });
     }
+
+    test('a cashier opens /sessions: the real seed gives a cashier their own sessions', async ({
+      page,
+    }) => {
+      const errors = watchForErrors(page);
+      await signIn(page, USERS.cashier);
+      await page.goto('/sessions');
+      await expect(page.getByRole('heading', { name: 'Sessions', level: 1 })).toBeVisible();
+      await expect(page.getByText('You do not have access to this page')).toHaveCount(0);
+      await expectNoAxeViolations(page);
+      expect(errors).toEqual([]);
+    });
 
     test('(b) a manager may read a user but not their grants: that section is denied by the server, the rest works', async ({
       page,
