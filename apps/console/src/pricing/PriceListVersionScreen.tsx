@@ -33,6 +33,8 @@ import {
   TableRow,
   TableRowHeader,
   type QueryLike,
+  PageHeader,
+  Alert,
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { When } from '../iam/presentation';
@@ -150,9 +152,10 @@ function VersionDetail({
           {t('version.back', { name: priceList.name })}
         </Link>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 id="version-title" className="text-2xl font-semibold">
-            {t('version.title', { name: priceList.name, number: version.versionNo })}
-          </h1>
+          <PageHeader
+            title={t('version.title', { name: priceList.name, number: version.versionNo })}
+            titleId="version-title"
+          />
           <VersionStatusBadge status={version.status} />
         </div>
       </div>
@@ -187,9 +190,7 @@ function VersionDetail({
         </CardBody>
       </Card>
       {version.status === 'PENDING_APPROVAL' ? (
-        <p role="status" className="font-semibold">
-          {t('version.awaiting')}
-        </p>
+        <Alert severity={'info'} title={t('version.awaiting')} />
       ) : null}
       {capped ? (
         <ErrorState title={t('version.tooMany')} description={t('version.tooManyBody')} />
@@ -344,11 +345,7 @@ function Preview({
           </li>
         ))}
       </ul>
-      {notice !== null ? (
-        <p role="status" className="font-semibold">
-          {notice}
-        </p>
-      ) : null}
+      {notice !== null ? <Alert severity={'good'} title={notice} /> : null}
       <TableContainer aria-label={t('preview.table')}>
         <Table>
           <TableHeader>
@@ -628,9 +625,10 @@ function SubmitDraft({
 
   if (outcome !== null) {
     return (
-      <p role="status" className="font-semibold">
-        {outcome === 'pending' ? t('submit.pending') : t('submit.activated')}
-      </p>
+      <Alert
+        severity={'good'}
+        title={outcome === 'pending' ? t('submit.pending') : t('submit.activated')}
+      />
     );
   }
 

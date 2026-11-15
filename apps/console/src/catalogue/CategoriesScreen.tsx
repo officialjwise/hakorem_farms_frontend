@@ -25,6 +25,8 @@ import {
   TableLoadingRows,
   TableRow,
   TableRowHeader,
+  PageHeader,
+  Alert,
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiAllPages, useApiMutation, useApiQuery } from '../data/api';
@@ -106,26 +108,25 @@ export function CategoriesScreen() {
 
   return (
     <section aria-labelledby="categories-title" className="grid gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 id="categories-title" className="text-2xl font-semibold">
-          {t('categories.title')}
-        </h1>
-        {auth.can('mdm.category.create') ? (
-          <Button
-            onClick={() => {
-              setNotice(null);
-              setEditing('new');
-            }}
-          >
-            {t('categories.new')}
-          </Button>
-        ) : null}
-      </div>
-      {notice !== null ? (
-        <p role="status" className="font-semibold">
-          {notice}
-        </p>
-      ) : null}
+      <PageHeader
+        title={t('categories.title')}
+        titleId="categories-title"
+        actions={
+          <>
+            {auth.can('mdm.category.create') ? (
+              <Button
+                onClick={() => {
+                  setNotice(null);
+                  setEditing('new');
+                }}
+              >
+                {t('categories.new')}
+              </Button>
+            ) : null}
+          </>
+        }
+      />
+      {notice !== null ? <Alert severity={'good'} title={notice} /> : null}
       <QueryBoundary
         query={categories}
         labels={labels}

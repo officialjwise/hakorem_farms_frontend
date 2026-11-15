@@ -28,6 +28,20 @@ export function compareQuantity(a: string, b: string): -1 | 0 | 1 {
   return x < y ? -1 : x > y ? 1 : 0;
 }
 
+/**
+ * How far apart two three-place quantities are, as a three-place string: the gap between what was sent
+ * and what is being typed, shown while the person types (owner, 2026-11-15: input feedback, not the
+ * business calculation). Exact, on integers of thousandths. What posts, and the variance on record, are
+ * the API's.
+ */
+export function gapBetween(a: string, b: string): string {
+  const x = BigInt(a.replace('.', ''));
+  const y = BigInt(b.replace('.', ''));
+  const gap = x > y ? x - y : y - x;
+  const digits = gap.toString().padStart(4, '0');
+  return `${digits.slice(0, -3)}.${digits.slice(-3)}`;
+}
+
 /** A display precision the unit declares (`Uom.displayDecimals`, CR-003), as `QuantityDisplay` takes it. */
 export function asPlaces(decimals: number | undefined): QuantityPlaces {
   return decimals === 0 || decimals === 1 || decimals === 2 ? decimals : 3;

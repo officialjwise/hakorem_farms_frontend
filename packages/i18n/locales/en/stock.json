@@ -351,6 +351,8 @@
     "confirm": "Receive",
     "doneFull": "Received in full.",
     "doneShort_one": "Received. {{count}} line was short: its loss is booked and a stock exception was raised. The differences are in the table above.",
-    "doneShort_other": "Received. {{count}} lines were short: their loss is booked and stock exceptions were raised. The differences are in the table above."
+    "doneShort_other": "Received. {{count}} lines were short: their loss is booked and stock exceptions were raised. The differences are in the table above.",
+    "gapShort": "{{gap}} {{unit}} fewer than sent",
+    "gapMore": "{{gap}} {{unit}} more than sent"
   }
 }

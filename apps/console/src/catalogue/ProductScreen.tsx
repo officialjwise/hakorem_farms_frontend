@@ -23,6 +23,8 @@ import {
   Skeleton,
   Textarea,
   WeightDisplay,
+  PageHeader,
+  Alert,
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiMutation, useApiQuery } from '../data/api';
@@ -130,9 +132,7 @@ function ProductDetail({
       <div className="grid gap-2">
         {back}
         <div className="flex flex-wrap items-center gap-3">
-          <h1 id="product-title" className="text-2xl font-semibold">
-            {product.name}
-          </h1>
+          <PageHeader title={product.name} titleId="product-title" />
           <ProductStatusBadge status={product.status} />
         </div>
         {product.description === null ? null : <p>{product.description}</p>}
@@ -243,11 +243,7 @@ function ProductForm({ product, onReload }: { product: Product; onReload: () => 
         >
           <p className="text-control-sm text-fg-muted">{t('product.editHint')}</p>
           <WriteFailureView failure={failure} title={t('product.notSaved')} onReload={onReload} />
-          {saved ? (
-            <p role="status" className="font-semibold">
-              {t('product.saved')}
-            </p>
-          ) : null}
+          {saved ? <Alert severity={'good'} title={t('product.saved')} /> : null}
           <FormField
             name="name"
             label={t('product.fields.name')}
@@ -324,9 +320,7 @@ function ArchiveProduct({ product }: { product: Product }) {
       <CardBody className="grid gap-3">
         <p>{t('product.archiveHint')}</p>
         {done ? (
-          <p role="status" className="font-semibold">
-            {t('product.archived')}
-          </p>
+          <Alert severity={'good'} title={t('product.archived')} />
         ) : (
           <div>
             <Button

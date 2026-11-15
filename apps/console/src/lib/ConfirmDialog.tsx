@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Dialog, MutationFailure, type FailureLike } from '@hakorem/ui';
+import { ConfirmChanges, MutationFailure, type ChangeRow, type FailureLike } from '@hakorem/ui';
 import { useStateLabels } from './states';
 
 export interface ConfirmDialogProps {
@@ -9,8 +9,12 @@ export interface ConfirmDialogProps {
   title: string;
   /** What will happen, in words. */
   body: string;
+  /** Exactly what changes, before and after, with its amounts (F5b). */
+  changes?: readonly ChangeRow[];
   /** The exact quantities or amounts the write will post, shown before it is sent. */
   children?: ReactNode;
+  /** What cannot be taken back. */
+  consequence?: string;
   confirmLabel: string;
   pendingLabel: string;
   pending: boolean;
@@ -24,15 +28,18 @@ export interface ConfirmDialogProps {
 
 /**
  * The confirmation every write to stock or money opens first (BUILD_PROMPT: "Anything that writes money or
- * stock gets a confirmation step showing the exact amounts first"). The screen keeps one idempotency key
- * per opening, so confirming again after a failure repeats the same intent.
+ * stock gets a confirmation step showing the exact amounts first"), drawn by `ConfirmChanges` (ADR 0033).
+ * The screen keeps one idempotency key per opening, so confirming again after a failure repeats the same
+ * intent. A refusal from the API, such as closing the last active branch, stays here in its own words.
  */
 export function ConfirmDialog({
   open,
   onOpenChange,
   title,
   body,
+  changes,
   children,
+  consequence,
   confirmLabel,
   pendingLabel,
   pending,
@@ -49,30 +56,27 @@ export function ConfirmDialog({
     deniedTitle: failedTitle,
   });
   return (
-    <Dialog
+    <ConfirmChanges
       open={open}
       onOpenChange={onOpenChange}
       title={title}
       description={body}
-      closeLabel={t('actions.cancel')}
+      changes={changes}
+      changeHeadings={{
+        label: t('confirm.what'),
+        before: t('confirm.before'),
+        after: t('confirm.after'),
+      }}
+      consequence={consequence}
+      confirmLabel={confirmLabel}
+      cancelLabel={t('actions.cancel')}
+      pendingLabel={pendingLabel}
+      pending={pending}
+      onConfirm={onConfirm}
+      failure={<MutationFailure error={error} labels={labels} />}
+      tone={destructive ? 'danger' : 'default'}
     >
-      <div className="grid gap-3 pb-2">
-        {children}
-        <MutationFailure error={error} labels={labels} />
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="secondary" onClick={() => onOpenChange(false)}>
-            {t('actions.cancel')}
-          </Button>
-          <Button
-            variant={destructive ? 'danger' : 'primary'}
-            loading={pending}
-            loadingLabel={pendingLabel}
-            onClick={onConfirm}
-          >
-            {confirmLabel}
-          </Button>
-        </div>
-      </div>
-    </Dialog>
+      {children}
+    </ConfirmChanges>
   );
 }

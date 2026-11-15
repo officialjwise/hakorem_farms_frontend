@@ -12,12 +12,13 @@ import {
   QuantityDisplay,
   Select,
   StatusBadge,
+  formatQuantity,
 } from '@hakorem/ui';
 import { CircleCheck, TriangleAlert } from 'lucide-react';
 import { useApiAllPages, useApiMutation } from '../data/api';
 import { ConfirmDialog } from '../lib/ConfirmDialog';
 import { useIntentKey } from '../lib/queries';
-import { compareQuantity, toQuantity, useUnits } from './units';
+import { compareQuantity, gapBetween, toQuantity, useUnits } from './units';
 
 type Transfer = components['schemas']['StockTransfer'];
 type Line = Transfer['lines'][number];
@@ -213,6 +214,36 @@ export function ReceiveTransfer({ transfer }: { transfer: Transfer }) {
                       />
                     </Field>
                   )}
+                  {!animal && (state?.kind === 'short' || state?.kind === 'more') ? (
+                    // Input feedback while typing: the gap between sent and typed. The variance on
+                    // record is the API's, shown once the transfer is received.
+                    <p
+                      aria-live="polite"
+                      className={
+                        state.kind === 'short'
+                          ? 'text-sm font-semibold text-warning-fg'
+                          : 'text-sm font-semibold text-critical-fg'
+                      }
+                    >
+                      {state.kind === 'short'
+                        ? t('receive.gapShort', {
+                            gap: formatQuantity(gapBetween(sent, state.quantity), {
+                              places: units.places(line.uom),
+                            }),
+                            unit: units.name(line.uom),
+                          })
+                        : t('receive.gapMore', {
+                            gap: formatQuantity(
+                              gapBetween(
+                                sent,
+                                toQuantity(arrivals[line.id]?.received ?? '') ?? sent,
+                              ),
+                              { places: units.places(line.uom) },
+                            ),
+                            unit: units.name(line.uom),
+                          })}
+                    </p>
+                  ) : null}
                   {state?.kind === 'short' ? (
                     <Field
                       label={t('receive.reason', { name: line.product.name })}

@@ -26,6 +26,8 @@ import {
   TableLoadingRows,
   TableRow,
   TableRowHeader,
+  PageHeader,
+  Alert,
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiMutation, useApiQuery } from '../data/api';
@@ -95,9 +97,10 @@ function TakeDetail({ take, back }: { take: StockTake; back: React.ReactNode }) 
       <div className="grid gap-2">
         {back}
         <div className="flex flex-wrap items-center gap-3">
-          <h1 id="take-title" className="text-2xl font-semibold">
-            {t('take.title', { number: title, location: take.location.name })}
-          </h1>
+          <PageHeader
+            title={t('take.title', { number: title, location: take.location.name })}
+            titleId="take-title"
+          />
           <StockTakeStatusBadge status={take.status} />
         </div>
         <p className="text-fg-muted">
@@ -122,9 +125,7 @@ function TakeDetail({ take, back }: { take: StockTake; back: React.ReactNode }) 
         )
       ) : null}
       {take.status === 'PENDING_APPROVAL' ? (
-        <p role="status" className="font-semibold">
-          {t('take.awaiting')}
-        </p>
+        <Alert severity={'info'} title={t('take.awaiting')} />
       ) : null}
       {take.status === 'REVIEW' ||
       take.status === 'PENDING_APPROVAL' ||
@@ -234,11 +235,7 @@ function CountLines({ take }: { take: StockTake }) {
         {t('count.title')}
       </h2>
       <p>{t('count.blind')}</p>
-      {notice !== null ? (
-        <p role="status" className="font-semibold">
-          {notice}
-        </p>
-      ) : null}
+      {notice !== null ? <Alert severity={'good'} title={notice} /> : null}
       <MutationFailure error={record.error} labels={failure} />
       <QueryBoundary
         query={lines}
@@ -418,15 +415,12 @@ function ReviewLines({ take }: { take: StockTake }) {
           />
         </dd>
       </dl>
-      {notice !== null ? (
-        <p role="status" className="font-semibold">
-          {notice}
-        </p>
-      ) : null}
+      {notice !== null ? <Alert severity={'good'} title={notice} /> : null}
       {outcome !== null ? (
-        <p role="status" className="font-semibold">
-          {outcome === 'pending' ? t('review.pending') : t('review.posted')}
-        </p>
+        <Alert
+          severity={'good'}
+          title={outcome === 'pending' ? t('review.pending') : t('review.posted')}
+        />
       ) : null}
       <QueryBoundary
         query={lines}

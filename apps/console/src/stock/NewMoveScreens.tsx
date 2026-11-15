@@ -13,6 +13,7 @@ import {
   Skeleton,
   Textarea,
   type FailureLike,
+  PageHeader,
 } from '@hakorem/ui';
 import { useApiAllPages, useApiMutation } from '../data/api';
 import { LeaveGuardDialog, useLeaveGuard } from '../lib/LeaveGuard';
@@ -88,9 +89,7 @@ function MoveForm({
         <Link to={backTo} className="text-accent-text underline">
           {t(`${titleKey}.back`)}
         </Link>
-        <h1 id="move-title" className="text-2xl font-semibold">
-          {t(`${titleKey}.newTitle`)}
-        </h1>
+        <PageHeader title={t(`${titleKey}.newTitle`)} titleId="move-title" />
         <p className="text-fg-muted">{t('move.draftHint')}</p>
       </div>
       <QueryBoundary

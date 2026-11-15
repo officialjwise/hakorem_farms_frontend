@@ -17,6 +17,7 @@ import {
   TableLoadingRows,
   TableRow,
   TableRowHeader,
+  PageHeader,
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiQuery } from '../data/api';
@@ -79,16 +80,19 @@ export function UsersScreen() {
 
   return (
     <section aria-labelledby="users-title" className="grid gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 id="users-title" className="text-2xl font-semibold">
-          {t('users.title')}
-        </h1>
-        {auth.can('iam.user.create') ? (
-          <Button asChild>
-            <Link to="/users/new">{t('users.new')}</Link>
-          </Button>
-        ) : null}
-      </div>
+      <PageHeader
+        title={t('users.title')}
+        titleId="users-title"
+        actions={
+          <>
+            {auth.can('iam.user.create') ? (
+              <Button asChild>
+                <Link to="/users/new">{t('users.new')}</Link>
+              </Button>
+            ) : null}
+          </>
+        }
+      />
 
       <form
         role="search"

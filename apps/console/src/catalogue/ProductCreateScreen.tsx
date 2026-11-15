@@ -18,6 +18,7 @@ import {
   Skeleton,
   Textarea,
   WeightInput,
+  PageHeader,
 } from '@hakorem/ui';
 import { PAGE_CAP_EXCEEDED, useApiAllPages, useApiMutation } from '../data/api';
 import { LeaveGuardDialog, useLeaveGuard } from '../lib/LeaveGuard';
@@ -71,9 +72,7 @@ export function ProductCreateScreen() {
         <Link to="/products" className="text-accent-text underline">
           {t('product.back')}
         </Link>
-        <h1 id="product-new-title" className="text-2xl font-semibold">
-          {t('create.title')}
-        </h1>
+        <PageHeader title={t('create.title')} titleId="product-new-title" />
       </div>
       {capped ? (
         <ErrorState title={t('create.tooMany')} description={t('create.tooManyBody')} />

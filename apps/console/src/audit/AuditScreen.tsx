@@ -19,6 +19,7 @@ import {
   TableRow,
   TableRowHeader,
   formatDateTime,
+  PageHeader,
 } from '@hakorem/ui';
 import { useApiQuery } from '../data/api';
 import { KNOWN_MODULES } from '../iam/permissions';
@@ -95,9 +96,7 @@ export function AuditScreen() {
 
   return (
     <section aria-labelledby="audit-title" className="grid gap-4">
-      <h1 id="audit-title" className="text-2xl font-semibold">
-        {t('list.title')}
-      </h1>
+      <PageHeader title={t('list.title')} titleId="audit-title" />
       <p className="text-fg-muted">
         {t('list.intro')} {t('common:time.zone')}
       </p>

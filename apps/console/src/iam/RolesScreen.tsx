@@ -15,6 +15,7 @@ import {
   TableLoadingRows,
   TableRow,
   TableRowHeader,
+  PageHeader,
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiQuery } from '../data/api';
@@ -57,16 +58,19 @@ export function RolesScreen() {
 
   return (
     <section aria-labelledby="roles-title" className="grid gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 id="roles-title" className="text-2xl font-semibold">
-          {t('roles.title')}
-        </h1>
-        {auth.can('iam.role.manage') ? (
-          <Button asChild>
-            <Link to="/roles/new">{t('roles.new')}</Link>
-          </Button>
-        ) : null}
-      </div>
+      <PageHeader
+        title={t('roles.title')}
+        titleId="roles-title"
+        actions={
+          <>
+            {auth.can('iam.role.manage') ? (
+              <Button asChild>
+                <Link to="/roles/new">{t('roles.new')}</Link>
+              </Button>
+            ) : null}
+          </>
+        }
+      />
       <QueryBoundary
         query={roles}
         labels={labels}

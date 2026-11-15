@@ -28,6 +28,7 @@ import {
   TableRow,
   TableRowHeader,
   Textarea,
+  PageHeader,
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiMutation, useApiQuery } from '../data/api';
@@ -88,9 +89,7 @@ export function PriceListScreen() {
         <article aria-labelledby="price-list-title" className="grid gap-4">
           <div className="grid gap-2">
             {back}
-            <h1 id="price-list-title" className="text-2xl font-semibold">
-              {current.name}
-            </h1>
+            <PageHeader title={current.name} titleId="price-list-title" />
             <p className="text-fg-muted">
               <code>{current.code}</code> · {t(`kind.${current.kind}`)} ·{' '}
               <AppliesTo list={current} /> ·{' '}

@@ -14,6 +14,8 @@ import {
   QueryBoundary,
   Select,
   Skeleton,
+  PageHeader,
+  Alert,
 } from '@hakorem/ui';
 import { useStepUp } from '../auth/StepUp';
 import { useApiMutation, useApiQuery } from '../data/api';
@@ -56,9 +58,7 @@ export function UserCreateScreen() {
 
   return (
     <section aria-labelledby="user-new-title" className="grid max-w-2xl gap-4">
-      <h1 id="user-new-title" className="text-2xl font-semibold">
-        {t('create.title')}
-      </h1>
+      <PageHeader title={t('create.title')} titleId="user-new-title" />
       <p className="text-fg-muted">{t('create.intro')}</p>
       <QueryBoundary
         query={bothQueries(roles, branches)}
@@ -133,9 +133,7 @@ function CreateUserForm({
   if (created !== null) {
     return (
       <div className="grid gap-4">
-        <p role="status" className="font-semibold">
-          {t('create.created', { name: created.name })}
-        </p>
+        <Alert severity={'good'} title={t('create.created', { name: created.name })} />
         <TemporaryPassword name={created.name} password={created.password} />
         <div>
           <Button asChild>

@@ -11,6 +11,7 @@ import {
   TableLoadingRows,
   TableRow,
   TableRowHeader,
+  PageHeader,
 } from '@hakorem/ui';
 import { useApiAllPages } from '../data/api';
 import { uniqueById } from '../lib/queries';
@@ -44,9 +45,7 @@ export function SpeciesScreen() {
   );
   return (
     <section aria-labelledby="species-title" className="grid gap-4">
-      <h1 id="species-title" className="text-2xl font-semibold">
-        {t('species.title')}
-      </h1>
+      <PageHeader title={t('species.title')} titleId="species-title" />
       <p className="text-fg-muted">{t('species.intro')}</p>
       <QueryBoundary
         query={species}
