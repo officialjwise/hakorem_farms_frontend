@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Building2, CircleCheck } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import type { components, OperationInput } from '@hakorem/api-client';
-import { Dialog, Form, FormField, FormSubmitButton, Input } from '@hakorem/ui';
+import { Dialog, DialogActions, Form, FormField, FormSubmitButton, Input } from '@hakorem/ui';
 import { useApiMutation } from '../data/api';
 import { useIntentKey } from '../lib/queries';
 import { useWriteFailure, WriteFailureView, type WriteFailure } from '../lib/writeFailure';
@@ -64,6 +65,8 @@ export function BranchDialog({
       title={branch === null ? t('form.newTitle') : t('form.editTitle', { name: branch.name })}
       description={branch === null ? t('form.newBody') : t('form.editBody')}
       closeLabel={t('common:actions.cancel')}
+      icon={Building2}
+      requiredNote={t('common:field.requiredNote')}
     >
       <Form
         form={form}
@@ -105,11 +108,18 @@ export function BranchDialog({
             hint={t('form.codeHint')}
             required
             requiredLabel={required}
+            requiredMark="asterisk"
           >
             {(field) => <Input {...field} autoComplete="off" autoCapitalize="characters" />}
           </FormField>
         ) : null}
-        <FormField name="name" label={t('form.name')} required requiredLabel={required}>
+        <FormField
+          name="name"
+          label={t('form.name')}
+          required
+          requiredLabel={required}
+          requiredMark="asterisk"
+        >
           {(field) => <Input {...field} autoComplete="off" />}
         </FormField>
         <FormField name="address" label={t('form.address')}>
@@ -118,11 +128,12 @@ export function BranchDialog({
         <FormField name="phone" label={t('form.phone')} hint={t('form.phoneHint')}>
           {(field) => <Input {...field} type="tel" autoComplete="tel" />}
         </FormField>
-        <div className="flex justify-end">
+        <DialogActions cancelLabel={t('common:actions.cancel')} onCancel={onClose}>
           <FormSubmitButton loadingLabel={t('form.saving')}>
+            <CircleCheck aria-hidden="true" />
             {branch === null ? t('form.create') : t('form.save')}
           </FormSubmitButton>
-        </div>
+        </DialogActions>
       </Form>
     </Dialog>
   );

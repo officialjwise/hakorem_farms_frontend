@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { CircleCheck, PawPrint } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +9,7 @@ import type { components, OperationInput } from '@hakorem/api-client';
 import {
   Button,
   Dialog,
+  DialogActions,
   EmptyState,
   Form,
   FormField,
@@ -315,6 +317,8 @@ function GradeDialog({
       }
       description={t('grades.dialogBody')}
       closeLabel={t('common:actions.cancel')}
+      icon={PawPrint}
+      requiredNote={t('common:field.requiredNote')}
     >
       <Form
         form={form}
@@ -347,22 +351,34 @@ function GradeDialog({
       >
         <WriteFailureView failure={failure} title={t('grades.notSaved')} />
         {grade === null ? (
-          <FormField name="code" label={t('grades.fields.code')} required requiredLabel={required}>
+          <FormField
+            name="code"
+            label={t('grades.fields.code')}
+            required
+            requiredLabel={required}
+            requiredMark="asterisk"
+          >
             {(field) => <Input {...field} autoComplete="off" autoCapitalize="characters" />}
           </FormField>
         ) : null}
-        <FormField name="name" label={t('grades.fields.name')} required requiredLabel={required}>
+        <FormField
+          name="name"
+          label={t('grades.fields.name')}
+          required
+          requiredLabel={required}
+          requiredMark="asterisk"
+        >
           {(field) => <Input {...field} autoComplete="off" />}
         </FormField>
         <FormField name="description" label={t('grades.fields.description')}>
           {(field) => <Input {...field} autoComplete="off" />}
         </FormField>
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="secondary" type="button" onClick={onClose}>
-            {t('common:actions.cancel')}
-          </Button>
-          <FormSubmitButton loadingLabel={t('grades.saving')}>{t('grades.save')}</FormSubmitButton>
-        </div>
+        <DialogActions cancelLabel={t('common:actions.cancel')} onCancel={onClose}>
+          <FormSubmitButton loadingLabel={t('grades.saving')}>
+            <CircleCheck aria-hidden="true" />
+            {t('grades.save')}
+          </FormSubmitButton>
+        </DialogActions>
       </Form>
     </Dialog>
   );
@@ -571,7 +587,13 @@ function BandDialog({
   });
   const toFailure = useWriteFailure(form);
   const weight = (name: 'minKg' | 'maxKg') => (
-    <FormField name={name} label={t(`bands.fields.${name}`)} required requiredLabel={required}>
+    <FormField
+      name={name}
+      label={t(`bands.fields.${name}`)}
+      required
+      requiredLabel={required}
+      requiredMark="asterisk"
+    >
       {(field) => (
         <WeightInput
           ref={field.ref}
@@ -594,6 +616,8 @@ function BandDialog({
       }
       description={t('bands.rule')}
       closeLabel={t('common:actions.cancel')}
+      icon={PawPrint}
+      requiredNote={t('common:field.requiredNote')}
     >
       <Form
         form={form}
@@ -626,18 +650,24 @@ function BandDialog({
       >
         <WriteFailureView failure={failure} title={t('bands.notSaved')} />
         {band === null ? (
-          <FormField name="code" label={t('bands.fields.code')} required requiredLabel={required}>
+          <FormField
+            name="code"
+            label={t('bands.fields.code')}
+            required
+            requiredLabel={required}
+            requiredMark="asterisk"
+          >
             {(field) => <Input {...field} autoComplete="off" autoCapitalize="characters" />}
           </FormField>
         ) : null}
         {weight('minKg')}
         {weight('maxKg')}
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="secondary" type="button" onClick={onClose}>
-            {t('common:actions.cancel')}
-          </Button>
-          <FormSubmitButton loadingLabel={t('bands.saving')}>{t('bands.save')}</FormSubmitButton>
-        </div>
+        <DialogActions cancelLabel={t('common:actions.cancel')} onCancel={onClose}>
+          <FormSubmitButton loadingLabel={t('bands.saving')}>
+            <CircleCheck aria-hidden="true" />
+            {t('bands.save')}
+          </FormSubmitButton>
+        </DialogActions>
       </Form>
     </Dialog>
   );

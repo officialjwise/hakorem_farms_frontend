@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { CircleCheck, ShieldPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
   Dialog,
+  DialogActions,
   Form,
   FormField,
   FormSubmitButton,
@@ -254,6 +256,8 @@ function AddGrantDialog({
       title={t('grants.addTitle')}
       description={t('grants.addBody')}
       closeLabel={t('common:actions.cancel')}
+      icon={ShieldPlus}
+      requiredNote={t('common:field.requiredNote')}
     >
       <QueryBoundary
         query={bothQueries(roles, branches)}
@@ -265,6 +269,7 @@ function AddGrantDialog({
           <AddGrantForm
             principalId={principalId}
             onAdded={onAdded}
+            onCancel={onClose}
             roles={uniqueById(rolePage.data).map((role) => ({ value: role.id, label: role.name }))}
             branches={uniqueById(branchPage.data)
               .filter((branch) => branch.status === 'ACTIVE')
@@ -279,11 +284,13 @@ function AddGrantDialog({
 function AddGrantForm({
   principalId,
   onAdded,
+  onCancel,
   roles,
   branches,
 }: {
   principalId: string;
   onAdded: () => void;
+  onCancel: () => void;
   roles: { value: string; label: string }[];
   branches: { value: string; label: string }[];
 }) {
@@ -330,6 +337,7 @@ function AddGrantForm({
           label={t('grants.role')}
           required
           requiredLabel={t('common:field.required')}
+          requiredMark="asterisk"
         >
           {(field) => (
             <Select
@@ -347,6 +355,7 @@ function AddGrantForm({
           label={t('grants.branch')}
           required
           requiredLabel={t('common:field.required')}
+          requiredMark="asterisk"
         >
           {(field) => (
             <Select
@@ -359,11 +368,12 @@ function AddGrantForm({
             />
           )}
         </FormField>
-        <div className="flex justify-end">
+        <DialogActions cancelLabel={t('common:actions.cancel')} onCancel={onCancel}>
           <FormSubmitButton loadingLabel={t('grants.addSubmit')}>
+            <CircleCheck aria-hidden="true" />
             {t('grants.addSubmit')}
           </FormSubmitButton>
-        </div>
+        </DialogActions>
       </Form>
       {stepUp.dialog}
     </>

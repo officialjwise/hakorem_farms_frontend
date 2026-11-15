@@ -4,7 +4,16 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { ApiError } from '@hakorem/api-client';
-import { Dialog, Form, FormField, FormSubmitButton, Input, type FailureLike } from '@hakorem/ui';
+import { CircleCheck, KeyRound } from 'lucide-react';
+import {
+  Dialog,
+  DialogActions,
+  Form,
+  FormField,
+  FormSubmitButton,
+  Input,
+  type FailureLike,
+} from '@hakorem/ui';
 import { useWriteFailure, WriteFailureView, type WriteFailure } from '../lib/writeFailure';
 import { useAuth } from './AuthProvider';
 
@@ -121,6 +130,8 @@ function StepUpDialog({
       title={t('stepUp.title')}
       description={t('stepUp.body')}
       closeLabel={t('actions.cancel')}
+      icon={KeyRound}
+      requiredNote={t('field.requiredNote')}
     >
       <Form
         form={form}
@@ -140,16 +151,18 @@ function StepUpDialog({
           hint={t('stepUp.codeHint')}
           required
           requiredLabel={t('field.required')}
+          requiredMark="asterisk"
         >
           {(field) => (
             <Input {...field} autoComplete="one-time-code" inputMode="numeric" maxLength={6} />
           )}
         </FormField>
-        <div className="flex flex-wrap justify-end gap-2">
+        <DialogActions cancelLabel={t('actions.cancel')} onCancel={close}>
           <FormSubmitButton loadingLabel={t('stepUp.confirm')}>
+            <CircleCheck aria-hidden="true" />
             {t('stepUp.confirm')}
           </FormSubmitButton>
-        </div>
+        </DialogActions>
       </Form>
     </Dialog>
   );

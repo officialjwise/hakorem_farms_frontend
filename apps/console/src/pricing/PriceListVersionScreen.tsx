@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CircleCheck, CirclePlus, CircleMinus, PencilLine } from 'lucide-react';
+import { CircleCheck, CirclePlus, CircleMinus, PencilLine, Send, Tags } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +12,7 @@ import {
   CardBody,
   Checkbox,
   Dialog,
+  DialogActions,
   EmptyState,
   ErrorState,
   Form,
@@ -496,6 +497,7 @@ function EditEntryDialog({
       label={t(`entry.fields.${name}`, { basis })}
       required
       requiredLabel={required}
+      requiredMark="asterisk"
     >
       {(field) => (
         <MoneyInput
@@ -516,6 +518,8 @@ function EditEntryDialog({
       title={t('entry.editTitle', { name: entry.product.name })}
       description={t('entry.editBody')}
       closeLabel={t('common:actions.cancel')}
+      icon={Tags}
+      requiredNote={t('common:field.requiredNote')}
     >
       <Form
         form={form}
@@ -541,12 +545,12 @@ function EditEntryDialog({
             />
           )}
         </FormField>
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="secondary" type="button" onClick={onClose}>
-            {t('common:actions.cancel')}
-          </Button>
-          <FormSubmitButton loadingLabel={t('entry.saving')}>{t('entry.save')}</FormSubmitButton>
-        </div>
+        <DialogActions cancelLabel={t('common:actions.cancel')} onCancel={onClose}>
+          <FormSubmitButton loadingLabel={t('entry.saving')}>
+            <CircleCheck aria-hidden="true" />
+            {t('entry.save')}
+          </FormSubmitButton>
+        </DialogActions>
       </Form>
     </Dialog>
   );
@@ -574,13 +578,12 @@ function RemoveEntryDialog({
       title={t('entry.removeTitle', { name: entry.product.name })}
       description={t('entry.removeBody')}
       closeLabel={t('common:actions.cancel')}
+      icon={Tags}
+      iconTone="critical"
     >
       <div className="grid gap-3 pb-2">
         <MutationFailure error={error} labels={failureLabels} />
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="secondary" onClick={onClose}>
-            {t('common:actions.cancel')}
-          </Button>
+        <DialogActions cancelLabel={t('common:actions.cancel')} onCancel={onClose}>
           <Button
             variant="danger"
             loading={pending}
@@ -589,9 +592,10 @@ function RemoveEntryDialog({
               onConfirm().catch(() => undefined);
             }}
           >
+            <CircleMinus aria-hidden="true" />
             {t('entry.removeConfirm')}
           </Button>
-        </div>
+        </DialogActions>
       </div>
     </Dialog>
   );
@@ -651,6 +655,7 @@ function SubmitDraft({
         title={t('submit.title')}
         description={t('submit.body')}
         closeLabel={t('common:actions.cancel')}
+        icon={Tags}
       >
         <div className="grid gap-3 pb-2">
           <ul className="grid list-disc gap-1 ps-5">
@@ -662,10 +667,7 @@ function SubmitDraft({
             </li>
           </ul>
           <MutationFailure error={submit.error} labels={failureLabels} />
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button variant="secondary" onClick={() => setOpen(false)}>
-              {t('common:actions.cancel')}
-            </Button>
+          <DialogActions cancelLabel={t('common:actions.cancel')} onCancel={() => setOpen(false)}>
             <Button
               loading={submit.isPending}
               loadingLabel={t('submit.sending')}
@@ -680,9 +682,10 @@ function SubmitDraft({
                   .catch(() => undefined);
               }}
             >
+              <Send aria-hidden="true" />
               {t('submit.confirm')}
             </Button>
-          </div>
+          </DialogActions>
         </div>
       </Dialog>
     </div>

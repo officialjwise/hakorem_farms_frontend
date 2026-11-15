@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ComponentType, ReactNode, SVGProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmChanges, MutationFailure, type ChangeRow, type FailureLike } from '@hakorem/ui';
 import { useStateLabels } from './states';
@@ -24,6 +24,10 @@ export interface ConfirmDialogProps {
   /** What did not happen, for the failure's title. */
   failedTitle: string;
   destructive?: boolean;
+  /** The chip beside the title, when one fits the write better than ConfirmChanges' default. */
+  icon?: ComponentType<SVGProps<SVGSVGElement>>;
+  /** The confirm button's icon, when the action has its own. Default: a tick. */
+  confirmIcon?: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
 /**
@@ -47,6 +51,8 @@ export function ConfirmDialog({
   error,
   failedTitle,
   destructive = false,
+  icon,
+  confirmIcon,
 }: ConfirmDialogProps) {
   const { t } = useTranslation('common');
   const labels = useStateLabels({
@@ -75,6 +81,8 @@ export function ConfirmDialog({
       onConfirm={onConfirm}
       failure={<MutationFailure error={error} labels={labels} />}
       tone={destructive ? 'danger' : 'default'}
+      icon={icon}
+      confirmIcon={confirmIcon}
     >
       {children}
     </ConfirmChanges>

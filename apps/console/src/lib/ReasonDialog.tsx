@@ -1,11 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { CircleCheck, MessageSquareText } from 'lucide-react';
 import { useMemo, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import {
-  Button,
   Dialog,
+  DialogActions,
   Form,
   FormField,
   FormSubmitButton,
@@ -76,6 +77,9 @@ export function ReasonDialog({
       title={title}
       description={body}
       closeLabel={t('common:actions.cancel')}
+      icon={MessageSquareText}
+      iconTone={destructive ? 'critical' : 'accent'}
+      requiredNote={t('common:field.requiredNote')}
     >
       <Form
         form={form}
@@ -95,17 +99,19 @@ export function ReasonDialog({
           hint={t('iam:user.reasonHint')}
           required
           requiredLabel={t('common:field.required')}
+          requiredMark="asterisk"
         >
           {(field) => <Textarea {...field} maxLength={REASON_MAX_LENGTH} rows={2} />}
         </FormField>
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="secondary" type="button" onClick={() => onOpenChange(false)}>
-            {t('common:actions.cancel')}
-          </Button>
+        <DialogActions
+          cancelLabel={t('common:actions.cancel')}
+          onCancel={() => onOpenChange(false)}
+        >
           <FormSubmitButton variant={destructive ? 'danger' : 'primary'} loadingLabel={submitLabel}>
+            <CircleCheck aria-hidden="true" />
             {submitLabel}
           </FormSubmitButton>
-        </div>
+        </DialogActions>
       </Form>
     </Dialog>
   );

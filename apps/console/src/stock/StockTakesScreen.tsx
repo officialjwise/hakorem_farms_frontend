@@ -1,4 +1,4 @@
-import { ClipboardCheck } from 'lucide-react';
+import { CircleCheck, ClipboardCheck } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
@@ -6,6 +6,7 @@ import type { components } from '@hakorem/api-client';
 import {
   Button,
   Dialog,
+  DialogActions,
   Field,
   IconChip,
   MutationFailure,
@@ -144,6 +145,8 @@ function NewTake({ onClose }: { onClose: () => void }) {
       title={t('takes.newTitle')}
       description={t('takes.newBody')}
       closeLabel={t('common:actions.cancel')}
+      icon={ClipboardCheck}
+      requiredNote={t('common:field.requiredNote')}
     >
       <form
         className="grid gap-3 pb-2"
@@ -166,6 +169,7 @@ function NewTake({ onClose }: { onClose: () => void }) {
           label={t('takes.location')}
           required
           requiredLabel={t('common:field.required')}
+          requiredMark="asterisk"
           error={missing ? t('common:field.required') : undefined}
         >
           <Select
@@ -178,14 +182,12 @@ function NewTake({ onClose }: { onClose: () => void }) {
             options={locations.options}
           />
         </Field>
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button type="button" variant="secondary" onClick={onClose}>
-            {t('common:actions.cancel')}
-          </Button>
+        <DialogActions cancelLabel={t('common:actions.cancel')} onCancel={onClose}>
           <Button type="submit" loading={create.isPending} loadingLabel={t('takes.creating')}>
+            <CircleCheck aria-hidden="true" />
             {t('takes.create')}
           </Button>
-        </div>
+        </DialogActions>
       </form>
     </Dialog>
   );

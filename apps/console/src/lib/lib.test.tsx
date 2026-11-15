@@ -194,7 +194,8 @@ describe('useStepUp', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'The code is wrong or already used.',
     );
-    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    // The action row's Cancel (its words on screen), not the header's close button, also named Cancel.
+    await userEvent.click(screen.getByText('Cancel'));
     await waitFor(() => expect(results).toEqual([null]));
     expect(calls).toBe(1);
   });

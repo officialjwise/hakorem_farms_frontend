@@ -1,7 +1,8 @@
+import { DoorOpen, TriangleAlert } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useBlocker } from 'react-router';
-import { Button, Dialog, useDirtyGuard } from '@hakorem/ui';
+import { Button, Dialog, DialogActions, useDirtyGuard } from '@hakorem/ui';
 
 export interface LeaveGuard {
   open: boolean;
@@ -42,7 +43,10 @@ export function useLeaveGuard(isDirty: boolean): LeaveGuard {
   };
 }
 
-/** "Leave without saving?" The keyboard default is Stay: it is the first button and takes focus. */
+/**
+ * "Leave without saving?" The keyboard default is Stay: it is the action row's first button (Cancel's place,
+ * on the left), before Leave.
+ */
 export function LeaveGuardDialog({ guard }: { guard: LeaveGuard }) {
   const { t } = useTranslation('common');
   return (
@@ -54,15 +58,15 @@ export function LeaveGuardDialog({ guard }: { guard: LeaveGuard }) {
       title={t('dirty.title')}
       description={t('dirty.body')}
       closeLabel={t('actions.close')}
+      icon={TriangleAlert}
+      iconTone="warning"
     >
-      <div className="flex flex-wrap justify-end gap-2 pb-2">
-        <Button variant="secondary" onClick={guard.stay}>
-          {t('dirty.stay')}
-        </Button>
+      <DialogActions cancelLabel={t('dirty.stay')} onCancel={guard.stay}>
         <Button variant="danger" onClick={guard.leave}>
+          <DoorOpen aria-hidden="true" />
           {t('dirty.leave')}
         </Button>
-      </div>
+      </DialogActions>
     </Dialog>
   );
 }

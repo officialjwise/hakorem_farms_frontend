@@ -1,5 +1,16 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Beef, Drumstick, Egg, Package, PawPrint, Tag, Wheat, Wrench } from 'lucide-react';
+import {
+  Beef,
+  CircleCheck,
+  Drumstick,
+  Egg,
+  FolderTree,
+  Package,
+  PawPrint,
+  Tag,
+  Wheat,
+  Wrench,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +21,7 @@ import {
   Button,
   Checkbox,
   Dialog,
+  DialogActions,
   Form,
   FormField,
   FormSubmitButton,
@@ -301,7 +313,13 @@ function CategoryDialog({
     name: 'productLine' | 'glGroup' | 'taxCategoryId',
     options: { value: string; label: string }[],
   ) => (
-    <FormField name={name} label={t(`categories.fields.${name}`)} required requiredLabel={required}>
+    <FormField
+      name={name}
+      label={t(`categories.fields.${name}`)}
+      required
+      requiredLabel={required}
+      requiredMark="asterisk"
+    >
       {(field) => (
         <Select
           ref={field.ref}
@@ -326,6 +344,8 @@ function CategoryDialog({
       }
       description={category === null ? t('categories.newBody') : t('categories.editBody')}
       closeLabel={t('common:actions.cancel')}
+      icon={FolderTree}
+      requiredNote={t('common:field.requiredNote')}
     >
       <Form
         form={form}
@@ -369,6 +389,7 @@ function CategoryDialog({
             label={t('categories.fields.code')}
             required
             requiredLabel={required}
+            requiredMark="asterisk"
           >
             {(field) => <Input {...field} autoComplete="off" autoCapitalize="characters" />}
           </FormField>
@@ -378,6 +399,7 @@ function CategoryDialog({
           label={t('categories.fields.name')}
           required
           requiredLabel={required}
+          requiredMark="asterisk"
         >
           {(field) => <Input {...field} autoComplete="off" />}
         </FormField>
@@ -415,14 +437,12 @@ function CategoryDialog({
             />
           )}
         </FormField>
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="secondary" type="button" onClick={onClose}>
-            {t('common:actions.cancel')}
-          </Button>
+        <DialogActions cancelLabel={t('common:actions.cancel')} onCancel={onClose}>
           <FormSubmitButton loadingLabel={t('categories.saving')}>
+            <CircleCheck aria-hidden="true" />
             {t('categories.save')}
           </FormSubmitButton>
-        </div>
+        </DialogActions>
       </Form>
     </Dialog>
   );
