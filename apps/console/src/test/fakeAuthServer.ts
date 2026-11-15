@@ -87,6 +87,11 @@ export interface FakeUser {
   roleCode: string;
   roleName: string;
   permissions: readonly string[];
+  /**
+   * The role must use TOTP and the user has not set it up: sign-in answers TOTP_ENROLMENT_REQUIRED until
+   * they enrol with startTotpEnrolment and confirmTotpEnrolment, and asks for a code after that.
+   */
+  mustEnrolTotp?: boolean;
   /** Branches beyond the farm where the user holds the same role. */
   moreBranches?: readonly (typeof SELLING_POINTS)[number][];
 }
@@ -284,6 +289,16 @@ const MANAGER_PERMISSIONS = [
   'prc.order.reverse',
 ];
 
+/** The Accountant: the four the contract's `listRoles` example gives the role. It must use TOTP. */
+const ACCOUNTANT_PERMISSIONS = [
+  'iam.session.read',
+  'iam.session.revoke',
+  'fin.journal.create',
+  'fin.period.lock',
+  'pur.supplier_payment.create',
+  'aud.audit.read',
+];
+
 /** Keyed by lower-case email. Permission codes are the contract's `x-permission` values. */
 export const FAKE_USERS: Record<string, FakeUser> = {
   'ama.mensah@hakoremfarms.com': {
@@ -345,6 +360,17 @@ export const FAKE_USERS: Record<string, FakeUser> = {
     roleName: 'Farm hand',
     permissions: FARM_HAND_PERMISSIONS,
   },
+  'akua.sarpong@hakoremfarms.com': {
+    id: '019a7a86-b3c8-7f14-8e62-2d9a5c1f0e47',
+    displayName: 'Akua Sarpong',
+    password: 'Mango-Season-2026!',
+    totp: false,
+    mustEnrolTotp: true,
+    mustChangePassword: false,
+    roleCode: 'ACCOUNTANT',
+    roleName: 'Accountant',
+    permissions: ACCOUNTANT_PERMISSIONS,
+  },
   'new.staff@hakoremfarms.com': {
     id: '019a7a86-9d07-7e52-a1c3-6a4f1d0c2b90',
     displayName: 'Efua Asante',
@@ -397,12 +423,14 @@ interface ServerSession {
 }
 interface Challenge {
   email: string;
-  kind: 'totp' | 'password';
+  kind: 'totp' | 'password' | 'enrol';
   expires: number;
   attempts: number;
+  /** For an enrolment: startTotpEnrolment has shown the secret, so a code can confirm it. */
+  started?: boolean;
 }
 
-/** The nine operations this fake answers, by method and path. Everything else is not its business. */
+/** The eleven operations this fake answers, by method and path. Everything else is not its business. */
 export const FAKE_AUTH_ROUTES = {
   'POST /auth/staff/login': 'loginStaff',
   'POST /auth/totp/verify': 'verifyTotp',
@@ -413,7 +441,25 @@ export const FAKE_AUTH_ROUTES = {
   'POST /auth/password/reset-request': 'requestPasswordReset',
   'POST /auth/password/reset': 'resetPassword',
   'POST /auth/step-up': 'stepUp',
+  'POST /auth/totp/enrol': 'startTotpEnrolment',
+  'POST /auth/totp/confirm': 'confirmTotpEnrolment',
 } as const;
+
+/** What the fake's enrolment shows: the contract's example secret, and a small stand-in QR image. */
+export const FAKE_TOTP_SECRET = 'JBSWY3DPEHPK3PXP';
+const FAKE_QR_DATA_URI =
+  'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0IDQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IndoaXRlIi8+PHBhdGggZD0iTTAgMGgydjJIMHptMiAyaDJ2MkgyeiIvPjwvc3ZnPg==';
+/** The contract's example recovery codes (confirmTotpEnrolment). */
+export const FAKE_RECOVERY_CODES = [
+  '7KQ2-M9XD',
+  'P4TR-2W8N',
+  'H6CJ-QF3L',
+  'Z8VB-1KMS',
+  'R3YN-T7EP',
+  'D5LG-9HWA',
+  'N2FU-X4QC',
+  'B9SE-6JRK',
+];
 
 /** Whole seconds, rounded up, with integer arithmetic only (money.test.ts forbids Math rounding in sources). */
 function secondsUntil(ms: number): number {
@@ -493,6 +539,9 @@ export function createFakeAuthServer(): FakeAuthServer {
   const passwords: Record<string, string> = {};
   /** The password-change challenge a loginStaff answered with, per CR-004 and A-F1-04. */
   let pendingPasswordChange: string | null = null;
+  /** Users who confirmed an enrolment with this fake: they are asked for a code from then on. */
+  const enrolled = new Set<string>();
+  const usesTotp = (email: string) => FAKE_USERS[email]?.totp === true || enrolled.has(email);
 
   const passwordOf = (email: string): string | undefined =>
     passwords[email] ?? FAKE_USERS[email]?.password;
@@ -590,7 +639,17 @@ export function createFakeAuthServer(): FakeAuthServer {
       pendingPasswordChange = token;
       return ok({ status: 'PASSWORD_CHANGE_REQUIRED', challengeToken: token, session: null });
     }
-    if (user.totp) {
+    if (user.mustEnrolTotp && !enrolled.has(email)) {
+      const token = `hk1.ch.${uuid()}`;
+      challenges.set(token, {
+        email,
+        kind: 'enrol',
+        expires: now() + CHALLENGE_TTL_MS,
+        attempts: 0,
+      });
+      return ok({ status: 'TOTP_ENROLMENT_REQUIRED', challengeToken: token, session: null });
+    }
+    if (usesTotp(email)) {
       const token = `hk1.ch.${uuid()}`;
       challenges.set(token, {
         email,
@@ -619,6 +678,42 @@ export function createFakeAuthServer(): FakeAuthServer {
       challengeToken: null,
       session: startSession(jar, challenge.email),
     });
+  }
+
+  /** During sign-in only (no cookie, the challenge in the body), as the contract describes the first login. */
+  function startTotpEnrolment(body: { challengeToken?: string }) {
+    const challenge = body.challengeToken ? challenges.get(body.challengeToken) : undefined;
+    if (!challenge || challenge.kind !== 'enrol' || challenge.expires <= now()) {
+      return CHALLENGE_EXPIRED();
+    }
+    challenge.started = true;
+    const name = challenge.email.split('@')[0] ?? challenge.email;
+    return ok({
+      otpauthUri: `otpauth://totp/HaKorem%20Farms:${name}?secret=${FAKE_TOTP_SECRET}&issuer=HaKorem%20Farms`,
+      secretBase32: FAKE_TOTP_SECRET,
+      qrCodeDataUri: FAKE_QR_DATA_URI,
+    });
+  }
+
+  /** Confirms with a first code and, during sign-in, completes it: the session cookies are set here. */
+  function confirmTotpEnrolment(body: { challengeToken?: string; code?: string }, jar: CookieJar) {
+    const token = body.challengeToken ?? '';
+    const challenge = challenges.get(token);
+    if (!challenge || challenge.kind !== 'enrol' || challenge.expires <= now()) {
+      return CHALLENGE_EXPIRED();
+    }
+    if (!challenge.started) {
+      return error(422, 'TOTP_ENROLMENT_REQUIRED', 'Start setting up two-step sign-in first.');
+    }
+    if ((body.code ?? '').trim() !== FAKE_TOTP_CODE) {
+      challenge.attempts += 1;
+      if (challenge.attempts >= MAX_TOTP_ATTEMPTS) challenges.delete(token);
+      return error(401, 'TOTP_INVALID', 'The code is wrong or already used.');
+    }
+    challenges.delete(token);
+    enrolled.add(challenge.email);
+    startSession(jar, challenge.email);
+    return ok({ recoveryCodes: [...FAKE_RECOVERY_CODES] });
   }
 
   function refreshSession(jar: CookieJar) {
@@ -717,11 +812,15 @@ export function createFakeAuthServer(): FakeAuthServer {
             return error(422, 'RESET_CODE_INVALID', 'That reset code is not valid or has expired.');
           }
           return NO_CONTENT;
+        case 'startTotpEnrolment':
+          return startTotpEnrolment(body);
+        case 'confirmTotpEnrolment':
+          return confirmTotpEnrolment(body, jar);
         case 'stepUp': {
           const entry = authenticate(jar);
           if (!entry) return UNAUTHENTICATED();
           if (header(request, 'X-CSRF-Token') !== entry[1].csrf) return CSRF_INVALID();
-          if (!FAKE_USERS[entry[1].email]?.totp) {
+          if (!usesTotp(entry[1].email)) {
             return error(403, 'TOTP_ENROLMENT_REQUIRED', 'Set up two-step sign-in first.');
           }
           if ((body.code ?? '').trim() !== FAKE_TOTP_CODE) {

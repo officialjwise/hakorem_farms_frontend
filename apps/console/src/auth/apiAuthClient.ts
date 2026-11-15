@@ -89,5 +89,7 @@ export function createApiAuthClient(options: ApiAuthClientOptions): AuthClient {
       await api.call('resetPassword', { body });
     },
     stepUp: async (body) => remember(await api.call('stepUp', { body })),
+    startTotpEnrolment: (body) => api.call('startTotpEnrolment', { body }),
+    confirmTotpEnrolment: (body) => api.call('confirmTotpEnrolment', { body }),
   };
 }

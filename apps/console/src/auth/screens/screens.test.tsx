@@ -2,7 +2,12 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { newClient, renderApp, USERS } from '../../test/harness';
-import { FAKE_RESET_CODE, FAKE_TOTP_CODE } from '../../test/fakeAuthServer';
+import {
+  FAKE_RECOVERY_CODES,
+  FAKE_RESET_CODE,
+  FAKE_TOTP_CODE,
+  FAKE_TOTP_SECRET,
+} from '../../test/fakeAuthServer';
 import { ApiError, NetworkError, type AuthClient } from '../types';
 
 /** The words a field's error gives, read the way a screen reader does: through aria-describedby. */
@@ -106,6 +111,73 @@ describe('login screen', () => {
     await fill(/^password/i, USERS.temp.password);
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
     await waitFor(() => expect(second.router.state.location.pathname).toBe('/change-password'));
+  });
+});
+
+describe('TOTP enrolment, on a first sign-in', () => {
+  async function toEnrolment() {
+    const view = await renderApp('/login?next=%2Fsettings', newClient());
+    await fill(/email or phone number/i, USERS.accountant.identifier);
+    await fill(/^password/i, USERS.accountant.password);
+    await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+    await screen.findByRole('heading', { level: 1, name: 'Set up two-step sign-in' });
+    return view;
+  }
+
+  it('shows the server’s QR image with words, and the key in text for a phone that cannot scan', async () => {
+    const { router } = await toEnrolment();
+    expect(router.state.location.pathname).toBe('/login/enrol');
+    const qr = await screen.findByRole('img', { name: /QR code that adds HaKorem Farms/ });
+    expect(qr.getAttribute('src')).toMatch(/^data:image\/svg\+xml;base64,/);
+    expect(screen.getByLabelText(`Key ${FAKE_TOTP_SECRET}`)).toHaveTextContent(
+      'JBSW Y3DP EHPK 3PXP',
+    );
+    expect(screen.getByLabelText(/^code/i)).toHaveAttribute('autocomplete', 'one-time-code');
+  });
+
+  it('a wrong first code: persistent words, and the key stays on screen', async () => {
+    await toEnrolment();
+    await screen.findByRole('img', { name: /QR code/ });
+    await fill(/^code/i, '000000');
+    await userEvent.click(screen.getByRole('button', { name: 'Turn on two-step sign-in' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(/wrong or has already been used/i);
+    expect(screen.getByLabelText(`Key ${FAKE_TOTP_SECRET}`)).toBeInTheDocument();
+  });
+
+  it('the recovery codes stay until the person says they kept them, then sign-in carries on', async () => {
+    const { router } = await toEnrolment();
+    await screen.findByRole('img', { name: /QR code/ });
+    await fill(/^code/i, FAKE_TOTP_CODE);
+    await userEvent.click(screen.getByRole('button', { name: 'Turn on two-step sign-in' }));
+    const list = await screen.findByRole('list', { name: 'Recovery codes' });
+    expect(list.querySelectorAll('li')).toHaveLength(FAKE_RECOVERY_CODES.length);
+    expect(list).toHaveTextContent(FAKE_RECOVERY_CODES[0] ?? '');
+    const go = screen.getByRole('button', { name: 'Continue to HaKorem Farms' });
+    expect(go).toBeDisabled();
+    expect(router.state.location.pathname).toBe('/login/enrol');
+    await userEvent.click(
+      screen.getByRole('checkbox', { name: 'I have kept these codes somewhere safe' }),
+    );
+    await userEvent.click(go);
+    await waitFor(() => expect(router.state.location.pathname).toBe('/settings'));
+  });
+
+  it('after enrolling, the next sign-in asks for a code', async () => {
+    const client = newClient();
+    const first = await client.loginStaff(USERS.accountant);
+    expect(first.status).toBe('TOTP_ENROLMENT_REQUIRED');
+    await client.startTotpEnrolment({ challengeToken: first.challengeToken ?? '' });
+    await client.confirmTotpEnrolment({
+      challengeToken: first.challengeToken ?? '',
+      code: FAKE_TOTP_CODE,
+    });
+    expect((await client.getCurrentSession()).principal.displayName).toBe('Akua Sarpong');
+    expect((await client.loginStaff(USERS.accountant)).status).toBe('TOTP_REQUIRED');
+  });
+
+  it('a reload loses the challenge: back to sign in', async () => {
+    const { router } = await renderApp('/login/enrol', newClient());
+    await waitFor(() => expect(router.state.location.pathname).toBe('/login'));
   });
 });
 

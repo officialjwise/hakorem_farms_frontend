@@ -52,6 +52,8 @@ export function LoginScreen() {
           setFailure(null);
           const status = await auth.login(identifier, password);
           if (status === 'TOTP_REQUIRED') navigate(`/login/totp${suffix}`, { replace: true });
+          else if (status === 'TOTP_ENROLMENT_REQUIRED')
+            navigate(`/login/enrol${suffix}`, { replace: true });
           else if (status === 'PASSWORD_CHANGE_REQUIRED')
             navigate('/change-password', { replace: true });
           else navigate(next, { replace: true });

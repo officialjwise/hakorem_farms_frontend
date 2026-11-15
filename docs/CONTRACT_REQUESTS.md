@@ -128,9 +128,7 @@ For each list operation's 200 response, replace the single `example` with an `ex
 1. Say which it is. (a) `TOTP_ENROLMENT_REQUIRED` issues a restricted session and cookies, so the two calls work as written; or (b) both calls accept the `challengeToken` (for example in the body), with no CSRF token because there is no session yet. This is the same question as CR-004 point 1 for the forced password change, and one answer can cover both.
 2. **Return the QR code as a data URI in the enrolment response** (added 2026-11-14, owner decision: the frontend takes no QR code dependency). `TotpEnrolment` gains a field beside `otpauthUri` and `secretBase32`, for example `qrCodeDataUri`, holding an image of `otpauthUri` (`data:image/svg+xml;base64,…` or `data:image/png;base64,…`), with an example. The screen shows it in an `<img>` with a text alternative, and keeps `secretBase32` on screen for a phone that cannot scan. Additive. The owner has asked B3 for it.
 
-**Status:** with the backend (B3 is answering it).
-
-**Until this lands:** enrolment is not built. A user whose sign-in answers `TOTP_ENROLMENT_REQUIRED` sees "this sign-in step is not available yet" (F1).
+**Status:** answered by the contract (option b: `startTotpEnrolment` and `confirmTotpEnrolment` take the `challengeToken` in the body during sign-in, and `TotpEnrolment.qrCodeDataUri` carries the QR image). **Built in F6b:** `/login/enrol`, in both documents, on demand.
 
 ## CR-007. Mark step-up operations in a machine-readable way (additive)
 

@@ -1,4 +1,5 @@
 import type { RouteObject } from 'react-router';
+import { lazyScreen } from './LazyScreen';
 import { ChangePasswordScreen } from '../auth/screens/ChangePasswordScreen';
 import { ForgotPasswordScreen } from '../auth/screens/ForgotPasswordScreen';
 import { LoginScreen } from '../auth/screens/LoginScreen';
@@ -13,6 +14,13 @@ import { TotpScreen } from '../auth/screens/TotpScreen';
 export const authRoutes: RouteObject[] = [
   { path: 'login', element: <LoginScreen /> },
   { path: 'login/totp', element: <TotpScreen /> },
+  // Once per person, on their first sign-in: on demand, so it stays out of the first load.
+  {
+    path: 'login/enrol',
+    element: lazyScreen(() =>
+      import('../auth/screens/TotpEnrolScreen').then((m) => m.TotpEnrolScreen),
+    ),
+  },
   { path: 'change-password', element: <ChangePasswordScreen /> },
   { path: 'forgot-password', element: <ForgotPasswordScreen /> },
   { path: 'reset-password', element: <ResetPasswordScreen /> },

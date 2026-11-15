@@ -25,4 +25,6 @@ export const authClient: AuthClient = {
   requestPasswordReset: async (input) => client().requestPasswordReset(input),
   resetPassword: async (input) => client().resetPassword(input),
   stepUp: async (input) => client().stepUp(input),
+  startTotpEnrolment: async (input) => client().startTotpEnrolment(input),
+  confirmTotpEnrolment: async (input) => client().confirmTotpEnrolment(input),
 };

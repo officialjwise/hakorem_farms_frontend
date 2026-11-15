@@ -19,6 +19,10 @@ export type SessionInfo = components['schemas']['SessionInfo'];
 /** Schema `LoginResult`. */
 export type LoginResult = components['schemas']['LoginResult'];
 export type LoginStatus = LoginResult['status'];
+/** Schema `TotpEnrolment`: the secret, its otpauth URI and a QR image of it, shown once. */
+export type TotpEnrolment = components['schemas']['TotpEnrolment'];
+/** Schema `RecoveryCodes`: single-use codes, shown once when an enrolment is confirmed. */
+export type RecoveryCodes = components['schemas']['RecoveryCodes'];
 /** Schema `ErrorDetail`. `field` is a JSON pointer, or null. */
 export type ErrorDetail = components['schemas']['ErrorDetail'];
 
@@ -29,8 +33,10 @@ type BodyOf<
     | 'changePassword'
     | 'requestPasswordReset'
     | 'resetPassword'
-    | 'stepUp',
-> = OperationInput<Op> extends { body: infer Body } ? Body : never;
+    | 'stepUp'
+    | 'startTotpEnrolment'
+    | 'confirmTotpEnrolment',
+> = OperationInput<Op> extends { body?: infer Body } ? NonNullable<Body> : never;
 
 /**
  * What the app needs from authentication. Each method names its contract operation id. The real client
@@ -61,4 +67,15 @@ export interface AuthClient {
    * and a new `steppedUpAt`. Needed before an operation the contract marks "Requires step-up" (API.md 3.4).
    */
   stepUp(input: BodyOf<'stepUp'>): Promise<SessionInfo>;
+  /**
+   * operationId `startTotpEnrolment`: POST /auth/totp/enrol. During sign-in, after TOTP_ENROLMENT_REQUIRED,
+   * with the `challengeToken` in the body and no cookie (CR-006, answered). The secret is shown once.
+   */
+  startTotpEnrolment(input: BodyOf<'startTotpEnrolment'>): Promise<TotpEnrolment>;
+  /**
+   * operationId `confirmTotpEnrolment`: POST /auth/totp/confirm. A first code activates the authenticator
+   * and answers the recovery codes, shown once. During sign-in it also sets the session cookies; the client
+   * then reads the session with `getCurrentSession`.
+   */
+  confirmTotpEnrolment(input: BodyOf<'confirmTotpEnrolment'>): Promise<RecoveryCodes>;
 }
