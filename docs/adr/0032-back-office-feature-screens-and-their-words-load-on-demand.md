@@ -29,3 +29,11 @@ Option 2, from F4 on.
 - A test harness that mounts screens directly must load the namespace itself (`apps/console/src/test/harness.tsx` does).
 - F13's service worker must precache these chunks and namespace files, as it must for the till's (`docs/DEPLOYMENT.md` section 2).
 - If the owner prefers eager screens and a larger budget, the routes go back to plain elements; nothing else depends on this.
+
+## Amendment, 2026-11-15 (F5c): the F3 screens load on demand too
+
+The F5c table card (ADR 0036) is shared by every list, the F3 ones included. With users, roles, sessions and the audit log still imported eagerly, the card, its toolbar and their Radix parts rode in the first load, and the back office's initial script went from 282.3 kB to 292.2 kB.
+
+The F3 screens are now `lazyScreen` routes like the F4 and F5 screens. Nothing else changes: their words (`iam`, `audit`) still load at boot, and their gates and handles are the same.
+
+Measured after the change (`pnpm budget:console`): the back office's initial script is 269.7 of 300 kB, the till's 202.4 of 250 kB.
