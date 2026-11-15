@@ -350,14 +350,43 @@ A-F5c-01 to 07 in `docs/ASSUMPTIONS.md`:
 - **The font on a real 3G phone.** It is swap over the system stack, measured at 17.9 KB, but not timed on a device.
 - **CI on this branch.** It has not run; no pull request was asked for.
 
+## The owner's decisions on F5c, and what each changed
+
+1. **Merge rule.** The branch goes to `main` through its PR once CI is green. A red run is fixed at its cause, never re-run blind. `CLAUDE.md` now says: a red CI run is re-run only after its cause is named in the PR.
+2. **PR #8 closed.**
+   - Its only change, `docs/CONTRACT_REQUESTS.md`, is on `main` word for word: the diff between the two is empty.
+   - Closed with a comment saying so ([officialjwise/hakorem_farms_frontend#8](https://github.com/officialjwise/hakorem_farms_frontend/pull/8)).
+   - Nothing was left to move.
+3. **Public pages keep the system font** (A-F5c-01 resolved).
+4. **The grey storefront page is accepted for now** (A-F5c-02 resolved).
+5. **ADR 0036 accepted.**
+6. **Stock list filters added**, and A-F5c-04 to 06 resolved on the recommended options. The filters:
+   - stock takes: status and location;
+   - adjustments: status, location and reason;
+   - transfers: status, from and to;
+   - goods receipts: status and supplier, beside the date range.
+
+   Each sits in the Filter pill and is sent as the API's own parameter, with an integration test for one. The four lists were re-shot.
+
+7. **Server-side sort requested.** CR-019 asks for it on products, stock on hand, lots and movements, on `main` through its own PR ([officialjwise/hakorem_farms_frontend#10](https://github.com/officialjwise/hakorem_farms_frontend/pull/10)). The "Sorts the rows on this page" label stays until it lands.
+8. **Contract sync.** The next session tries to attach the backend first, and reports the exact error words if it is refused.
+
+**Gates re-run after these changes,** each on its own:
+
+- clean: `format:check`, `lint`, `typecheck`, `test:unit`, and the four freshness checks;
+- `test:integration`: 187;
+- `test:e2e`: 201;
+- `budget:console`: back office 268.9 of 300 kB, till 202.4 of 250 kB.
+
 ## Opening message for the next session
 
 ```text
 Read CLAUDE.md, docs/SHARED_BRIEF.md and docs/sessions/F05c-closer-pass.md. ADR 0036 is proposed and
 stands until the owner answers.
 
-Attach officialjwise/hakorem_farms_backend as ../backend, run pnpm sync-contract and read the changelog
-after 1.17.0. Wire the new getOwnerDashboard fields in apps/console/src/dashboard/figures.ts (each leaves
+First, before anything else: attach officialjwise/hakorem_farms_backend as ../backend. If it is refused,
+report the exact error words, not just "refused". Then run pnpm sync-contract and read the changelog after
+1.17.0. Wire the new getOwnerDashboard fields in apps/console/src/dashboard/figures.ts (each leaves
 the "still to come" strip), pass any series to StatTile's `series`, and re-shoot the dashboard. Then F6 as
 BUILD_PROMPT describes.
 ```
