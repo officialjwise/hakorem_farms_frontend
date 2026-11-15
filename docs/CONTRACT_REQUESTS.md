@@ -22,6 +22,7 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-016 | 2026-11-15 | Open                     |
 | CR-017 | 2026-11-15 | Open                     |
 | CR-018 | 2026-11-15 | Open                     |
+| CR-019 | 2026-11-15 | Open                     |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -267,3 +268,31 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 - Give `runReport` an example per code, so the mock shows each report's own columns. Today every code answers with the MORTALITY_RATE example.
 
 **Until this lands:** sales uses SALES_BY_CASHIER and purchases asks for PURCHASES. Against the mock, every report shows the mortality example's columns, and the report says nothing it does not have.
+
+## CR-019. Server-side sort on products, stock on hand, lots and movements (additive)
+
+- **Raised by:** frontend F5c, the table card's Sort menu (ADR 0036), on the owner's instruction
+- **Contract read first:**
+  - `listProducts`, `listStockOnHand`, `listStockUnits` and `listStockMovements` take filters, `cursor` and `limit`, and no sort parameter.
+  - Their order is the server's own: newest first for movements, unstated for the others.
+  - No list operation in 1.17.0 takes a sort.
+- **What happens today:**
+  - Sort by orders only the page on screen, and the menu says so: "Sorts the rows on this page. Search and filters reach the whole list."
+  - With more than one page, a sorted page is not the start of the sorted list. The owner accepts that only while the label says it.
+
+**Request:** on these four operations, `sort` (a field name from a fixed, documented list per operation) and `direction` (`asc` or `desc`), applied before paging, so cursors walk the sorted list.
+
+| Operation            | Fields worth sorting by                                            |
+| -------------------- | ------------------------------------------------------------------ |
+| `listProducts`       | `name`, `sku`, `category`, `status`, `updatedAt`                   |
+| `listStockOnHand`    | product `name`, location `name`, `onHandQty`, `valueAtCostPesewas` |
+| `listStockUnits`     | product `name`, `identifier`, `expiresOn`, `valueAtCostPesewas`    |
+| `listStockMovements` | `occurredAt`, product `name`, `valuePesewas`                       |
+
+- **Errors:** an unknown field is a 400 with a code, not silently ignored.
+- **Examples:** each operation's example shows the default order it uses when `sort` is absent.
+
+**Until this lands:**
+
+- Sort stays on the page on screen, with its label.
+- When a sort parameter appears in a synced contract, the Sort menu sends it for that list and the label goes.
