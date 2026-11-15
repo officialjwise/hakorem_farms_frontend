@@ -306,6 +306,53 @@ PHASES.F06 = [
   { name: 'lots-came-from', path: '/lots', ready: 'Came from' },
 ];
 
+/** A small grey picture for a death's photograph, so no shot fetches the example's signed link. */
+const PHOTO =
+  'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0IDMiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjMiIGZpbGw9ImdyYXkiLz48L3N2Zz4=';
+
+PHASES.F06b = [
+  { name: 'approvals', path: '/approvals', ready: 'Void a sale' },
+  {
+    // The contract's G-0171 death, waiting as a MORTALITY_WRITE_OFF with its photograph (1.24.0).
+    name: 'approval-death',
+    path: `/approvals/${ID}`,
+    ready: 'Death or cull write-off',
+    prepare: (api) => {
+      api.rewrite('getApproval', (body) => ({
+        ...(body as Record<string, unknown>),
+        kind: 'MORTALITY_WRITE_OFF',
+        subject: {
+          id: '019a7ac0-1177-71b6-96ef-24403c269d1e',
+          docType: 'MORTALITY_RECORD',
+          number: null,
+        },
+        summary: 'Death of G-0171 (DISEASE_SUSPECTED), valued 58900 pesewas',
+        amountPesewas: 58900,
+        evidenceFileId: '019a7ac0-3066-7b9a-a0d2-c277b5d73b55',
+        requestedBy: { id: '019a7a87-08cf-7652-9b8a-6df7ddcee6d5', displayName: 'Abena Quaye' },
+      }));
+      api.rewrite('getFile', (body) => ({
+        ...(body as Record<string, unknown>),
+        scanStatus: 'CLEAN',
+      }));
+      api.rewrite('createFileSignedUrl', (body) => ({
+        ...(body as Record<string, unknown>),
+        url: PHOTO,
+      }));
+    },
+  },
+  { name: 'report-death', path: '/report-death', ready: 'Take or choose a photo' },
+  {
+    name: 'pack-labels',
+    path: `/processing-orders/${ID}`,
+    ready: 'PRC-261109-3a247e03-01',
+    act: async (page) => {
+      await page.getByRole('button', { name: /^Print \d+ labels?$/ }).click();
+      await expect(page.getByRole('list', { name: 'Pack labels' })).toBeVisible();
+    },
+  },
+];
+
 const WIDTHS = [1280, 360] as const;
 
 for (const [phase, shots] of Object.entries(PHASES)) {
