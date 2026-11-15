@@ -33,8 +33,11 @@ export const protectedRoutes: RouteObject[] = [
     element: <BackOfficeShell />,
     children: [
       {
+        // The start page for everyone; its content needs rpt.dashboard.owner and says so in words.
         index: true,
-        element: <PlaceholderScreen area="dashboard" />,
+        element: lazyScreen(() =>
+          import('../dashboard/DashboardScreen').then((m) => m.DashboardScreen),
+        ),
         handle: back(null, 'dashboard'),
       },
       // F5, loaded on demand (ADR 0032).
@@ -137,6 +140,27 @@ export const protectedRoutes: RouteObject[] = [
             path: ':id',
             element: lazyScreen(() => import('../stock/MoveScreens').then((m) => m.ReceiptScreen)),
             handle: back('inv.goods_receipt.read', 'receipt'),
+          },
+        ],
+      },
+      // F5b, loaded on demand (ADR 0032).
+      {
+        path: 'branches',
+        handle: back('mdm.branch.read', 'branches'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../branches/BranchesScreen').then((m) => m.BranchesScreen),
+            ),
+            handle: back('mdm.branch.read', 'branches'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../branches/BranchScreen').then((m) => m.BranchScreen),
+            ),
+            handle: back('mdm.branch.read', 'branchDetail'),
           },
         ],
       },

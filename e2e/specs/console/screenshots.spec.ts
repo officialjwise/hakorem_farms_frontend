@@ -90,6 +90,8 @@ const PHASES: Record<string, Shot[]> = {
   ],
 };
 
+PHASES.F05b = [{ name: 'dashboard', path: '/', ready: 'Selling best today' }];
+
 const WIDTHS = [1280, 360] as const;
 
 for (const [phase, shots] of Object.entries(PHASES)) {
