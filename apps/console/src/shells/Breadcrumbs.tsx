@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, House } from 'lucide-react';
 import { Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useMatches } from 'react-router';
@@ -20,18 +20,26 @@ export function Breadcrumbs() {
 
   return (
     <nav aria-label={t('backOffice.breadcrumb')} data-slot="breadcrumbs">
-      <ol className="flex flex-wrap items-center gap-1 text-sm text-fg-muted">
+      <ol className="flex flex-wrap items-center gap-2 text-sm text-fg-muted">
         {unique.map((crumb, index) => {
           const last = index === unique.length - 1;
           return (
             <Fragment key={crumb.key}>
               <li>
                 {last ? (
-                  <span aria-current="page" className="font-semibold text-fg">
+                  <span aria-current="page" className="font-medium text-fg">
                     {t(`nav.${crumb.key}`)}
                   </span>
                 ) : (
-                  <Link to={crumb.path} className="text-accent-text underline">
+                  <Link
+                    to={crumb.path}
+                    className="inline-flex items-center gap-2 text-fg-muted hover:text-fg hover:underline"
+                  >
+                    {index === 0 ? (
+                      <span className="grid size-7 place-items-center rounded-full bg-accent-subtle">
+                        <House aria-hidden="true" className="size-icon-sm stroke-accent" />
+                      </span>
+                    ) : null}
                     {t(`nav.${crumb.key}`)}
                   </Link>
                 )}

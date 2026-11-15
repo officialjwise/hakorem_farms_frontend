@@ -9,7 +9,6 @@ import {
   Field,
   Input,
   isCode128B,
-  PageHeader,
   QueryBoundary,
   Skeleton,
   Tabs,
@@ -18,6 +17,7 @@ import {
   TabsTrigger,
   WeightDisplay,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiQuery } from '../data/api';
 import { useStateLabels } from '../lib/states';

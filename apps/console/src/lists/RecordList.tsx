@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  PageHeader,
   Pagination,
   QueryBoundary,
   Table,
@@ -16,6 +15,7 @@ import {
   type FailureLike,
   type QueryLike,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useStateLabels, type ScreenStateWords } from '../lib/states';
 import type { useCursorPages } from '../lib/useCursorPages';
 
@@ -80,63 +80,68 @@ export function RecordList<T>({
   return (
     <section aria-labelledby={id} className="grid gap-4">
       <PageHeader title={title} titleId={id} description={description} />
-      {filters === undefined ? null : (
-        <div className="flex flex-wrap items-end gap-3">{filters}</div>
-      )}
-      <QueryBoundary
-        query={query}
-        labels={labels}
-        isEmpty={(page) => page.data.length === 0}
-        loadingFallback={
-          <TableContainer aria-label={tableLabel}>
-            <Table>
-              {header}
-              <TableBody>
-                <TableLoadingRows columns={columns.length + 1} label={labels.loading} />
-              </TableBody>
-            </Table>
-          </TableContainer>
-        }
-      >
-        {(page) => (
-          <div className="grid gap-3">
-            <TableContainer aria-label={tableLabel}>
+      {/* The reference's table card: filters as a toolbar, then the table, in one card. */}
+      <div className="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
+        {filters === undefined ? null : (
+          <div className="flex flex-wrap items-end gap-3 border-b border-border p-4">{filters}</div>
+        )}
+        <QueryBoundary
+          query={query}
+          labels={labels}
+          isEmpty={(page) => page.data.length === 0}
+          loadingFallback={
+            <TableContainer aria-label={tableLabel} className="rounded-none border-0 shadow-none">
               <Table>
                 {header}
                 <TableBody>
-                  {page.data.map((row, index) => (
-                    <TableRow key={rowKey(row, index)}>
-                      <TableRowHeader>{name(row)}</TableRowHeader>
-                      {columns.map((column) => (
-                        <TableCell
-                          key={column.head}
-                          numeric={column.numeric ?? false}
-                          label={column.head}
-                        >
-                          {column.cell(row)}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
+                  <TableLoadingRows columns={columns.length + 1} label={labels.loading} />
                 </TableBody>
               </Table>
             </TableContainer>
-            {pages.hasPrevious || page.page.hasMore ? (
-              <Pagination
-                label={pagesLabel}
-                hasPrevious={pages.hasPrevious}
-                hasNext={page.page.hasMore && page.page.nextCursor !== null}
-                onPrevious={pages.previous}
-                onNext={() => {
-                  if (page.page.nextCursor !== null) pages.next(page.page.nextCursor);
-                }}
-                previousLabel={t('pagination.previous')}
-                nextLabel={t('pagination.next')}
-              />
-            ) : null}
-          </div>
-        )}
-      </QueryBoundary>
+          }
+        >
+          {(page) => (
+            <div className="grid">
+              <TableContainer aria-label={tableLabel} className="rounded-none border-0 shadow-none">
+                <Table>
+                  {header}
+                  <TableBody>
+                    {page.data.map((row, index) => (
+                      <TableRow key={rowKey(row, index)}>
+                        <TableRowHeader>{name(row)}</TableRowHeader>
+                        {columns.map((column) => (
+                          <TableCell
+                            key={column.head}
+                            numeric={column.numeric ?? false}
+                            label={column.head}
+                          >
+                            {column.cell(row)}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              {pages.hasPrevious || page.page.hasMore ? (
+                <div className="border-t border-border p-3">
+                  <Pagination
+                    label={pagesLabel}
+                    hasPrevious={pages.hasPrevious}
+                    hasNext={page.page.hasMore && page.page.nextCursor !== null}
+                    onPrevious={pages.previous}
+                    onNext={() => {
+                      if (page.page.nextCursor !== null) pages.next(page.page.nextCursor);
+                    }}
+                    previousLabel={t('pagination.previous')}
+                    nextLabel={t('pagination.next')}
+                  />
+                </div>
+              ) : null}
+            </div>
+          )}
+        </QueryBoundary>
+      </div>
     </section>
   );
 }

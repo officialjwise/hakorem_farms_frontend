@@ -11,8 +11,8 @@ import {
   TableLoadingRows,
   TableRow,
   TableRowHeader,
-  PageHeader,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useApiAllPages } from '../data/api';
 import { uniqueById } from '../lib/queries';
 import { useStateLabels } from '../lib/states';

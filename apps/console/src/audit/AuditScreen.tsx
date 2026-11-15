@@ -19,8 +19,8 @@ import {
   TableRow,
   TableRowHeader,
   formatDateTime,
-  PageHeader,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useApiQuery } from '../data/api';
 import { KNOWN_MODULES } from '../iam/permissions';
 import { useStateLabels } from '../lib/states';

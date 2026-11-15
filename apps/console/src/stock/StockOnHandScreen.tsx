@@ -19,8 +19,8 @@ import {
   TableRow,
   TableRowHeader,
   WeightDisplay,
-  PageHeader,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useBranchScope } from '../branch/branchScope';
 import { useApiQuery } from '../data/api';
 import { When } from '../iam/presentation';

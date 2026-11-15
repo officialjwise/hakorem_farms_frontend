@@ -24,9 +24,9 @@ import {
   TableRowHeader,
   type FailureLike,
   type QueryLike,
-  PageHeader,
   Alert,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { BranchScopeNote } from '../branch/BranchScopeNote';
 import { useApiMutation, useApiQuery } from '../data/api';

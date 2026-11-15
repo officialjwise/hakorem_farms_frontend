@@ -1,15 +1,22 @@
 import { ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { NavLink } from 'react-router';
+import { Link, NavLink } from 'react-router';
 import { Button, cn, Tooltip } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { foldedGroups, sidebarPreference, usePreference } from '../lib/preferences';
 import { BACK_OFFICE_GROUPS, type NavGroupKey } from '../routing/nav';
 
+/*
+ * The reference's sidebar item: a tall row with an outline icon; the current page is an outlined pill
+ * with its icon on an accent square, and a heavier weight. Rendered inside the dark teal panel, so every
+ * token here takes its dark value (ADR 0001, amendment).
+ */
 const NAV_LINK =
-  'flex h-control-md items-center gap-2 rounded-md border-s-4 border-transparent px-2 text-control-md text-fg ' +
+  'group flex h-11 items-center gap-3 rounded-lg border border-transparent px-2.5 text-sm text-fg ' +
   'outline-focus outline-offset-[-2px] focus-visible:outline-2 hover:bg-surface-hover ' +
-  'aria-[current=page]:border-accent aria-[current=page]:bg-accent-subtle aria-[current=page]:font-semibold aria-[current=page]:text-accent-subtle-fg';
+  'aria-[current=page]:border-accent aria-[current=page]:bg-accent-subtle aria-[current=page]:font-semibold';
+const NAV_ICON =
+  'grid size-7 shrink-0 place-items-center rounded-md group-aria-[current=page]:bg-accent';
 
 /**
  * The back office menu, grouped by job with a heading per group. Each group folds; on a wide screen the
@@ -51,7 +58,7 @@ export function SidebarLinks({
                   aria-expanded={!isFolded}
                   aria-controls={listId}
                   onClick={() => toggle(group.key)}
-                  className="flex w-full items-center justify-between rounded-sm px-2 py-1 text-xs font-semibold tracking-wide text-fg-muted uppercase outline-focus focus-visible:outline-2 hover:text-fg"
+                  className="flex w-full items-center justify-between rounded-sm px-2 py-1 text-sm text-fg-muted outline-focus focus-visible:outline-2 hover:text-fg"
                 >
                   {t(`navGroups.${group.key}`)}
                   <ChevronDown
@@ -70,7 +77,12 @@ export function SidebarLinks({
                     className={cn(NAV_LINK, narrow && 'justify-center px-0')}
                     onClick={onNavigate}
                   >
-                    <Icon aria-hidden="true" className="size-icon-md shrink-0" />
+                    <span className={NAV_ICON}>
+                      <Icon
+                        aria-hidden="true"
+                        className="size-icon-md text-fg-muted group-aria-[current=page]:text-accent-fg"
+                      />
+                    </span>
                     <span className={cn(narrow && 'sr-only')}>{t(`nav.${key}`)}</span>
                   </NavLink>
                 );
@@ -97,12 +109,21 @@ export function Sidebar() {
     <nav
       aria-label={t('backOffice.navLabel')}
       data-width={width}
+      data-theme="dark"
       className={cn(
-        'hidden shrink-0 flex-col gap-2 overflow-y-auto border-e border-border bg-surface p-2 lg:flex print:hidden',
-        narrow ? 'w-16' : 'w-60',
+        'sticky top-0 hidden h-dvh shrink-0 flex-col gap-3 overflow-y-auto bg-panel p-3 text-fg lg:flex print:hidden',
+        narrow ? 'w-20' : 'w-64',
       )}
     >
-      <div className={cn('flex', narrow ? 'justify-center' : 'justify-end')}>
+      <div className={cn('flex items-center gap-2', narrow ? 'justify-center' : 'justify-between')}>
+        {narrow ? null : (
+          <Link
+            to="/"
+            className="text-lg font-bold text-accent-text outline-focus focus-visible:outline-2"
+          >
+            {t('app.name')}
+          </Link>
+        )}
         <Button
           variant="ghost"
           size="sm"

@@ -19,9 +19,9 @@ import {
   NOT_APPLICABLE,
   QueryBoundary,
   Skeleton,
-  PageHeader,
   Alert,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { shownFailure, useStepUp } from '../auth/StepUp';
 import { useApiMutation, useApiQuery } from '../data/api';

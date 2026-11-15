@@ -28,9 +28,9 @@ import {
   TableRowHeader,
   WeightDisplay,
   WeightInput,
-  PageHeader,
   Alert,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiMutation, useApiQuery } from '../data/api';
 import { useIntentKey } from '../lib/queries';

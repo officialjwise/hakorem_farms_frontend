@@ -19,9 +19,9 @@ import {
   TableRow,
   TableRowHeader,
   formatDateTime,
-  PageHeader,
   Alert,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { shownFailure } from '../auth/StepUp';
 import { useApiMutation, useApiQuery } from '../data/api';

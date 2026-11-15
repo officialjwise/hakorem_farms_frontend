@@ -23,9 +23,9 @@ import {
   Skeleton,
   Textarea,
   WeightDisplay,
-  PageHeader,
   Alert,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiMutation, useApiQuery } from '../data/api';
 import { LeaveGuardDialog, useLeaveGuard } from '../lib/LeaveGuard';

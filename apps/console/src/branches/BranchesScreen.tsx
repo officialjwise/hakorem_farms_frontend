@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import {
   Button,
-  PageHeader,
   Pagination,
   QueryBoundary,
   StatusBadge,
@@ -19,6 +18,7 @@ import {
   TableRowHeader,
   NOT_APPLICABLE,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiQuery } from '../data/api';
 import { useStateLabels } from '../lib/states';

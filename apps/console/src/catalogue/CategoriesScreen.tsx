@@ -25,9 +25,9 @@ import {
   TableLoadingRows,
   TableRow,
   TableRowHeader,
-  PageHeader,
   Alert,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiAllPages, useApiMutation, useApiQuery } from '../data/api';
 import { uniqueById, useIntentKey } from '../lib/queries';

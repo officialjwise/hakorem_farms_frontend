@@ -16,8 +16,8 @@ import {
   TableLoadingRows,
   TableRow,
   TableRowHeader,
-  PageHeader,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useApiQuery } from '../data/api';
 import { When } from '../iam/presentation';
 import { useStateLabels } from '../lib/states';

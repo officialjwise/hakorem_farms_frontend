@@ -33,9 +33,9 @@ import {
   TableRow,
   TableRowHeader,
   type QueryLike,
-  PageHeader,
   Alert,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { When } from '../iam/presentation';
 import { PAGE_CAP_EXCEEDED, useApiAllPages, useApiMutation, useApiQuery } from '../data/api';

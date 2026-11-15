@@ -10,8 +10,8 @@ import {
   TableLoadingRows,
   TableRow,
   TableRowHeader,
-  PageHeader,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useApiAllPages } from '../data/api';
 import { useStateLabels } from '../lib/states';
 

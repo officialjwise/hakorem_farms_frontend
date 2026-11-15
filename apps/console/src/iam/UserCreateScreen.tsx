@@ -14,9 +14,9 @@ import {
   QueryBoundary,
   Select,
   Skeleton,
-  PageHeader,
   Alert,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useStepUp } from '../auth/StepUp';
 import { useApiMutation, useApiQuery } from '../data/api';
 import { LeaveGuardDialog, useLeaveGuard } from '../lib/LeaveGuard';

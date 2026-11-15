@@ -23,7 +23,6 @@ import {
   Donut,
   formatMoney,
   MoneyDisplay,
-  PageHeader,
   ProgressList,
   QueryBoundary,
   StatTile,
@@ -34,6 +33,7 @@ import {
   type BadgeTone,
   type StatTrend,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { protectedRoutes } from '../app/routes';
 import { useAuth } from '../auth/AuthProvider';
 import { useBranchScope } from '../branch/branchScope';

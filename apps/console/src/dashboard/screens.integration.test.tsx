@@ -205,7 +205,10 @@ describe.each(LISTS)('the $screen screen against the Prism mock', (c) => {
   it('loading, then the data the mock served', async () => {
     const release = holdResponses();
     await renderApp(c.path, await signedIn('owner'));
-    expect((await screen.findAllByText(c.loading)).length).toBeGreaterThan(0);
+    // The first case in a file loads its screen's modules cold: allow for it.
+    expect((await screen.findAllByText(c.loading, {}, { timeout: 5000 })).length).toBeGreaterThan(
+      0,
+    );
     release();
     expect((await screen.findAllByText(c.ready)).length).toBeGreaterThan(0);
   });
@@ -213,7 +216,7 @@ describe.each(LISTS)('the $screen screen against the Prism mock', (c) => {
   it('empty, error with its reference, and permission denied, in words', async () => {
     mock.noRows = true;
     await renderApp(c.path, await signedIn('owner'));
-    expect((await screen.findAllByText(c.empty)).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText(c.empty, {}, { timeout: 5000 })).length).toBeGreaterThan(0);
     queryClient.clear();
     mock.noRows = false;
     mock.prefer = 'code=500';

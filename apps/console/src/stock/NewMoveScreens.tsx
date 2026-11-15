@@ -13,8 +13,8 @@ import {
   Skeleton,
   Textarea,
   type FailureLike,
-  PageHeader,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useApiAllPages, useApiMutation } from '../data/api';
 import { LeaveGuardDialog, useLeaveGuard } from '../lib/LeaveGuard';
 import { useIntentKey } from '../lib/queries';

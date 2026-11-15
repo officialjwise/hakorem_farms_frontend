@@ -16,7 +16,6 @@ import {
   FormSubmitButton,
   Input,
   NOT_APPLICABLE,
-  PageHeader,
   QueryBoundary,
   Select,
   Table,
@@ -29,6 +28,7 @@ import {
   TableRow,
   TableRowHeader,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiMutation, useApiQuery } from '../data/api';
 import { When } from '../iam/presentation';

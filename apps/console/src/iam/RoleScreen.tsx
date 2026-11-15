@@ -21,9 +21,9 @@ import {
   QueryBoundary,
   Skeleton,
   toggleInList,
-  PageHeader,
   Alert,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { useStepUp } from '../auth/StepUp';
 import { PAGE_CAP_EXCEEDED, useApiAllPages, useApiMutation, useApiQuery } from '../data/api';

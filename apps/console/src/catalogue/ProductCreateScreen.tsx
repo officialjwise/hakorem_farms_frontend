@@ -18,8 +18,8 @@ import {
   Skeleton,
   Textarea,
   WeightInput,
-  PageHeader,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { PAGE_CAP_EXCEEDED, useApiAllPages, useApiMutation } from '../data/api';
 import { LeaveGuardDialog, useLeaveGuard } from '../lib/LeaveGuard';
 import { bothQueries, uniqueById, useIntentKey } from '../lib/queries';
