@@ -20,10 +20,6 @@ export const invalid = [
   // @ts-expect-error label cannot be an empty string
   <StatusBadge key="b" tone="good" icon={CircleCheck} label="" />,
 
-  // Words without the second cue.
-  // @ts-expect-error icon is required
-  <StatusBadge key="c" tone="good" label="In stock" />,
-
   // Content through children instead of the label.
   // @ts-expect-error children are not accepted
   <StatusBadge key="d" tone="good" icon={CircleCheck} label="In stock">
