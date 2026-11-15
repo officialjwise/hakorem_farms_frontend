@@ -19,7 +19,9 @@ import {
   NOT_APPLICABLE,
   QueryBoundary,
   Skeleton,
+  Alert,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { shownFailure, useStepUp } from '../auth/StepUp';
 import { useApiMutation, useApiQuery } from '../data/api';
@@ -95,9 +97,7 @@ function UserDetail({
       <div className="grid gap-2">
         {back}
         <div className="flex flex-wrap items-center gap-3">
-          <h1 id="user-title" className="text-2xl font-semibold">
-            {account.displayName}
-          </h1>
+          <PageHeader title={account.displayName} titleId="user-title" />
           <UserStatusBadge status={account.status} />
         </div>
       </div>
@@ -209,11 +209,7 @@ function ProfileForm({ account, onReload }: { account: UserAccount; onReload: ()
         >
           <p className="text-control-sm text-fg-muted">{t('user.profileHint')}</p>
           <WriteFailureView failure={failure} title={t('user.writeFailed')} onReload={onReload} />
-          {saved ? (
-            <p role="status" className="font-semibold">
-              {t('user.saved')}
-            </p>
-          ) : null}
+          {saved ? <Alert severity={'good'} title={t('user.saved')} /> : null}
           <FormField
             name="displayName"
             label={t('user.displayName')}
@@ -305,11 +301,7 @@ function AccountActions({ account }: { account: UserAccount }) {
         </CardTitle>
       </CardHeader>
       <CardBody className="grid gap-3">
-        {done !== null ? (
-          <p role="status" className="font-semibold">
-            {done}
-          </p>
-        ) : null}
+        {done !== null ? <Alert severity={'good'} title={done} /> : null}
         {password !== null ? <TemporaryPassword name={name} password={password} /> : null}
         <div className="flex flex-wrap gap-2">
           {offered.map((action) => (

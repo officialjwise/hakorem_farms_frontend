@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { asPlaces, compareQuantity, toQuantity } from './units';
+import { asPlaces, compareQuantity, gapBetween, toQuantity } from './units';
 
 describe('toQuantity', () => {
   it('pads what was typed to the contract’s three places, as a string', () => {
@@ -33,5 +33,16 @@ describe('compareQuantity', () => {
     expect(compareQuantity('20.001', '20.000')).toBe(1);
     expect(compareQuantity('9.999', '10.000')).toBe(-1);
     expect(compareQuantity('0.000', '0.000')).toBe(0);
+  });
+});
+
+describe('gapBetween', () => {
+  it('is the exact gap between two three-place quantities, either way round', () => {
+    expect(gapBetween('20.000', '18.000')).toBe('2.000');
+    expect(gapBetween('18.000', '20.000')).toBe('2.000');
+    expect(gapBetween('29.750', '29.750')).toBe('0.000');
+    // No float: 0.1 + 0.2 style errors cannot happen on thousandths.
+    expect(gapBetween('0.300', '0.100')).toBe('0.200');
+    expect(gapBetween('1234567.891', '0.001')).toBe('1234567.890');
   });
 });

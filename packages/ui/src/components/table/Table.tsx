@@ -56,7 +56,7 @@ export function TableContainer({ className, layout = 'stack', ...props }: TableC
       data-slot="table-container"
       data-layout={layout}
       className={cn(
-        'relative w-full overflow-auto rounded-lg border border-border bg-surface',
+        'relative w-full overflow-auto rounded-lg border border-border bg-surface shadow-sm',
         'outline-focus outline-offset-2 focus-visible:outline-2',
         className,
       )}
@@ -204,8 +204,8 @@ export function TableHead({
       data-sortable={onSort ? '' : undefined}
       aria-sort={sorted ? sort : undefined}
       className={cn(
-        'h-head px-cell text-head font-semibold tracking-wide whitespace-nowrap uppercase',
-        'border-b border-border-strong bg-surface-sunken text-fg-muted',
+        'h-head px-cell text-head font-semibold whitespace-nowrap',
+        'border-b border-border bg-surface-sunken text-fg',
         numeric ? 'text-end' : 'text-start',
         sorted && 'text-fg',
         className,

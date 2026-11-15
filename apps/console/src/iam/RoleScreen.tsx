@@ -21,7 +21,9 @@ import {
   QueryBoundary,
   Skeleton,
   toggleInList,
+  Alert,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { useStepUp } from '../auth/StepUp';
 import { PAGE_CAP_EXCEEDED, useApiAllPages, useApiMutation, useApiQuery } from '../data/api';
@@ -121,9 +123,7 @@ function RoleEditor({
     <article aria-labelledby="role-title" className="grid gap-4">
       <div className="grid gap-2">
         {back}
-        <h1 id="role-title" className="text-2xl font-semibold">
-          {title}
-        </h1>
+        <PageHeader title={title} titleId="role-title" />
         {role !== null ? (
           <p className="text-fg-muted">
             <code>{role.code}</code> · {t('role.people', { count: role.userCount })}
@@ -294,11 +294,7 @@ function RoleForm({
         onSubmitError={(error) => setFailure(toFailure(error))}
       >
         <WriteFailureView failure={failure} title={t('role.failed')} onReload={onReload} />
-        {saved ? (
-          <p role="status" className="font-semibold">
-            {t('role.saved')}
-          </p>
-        ) : null}
+        {saved ? <Alert severity={'good'} title={t('role.saved')} /> : null}
         {role === null ? (
           <FormField
             name="code"

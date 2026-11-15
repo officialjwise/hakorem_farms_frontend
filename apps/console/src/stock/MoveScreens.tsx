@@ -24,8 +24,11 @@ import {
   TableRowHeader,
   type FailureLike,
   type QueryLike,
+  Alert,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
+import { BranchScopeNote } from '../branch/BranchScopeNote';
 import { useApiMutation, useApiQuery } from '../data/api';
 import { When } from '../iam/presentation';
 import { isApprovalPending } from '../lib/approval';
@@ -93,16 +96,18 @@ function DocList<T extends { id: string }>({
   );
   return (
     <section aria-labelledby={`${area}-title`} className="grid gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 id={`${area}-title`} className="text-2xl font-semibold">
-          {t(`${area}.title`)}
-        </h1>
-        {canCreate ? (
-          <Button asChild>
-            <Link to={newPath}>{t(`${area}.new`)}</Link>
-          </Button>
-        ) : null}
-      </div>
+      <PageHeader
+        title={t(`${area}.title`)}
+        titleId={`${area}-title`}
+        description={<BranchScopeNote />}
+        actions={
+          canCreate ? (
+            <Button asChild>
+              <Link to={newPath}>{t(`${area}.new`)}</Link>
+            </Button>
+          ) : undefined
+        }
+      />
       <QueryBoundary
         query={query}
         labels={labels}
@@ -408,11 +413,7 @@ function DraftAction({
   const [open, setOpen] = useState(false);
   const [outcome, setOutcome] = useState<string | null>(null);
   if (outcome !== null) {
-    return (
-      <p role="status" className="font-semibold">
-        {outcome}
-      </p>
-    );
+    return <Alert severity={'good'} title={outcome} />;
   }
   return (
     <div>
@@ -478,9 +479,10 @@ export function AdjustmentScreen() {
         return (
           <>
             <div className="flex flex-wrap items-center gap-3">
-              <h1 id="doc-title" className="text-2xl font-semibold">
-                {a.adjustmentNo ?? t('move.unnumbered', { location: a.location.name })}
-              </h1>
+              <PageHeader
+                title={a.adjustmentNo ?? t('move.unnumbered', { location: a.location.name })}
+                titleId="doc-title"
+              />
               <AdjustmentStatusBadge status={a.status} />
             </div>
             <Facts
@@ -582,9 +584,10 @@ export function TransferScreen() {
         return (
           <>
             <div className="flex flex-wrap items-center gap-3">
-              <h1 id="doc-title" className="text-2xl font-semibold">
-                {x.transferNo ?? t('move.unnumbered', { location: x.from.name })}
-              </h1>
+              <PageHeader
+                title={x.transferNo ?? t('move.unnumbered', { location: x.from.name })}
+                titleId="doc-title"
+              />
               <TransferStatusBadge status={x.status} />
             </div>
             <Facts
@@ -691,9 +694,10 @@ export function ReceiptScreen() {
         return (
           <>
             <div className="flex flex-wrap items-center gap-3">
-              <h1 id="doc-title" className="text-2xl font-semibold">
-                {r.receiptNo ?? t('move.unnumbered', { location: r.location.name })}
-              </h1>
+              <PageHeader
+                title={r.receiptNo ?? t('move.unnumbered', { location: r.location.name })}
+                titleId="doc-title"
+              />
               <ReceiptStatusBadge status={r.status} />
             </div>
             <Facts

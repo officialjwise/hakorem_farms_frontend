@@ -1,0 +1,61 @@
+{
+  "title": "Labels",
+  "description": "Product and lot labels with barcodes, for the counter scanner and the cold room. Printed from this browser.",
+  "print_one": "Print {{count}} label",
+  "print_other": "Print {{count}} labels",
+  "choose": "What to label",
+  "tabs": {
+    "product": "Products",
+    "lot": "Lots and animals"
+  },
+  "search": "Search",
+  "add": "Add a label for {{name}}",
+  "addShort": "Add",
+  "products": {
+    "search": "Find a product by name, SKU or barcode",
+    "results": "Products",
+    "loading": "Loading products",
+    "empty": "No products match",
+    "error": "Products could not be loaded",
+    "denied": "You do not have access to products"
+  },
+  "lots": {
+    "search": "Find a lot or animal by its number",
+    "results": "Lots and animals",
+    "loading": "Loading lots",
+    "empty": "No lots match",
+    "error": "Lots could not be loaded",
+    "denied": "You do not have access to stock"
+  },
+  "chosen": {
+    "title": "Labels to print",
+    "none": "Nothing chosen yet. Add a product or a lot.",
+    "copies_one": "{{count}} copy",
+    "copies_other": "{{count}} copies",
+    "fewer": "One fewer label for {{name}}",
+    "more": "One more label for {{name}}",
+    "remove": "Remove {{name}}"
+  },
+  "sheet": {
+    "title": "Label sheet",
+    "none": "The labels appear here as they will print."
+  },
+  "barcode": {
+    "product": "Product barcode",
+    "lot": "Lot barcode",
+    "cannot": "{{code}} cannot be printed as a barcode: it has characters a scanner cannot read."
+  },
+  "fields": {
+    "sku": "SKU",
+    "soldBy": "Sold by",
+    "produced": "Produced",
+    "expires": "Use by",
+    "keep": "Keep",
+    "weight": "Weight"
+  },
+  "temp": {
+    "AMBIENT": "Ambient",
+    "CHILLED": "Chilled",
+    "FROZEN": "Frozen"
+  }
+}

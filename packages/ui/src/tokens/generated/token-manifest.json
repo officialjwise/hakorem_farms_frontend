@@ -127,6 +127,31 @@
       ],
       "scope": "app"
     },
+    "panel": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "app"
+    },
+    "series-2": {
+      "roles": [
+        "line",
+        "glyph"
+      ],
+      "scope": "app"
+    },
+    "series-1-area": {
+      "roles": [
+        "glyph"
+      ],
+      "scope": "app"
+    },
+    "series-2-area": {
+      "roles": [
+        "glyph"
+      ],
+      "scope": "app"
+    },
     "good": {
       "roles": [
         "line",

@@ -17,6 +17,7 @@ import {
   TableRow,
   TableRowHeader,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useApiQuery } from '../data/api';
 import { When } from '../iam/presentation';
 import { useStateLabels } from '../lib/states';
@@ -64,9 +65,7 @@ export function PriceListsScreen() {
 
   return (
     <section aria-labelledby="price-lists-title" className="grid gap-4">
-      <h1 id="price-lists-title" className="text-2xl font-semibold">
-        {t('priceLists.title')}
-      </h1>
+      <PageHeader title={t('priceLists.title')} titleId="price-lists-title" />
       <p className="text-fg-muted">{t('priceLists.intro')}</p>
       <div className="max-w-xs">
         <Field label={t('priceLists.filterKind')}>

@@ -9,7 +9,7 @@ const names = Object.keys(colors) as ColorName[];
 const roles = (n: ColorName) => colors[n].roles as readonly Role[];
 
 /** Decorative-only tokens, deliberately not held to a contrast minimum. */
-const DECORATIVE: readonly ColorName[] = ['border'];
+const DECORATIVE: readonly ColorName[] = ['border', 'series-1-area', 'series-2-area'];
 
 /** Surfaces nothing is written on, so no text pair exists for them. The scrim has its own tests below. */
 const NO_TEXT: readonly ColorName[] = ['scrim'];
@@ -22,7 +22,7 @@ describe('contrast', () => {
     describe(theme, () => {
       it.each(
         contrastPairs
-          .filter((p) => p.kind !== 'exempt')
+          .filter((p) => p.kind !== 'exempt' && (p.themes ?? THEMES).includes(theme))
           .map((p) => [p.use, p.fg, p.bg, p.min] as const),
       )('%s: --%s on --%s reaches %d:1', (_use, fg, bg, min) => {
         expect(contrastRatio(colors[fg][theme], colors[bg][theme])).toBeGreaterThanOrEqual(min);

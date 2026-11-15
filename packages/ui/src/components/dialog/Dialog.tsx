@@ -71,13 +71,13 @@ export function Dialog<T extends string, C extends string>({
             {...(description ? {} : { 'aria-describedby': undefined })}
             className={cn(
               'fixed inset-0 z-modal m-auto flex h-fit max-h-[calc(100%-2rem)] w-[min(32rem,calc(100%-2rem))] flex-col',
-              'rounded-lg border border-border-strong bg-surface text-fg shadow-lg',
+              'rounded-xl border border-border bg-surface text-fg shadow-lg',
               className,
             )}
           >
-            <div className="flex items-start gap-3 p-4 pb-2">
+            <div className="flex items-start gap-3 px-5 pt-5 pb-3">
               <div className="grid min-w-0 flex-1 gap-1">
-                <DialogPrimitive.Title className="text-lg font-semibold text-balance">
+                <DialogPrimitive.Title className="text-xl font-bold text-balance">
                   {title}
                 </DialogPrimitive.Title>
                 {description ? (
@@ -87,12 +87,18 @@ export function Dialog<T extends string, C extends string>({
                 ) : null}
               </div>
               <DialogPrimitive.Close asChild>
-                <Button variant="ghost" size="sm" iconOnly aria-label={closeLabel}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  iconOnly
+                  aria-label={closeLabel}
+                  className="bg-surface-sunken"
+                >
                   <X />
                 </Button>
               </DialogPrimitive.Close>
             </div>
-            {children ? <div className="min-h-0 overflow-auto px-4 py-2">{children}</div> : null}
+            {children ? <div className="min-h-0 overflow-auto px-5 py-2">{children}</div> : null}
             {footer ? (
               <div className="flex flex-wrap justify-end gap-2 p-4 pt-2">{footer}</div>
             ) : null}

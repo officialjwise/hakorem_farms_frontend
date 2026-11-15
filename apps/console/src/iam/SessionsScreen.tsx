@@ -19,7 +19,9 @@ import {
   TableRow,
   TableRowHeader,
   formatDateTime,
+  Alert,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { shownFailure } from '../auth/StepUp';
 import { useApiMutation, useApiQuery } from '../data/api';
@@ -81,9 +83,7 @@ export function SessionsScreen() {
 
   return (
     <section aria-labelledby="sessions-title" className="grid gap-4">
-      <h1 id="sessions-title" className="text-2xl font-semibold">
-        {t('sessions.title')}
-      </h1>
+      <PageHeader title={t('sessions.title')} titleId="sessions-title" />
       <p className="text-fg-muted">
         {t('sessions.intro')} {t('common:time.zone')}
       </p>
@@ -102,11 +102,7 @@ export function SessionsScreen() {
           />
         </Field>
       </div>
-      {done !== null ? (
-        <p role="status" className="font-semibold">
-          {done}
-        </p>
-      ) : null}
+      {done !== null ? <Alert severity={'good'} title={done} /> : null}
       <QueryBoundary
         query={sessions}
         labels={labels}

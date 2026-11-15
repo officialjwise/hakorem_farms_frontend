@@ -30,7 +30,7 @@ export function Card({
       data-selected={selected || undefined}
       aria-current={selected ? 'true' : undefined}
       className={cn(
-        'block rounded-lg border border-border bg-surface text-fg',
+        'block rounded-lg border border-border bg-surface text-fg shadow-sm',
         interactive && [
           'cursor-pointer transition-colors duration-fast',
           'hover-enabled:bg-surface-hover',

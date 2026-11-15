@@ -28,7 +28,9 @@ import {
   TableRowHeader,
   WeightDisplay,
   WeightInput,
+  Alert,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiMutation, useApiQuery } from '../data/api';
 import { useIntentKey } from '../lib/queries';
@@ -80,9 +82,7 @@ export function SpeciesDetailScreen() {
         <article aria-labelledby="species-detail-title" className="grid gap-6">
           <div className="grid gap-2">
             {back}
-            <h1 id="species-detail-title" className="text-2xl font-semibold">
-              {current.name}
-            </h1>
+            <PageHeader title={current.name} titleId="species-detail-title" />
             <p className="text-fg-muted">
               <code>{current.code}</code> · {t(`tracking.${current.trackingDefault}`)}
             </p>
@@ -158,11 +158,7 @@ function Grades({ species }: { species: Species }) {
           </Button>
         ) : null}
       </div>
-      {notice !== null ? (
-        <p role="status" className="font-semibold">
-          {notice}
-        </p>
-      ) : null}
+      {notice !== null ? <Alert severity={'good'} title={notice} /> : null}
       <QueryBoundary
         query={grades}
         labels={labels}
@@ -436,11 +432,7 @@ function Bands({ species }: { species: Species }) {
         ) : null}
       </div>
       <p className="text-control-sm text-fg-muted">{t('bands.rule')}</p>
-      {notice !== null ? (
-        <p role="status" className="font-semibold">
-          {notice}
-        </p>
-      ) : null}
+      {notice !== null ? <Alert severity={'good'} title={notice} /> : null}
       <QueryBoundary
         query={bands}
         labels={labels}

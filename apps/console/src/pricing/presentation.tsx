@@ -2,6 +2,7 @@ import { CircleCheck, CircleDashed, CircleX, Clock, History } from 'lucide-react
 import { useTranslation } from 'react-i18next';
 import type { components } from '@hakorem/api-client';
 import { StatusBadge } from '@hakorem/ui';
+import { lookup, UNKNOWN } from '../lib/lookup';
 
 type VersionStatus = components['schemas']['PriceListVersion']['status'];
 
@@ -16,6 +17,12 @@ const BADGE = {
 /** A price list version's state in words and an icon, never colour alone. */
 export function VersionStatusBadge({ status }: { status: VersionStatus }) {
   const { t } = useTranslation('catalogue');
-  const { tone, icon } = BADGE[status];
-  return <StatusBadge tone={tone} icon={icon} label={t(`versionStatus.${status}`)} />;
+  const { tone, icon } = lookup(BADGE, status, UNKNOWN);
+  return (
+    <StatusBadge
+      tone={tone}
+      icon={icon}
+      label={t(`versionStatus.${status}`, { defaultValue: status })}
+    />
+  );
 }

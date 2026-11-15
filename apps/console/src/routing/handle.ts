@@ -48,7 +48,17 @@ export type NavKey =
   | 'transfer'
   | 'receipts'
   | 'receiptNew'
-  | 'receipt';
+  | 'receipt'
+  | 'branches'
+  | 'branchNew'
+  | 'branchDetail'
+  | 'labels'
+  | 'lots'
+  | 'movements'
+  | 'suppliers'
+  | 'registers'
+  | 'reports'
+  | 'report';
 
 export function isRouteHandle(value: unknown): value is RouteHandle {
   return (

@@ -34,6 +34,12 @@ const INTERACTIVE = [
   'query-boundary',
   'card',
   'table',
+  'stat-tile',
+  'chart',
+  'progress-list',
+  'alert-row',
+  'confirm-changes',
+  'page-header',
 ] as const;
 
 /** Everything else is display only and needs no key handling. */
@@ -55,6 +61,10 @@ const DISPLAY_ONLY = [
   'status-badge',
   'ui-provider',
   'weight-display',
+  'alert',
+  'donut',
+  'unavailable',
+  'barcode',
 ] as const;
 
 describe('keyboard path budget', () => {

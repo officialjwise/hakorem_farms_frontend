@@ -27,7 +27,7 @@ export function Textarea({ className, size, rows = 3, ref, ...props }: TextareaP
       ref={labelled}
       rows={rows}
       data-slot="textarea"
-      className={cn(inputVariants({ size }), textareaVariants({ size }), className)}
+      className={cn(inputVariants({ size }), 'rounded-lg', textareaVariants({ size }), className)}
       {...props}
     />
   );

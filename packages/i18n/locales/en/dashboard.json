@@ -1,0 +1,98 @@
+{
+  "title": "Dashboard",
+  "description": "Livestock, meat and produce trading at {{branch}}: today's sales, stock and money.",
+  "allBranches": "every branch",
+  "generated": "Figures as of",
+  "refresh": "Refresh",
+  "refreshing": "Refreshing",
+  "openPos": "Open the till",
+  "print": "Print",
+  "loading": "Loading today's figures",
+  "loadingTile": "Loading",
+  "empty": "Nothing has happened at this branch yet",
+  "emptyBody": "No sales, no stock and no alerts. Receive stock or open a till to start the day.",
+  "receiveStock": "Receive stock",
+  "error": "Today's figures could not be loaded",
+  "denied": "The dashboard is for the owner",
+  "unavailable": "No data source yet",
+  "unavailableBody": "The API does not provide this figure yet. It appears here when it does, never as a zero.",
+  "yesterday": "Yesterday {{amount}}",
+  "tiles": {
+    "salesToday": "Sales today",
+    "purchasesToday": "Purchases today",
+    "stockValue": "Stock value",
+    "atCost": "At cost, never at price",
+    "receivables": "Owed by customers",
+    "overdue": "{{amount}} overdue",
+    "lowStock": "Low stock",
+    "animals": "Animals on hand"
+  },
+  "series": {
+    "title": "Sales and purchases",
+    "unavailable": "The day-by-day sales and purchases chart arrives when the API provides the series.",
+    "salesMonthToDate": "Sales this month",
+    "purchasesMonthToDate": "Purchases this month"
+  },
+  "health": {
+    "title": "Stock health",
+    "summary": "Products low on stock, available, and out of stock.",
+    "unavailable": "The counts arrive when the API provides them.",
+    "open": "Open stock on hand"
+  },
+  "attention": {
+    "title": "Needs attention",
+    "none": "Nothing needs attention right now.",
+    "exceptions_one": "{{count}} exception recorded today",
+    "exceptions_other": "{{count}} exceptions recorded today",
+    "severity": {
+      "INFO": "Note",
+      "REVIEW": "Review",
+      "URGENT": "Urgent"
+    }
+  },
+  "movers": {
+    "title": "Selling best today",
+    "none": "Nothing sold yet today.",
+    "figure": "{{amount}} · {{qty}} {{unit}}"
+  },
+  "channels": {
+    "title": "Sales by channel today",
+    "today": "today",
+    "figure_one": "{{amount}} · {{count}} sale",
+    "figure_other": "{{amount}} · {{count}} sales",
+    "POS": "Counter",
+    "ONLINE": "Online shop",
+    "WHOLESALE": "Wholesale",
+    "QUOTE": "Quotes"
+  },
+  "cash": {
+    "title": "Where the cash is",
+    "tills": "In tills",
+    "safe": "In the safe",
+    "drivers": "With drivers",
+    "mobileMoney": "Mobile money",
+    "bank": "In the bank",
+    "total": "Total"
+  },
+  "categories": {
+    "title": "Stock by category"
+  },
+  "invoices": {
+    "title": "Invoices",
+    "total": "All invoices",
+    "paid": "Paid",
+    "overdue": "Overdue"
+  },
+  "lists": {
+    "stockAlerts": "Stock alerts",
+    "expiringLots": "Expiring lots",
+    "expiredLots": "Expired lots",
+    "nearExpiry": "Expiring by month",
+    "openLots": "Open lots and expiry"
+  },
+  "payments": {
+    "title": "Recent transactions",
+    "splitUnavailable": "Today's split by payment method arrives when the API provides it.",
+    "recentUnavailable": "The latest payments arrive when the API provides them."
+  }
+}

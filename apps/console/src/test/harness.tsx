@@ -42,7 +42,20 @@ export async function renderApp(
   state?: unknown,
 ) {
   const i18n = await createI18n({
-    namespaces: ['common', 'shell', 'auth', 'iam', 'audit', 'catalogue', 'stock'],
+    namespaces: [
+      'common',
+      'shell',
+      'auth',
+      'iam',
+      'audit',
+      'catalogue',
+      'stock',
+      'dashboard',
+      'branches',
+      'labels',
+      'lists',
+      'reports',
+    ],
   });
   const router = createMemoryRouter(routes, {
     initialEntries: [state === undefined ? path : { pathname: path, state }],

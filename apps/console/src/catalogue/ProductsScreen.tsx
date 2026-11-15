@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import type { components } from '@hakorem/api-client';
 import {
   Button,
@@ -19,6 +19,7 @@ import {
   TableRow,
   TableRowHeader,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiQuery } from '../data/api';
 import { useStateLabels } from '../lib/states';
@@ -35,8 +36,18 @@ export function ProductsScreen() {
   const auth = useAuth();
   const pages = useCursorPages();
   const [status, setStatus] = useState<Status | 'ALL'>('ALL');
-  const [typed, setTyped] = useState('');
-  const [q, setQ] = useState('');
+  // The header's search lands here with `?q=`; a new search from the header replaces the current one.
+  const [params] = useSearchParams();
+  const fromHeader = params.get('q') ?? '';
+  const [typed, setTyped] = useState(fromHeader);
+  const [q, setQ] = useState(fromHeader);
+  const [seen, setSeen] = useState(fromHeader);
+  if (seen !== fromHeader) {
+    setSeen(fromHeader);
+    setTyped(fromHeader);
+    setQ(fromHeader);
+    pages.reset();
+  }
   // A list people browse and filter: `working` (DATA_CONVENTIONS).
   const products = useApiQuery(
     'listProducts',
@@ -72,16 +83,19 @@ export function ProductsScreen() {
 
   return (
     <section aria-labelledby="products-title" className="grid gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 id="products-title" className="text-2xl font-semibold">
-          {t('products.title')}
-        </h1>
-        {auth.can('mdm.product.create') ? (
-          <Button asChild>
-            <Link to="/products/new">{t('products.new')}</Link>
-          </Button>
-        ) : null}
-      </div>
+      <PageHeader
+        title={t('products.title')}
+        titleId="products-title"
+        actions={
+          <>
+            {auth.can('mdm.product.create') ? (
+              <Button asChild>
+                <Link to="/products/new">{t('products.new')}</Link>
+              </Button>
+            ) : null}
+          </>
+        }
+      />
       <form
         role="search"
         aria-label={t('products.search')}

@@ -1,0 +1,57 @@
+{
+  "title": "Reports",
+  "description": "Sales, purchases, stock and profit for any period, from the API, ready to export.",
+  "list": {
+    "sales": {
+      "name": "Sales report",
+      "about": "What was sold in the period, by cashier, with the API's totals."
+    },
+    "purchases": {
+      "name": "Purchases report",
+      "about": "What was bought and received in the period (CR-018)."
+    },
+    "stock-valuation": {
+      "name": "Stock valuation",
+      "about": "Stock on hand at cost, never at price."
+    },
+    "expiry": {
+      "name": "Expiry report",
+      "about": "Lots expiring soon, so they sell or move before they spoil."
+    },
+    "profit-and-loss": {
+      "name": "Profit and loss",
+      "about": "Income, cost of sales and expenses from the ledger for the period."
+    }
+  },
+  "range": "Report period",
+  "from": "From",
+  "to": "To",
+  "run": "Run report",
+  "running": "Running",
+  "loading": "Running the {{name}}",
+  "empty": "Nothing in this period",
+  "emptyBody": "Try a longer period or another branch.",
+  "error": "The {{name}} could not be run",
+  "denied": "You do not have access to this report",
+  "summary": "Totals for the period",
+  "total": "Total for the period",
+  "negative": "A net loss for the period",
+  "negativeShort": "(negative)",
+  "asOf_one": "Data as of {{when}} · {{count}} row",
+  "asOf_other": "Data as of {{when}} · {{count}} rows",
+  "generated": "Generated {{when}}",
+  "checks_one": "{{count}} check on this statement",
+  "checks_other": "{{count}} checks on this statement",
+  "export": "Export",
+  "xlsx": "Spreadsheet (XLSX)",
+  "pdf": "PDF",
+  "exporting": "Preparing the file",
+  "download": "Download the file",
+  "queued": "The file is being prepared. It appears in report runs when it is ready.",
+  "notExported": "The file was not prepared",
+  "pl": {
+    "line": "Line",
+    "amount": "Amount",
+    "totalFor": "Total {{section}}"
+  }
+}

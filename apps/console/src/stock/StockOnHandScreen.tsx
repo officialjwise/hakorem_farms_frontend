@@ -20,6 +20,8 @@ import {
   TableRowHeader,
   WeightDisplay,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
+import { useBranchScope } from '../branch/branchScope';
 import { useApiQuery } from '../data/api';
 import { When } from '../iam/presentation';
 import { useStateLabels } from '../lib/states';
@@ -38,12 +40,14 @@ const COLUMNS = 7;
 export function StockOnHandScreen() {
   const { t } = useTranslation(['stock', 'common']);
   const units = useUnits();
+  const scope = useBranchScope();
   const locations = useLocations();
   const pages = useCursorPages();
   const [locationId, setLocationId] = useState(ALL);
   // Stock is acted on: `live`, the default.
   const stock = useApiQuery('listStockOnHand', {
     query: {
+      ...scope.query,
       ...(locationId === ALL ? {} : { locationId }),
       ...(pages.cursor === undefined ? {} : { cursor: pages.cursor }),
     },
@@ -71,9 +75,7 @@ export function StockOnHandScreen() {
 
   return (
     <section aria-labelledby="on-hand-title" className="grid gap-4">
-      <h1 id="on-hand-title" className="text-2xl font-semibold">
-        {t('onHand.title')}
-      </h1>
+      <PageHeader title={t('onHand.title')} titleId="on-hand-title" />
       <div className="max-w-xs">
         <Field label={t('onHand.location')}>
           <Select

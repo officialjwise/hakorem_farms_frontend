@@ -11,6 +11,7 @@ import {
   TableRow,
   TableRowHeader,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useApiAllPages } from '../data/api';
 import { useStateLabels } from '../lib/states';
 
@@ -45,9 +46,7 @@ export function UnitsScreen() {
   );
   return (
     <section aria-labelledby="units-title" className="grid gap-4">
-      <h1 id="units-title" className="text-2xl font-semibold">
-        {t('units.title')}
-      </h1>
+      <PageHeader title={t('units.title')} titleId="units-title" />
       <p className="text-fg-muted">{t('units.intro')}</p>
       <QueryBoundary
         query={units}

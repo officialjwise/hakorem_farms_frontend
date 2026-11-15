@@ -26,6 +26,7 @@ import {
   TableLoadingRows,
   TableRow,
   TableRowHeader,
+  Alert,
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { shownFailure, useStepUp } from '../auth/StepUp';
@@ -106,11 +107,7 @@ export function GrantsSection({
         </CardHeader>
         <CardBody className="grid gap-3">
           <p className="text-control-sm text-fg-muted">{t('grants.intro')}</p>
-          {done !== null ? (
-            <p role="status" className="font-semibold">
-              {done}
-            </p>
-          ) : null}
+          {done !== null ? <Alert severity={'good'} title={done} /> : null}
           <QueryBoundary
             query={grants}
             labels={labels}

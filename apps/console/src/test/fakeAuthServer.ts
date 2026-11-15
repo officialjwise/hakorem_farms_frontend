@@ -59,6 +59,25 @@ const BRANCH = {
   locationCode: null,
 } as const;
 
+/**
+ * The owner's two selling points beside the farm (F5b: Kasoa and KNUST). Not in the contract's
+ * `listBranches` example, so the switcher shows their codes, as it does for any branch it cannot name.
+ */
+const SELLING_POINTS = [
+  {
+    branchId: '019a7ab0-1c3e-7d21-9a40-6b2f8e0c4a11',
+    branchCode: 'KAS',
+    locationId: null,
+    locationCode: null,
+  },
+  {
+    branchId: '019a7ab0-2d4f-7e32-8b51-7c3a9f1d5b22',
+    branchCode: 'KNU',
+    locationId: null,
+    locationCode: null,
+  },
+] as const;
+
 export interface FakeUser {
   id: string;
   displayName: string;
@@ -68,9 +87,17 @@ export interface FakeUser {
   roleCode: string;
   roleName: string;
   permissions: readonly string[];
+  /** Branches beyond the farm where the user holds the same role. */
+  moreBranches?: readonly (typeof SELLING_POINTS)[number][];
 }
 
+/**
+ * The real seed's Cashier (backend main at e47ae8f, read by signing in on localhost in F5). It holds its own
+ * sessions: `iam.session.read` and `iam.session.revoke` answer only for the caller's own devices.
+ */
 const CASHIER_PERMISSIONS = [
+  'iam.session.read',
+  'iam.session.revoke',
   'pos.sale.create',
   'pos.shift.open',
   'pos.shift.close',
@@ -93,8 +120,6 @@ const OWNER_PERMISSIONS = [
   'iam.role.manage',
   'iam.grant.read',
   'iam.grant.manage',
-  'iam.session.read',
-  'iam.session.revoke',
   'mdm.branch.read',
   'aud.audit.read',
 ];
@@ -143,6 +168,22 @@ const STOCK_PERMISSIONS = [
   'inv.goods_receipt.post',
 ];
 
+/** What the owner holds for the F5b screens: the dashboard, branches and locations, and the new lists. */
+const OWNER_F5B_PERMISSIONS = [
+  'rpt.dashboard.owner',
+  'rpt.exceptions.read',
+  'mdm.branch.create',
+  'mdm.branch.update',
+  'mdm.location.create',
+  'mdm.location.update',
+  'mdm.supplier.read',
+  'inv.movement.read',
+  'pos.register.read',
+  'rpt.report.read',
+  'rpt.report.export',
+  'fin.report.read',
+];
+
 /** Keyed by lower-case email. Permission codes are the contract's `x-permission` values. */
 export const FAKE_USERS: Record<string, FakeUser> = {
   'ama.mensah@hakoremfarms.com': {
@@ -153,7 +194,13 @@ export const FAKE_USERS: Record<string, FakeUser> = {
     mustChangePassword: false,
     roleCode: 'OWNER',
     roleName: 'Owner',
-    permissions: [...OWNER_PERMISSIONS, ...OWNER_CATALOGUE_PERMISSIONS, ...STOCK_PERMISSIONS],
+    permissions: [
+      ...OWNER_PERMISSIONS,
+      ...OWNER_CATALOGUE_PERMISSIONS,
+      ...STOCK_PERMISSIONS,
+      ...OWNER_F5B_PERMISSIONS,
+    ],
+    moreBranches: SELLING_POINTS,
   },
   'kwabena.owusu@hakoremfarms.com': {
     id: '019a7a86-4f35-7afd-b035-b8ab03a83188',
@@ -362,7 +409,11 @@ export function createFakeAuthServer(): FakeAuthServer {
         session.steppedUpAt === null ? null : new Date(session.steppedUpAt).toISOString(),
       mustChangePassword: false,
       totpEnrolled: user.totp,
-      grants: [{ roleCode: user.roleCode, roleName: user.roleName, ...BRANCH }],
+      grants: [BRANCH, ...(user.moreBranches ?? [])].map((branch) => ({
+        roleCode: user.roleCode,
+        roleName: user.roleName,
+        ...branch,
+      })),
       permissions: [...user.permissions],
     };
   }

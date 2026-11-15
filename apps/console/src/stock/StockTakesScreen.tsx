@@ -19,7 +19,9 @@ import {
   TableRow,
   TableRowHeader,
 } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
+import { BranchScopeNote } from '../branch/BranchScopeNote';
 import { useApiMutation, useApiQuery } from '../data/api';
 import { When } from '../iam/presentation';
 import { useIntentKey } from '../lib/queries';
@@ -58,14 +60,18 @@ export function StockTakesScreen() {
   );
   return (
     <section aria-labelledby="takes-title" className="grid gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 id="takes-title" className="text-2xl font-semibold">
-          {t('takes.title')}
-        </h1>
-        {auth.can('inv.stock_take.create') ? (
-          <Button onClick={() => setCreating(true)}>{t('takes.new')}</Button>
-        ) : null}
-      </div>
+      <PageHeader
+        title={t('takes.title')}
+        titleId="takes-title"
+        description={<BranchScopeNote />}
+        actions={
+          <>
+            {auth.can('inv.stock_take.create') ? (
+              <Button onClick={() => setCreating(true)}>{t('takes.new')}</Button>
+            ) : null}
+          </>
+        }
+      />
       <QueryBoundary
         query={takes}
         labels={labels}
