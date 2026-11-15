@@ -250,12 +250,14 @@ describe('the Farm hand (A-158)', () => {
     expect(screen.queryByRole('button', { name: 'Weigh a pen' })).toBeNull();
   });
 
-  it('cannot look an animal up, and is told so instead of meeting an empty list', async () => {
+  it('looks an animal up by tag in the care register, which carries no cost (contract 1.26.0)', async () => {
     const user = userEvent.setup();
     await renderApp('/weights', await signedIn('farmHand'));
     await user.click(await screen.findByRole('button', { name: 'Weigh one animal' }));
     const dialog = await screen.findByRole('dialog', { name: 'Which animal?' });
-    expect(dialog).toHaveTextContent('Your role cannot look animals up by tag yet');
+    await user.type(within(dialog).getByRole('combobox', { name: /Animal/ }), 'G-01');
+    expect(await screen.findByRole('option', { name: 'G-0142, Goat' })).toBeInTheDocument();
+    expect(dialog).not.toHaveTextContent('GH₵');
   });
 
   it('meets the register as permission denied, in words', async () => {
