@@ -1,7 +1,6 @@
-import { HeartCrack, MoveRight, PencilLine, Scale, Syringe } from 'lucide-react';
+import { MoveRight, PencilLine, Scale, Syringe } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { components } from '@hakorem/api-client';
 import {
   Button,
   Dialog,
@@ -27,15 +26,7 @@ import { useStateLabels } from '../lib/states';
 import { ProductPicker, type ProductRef } from '../stock/LinesEditor';
 import { useLocations } from '../stock/locations';
 import { toQuantity, useUnits } from '../stock/units';
-import {
-  AnimalPicker,
-  animalName,
-  useMortalityReasons,
-  type Animal,
-  type PickedAnimal,
-} from './animals';
-
-type S = components['schemas'];
+import { AnimalPicker, animalName, type Animal, type PickedAnimal } from './animals';
 
 const WEIGHT_SOURCES = ['SCALE', 'MANUAL', 'ESTIMATE'] as const;
 const HEALTH_KINDS = ['VACCINATION', 'TREATMENT', 'CHECK', 'DEWORMING'] as const;
@@ -368,122 +359,6 @@ export function HealthEventDialog({
         </Field>
         <DialogActions cancelLabel={t('common:actions.cancel')} onCancel={onClose}>
           <Button type="submit">{t('health.review')}</Button>
-        </DialogActions>
-      </form>
-    </Dialog>
-  );
-}
-
-/**
- * Report a death or a cull. The report itself writes nothing off: the animal stays on hand until the
- * reporter submits the record (on its own page), which values it and, at or above the threshold, waits for
- * a second person. A photograph is required at or above that threshold and cannot be added later; the
- * console cannot upload files yet (A-F6-03), so such a report is refused on submit in the API's words.
- */
-export function MortalityDialog({
-  animal,
-  onClose,
-  onDone,
-}: {
-  animal: PickedAnimal | null;
-  onClose: () => void;
-  onDone: (record: S['MortalityRecord']) => void;
-}) {
-  const { t } = useTranslation(['livestock', 'common']);
-  const intent = useRecordIntent();
-  const [picked, setPicked] = useState<PickedAnimal | null>(animal);
-  const [kind, setKind] = useState<'DEATH' | 'CULL'>('DEATH');
-  const reasons = useMortalityReasons(kind);
-  const [reason, setReason] = useState('');
-  const [note, setNote] = useState('');
-  const [problems, setProblems] = useState<string[]>([]);
-  const report = useApiMutation('reportMortality');
-  const keyFor = useIntentKey();
-  const failure = useFailureLabels(t('mortality.failed'), t('mortality.denied'));
-  return (
-    <Dialog
-      open
-      onOpenChange={(open) => (open ? undefined : onClose())}
-      title={
-        animal === null
-          ? t('mortality.title')
-          : t('mortality.titleFor', { animal: animalName(animal) })
-      }
-      description={t('mortality.body')}
-      closeLabel={t('common:actions.cancel')}
-      icon={HeartCrack}
-      requiredNote={t('common:field.requiredNote')}
-    >
-      <form
-        className="grid gap-3 pb-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          const found: string[] = [];
-          if (picked === null) found.push('animal');
-          if (reason === '') found.push('reason');
-          setProblems(found);
-          if (picked === null || reason === '') return;
-          const body = {
-            id: intent.id,
-            kind,
-            stockUnitId: picked.id,
-            reasonCode: reason,
-            foundAt: intent.at,
-            ...(note.trim() === '' ? {} : { disposalNote: note.trim() }),
-          };
-          report
-            .mutateAsync({ body }, { idempotencyKey: keyFor(body) })
-            .then(onDone)
-            .catch(() => undefined);
-        }}
-      >
-        <MutationFailure error={report.error} labels={failure} />
-        {animal === null ? (
-          <AnimalPicker
-            label={t('mortality.animal')}
-            value={picked}
-            onChange={setPicked}
-            error={problems.includes('animal') ? t('common:field.required') : undefined}
-          />
-        ) : null}
-        <Field label={t('mortality.kind')} {...required(t)} requiredMark="asterisk">
-          <Select
-            value={kind}
-            onValueChange={(value) => {
-              setKind(value === 'CULL' ? 'CULL' : 'DEATH');
-              setReason('');
-            }}
-            options={[
-              { value: 'DEATH', label: t('mortalityKind.DEATH') },
-              { value: 'CULL', label: t('mortalityKind.CULL') },
-            ]}
-          />
-        </Field>
-        {reasons.query.isError ? <p role="alert">{t('mortality.reasonsError')}</p> : null}
-        <Field
-          label={t('mortality.reason')}
-          {...required(t)}
-          requiredMark="asterisk"
-          error={problems.includes('reason') ? t('common:field.required') : undefined}
-        >
-          <Select
-            value={reason}
-            onValueChange={setReason}
-            placeholder={t('mortality.chooseReason')}
-            options={reasons.options}
-          />
-        </Field>
-        <Field label={t('mortality.disposal')} hint={t('mortality.disposalHint')}>
-          <Textarea value={note} onChange={(event) => setNote(event.target.value)} />
-        </Field>
-        <p role="note" className="text-control-sm text-fg-muted">
-          {t('mortality.photoNote')}
-        </p>
-        <DialogActions cancelLabel={t('common:actions.cancel')} onCancel={onClose}>
-          <Button type="submit" loading={report.isPending} loadingLabel={t('mortality.saving')}>
-            <HeartCrack aria-hidden="true" />
-            {t('mortality.save')}
-          </Button>
         </DialogActions>
       </form>
     </Dialog>

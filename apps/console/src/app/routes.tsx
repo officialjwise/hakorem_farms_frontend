@@ -408,6 +408,14 @@ export const protectedRoutes: RouteObject[] = [
           },
         ],
       },
+      // F6b: the reporter of a death sends it from here, whether or not they can read the records.
+      {
+        path: 'report-death',
+        element: lazyScreen(() =>
+          import('../livestock/ReportDeathScreen').then((m) => m.ReportDeathScreen),
+        ),
+        handle: back('liv.mortality.report', 'reportDeath'),
+      },
       {
         path: 'feed',
         element: lazyScreen(() => import('../livestock/FeedScreen').then((m) => m.FeedScreen)),

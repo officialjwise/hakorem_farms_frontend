@@ -243,8 +243,8 @@ const OWNER_F6_PERMISSIONS = [
  * - the care register, health events, rations and batches through `liv.care.read` (1.26.0);
  * - breeding and growth (1.25.0: "The Vet or Farm hand now holds the edits, moves, batches, growth and
  *   breeding");
- * - location and product reads, so a pen and a feed or medicine can be named, and the file upload a death's
- *   photograph needs: assumed (A-F6-02, A-F6b-02).
+ * - location, product and reason code reads, so a pen, a feed or medicine and the reason for a death can be
+ *   named, and the file upload a death's photograph needs: assumed (A-F6-02, A-F6b-02).
  */
 const FARM_HAND_PERMISSIONS = [
   'liv.weight.read',
@@ -262,6 +262,7 @@ const FARM_HAND_PERMISSIONS = [
   'liv.report.read',
   'mdm.location.read',
   'mdm.product.read',
+  'mdm.reason_code.read',
   'platform.file.upload',
 ];
 

@@ -242,9 +242,14 @@ describe('the Farm hand (A-158)', () => {
     await renderApp('/weights', await signedIn('farmHand'));
     expect(await screen.findByRole('heading', { level: 1, name: 'Weights' })).toBeInTheDocument();
     const work = screen.getByRole('region', { name: 'Other pen work' });
-    for (const action of ['Record a treatment', 'Record feed given', 'Report a death or cull']) {
+    for (const action of ['Record a treatment', 'Record feed given']) {
       expect(within(work).getByRole('button', { name: action })).toBeEnabled();
     }
+    // A death is reported and sent from its own page, which the Farm hand can open (F6b).
+    expect(within(work).getByRole('link', { name: 'Report a death or cull' })).toHaveAttribute(
+      'href',
+      '/report-death',
+    );
     // The register is not offered, and opening it says why in words.
     expect(screen.queryByRole('link', { name: 'Animals' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Weigh a pen' })).toBeNull();

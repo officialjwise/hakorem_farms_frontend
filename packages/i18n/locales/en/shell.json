@@ -115,7 +115,9 @@
     "processingOrders": "Processing orders",
     "processingOrderNew": "New processing order",
     "processingOrder": "Processing order",
-    "yieldStandards": "Yield standards"
+    "yieldStandards": "Yield standards",
+    "reportDeath": "Report a death",
+    "approvals": "Approvals"
   },
   "placeholder": {
     "title": "This area is built in a later session",

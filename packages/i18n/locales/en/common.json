@@ -187,5 +187,15 @@
       "TAG_NOT_EDITABLE": "An animal's tag cannot be changed: it is the stock record's identifier.",
       "TOO_LARGE": "The conversion is too large."
     }
+  },
+  "photo": {
+    "choose": "Take or choose a photo",
+    "replace": "Take another",
+    "remove": "Remove the photo",
+    "busy": "Sending the photo",
+    "preview": "The photograph you took",
+    "missing": "Take the photograph first.",
+    "offline": "The photo was not sent: the connection dropped. Take it again when you have signal.",
+    "failed": "The photo was not sent. Try again."
   }
 }

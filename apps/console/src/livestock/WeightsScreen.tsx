@@ -33,7 +33,7 @@ import { TableCard } from '../lib/TableCard';
 import { useCursorPages } from '../lib/useCursorPages';
 import { ANY, FilterSelect, countSet, param } from '../stock/filters';
 import { useLocations } from '../stock/locations';
-import { HealthEventDialog, MortalityDialog, RecordWeightDialog } from './forms';
+import { HealthEventDialog, RecordWeightDialog } from './forms';
 import { RecordFeedDialog } from './FeedScreen';
 import { AnimalPicker, type PickedAnimal } from './animals';
 import { rangeQuery } from './range';
@@ -55,7 +55,7 @@ export function WeightsScreen() {
   const [range, setRange] = useState<DateRange>({ from: undefined, to: undefined });
   const [locationId, setLocationId] = useState(ANY);
   const [weighing, setWeighing] = useState<'pen' | 'one' | null>(null);
-  const [penWork, setPenWork] = useState<'health' | 'feed' | 'mortality' | null>(null);
+  const [penWork, setPenWork] = useState<'health' | 'feed' | null>(null);
   const [one, setOne] = useState<PickedAnimal | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const weights = useApiQuery('listWeightRecords', {
@@ -166,11 +166,17 @@ export function WeightsScreen() {
             {t('weights.penWork')}
           </h2>
           <div className="flex flex-wrap gap-2">
-            {penWorks.map(([key]) => (
-              <Button key={key} variant="secondary" onClick={() => setPenWork(key)}>
-                {t(`weights.penWorkAction.${key}`)}
-              </Button>
-            ))}
+            {penWorks.map(([key]) =>
+              key === 'mortality' ? (
+                <Button key={key} variant="secondary" asChild>
+                  <Link to="/report-death">{t('weights.penWorkLink')}</Link>
+                </Button>
+              ) : (
+                <Button key={key} variant="secondary" onClick={() => setPenWork(key)}>
+                  {t(`weights.penWorkAction.${key}`)}
+                </Button>
+              ),
+            )}
           </div>
         </section>
       )}
@@ -240,16 +246,6 @@ export function WeightsScreen() {
           onDone={(message) => {
             setPenWork(null);
             setNotice(message);
-          }}
-        />
-      ) : null}
-      {penWork === 'mortality' ? (
-        <MortalityDialog
-          animal={null}
-          onClose={() => setPenWork(null)}
-          onDone={(record) => {
-            setPenWork(null);
-            setNotice(t('mortality.reportedOnly', { kind: t(`mortalityKind.${record.kind}`) }));
           }}
         />
       ) : null}

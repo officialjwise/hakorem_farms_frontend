@@ -1,7 +1,7 @@
 import { HeartCrack, History, MoveRight, PencilLine, Scale, Syringe } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 import type { components } from '@hakorem/api-client';
 import {
   Alert,
@@ -26,7 +26,6 @@ import { animalName, type Animal } from './animals';
 import {
   EditAnimalDialog,
   HealthEventDialog,
-  MortalityDialog,
   MoveAnimalDialog,
   RecordWeightDialog,
   type OpenDialog,
@@ -83,6 +82,7 @@ function AnimalDetail({ animal, back }: { animal: Animal; back: ReactNode }) {
   const auth = useAuth();
   const [open, setOpen] = useState<OpenDialog>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const navigate = useNavigate();
   const alive = animal.status === 'ALIVE';
   const done = (message: string) => {
     setOpen(null);
@@ -122,7 +122,19 @@ function AnimalDetail({ animal, back }: { animal: Animal; back: ReactNode }) {
                         key={key}
                         size="sm"
                         variant={key === 'mortality' ? 'secondary' : 'primary'}
-                        onClick={() => setOpen(key)}
+                        onClick={() =>
+                          key === 'mortality'
+                            ? void navigate('/report-death', {
+                                state: {
+                                  animal: {
+                                    id: animal.id,
+                                    tagNo: animal.tagNo,
+                                    species: animal.species,
+                                  },
+                                },
+                              })
+                            : setOpen(key)
+                        }
                       >
                         <Icon aria-hidden="true" />
                         {t(`animal.actions.${key}`)}
@@ -198,15 +210,6 @@ function AnimalDetail({ animal, back }: { animal: Animal; back: ReactNode }) {
       ) : null}
       {open === 'move' ? (
         <MoveAnimalDialog animal={animal} onClose={() => setOpen(null)} onDone={done} />
-      ) : null}
-      {open === 'mortality' ? (
-        <MortalityDialog
-          animal={animal}
-          onClose={() => setOpen(null)}
-          onDone={(record) =>
-            done(t('mortality.done', { kind: t(`mortalityKind.${record.kind}`) }))
-          }
-        />
       ) : null}
       {open === 'edit' ? (
         <EditAnimalDialog animal={animal} onClose={() => setOpen(null)} onDone={done} />

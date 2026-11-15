@@ -131,6 +131,12 @@ export const BACK_OFFICE_GROUPS: readonly NavGroup[] = [
       },
       { key: 'breeding', path: '/breeding', permission: 'liv.breeding.read', icon: HeartPulse },
       { key: 'mortality', path: '/mortality', permission: 'liv.mortality.read', icon: HeartCrack },
+      {
+        key: 'reportDeath',
+        path: '/report-death',
+        permission: 'liv.mortality.report',
+        icon: HeartCrack,
+      },
       { key: 'feed', path: '/feed', permission: 'liv.feed.read', icon: Wheat },
     ],
   },

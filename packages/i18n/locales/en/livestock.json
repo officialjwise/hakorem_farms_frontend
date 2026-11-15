@@ -251,7 +251,8 @@
       "health": "Record a treatment",
       "feed": "Record feed given",
       "mortality": "Report a death or cull"
-    }
+    },
+    "penWorkLink": "Report a death or cull"
   },
   "health": {
     "title": "Record a treatment",
@@ -332,9 +333,6 @@
     "holds_other": "{{count}} animals held from sale"
   },
   "mortality": {
-    "title": "Report a death or cull",
-    "titleFor": "Report a death or cull: {{animal}}",
-    "body": "The report writes nothing off. The person who reports it submits it afterwards, on its own page.",
     "animal": "Animal",
     "kind": "What happened",
     "reason": "Reason",
@@ -342,12 +340,6 @@
     "reasonsError": "Reasons could not be loaded. Try again.",
     "disposal": "Disposal",
     "disposalHint": "How the carcass was disposed of, for the record",
-    "photoNote": "A death worth GH₵500.00 or more at cost needs a photograph, taken at the report. This screen cannot attach one yet, so such a report will be refused when it is submitted.",
-    "save": "Report it",
-    "saving": "Reporting",
-    "done": "{{kind}} reported. Submit it from its record to write it off.",
-    "reportedOnly": "{{kind}} reported. A manager submits it to write it off.",
-    "failed": "The report was not saved",
     "denied": "You cannot report deaths or culls"
   },
   "mortalityList": {
@@ -612,5 +604,34 @@
     "created": "{{name}} created.",
     "saved": "{{name}} saved.",
     "failed": "The ration was not saved"
+  },
+  "reportDeath": {
+    "title": "Report a death or cull",
+    "description": "From the pen: which animal, what happened, and a photograph. It goes to a manager in the same step.",
+    "photo": "Photograph",
+    "photoHint": "The animal where it was found, with its tag in view. It cannot be added later, and a loss above the approval limit is refused without one.",
+    "photoAttached": "Attached",
+    "review": "Check and send",
+    "confirmTitle": "Send this {{kind}} of {{animal}}?",
+    "confirmBody": "The report goes in with its photograph and is sent for approval at once. The server works out what the animal was worth.",
+    "confirmConsequence": "If the loss is above the approval limit, a manager must approve it before the animal is written off. Below it, the animal is written off now.",
+    "send": "Send the report",
+    "sending": "Sending",
+    "notReported": "The report was not saved",
+    "notSent": "The report was not sent for approval",
+    "pendingTitle": "{{kind}} of {{tag}} sent for approval",
+    "pendingBody": "A manager decides it in the approvals inbox. Until then nothing is written off and the animal stays on the books.",
+    "postedTitle": "{{kind}} of {{tag}} written off",
+    "postedBody": "The loss was under the approval limit, so it was written off straight away.",
+    "another": "Report another",
+    "stuckTitle": "{{kind}} of {{tag}} is reported, but not yet sent for approval",
+    "stuckBody": "The report and its photograph are saved. Send it again when you have signal: it is the same report, so it will not be counted twice.",
+    "sendAgain": "Send it again",
+    "unsentTitle": "Reported from this phone, not yet sent",
+    "unsentBody": "These reports are saved but were not sent for approval. Send each one again.",
+    "unsentRow": "{{kind}} of {{tag}}",
+    "loadingReasons": "Loading the reasons",
+    "reasonsDenied": "Your role cannot read the reasons for a death",
+    "reasonsDeniedBody": "A report needs a reason from the list. Ask a manager to report this one, and ask the owner to give your role the reasons."
   }
 }
