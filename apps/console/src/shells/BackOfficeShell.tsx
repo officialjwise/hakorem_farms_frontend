@@ -2,6 +2,7 @@ import { Menu, ScanBarcode } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Outlet } from 'react-router';
+import { PAGE_TITLE_SLOT_ID } from '../lib/ScreenHeader';
 import { Button, Sheet } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { POS_NAV } from '../routing/nav';
@@ -16,7 +17,7 @@ import {
 import { Sidebar, SidebarLinks } from './Sidebar';
 
 /**
- * The back office frame (F5b): a header with the menu (a sheet below 64rem), the name, breadcrumbs, search,
+ * The back office frame (F5b, F5c): a top bar with the menu (a sheet below 64rem), the page's title, search,
  * the branch every screen is scoped to, the till, theme, notifications and the account; a grouped sidebar;
  * and a permission-gated main area.
  */
@@ -55,13 +56,9 @@ export function BackOfficeShell() {
               </nav>
             </Sheet>
           </div>
-          <Link
-            to="/"
-            className="shrink-0 text-lg font-bold text-accent-text outline-focus focus-visible:outline-2 lg:hidden"
-          >
-            {t('app.name')}
-          </Link>
-          <div className="ms-auto flex min-w-0 items-center justify-end gap-1 sm:gap-2">
+          {/* The page's h1 lands here (lib/ScreenHeader), as the reference puts the title in the top bar. */}
+          <div id={PAGE_TITLE_SLOT_ID} className="flex min-w-0 flex-1 items-center" />
+          <div className="ms-auto flex min-w-0 shrink-0 items-center justify-end gap-1 sm:gap-2">
             <GlobalSearch />
             <BranchSwitcher />
             {auth.can(POS_NAV.permission ?? '') ? (
