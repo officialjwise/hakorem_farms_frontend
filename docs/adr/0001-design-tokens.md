@@ -95,3 +95,9 @@ Light `accent` goes from HSL 175° 75% 21% to 173° 84% 25%. That is brighter an
 | `fg` on `panel`                           | dark  | 10.5  | 7       |
 
 Every other pair in the matrix is unchanged and still passes.
+
+### Amendment, later the same day (F5b): the accent goes back to `#0D5C55` and `#3DBE98`
+
+The owner then set the accent explicitly: `#0D5C55` in light mode and `#3DBE98` in dark mode. These are the F0 values. So `accent`, `accent-hover`, `accent-text` and `focus` are back to their F0 values (`#0D5C55`/`#3DBE98`, `#09463F`/`#62CDAD`, `#0D5C55`/`#52C6A3`, `#0D5C55`/`#3DBE98`). The brighter values in the table above are withdrawn.
+
+The panel and the second series stay. Re-run: 219 contrast tests pass. On the panel, `accent-text` is 5.96:1 (minimum 4.5) and `accent` 5.0:1 or better (minimum 3).

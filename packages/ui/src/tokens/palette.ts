@@ -88,21 +88,21 @@ export const colors = {
 
   // Accent
   accent: {
-    light: '#0A7468',
-    dark: '#2EC4A6',
+    light: '#0D5C55',
+    dark: '#3DBE98',
     roles: ['surface', ...MARK],
     use: 'Primary action fill, selection bar',
   },
   'accent-hover': {
-    light: '#075A51',
-    dark: '#5ED3BA',
+    light: '#09463F',
+    dark: '#62CDAD',
     roles: ['surface'],
     use: 'Primary action hover',
   },
   'accent-fg': { light: '#FFFFFF', dark: '#03201A', roles: ['text'], use: 'Text on accent' },
   'accent-text': {
-    light: '#0A7468',
-    dark: '#4CCDB0',
+    light: '#0D5C55',
+    dark: '#52C6A3',
     roles: ['text'],
     use: 'Links, accent text on page',
   },
@@ -118,7 +118,7 @@ export const colors = {
     roles: ['text'],
     use: 'Text on accent tint',
   },
-  focus: { light: '#0A7468', dark: '#2EC4A6', roles: ['line'], use: 'Focus ring' },
+  focus: { light: '#0D5C55', dark: '#3DBE98', roles: ['line'], use: 'Focus ring' },
 
   // The deep teal panel: a dark island for one highlighted figure group (the dashboard's stock health).
   // It is always rendered with data-theme="dark", so only its dark value is ever shown; the light value
