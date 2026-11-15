@@ -1,3 +1,346 @@
 {
-  "title": "Processing"
+  "title": "Processing",
+  "notNumbered": "Not numbered yet",
+  "setAtCompletion": "Set at completion",
+  "percent": "{{value}}%",
+  "orderStatus": {
+    "PLANNED": "Planned",
+    "IN_PROGRESS": "In progress",
+    "COMPLETED": "Completed",
+    "CANCELLED": "Cancelled"
+  },
+  "outputKind": {
+    "MEAT": "Meat",
+    "OFFAL": "Offal",
+    "BY_PRODUCT": "By-product",
+    "WASTE": "Waste"
+  },
+  "costKind": {
+    "LABOUR": "Labour",
+    "CONSUMABLE": "Consumables",
+    "SERVICE": "Service",
+    "UTILITY": "Utilities"
+  },
+  "weightSource": {
+    "SCALE": "Read from a scale",
+    "MANUAL": "Typed in",
+    "ESTIMATE": "Estimated"
+  },
+  "packStatus": {
+    "IN_STOCK": "In stock",
+    "PICKED": "Picked",
+    "SOLD": "Sold",
+    "WRITTEN_OFF": "Written off"
+  },
+  "yield": {
+    "title": "Weights and yield",
+    "expected": "Expected yield",
+    "actual": "Actual yield",
+    "against": "Against the standard",
+    "flagged": "Yield outside tolerance",
+    "within": "Yield within tolerance",
+    "notJudged": "Judged at completion"
+  },
+  "orders": {
+    "title": "Processing orders",
+    "new": "New processing order",
+    "back": "Back to processing orders",
+    "table": "Processing orders",
+    "pages": "Processing order pages",
+    "loading": "Loading processing orders",
+    "empty": "No processing orders yet",
+    "emptyBody": "Plan one to take animals to the processing room.",
+    "error": "Processing orders could not be loaded",
+    "denied": "You do not have access to processing orders",
+    "dates": "Created",
+    "route": "{{from}} to {{to}}",
+    "expected": "expected {{value}}%",
+    "columns": {
+      "order": "Order",
+      "status": "State",
+      "inputs": "Animals",
+      "yield": "Yield",
+      "cost": "Total cost",
+      "created": "Created"
+    },
+    "filters": {
+      "status": "State",
+      "anyStatus": "Any state",
+      "yield": "Yield against the standard",
+      "anyYield": "Any yield",
+      "flagged": "Outside tolerance",
+      "notFlagged": "Not flagged"
+    }
+  },
+  "newOrder": {
+    "title": "New processing order",
+    "hint": "Planning an order moves no stock. The animals are consumed, and the meat becomes lots, only when the order is completed.",
+    "form": "New processing order",
+    "loading": "Loading locations",
+    "noLocations": "There are no locations to choose from",
+    "noLocationsBody": "A processing order needs a processing location and an output location.",
+    "locationsError": "Locations could not be loaded",
+    "locationsDenied": "You cannot see the locations this needs",
+    "denied": "You cannot plan processing orders",
+    "location": "Processing location",
+    "locationHint": "Where the animals are slaughtered. Changing it clears the animals chosen.",
+    "outputLocation": "Output location",
+    "outputLocationHint": "Where the meat is kept, usually the cold room.",
+    "chooseLocation": "Choose a location",
+    "inputs": "Animals to process",
+    "addAnimal": "Add an animal",
+    "noInputs": "Add at least one animal",
+    "noneYet": "No animals chosen yet.",
+    "animal": "{{tag}}, {{product}}",
+    "lastWeighed": "Last weighed at",
+    "weight": "Weight at input of {{tag}} (kg)",
+    "weightHint": "Three decimal places, from the scale where there is one.",
+    "weightMissing": "Enter the weight in kilograms",
+    "weightSource": "How {{tag}} was weighed",
+    "remove": "Remove {{tag}}",
+    "save": "Plan the order",
+    "saving": "Planning",
+    "notSaved": "The order was not planned"
+  },
+  "order": {
+    "title": "Processing order {{name}}",
+    "loading": "Loading the processing order",
+    "notFound": "There is no processing order at this address",
+    "error": "This processing order could not be loaded",
+    "denied": "You do not have access to this processing order"
+  },
+  "notice": {
+    "started": "Started. Nothing has moved yet: the animals are consumed when the order is completed.",
+    "completed": "Completed. The animals are consumed and the outputs are in their lots.",
+    "cancelled": "Cancelled. Nothing had moved, so no stock or cost changed.",
+    "costAdded": "Cost added. It reaches the ledger when the order is completed.",
+    "outputsSaved": "Outputs saved."
+  },
+  "facts": {
+    "title": "Order",
+    "number": "Number",
+    "location": "Processing location",
+    "outputLocation": "Output location",
+    "created": "Planned by",
+    "started": "Started",
+    "completed": "Completed",
+    "posted": "Posted by",
+    "notYet": "Not yet",
+    "inputWeight": "Weight in",
+    "outputWeight": "Weight out",
+    "wasteWeight": "Waste",
+    "costsTitle": "Costs",
+    "inputCost": "Input cost",
+    "directCost": "Direct cost",
+    "totalCost": "Total cost"
+  },
+  "actions": {
+    "title": "What happens next",
+    "plannedHint": "Start the order when the animals are in the processing room. Starting moves no stock.",
+    "inProgressHint": "Record what each animal yielded, then complete the order. Until it is completed it can still be cancelled with no stock or cost effect."
+  },
+  "start": {
+    "action": "Start processing",
+    "title": "Start processing?",
+    "body": "Each animal is checked again: one sold, moved or put under a hold since it was planned is refused. Starting moves no stock.",
+    "pending": "Starting",
+    "failed": "The order was not started"
+  },
+  "complete": {
+    "action": "Complete the order",
+    "title": "Complete the order?",
+    "body": "This consumes the animals at their whole cost, turns each saleable output into a lot in the output location, and sends the direct costs to the ledger.",
+    "consequence": "A completed order cannot be changed or cancelled.",
+    "consumed": "Animals consumed",
+    "outputs": "Outputs received",
+    "allocation": "The total cost and each output's share of it are worked out by the API when the order completes, by the sales value of each output. Waste takes no cost.",
+    "needsOutputs": "Record the outputs before completing.",
+    "pending": "Completing",
+    "failed": "The order was not completed"
+  },
+  "confirm": {
+    "input": "{{tag}}, {{product}},",
+    "costNow": "cost now",
+    "output": "{{product}} ({{kind}}),"
+  },
+  "cancel": {
+    "action": "Cancel the order",
+    "title": "Cancel this processing order?",
+    "body": "Nothing has moved before completion, so cancelling has no stock or cost effect. The reason is kept with the order.",
+    "pending": "Cancelling",
+    "failed": "The order was not cancelled"
+  },
+  "addCost": {
+    "title": "Add a direct cost",
+    "kind": "Kind of cost",
+    "amount": "Amount (GH₵)",
+    "amountMissing": "Enter an amount above zero",
+    "description": "What it was for",
+    "descriptionHint": "For example: slaughter and dressing, two hands.",
+    "action": "Add the cost",
+    "confirmTitle": "Add this cost?",
+    "confirmBody": "It becomes part of the order's total cost, shared across the outputs when the order completes.",
+    "pending": "Adding",
+    "failed": "The cost was not added"
+  },
+  "inputs": {
+    "title": "Animals in",
+    "costHint": "Until the order completes, each cost is what the animal would carry now.",
+    "columns": {
+      "animal": "Animal",
+      "product": "Product",
+      "weight": "Weight at input",
+      "source": "Weighed by",
+      "costNow": "Cost now",
+      "costConsumed": "Cost consumed"
+    }
+  },
+  "outputs": {
+    "title": "Outputs",
+    "none": "No outputs recorded yet.",
+    "noneUntilStarted": "Outputs are recorded once the order is started.",
+    "lineNo": "Line {{number}}",
+    "noLotForWaste": "No lot: waste",
+    "perKg": "per kg",
+    "columns": {
+      "output": "Output",
+      "kind": "Kind",
+      "lot": "Lot",
+      "weight": "Weight",
+      "packs": "Packs",
+      "expires": "Expires",
+      "referencePrice": "Reference selling price",
+      "allocatedCost": "Allocated cost"
+    },
+    "editTitle": "Record the outputs",
+    "editHint": "Weigh each output and save the whole set. Saving again replaces what was saved before.",
+    "form": "Outputs of this order",
+    "line": "Output {{number}}",
+    "product": "Product of output {{number}}",
+    "kind": "Kind of output {{number}}",
+    "weight": "Weight of output {{number}} (kg)",
+    "weightMissing": "Enter the weight in kilograms",
+    "weightSource": "How output {{number}} was weighed",
+    "packs": "Packs in output {{number}}",
+    "packsHint": "Optional.",
+    "packsInvalid": "Enter a whole number of packs",
+    "expires": "Use by, output {{number}}",
+    "expiresHint": "Optional.",
+    "expiresInvalid": "Enter a date",
+    "wasteHint": "Waste has no packs and no use-by date, and takes no cost.",
+    "remove": "Remove output {{number}}",
+    "add": "Add an output",
+    "save": "Save the outputs",
+    "saving": "Saving",
+    "notSaved": "The outputs were not saved"
+  },
+  "costs": {
+    "title": "Direct costs",
+    "none": "No direct costs yet.",
+    "total": "Direct cost, from the API:",
+    "columns": {
+      "description": "For",
+      "kind": "Kind",
+      "amount": "Amount"
+    }
+  },
+  "packs": {
+    "title": "Packs",
+    "table": "Packs",
+    "pages": "Pack pages",
+    "loading": "Loading packs",
+    "empty": "No packs yet",
+    "emptyBody": "Cut packs from a saleable output to label them.",
+    "error": "Packs could not be loaded",
+    "denied": "You do not have access to packs",
+    "packNo": "Pack {{number}}",
+    "notPrinted": "Not printed",
+    "columns": {
+      "pack": "Pack",
+      "lot": "Lot",
+      "weight": "Weight",
+      "barcode": "Barcode",
+      "status": "State",
+      "label": "Label printed"
+    },
+    "createTitle": "Cut packs",
+    "output": "From output",
+    "outputOption": "Line {{number}}, {{product}}",
+    "outputWeight": "The output weighs",
+    "weightSource": "How the packs were weighed",
+    "weight": "Weight of pack {{number}} (kg)",
+    "remove": "Remove pack {{number}}",
+    "addPack": "Add a pack",
+    "create": "Save the packs",
+    "creating": "Saving",
+    "created_one": "{{count}} pack saved",
+    "created_other": "{{count}} packs saved",
+    "notCreated": "The packs were not saved"
+  },
+  "labels": {
+    "title": "Labels",
+    "format": "Label format",
+    "formats": {
+      "PDF_LABEL_50x30": "PDF, 50 by 30 mm",
+      "ZPL": "ZPL, for a label printer"
+    },
+    "action_one": "Print {{count}} label",
+    "action_other": "Print {{count}} labels",
+    "pending": "Preparing labels",
+    "failed": "The labels were not prepared",
+    "open": "Open the labels",
+    "expires": "The link works until"
+  },
+  "pickers": {
+    "products": "Matching products",
+    "animals": "Animals here",
+    "searching": "Searching",
+    "typeMore": "Type at least two letters",
+    "noProduct": "No product matches",
+    "noAnimal": "No animal here matches",
+    "animalsError": "The animals could not be loaded",
+    "chooseLocationFirst": "Choose the processing location first",
+    "animalHint": "Animals standing at the processing location. Type part of a tag to narrow the list.",
+    "lastWeight": "last weighed {{weight}}",
+    "onHold": "under a hold, cannot be processed"
+  },
+  "standards": {
+    "title": "Yield standards",
+    "description": "The weight of each output expected from an animal's live weight, and how far a completed order may stray before it is flagged.",
+    "new": "New yield standard",
+    "table": "Yield standards",
+    "pages": "Yield standard pages",
+    "loading": "Loading yield standards",
+    "empty": "No yield standards yet",
+    "emptyBody": "Add one so completed orders are judged against it.",
+    "error": "Yield standards could not be loaded",
+    "denied": "You do not have access to yield standards",
+    "plusMinus": "±{{value}}%",
+    "columns": {
+      "input": "Input",
+      "output": "Output",
+      "expected": "Expected yield",
+      "tolerance": "Tolerance",
+      "change": "Change"
+    },
+    "edit": "Change {{input}} to {{output}}",
+    "newTitle": "New yield standard",
+    "newBody": "One standard for each pair of input and output products.",
+    "inputProduct": "Input product",
+    "inputProductHint": "The live animal, for example Goat.",
+    "outputProduct": "Output product",
+    "expected": "Expected yield (%)",
+    "expectedHint": "Output weight as a percentage of live weight, up to four decimal places.",
+    "tolerance": "Tolerance (%)",
+    "toleranceDefault": "Optional. 5 percent when left empty.",
+    "toleranceHint": "How far the yield may stray before the order is flagged.",
+    "percentInvalid": "Enter a percentage from 0 to 100, up to four decimal places",
+    "create": "Add the standard",
+    "save": "Save the standard",
+    "saving": "Saving",
+    "notCreated": "The yield standard was not added",
+    "notSaved": "The yield standard was not saved",
+    "editTitle": "Change {{input}} to {{output}}",
+    "editBody": "Orders already completed keep the yield they were judged with."
+  }
 }
