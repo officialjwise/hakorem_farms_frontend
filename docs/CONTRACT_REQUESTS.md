@@ -12,6 +12,9 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-006 | 2026-11-14 | Open   |
 | CR-007 | 2026-11-14 | Open   |
 | CR-008 | 2026-11-14 | Open   |
+| CR-009 | 2026-11-15 | Open   |
+| CR-010 | 2026-11-15 | Open   |
+| CR-011 | 2026-11-15 | Open   |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -137,3 +140,34 @@ For each list operation's 200 response, replace the single `example` with an `ex
 **Request:** give each example row its own id, or drop the repeats. A real answer never repeats a row, but the mock serves the example as the answer, and a choice list built from it shows each branch twice. Example only; nothing changes for a generated client.
 
 **Until this lands:** option lists are made unique by id (`uniqueById`), which costs nothing against the real API.
+
+## CR-009. Preview a draft price list version against the one in force (additive)
+
+- **Raised by:** frontend F4, the price list version screen (the F4 gate)
+- **Needed by:** `/price-list-versions/:id` for any list longer than 500 lines
+- **Contract read first:** `getPriceListVersion`, `listPriceListEntries` (cursor pages, at most 100 a page), `submitPriceListVersion`, `resolvePrices` (its `at` defaults to now and it walks active versions only; it cannot price from a draft).
+
+**Request:** `GET /price-list-versions/{id}/preview` (permission `mdm.price_list.read`), answering cursor pages of lines with `kind` (`ADDED`, `CHANGED`, `REMOVED`, `UNCHANGED`), `current` (a `PriceListEntry` or null) and `proposed` (a `PriceListEntry` or null), plus `counts` for the four kinds and the `PriceListVersionSummary` it was compared against. Optionally, `resolvePrices` could accept a `priceListVersionId` so a sample basket can be priced as the draft would price it.
+
+**Why:** the screen now reads both versions whole (at most five pages of 100 each, ADR 0028) and lines them up by product, grade, band and quantity break. Past 500 lines it shows words and no preview, because a partial one would show a missing line as a dropped price (A-F4-02). The server already knows the identity rule.
+
+**Until this lands:** the screen's comparison, `apps/console/src/pricing/preview.ts`, which compares and never computes.
+
+## CR-010. Price list examples contradict each other (example fix)
+
+- **Raised by:** frontend F4
+- **Checked:** the `getPriceList` example gives `activeVersion.id` `019a7aa3-e9f0-…`, which the `listPriceListVersions` and `getPriceListVersion` examples give as version 5, status `DRAFT`, the same list's `draftVersionId`. Every version's entries example is the same eight lines.
+
+**Request:** make `getPriceList.activeVersion` version 4 (`019a7aa4-46bd-…`, the example's ACTIVE one), and if possible give the draft's entries a changed price, so the mock alone shows a preview with a change. Example only.
+
+**Until this lands:** against the mock the preview says no version is in force and every line is new; the end-to-end gate rewrites the two answers for its test only (`api.rewrite` in `e2e/support/fakeApi.ts`).
+
+## CR-011. Units of measure: conversions, and a way to add one (question)
+
+- **Raised by:** frontend F4, the units screen
+- **Contract read first:** `listUnitsOfMeasure` and `Uom` (`code`, `name`, `kind`). There is no create, update or conversion operation, and no conversion on any schema.
+- **The brief says:** "units of measure with conversions" (MDM).
+
+**Request:** say whether units are seeded only (then the screen stays read only, as now), and how a conversion is represented, for example a crate of 30 eggs, or a pack's nominal kilograms. If conversions exist, list them on `Uom` or a `listUomConversions` operation. CR-003 (`displayDecimals`) is still open on the same schema.
+
+**Until this lands:** `/units` is a read-only list (A-F4-05).
