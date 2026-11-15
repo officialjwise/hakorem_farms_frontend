@@ -37,7 +37,7 @@ export function BackOfficeShell() {
       </a>
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-2 border-b border-border bg-surface px-4 py-2.5 print:hidden">
+        <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-border bg-surface px-4 py-2.5 print:hidden sm:flex-nowrap">
           <div className="lg:hidden">
             <Sheet
               side="start"
@@ -56,17 +56,23 @@ export function BackOfficeShell() {
               </nav>
             </Sheet>
           </div>
-          {/* The page's h1 lands here (lib/ScreenHeader), as the reference puts the title in the top bar. */}
-          <div id={PAGE_TITLE_SLOT_ID} className="flex min-w-0 flex-1 items-center" />
-          <div className="ms-auto flex min-w-0 shrink-0 items-center justify-end gap-1 sm:gap-2">
+          {/*
+            The page's h1 lands here (lib/ScreenHeader), as the reference puts the title in the top bar. On a
+            phone it takes its own line beneath the tools, so it is never cut to a letter.
+          */}
+          <div
+            id={PAGE_TITLE_SLOT_ID}
+            className="order-last flex w-full min-w-0 items-center sm:order-none sm:w-auto sm:flex-1"
+          />
+          <div className="ms-auto flex shrink-0 items-center justify-end gap-1 sm:gap-2">
             <GlobalSearch />
             <BranchSwitcher />
             {auth.can(POS_NAV.permission ?? '') ? (
               <Button asChild size="sm">
                 <Link to={POS_NAV.path}>
                   <ScanBarcode aria-hidden="true" />
-                  {/* Icon only on a phone; the name stays for assistive technology. */}
-                  <span className="sr-only sm:not-sr-only">{t('backOffice.openPos')}</span>
+                  {/* Icon only below 80rem, so the page title has room; the name stays for assistive technology. */}
+                  <span className="sr-only xl:not-sr-only">{t('backOffice.openPos')}</span>
                 </Link>
               </Button>
             ) : null}
