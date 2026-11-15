@@ -42,3 +42,6 @@ test-results/
 playwright-report/
 .vitest-attachments/
 __screenshots__/
+
+# The backend contract and changelog as fetched by pnpm sync-contract:github (ADR 0018)
+.contract-upstream/

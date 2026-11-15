@@ -9,16 +9,17 @@ The backend owns `contract/openapi.yaml` and never breaks it silently. The front
 
 ## What exists today
 
-- `contract/openapi.yaml` is a **byte-for-byte copy** of `../backend/contract/openapi.yaml`. Prettier ignores `contract/`.
-- `./scripts/sync-contract.sh` (`pnpm sync-contract`) copies it, regenerates `packages/api-client/src/generated`, then type checks every package and app, and exits non-zero with a message if any no longer compiles. `--check` (`pnpm sync-contract:check`) copies nothing, regenerates in memory and fails if the committed client differs; CI runs it so a stale client cannot merge.
+- `contract/openapi.yaml` is a three-line `# hakorem-contract-sync:` header (where it came from, the commit, and the sha256 of the rest) followed by a **byte-for-byte copy** of the backend's `contract/openapi.yaml`. Prettier ignores `contract/`.
+- **In a cloud session there is no `../backend`: use `pnpm sync-contract:github`** (ADR 0018, amended F6). It fetches the contract and `docs/CONTRACT_CHANGELOG.md` from the public backend repository at one commit (`main` by default, or the branch, tag or commit you name) into `.contract-upstream/`, which is gitignored. Never clone the backend for this.
+- `./scripts/sync-contract.sh` (`pnpm sync-contract`) copies it from `../backend`, regenerates `packages/api-client/src/generated`, then type checks every package and app, and exits non-zero with a message if any no longer compiles. `--check` (`pnpm sync-contract:check`) copies nothing, fails if the contract's body no longer matches the digest in its header (a hand edit), regenerates in memory and fails if the committed client differs; CI runs it so a stale client cannot merge.
 - The generated files are committed. After a sync, commit the contract and the regenerated client together.
 
 You may read `../backend/contract/` and `../backend/docs/CONTRACT_CHANGELOG.md`. Never read `../backend/src/` and never write anything under `../backend/`.
 
 ## Every session
 
-1. Run `./scripts/sync-contract.sh`, and read the type errors it reports.
-2. Read `../backend/docs/CONTRACT_CHANGELOG.md` for anything added since the last session.
+1. Run `./scripts/sync-contract.sh` (or `pnpm sync-contract:github` with no `../backend`), and read the type errors it reports.
+2. Read `../backend/docs/CONTRACT_CHANGELOG.md`, or `.contract-upstream/CONTRACT_CHANGELOG.md` after a GitHub sync, for anything added since the last session.
 3. Read the backend's latest session report for which modules went live.
 4. For each screen whose module is now live, move it from the mock to the real API.
 5. In your report state: which screens moved from the mock, and what you added to `docs/CONTRACT_REQUESTS.md`. The other track relies on those two lines.
