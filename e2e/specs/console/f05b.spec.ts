@@ -39,7 +39,7 @@ for (const scheme of ['light', 'dark'] as const) {
     // One read for the whole dashboard (owner, 2026-11-15), not one per tile.
     expect(api.log.filter((e) => e.operationId === 'getOwnerDashboard')).toHaveLength(1);
     // A figure with no data source is words, never a number, in one strip (F5c).
-    const pending = page.getByRole('region', { name: 'Not on the dashboard yet' });
+    const pending = page.getByRole('region', { name: 'Figures still to come from the server' });
     for (const label of ['Purchases today', 'Low stock', 'Animals on hand']) {
       await expect(pending.getByText(label)).toBeVisible();
     }

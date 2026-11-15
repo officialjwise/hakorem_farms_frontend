@@ -43,7 +43,7 @@ describe('the dashboard against the Prism mock', () => {
     expect(sales).toHaveTextContent('Yesterday');
     expect(screen.getByText('Goat')).toBeInTheDocument();
     // Not in the contract yet: named in the one strip that says what they arrive with, with no figure.
-    const pending = screen.getByRole('region', { name: 'Not on the dashboard yet' });
+    const pending = screen.getByRole('region', { name: 'Figures still to come from the server' });
     expect(pending).toHaveTextContent('next dashboard update');
     for (const label of ['Purchases today', 'Low stock', 'Animals on hand']) {
       const item = within(pending).getByText(label);

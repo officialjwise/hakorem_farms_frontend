@@ -1,10 +1,18 @@
-import { Bell, LogOut, Monitor, Moon, Search, Sun, type LucideIcon } from 'lucide-react';
+import {
+  Bell,
+  CircleUserRound,
+  LogOut,
+  Monitor,
+  Moon,
+  Search,
+  Sun,
+  type LucideIcon,
+} from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import {
   AlertRow,
-  Avatar,
   Button,
   Input,
   Popover,
@@ -225,13 +233,9 @@ export function AccountMenu() {
       label={t('account.title')}
       align="end"
       trigger={
-        <Button
-          variant="ghost"
-          size="sm"
-          aria-label={t('account.open', { name })}
-          className="ps-0.5"
-        >
-          <Avatar name={name} size="sm" className="size-7" />
+        <Button variant="ghost" size="sm" aria-label={t('account.open', { name })}>
+          <CircleUserRound aria-hidden="true" />
+          {/* The name from 96rem; below that the icon alone, so the page title keeps its room. */}
           <span className="hidden max-w-32 truncate 2xl:inline">{name}</span>
         </Button>
       }
