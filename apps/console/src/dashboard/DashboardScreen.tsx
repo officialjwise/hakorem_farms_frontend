@@ -97,7 +97,6 @@ export function DashboardScreen() {
   const { t } = useTranslation(['dashboard', 'common']);
   const auth = useAuth();
   const scope = useBranchScope();
-  const units = useUnits();
   const allowed = auth.can('rpt.dashboard.owner');
   // Money and stock an owner acts on: `live`, the default.
   const dashboard = useApiQuery('getOwnerDashboard', { query: scope.query }, { enabled: allowed });
@@ -342,31 +341,7 @@ export function DashboardScreen() {
               </Panel>
 
               <Panel id="dash-movers" title={t('movers.title')}>
-                {d.topMovers.length === 0 ? (
-                  <p className="text-sm text-fg-muted">{t('movers.none')}</p>
-                ) : (
-                  <ProgressList
-                    label={t('movers.title')}
-                    items={d.topMovers.map((mover) => ({
-                      id: mover.product.id,
-                      label: mover.product.name,
-                      value: mover.revenuePesewas,
-                      formatted: t('movers.figure', {
-                        amount: formatMoney(mover.revenuePesewas),
-                        qty: formatQuantity(mover.qty, { places: units.places(mover.uom) }),
-                        unit: units.name(mover.uom),
-                      }),
-                      href: auth.can('mdm.product.read')
-                        ? `/products/${mover.product.id}`
-                        : undefined,
-                    }))}
-                    renderLink={(href, children, className) => (
-                      <Link to={href} className={className}>
-                        {children}
-                      </Link>
-                    )}
-                  />
-                )}
+                <TopMovers movers={d.topMovers} />
               </Panel>
 
               <Panel id="dash-channels" title={t('channels.title')}>
@@ -467,5 +442,37 @@ export function DashboardScreen() {
         )}
       </QueryBoundary>
     </section>
+  );
+}
+
+/**
+ * Today's best sellers. Its own component so the unit names it needs (a reference read) are asked for only
+ * when there is a dashboard to show, never for a role that cannot see it.
+ */
+function TopMovers({ movers }: { movers: OwnerDashboard['topMovers'] }) {
+  const { t } = useTranslation('dashboard');
+  const auth = useAuth();
+  const units = useUnits();
+  if (movers.length === 0) return <p className="text-sm text-fg-muted">{t('movers.none')}</p>;
+  return (
+    <ProgressList
+      label={t('movers.title')}
+      items={movers.map((mover) => ({
+        id: mover.product.id,
+        label: mover.product.name,
+        value: mover.revenuePesewas,
+        formatted: t('movers.figure', {
+          amount: formatMoney(mover.revenuePesewas),
+          qty: formatQuantity(mover.qty, { places: units.places(mover.uom) }),
+          unit: units.name(mover.uom),
+        }),
+        href: auth.can('mdm.product.read') ? `/products/${mover.product.id}` : undefined,
+      }))}
+      renderLink={(href, children, className) => (
+        <Link to={href} className={className}>
+          {children}
+        </Link>
+      )}
+    />
   );
 }

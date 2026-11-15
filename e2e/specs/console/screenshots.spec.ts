@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test';
 import { expect, test } from '../../support/test';
 import type { FakeApi } from '../../support/fakeApi';
 import { signInWithTotp, USERS } from '../../support/helpers';
@@ -21,6 +22,8 @@ interface Shot {
   theme?: 'light' | 'dark';
   /** Rewrites for a state the contract's examples cannot show by themselves. */
   prepare?: (api: FakeApi) => void;
+  /** Steps on the screen before the shot, for a state reached by using it. */
+  act?: (page: Page) => Promise<void>;
 }
 
 const PHASES: Record<string, Shot[]> = {
@@ -90,7 +93,63 @@ const PHASES: Record<string, Shot[]> = {
   ],
 };
 
-PHASES.F05b = [{ name: 'dashboard', path: '/', ready: 'Selling best today' }];
+PHASES.F05b = [
+  { name: 'dashboard', path: '/', ready: 'Selling best today' },
+  { name: 'dashboard-dark', path: '/', ready: 'Selling best today', theme: 'dark' },
+  { name: 'branches', path: '/branches', ready: 'HaKorem Farms, Dodowa' },
+  { name: 'branch', path: `/branches/${ID}`, ready: 'Locations in this branch' },
+  { name: 'labels', path: '/labels', ready: 'LIV-GOAT' },
+  {
+    name: 'labels-sheet',
+    path: '/labels',
+    ready: 'LIV-GOAT',
+    act: async (page) => {
+      await page.getByRole('button', { name: 'Add a label for Goat' }).click();
+      await page.getByRole('button', { name: 'Add a label for Broiler chicken' }).click();
+      await page.getByRole('button', { name: 'One more label for Broiler chicken' }).click();
+      await page.getByRole('tab', { name: 'Lots and animals' }).click();
+      await page.getByRole('button', { name: /^Add a label for Goat G-0142/ }).click();
+    },
+  },
+  { name: 'lots', path: '/lots', ready: 'G-0142' },
+  { name: 'movements', path: '/movements', ready: 'Sale issue' },
+  { name: 'suppliers', path: '/suppliers', ready: 'Kpone Livestock Traders' },
+  { name: 'registers', path: '/registers', ready: 'Shift open' },
+  { name: 'stock-on-hand', path: '/stock', ready: 'Stock value at cost' },
+  { name: 'transfers', path: '/stock-transfers', ready: 'TRF-2026-DDW-00009' },
+  { name: 'products', path: '/products', ready: 'LIV-GOAT' },
+  { name: 'users', path: '/users', ready: 'Akua Mensah' },
+  { name: 'roles', path: '/roles', ready: 'Cashier' },
+  { name: 'sessions', path: '/sessions', ready: 'This device' },
+  { name: 'stock-takes', path: '/stock-takes', ready: 'Feed and produce store' },
+  { name: 'goods-receipts', path: '/goods-receipts', ready: 'GRN-2026-DDW-000072' },
+  { name: 'price-lists', path: '/price-lists', ready: 'Royal Palm Hotel contract prices' },
+  {
+    name: 'transfer-receive-gap',
+    path: `/stock-transfers/${ID}`,
+    ready: 'Receive what arrived',
+    prepare: (api) =>
+      api.rewrite('getStockTransfer', (body) => {
+        const transfer = body as { lines: Record<string, unknown>[] };
+        return {
+          ...transfer,
+          status: 'DISPATCHED',
+          receivedAt: null,
+          receivedBy: null,
+          lines: transfer.lines.map((l) => ({
+            ...l,
+            qtyReceived: null,
+            varianceQty: null,
+            varianceReasonCode: null,
+          })),
+        };
+      }),
+    act: async (page) => {
+      await page.getByLabel(/^Goat meat, 15 kg pack: quantity that arrived/).fill('29.750');
+      await page.getByText('fewer than sent').first().waitFor();
+    },
+  },
+];
 
 const WIDTHS = [1280, 360] as const;
 
@@ -104,6 +163,7 @@ for (const [phase, shots] of Object.entries(PHASES)) {
         await signInWithTotp(page, USERS.owner, shot.path);
         await expect(page.getByText(shot.ready).first()).toBeVisible();
         await expect(page.getByText(/^Loading/)).toHaveCount(0);
+        await shot.act?.(page);
         await page.screenshot({
           path: `../docs/screenshots/${phase}/${shot.name}-${width}.png`,
           fullPage: true,

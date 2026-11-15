@@ -66,10 +66,11 @@ export function BackOfficeShell() {
           <GlobalSearch />
           <BranchSwitcher />
           {auth.can(POS_NAV.permission ?? '') ? (
-            <Button asChild size="sm" className="hidden sm:inline-flex">
+            <Button asChild size="sm">
               <Link to={POS_NAV.path}>
                 <ScanBarcode aria-hidden="true" />
-                {t('backOffice.openPos')}
+                {/* Icon only on a phone; the name stays for assistive technology. */}
+                <span className="sr-only sm:not-sr-only">{t('backOffice.openPos')}</span>
               </Link>
             </Button>
           ) : null}

@@ -7,6 +7,8 @@ test.describe('sign in', () => {
   }) => {
     await signIn(page, USERS.cashier);
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+    // Signing out lives in the account menu (F5b).
+    await page.getByRole('button', { name: /^Your account: / }).click();
     await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
     await expect(page).toHaveURL('/');
   });
@@ -117,6 +119,7 @@ test.describe('forgot and reset password', () => {
 
 test('sign out ends the session', async ({ page }) => {
   await signIn(page, USERS.cashier);
+  await page.getByRole('button', { name: /^Your account: / }).click();
   await page.getByRole('button', { name: 'Sign out' }).click();
   await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
   await page.goto('/');
