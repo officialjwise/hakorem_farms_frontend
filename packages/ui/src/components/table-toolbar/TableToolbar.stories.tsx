@@ -178,7 +178,8 @@ export const SortedAndNarrowed: Story = {
   args: { initialSort: { id: 'head', direction: 'descending' }, initialHidden: ['where'] },
 };
 
-export const KeyboardSortsFromTheHeader: Story = {
+/** The keyboard path: a sortable header is a button; Enter sorts by it. */
+export const KeyboardPath: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const header = canvas.getByRole('button', { name: 'On hand' });

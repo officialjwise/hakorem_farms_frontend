@@ -221,3 +221,10 @@ export {
   type TableSort,
   type TableView,
 } from './components/table-toolbar/useTableView';
+export { StatGroup, type StatGroupProps } from './components/stat-tile/StatGroup';
+export { Sparkline, type SparklineProps } from './components/sparkline/Sparkline';
+export {
+  ReportTile,
+  type ReportTileProps,
+  type ReportTileTone,
+} from './components/stat-tile/ReportTile';
