@@ -51,3 +51,47 @@ Option 3.
 - Any colour need not covered by the existing roles has to be designed, not improvised inline.
 - Utilities for custom tokens are static, so Tailwind opacity modifiers are unavailable. That is intended.
 - Revisit if Tailwind gains per-utility colour namespaces natively. The generator could then emit theme keys instead of `@utility` blocks.
+
+## Amendment, 2026-11-15 (F5b): a brighter accent, a deep teal panel and a second chart series
+
+**Why.** The owner saw a reference dashboard (teal accent on a cream field, a deep teal panel for contrast) and asked for the accent to lean brighter and more saturated toward it, on condition that every pair in the contrast matrix still passes AA in both themes, with one accent kept and the sand used for the second data series.
+
+**Values changed.**
+
+| Token          | Light, was → now      | Dark, was → now       |
+| -------------- | --------------------- | --------------------- |
+| `accent`       | `#0D5C55` → `#0A7468` | `#3DBE98` → `#2EC4A6` |
+| `accent-hover` | `#09463F` → `#075A51` | `#62CDAD` → `#5ED3BA` |
+| `accent-text`  | `#0D5C55` → `#0A7468` | `#52C6A3` → `#4CCDB0` |
+| `focus`        | `#0D5C55` → `#0A7468` | `#3DBE98` → `#2EC4A6` |
+
+Light `accent` goes from HSL 175° 75% 21% to 173° 84% 25%. That is brighter and more saturated, and as far as AA allows: white on it is 5.66:1 and as link text it holds 4.64:1 on the sunken surface (the binding pair). A brighter light value fails link text on `surface-sunken`.
+
+**Tokens added.**
+
+- **`panel`** (surface, `#0C3A35` in both themes): the deep teal panel. A panel is always rendered with `data-theme="dark"` (any element's `data-theme` wins for its subtree), so inside it every token takes its dark value. Its pairs carry `themes: ['dark']`, and the contrast test checks them in the dark theme only (`DARK_ISLAND`).
+  - The panel carries no bordered control: `border-strong` reaches only 2.6:1 on it. Its one control, refresh, is a quiet button.
+- **`series-2`** (mark: line and glyph; light `#9A6418`, dark `#DDAA5E`): the second chart series, a darker sand. The first series is `accent`, so there is still one accent.
+- **`series-1-area`, `series-2-area`** (glyph, decorative): the tint under a line and the hatching on a second-series bar. Nothing is written on them, so like `border` they hold no contrast minimum.
+
+**Re-run, 2026-11-15:** `pnpm --filter @hakorem/ui test:unit src/tokens`, 219 tests, all passed. The 54 pairs that involve the changed or new tokens, tightest first:
+
+| Pair                                      | Theme | Ratio | Minimum |
+| ----------------------------------------- | ----- | ----- | ------- |
+| `critical` on `panel` (panel bar, out)    | dark  | 3.85  | 3       |
+| `series-2` on `bg`                        | light | 4.54  | 3       |
+| `accent-text` on `surface-sunken`         | light | 4.64  | 4.5     |
+| `accent` / `focus` on `surface-sunken`    | light | 4.64  | 3       |
+| `accent` / `focus` on `accent-subtle`     | light | 4.67  | 3       |
+| `accent-text` on `surface-hover`          | light | 4.81  | 4.5     |
+| `series-2` on `surface`                   | light | 4.87  | 3       |
+| `accent-text` on `bg`                     | light | 5.15  | 4.5     |
+| `accent-text` on `surface`                | light | 5.53  | 4.5     |
+| `accent-fg` on `accent` (primary label)   | light | 5.66  | 4.5     |
+| `accent` / `warning` / `focus` on `panel` | dark  | 5.72  | 3       |
+| `fg-muted` on `panel`                     | dark  | 6.10  | 4.5     |
+| `accent-text` on `panel`                  | dark  | 6.38  | 4.5     |
+| `accent-fg` on `accent` (primary label)   | dark  | 7.80  | 4.5     |
+| `fg` on `panel`                           | dark  | 10.5  | 7       |
+
+Every other pair in the matrix is unchanged and still passes.

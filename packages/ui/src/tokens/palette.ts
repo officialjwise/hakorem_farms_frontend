@@ -88,21 +88,21 @@ export const colors = {
 
   // Accent
   accent: {
-    light: '#0D5C55',
-    dark: '#3DBE98',
+    light: '#0A7468',
+    dark: '#2EC4A6',
     roles: ['surface', ...MARK],
     use: 'Primary action fill, selection bar',
   },
   'accent-hover': {
-    light: '#09463F',
-    dark: '#62CDAD',
+    light: '#075A51',
+    dark: '#5ED3BA',
     roles: ['surface'],
     use: 'Primary action hover',
   },
   'accent-fg': { light: '#FFFFFF', dark: '#03201A', roles: ['text'], use: 'Text on accent' },
   'accent-text': {
-    light: '#0D5C55',
-    dark: '#52C6A3',
+    light: '#0A7468',
+    dark: '#4CCDB0',
     roles: ['text'],
     use: 'Links, accent text on page',
   },
@@ -118,7 +118,38 @@ export const colors = {
     roles: ['text'],
     use: 'Text on accent tint',
   },
-  focus: { light: '#0D5C55', dark: '#3DBE98', roles: ['line'], use: 'Focus ring' },
+  focus: { light: '#0A7468', dark: '#2EC4A6', roles: ['line'], use: 'Focus ring' },
+
+  // The deep teal panel: a dark island for one highlighted figure group (the dashboard's stock health).
+  // It is always rendered with data-theme="dark", so only its dark value is ever shown; the light value
+  // is the same colour, and its pairs are checked in the dark theme only (DARK_ISLAND below).
+  panel: {
+    light: '#0C3A35',
+    dark: '#0C3A35',
+    roles: ['surface'],
+    use: 'Deep teal panel behind a dark-theme island (data-theme="dark")',
+  },
+
+  // Chart series. The first series is the accent; the second is the warm sand, so there is still one
+  // accent. Series are told apart by line style and marker shape as well as hue (ADR 0033).
+  'series-2': {
+    light: '#9A6418',
+    dark: '#DDAA5E',
+    roles: MARK,
+    use: 'Second chart series (sand): line, marker, bar. Never text.',
+  },
+  'series-1-area': {
+    light: '#D4ECE8',
+    dark: '#123A33',
+    roles: ['glyph'],
+    use: 'Decorative area under the first series. Nothing is written on it.',
+  },
+  'series-2-area': {
+    light: '#F3E6D0',
+    dark: '#3A2C16',
+    roles: ['glyph'],
+    use: 'Decorative area under the second series, and the second series hatching ground.',
+  },
 
   // Status: good
   good: { light: '#3B8A2F', dark: '#A3CC5C', roles: MARK, use: 'Good: icon, dot, border only' },
@@ -324,7 +355,12 @@ export interface ContrastPair {
   readonly min: number;
   readonly kind: PairKind;
   readonly use: string;
+  /** Themes the pair is shown in. Omitted means both. A dark island's pairs are 'dark' only. */
+  readonly themes?: readonly ('light' | 'dark')[];
 }
+
+/** Surfaces only ever rendered inside data-theme="dark": checked against dark-theme foregrounds only. */
+export const DARK_ISLAND: readonly ColorName[] = ['panel'];
 
 const AA_TEXT = 4.5;
 const AA_NON_TEXT = 3;
@@ -434,6 +470,40 @@ export const contrastPairs: readonly ContrastPair[] = [
       use: `${c}: icon inside badge`,
     },
   ]),
+  // Chart series against the surfaces a chart sits on.
+  ...(['surface', 'bg'] as const).map((bg): ContrastPair => ({
+    fg: 'series-2',
+    bg,
+    min: AA_NON_TEXT,
+    kind: 'non-text',
+    use: 'Second chart series',
+  })),
+  // The deep teal panel is a dark island: what it carries, in the dark theme only.
+  ...(
+    [
+      ['fg', DAYLIGHT_BODY, 'text', 'Panel body text'],
+      ['fg-muted', AA_TEXT, 'text', 'Panel secondary text'],
+      ['accent-text', AA_TEXT, 'text', 'Panel link'],
+      ['good-fg', AA_TEXT, 'text', 'Panel good text'],
+      ['warning-fg', AA_TEXT, 'text', 'Panel warning text'],
+      ['critical-fg', AA_TEXT, 'text', 'Panel critical text'],
+      ['focus', AA_NON_TEXT, 'non-text', 'Panel focus ring'],
+      ['accent', AA_NON_TEXT, 'non-text', 'Panel bar, available'],
+      ['good', AA_NON_TEXT, 'non-text', 'Panel bar, good'],
+      ['warning', AA_NON_TEXT, 'non-text', 'Panel bar, low'],
+      ['critical', AA_NON_TEXT, 'non-text', 'Panel bar, out'],
+      ['series-2', AA_NON_TEXT, 'non-text', 'Panel second series'],
+      // No border-strong pair: it reaches only 2.6:1 here, so the panel carries no bordered control.
+      // Its one control, refresh, is a quiet button identified by its label and focus ring.
+    ] as const
+  ).map(([fg, min, kind, use]): ContrastPair => ({
+    fg,
+    bg: 'panel',
+    min,
+    kind,
+    use,
+    themes: ['dark'],
+  })),
   {
     fg: 'brand-marketing-fg',
     bg: 'brand-marketing',

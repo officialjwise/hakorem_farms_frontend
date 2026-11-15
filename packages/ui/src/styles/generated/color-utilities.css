@@ -338,6 +338,90 @@
   box-shadow: inset 3px 0 0 0 var(--focus);
 }
 
+@utility bg-panel {
+  background-color: var(--panel);
+}
+
+@utility border-series-2 {
+  border-color: var(--series-2);
+}
+
+@utility border-x-series-2 {
+  border-inline-color: var(--series-2);
+}
+
+@utility border-y-series-2 {
+  border-block-color: var(--series-2);
+}
+
+@utility border-t-series-2 {
+  border-top-color: var(--series-2);
+}
+
+@utility border-r-series-2 {
+  border-right-color: var(--series-2);
+}
+
+@utility border-b-series-2 {
+  border-bottom-color: var(--series-2);
+}
+
+@utility border-l-series-2 {
+  border-left-color: var(--series-2);
+}
+
+@utility border-s-series-2 {
+  border-inline-start-color: var(--series-2);
+}
+
+@utility border-e-series-2 {
+  border-inline-end-color: var(--series-2);
+}
+
+@utility divide-series-2 {
+  :where(& > :not(:last-child)) { border-color: var(--series-2); }
+}
+
+@utility outline-series-2 {
+  outline-color: var(--series-2);
+}
+
+@utility ring-series-2 {
+  --tw-ring-color: var(--series-2);
+}
+
+@utility ring-offset-series-2 {
+  --tw-ring-offset-color: var(--series-2);
+}
+
+@utility edge-series-2 {
+  box-shadow: inset 3px 0 0 0 var(--series-2);
+}
+
+@utility fill-series-2 {
+  fill: var(--series-2);
+}
+
+@utility stroke-series-2 {
+  stroke: var(--series-2);
+}
+
+@utility fill-series-1-area {
+  fill: var(--series-1-area);
+}
+
+@utility stroke-series-1-area {
+  stroke: var(--series-1-area);
+}
+
+@utility fill-series-2-area {
+  fill: var(--series-2-area);
+}
+
+@utility stroke-series-2-area {
+  stroke: var(--series-2-area);
+}
+
 @utility border-good {
   border-color: var(--good);
 }
