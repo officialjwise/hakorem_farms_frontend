@@ -1,51 +1,45 @@
 import {
   BadgeCent,
+  Banknote,
   CalendarClock,
   ChartColumn,
-  Download,
-  FileSpreadsheet,
-  FileText,
-  Play,
+  Hash,
+  Percent,
+  Scale,
   ShoppingCart,
   Warehouse,
   type LucideIcon,
 } from 'lucide-react';
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 import type { components } from '@hakorem/api-client';
 import {
   Alert,
-  Button,
-  DatePicker,
-  Field,
+  DateRangeMenu,
+  IconChip,
   MoneyDisplay,
   MutationFailure,
-  Popover,
-  QueryBoundary,
-  StatTile,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableHeader,
-  TableLoadingRows,
-  TableRow,
-  TableRowHeader,
+  ReportTile,
   formatDateTime,
   formatMoney,
   formatWeight,
+  useTableView,
   type DateString,
+  type ExportMenuItem,
   type FailureLike,
   type QueryLike,
+  type ReportTileTone,
+  type TableColumn,
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { useBranchScope } from '../branch/branchScope';
 import { useApiMutation, useApiQuery } from '../data/api';
+import { useDateRangeWords } from '../lib/dateRange';
 import { useIntentKey } from '../lib/queries';
 import { PageHeader } from '../lib/ScreenHeader';
 import { useStateLabels } from '../lib/states';
+import { TableCard } from '../lib/TableCard';
 
 type ReportRun = components['schemas']['ReportRun'];
 type Column = components['schemas']['ReportColumn'];
@@ -106,9 +100,7 @@ export function ReportsScreen() {
                 to={`/reports/${key}`}
                 className="flex h-full items-start gap-3 rounded-lg border border-border bg-surface p-5 shadow-sm outline-focus outline-offset-2 hover:bg-surface-hover focus-visible:outline-2"
               >
-                <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-accent-subtle">
-                  <Icon aria-hidden="true" className="size-icon-md stroke-accent" />
-                </span>
+                <IconChip icon={Icon} />
                 <span className="grid gap-0.5">
                   <span className="font-semibold">{t(`list.${key}.name`)}</span>
                   <span className="text-sm text-fg-muted">{t(`list.${key}.about`)}</span>
@@ -122,59 +114,52 @@ export function ReportsScreen() {
   );
 }
 
-/** From, to and run: the toolbar every report shares, at the top of its card. */
-function RangeToolbar({
-  from,
-  to,
-  onRun,
-  running,
-}: {
-  from: DateString;
-  to: DateString;
-  onRun: (from: DateString, to: DateString) => void;
-  running: boolean;
-}) {
-  const { t } = useTranslation('reports');
-  const [start, setStart] = useState(from);
-  const [end, setEnd] = useState(to);
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    onRun(start, end);
-  };
-  return (
-    <form
-      onSubmit={submit}
-      aria-label={t('range')}
-      className="flex flex-wrap items-end gap-3 border-b border-border p-4"
-    >
-      <div className="w-full sm:w-44">
-        <Field label={t('from')}>
-          <DatePicker
-            value={start}
-            max={end}
-            onChange={(e) => setStart(e.target.value as DateString)}
-          />
-        </Field>
-      </div>
-      <div className="w-full sm:w-44">
-        <Field label={t('to')}>
-          <DatePicker
-            value={end}
-            min={start}
-            onChange={(e) => setEnd(e.target.value as DateString)}
-          />
-        </Field>
-      </div>
-      <Button type="submit" loading={running} loadingLabel={t('running')}>
-        <Play aria-hidden="true" />
-        {t('run')}
-      </Button>
-    </form>
+/** A summary figure's icon and tint by the type of its column: money, weight, a share or a count. */
+const TILE: Record<Column['type'], { icon: LucideIcon; tone: ReportTileTone }> = {
+  PESEWAS: { icon: Banknote, tone: 'accent' },
+  KG: { icon: Scale, tone: 'sand' },
+  PERCENT: { icon: Percent, tone: 'info' },
+  INTEGER: { icon: Hash, tone: 'good' },
+  QUANTITY: { icon: Scale, tone: 'sand' },
+  TEXT: { icon: Hash, tone: 'good' },
+  DATE: { icon: CalendarClock, tone: 'info' },
+  DATETIME: { icon: CalendarClock, tone: 'info' },
+};
+const TONES: readonly ReportTileTone[] = ['accent', 'sand', 'info', 'good'];
+
+/** The report's period: the date pill, which always holds both ends (clearing returns to this month). */
+function usePeriod() {
+  const today = accraToday();
+  const fallback = { from: monthStart(today), to: today };
+  const [range, setRange] = useState(fallback);
+  const words = useDateRangeWords();
+  const { t } = useTranslation(['reports', 'common']);
+  const menu = (
+    <DateRangeMenu
+      label={t('range')}
+      summary={words(range)}
+      from={range.from}
+      to={range.to}
+      onChange={(next) =>
+        setRange({
+          from: (next.from as DateString | undefined) ?? fallback.from,
+          to: (next.to as DateString | undefined) ?? fallback.to,
+        })
+      }
+      fromLabel={t('from')}
+      toLabel={t('to')}
+      clearLabel={t('thisMonth')}
+    />
   );
+  return { range, menu };
 }
 
-/** Export as a spreadsheet or PDF: the API builds the file (rpt.report.export), this hands over its link. */
-function ExportMenu({ code, parameters }: { code: string; parameters: Record<string, string> }) {
+/**
+ * Export as a spreadsheet or PDF: the API builds the file (rpt.report.export). The formats go in the table
+ * card's Export menu; what came of the last export (the link, "being prepared", or the failure) stays on
+ * the page in words.
+ */
+function useReportExport(code: string, parameters: Record<string, string>) {
   const { t } = useTranslation(['reports', 'common']);
   const auth = useAuth();
   const run = useApiMutation('runReport');
@@ -185,66 +170,41 @@ function ExportMenu({ code, parameters }: { code: string; parameters: Record<str
     errorTitle: t('notExported'),
     deniedTitle: t('notExported'),
   });
-  if (!auth.can('rpt.report.export')) return null;
+  if (!auth.can('rpt.report.export')) return { items: [], status: null };
   const go = (format: 'XLSX' | 'PDF') => {
     const body = { parameters, format };
     void run
       .mutateAsync({ path: { code }, body }, { idempotencyKey: keyFor(body) })
       .catch(() => undefined);
   };
+  const items: ExportMenuItem[] = [
+    { id: 'xlsx', label: t('xlsx'), onSelect: () => go('XLSX'), disabled: run.isPending },
+    { id: 'pdf', label: t('pdf'), onSelect: () => go('PDF'), disabled: run.isPending },
+  ];
   const file = run.data && 'file' in run.data ? run.data.file : null;
-  return (
-    <Popover
-      label={t('export')}
-      align="end"
-      trigger={
-        <Button variant="secondary">
-          <Download aria-hidden="true" />
-          {t('export')}
-        </Button>
-      }
-    >
-      <div className="grid w-64 gap-2">
-        <Button
-          variant="ghost"
-          onClick={() => go('XLSX')}
-          loading={run.isPending}
-          loadingLabel={t('exporting')}
-        >
-          <FileSpreadsheet aria-hidden="true" />
-          {t('xlsx')}
-        </Button>
-        <Button
-          variant="ghost"
-          onClick={() => go('PDF')}
-          loading={run.isPending}
-          loadingLabel={t('exporting')}
-        >
-          <FileText aria-hidden="true" />
-          {t('pdf')}
-        </Button>
-        {file === null || file === undefined ? null : (
-          <a
-            href={file.url}
-            className="text-sm text-accent-text underline"
-            target="_blank"
-            rel="noreferrer"
-          >
-            {t('download')}
-          </a>
-        )}
-        {run.isSuccess && (file === null || file === undefined) ? (
-          <p role="status" className="text-sm text-fg-muted">
-            {t('queued')}
-          </p>
-        ) : null}
-        <MutationFailure error={run.error} labels={labels} />
-      </div>
-    </Popover>
-  );
+  const status = run.isPending ? (
+    <p role="status" className="text-sm text-fg-muted">
+      {t('exporting')}
+    </p>
+  ) : run.isError ? (
+    <MutationFailure error={run.error} labels={labels} />
+  ) : run.isSuccess ? (
+    file === null || file === undefined ? (
+      <p role="status" className="text-sm text-fg-muted">
+        {t('queued')}
+      </p>
+    ) : (
+      <p role="status" className="text-sm">
+        <a href={file.url} className="text-accent-text underline" target="_blank" rel="noreferrer">
+          {t('download')}
+        </a>
+      </p>
+    )
+  ) : null;
+  return { items, status };
 }
 
-/** A report from `runReport`: range, the API's totals as a summary row, the table, and export. */
+/** A report from `runReport`: the period, the API's totals as report tiles, the table card, and export. */
 export function ReportScreen() {
   const { t } = useTranslation(['reports', 'common']);
   const { report = '' } = useParams();
@@ -254,6 +214,8 @@ export function ReportScreen() {
     <RunReport reportKey={key} code={REPORTS[key].code} key={key} title={t(`list.${key}.name`)} />
   );
 }
+
+type Row = Record<string, unknown>;
 
 function RunReport({
   reportKey,
@@ -266,15 +228,15 @@ function RunReport({
 }) {
   const { t } = useTranslation(['reports', 'common']);
   const scope = useBranchScope();
-  const today = accraToday();
-  const [range, setRange] = useState({ from: monthStart(today), to: today });
+  const period = usePeriod();
   const run = useApiMutation('runReport');
   const keyFor = useIntentKey();
   const parameters = {
-    from: range.from,
-    to: range.to,
+    from: period.range.from,
+    to: period.range.to,
     ...(scope.branchId === null ? {} : { branchId: scope.branchId }),
   };
+  const exporting = useReportExport(code, parameters);
   const asked = JSON.stringify(parameters);
   const go = () => {
     const body = {
@@ -307,133 +269,82 @@ function RunReport({
     errorTitle: t('error', { name: title }),
     deniedTitle: t('denied'),
   });
+  const result = query.data?.result ?? null;
+  const columns: TableColumn<Row>[] = (result?.columns ?? []).map((column, index) => ({
+    id: column.key,
+    head: column.label,
+    rowHeader: index === 0,
+    numeric: column.type !== 'TEXT' && column.type !== 'DATE',
+    // The API's own values: integer pesewas, numbers and ISO strings compare as they are.
+    sortValue: (row) => {
+      const value = row[column.key];
+      return typeof value === 'number' || typeof value === 'string' ? value : null;
+    },
+    cell: (row) => cellText(column, row[column.key]),
+  }));
+  const view = useTableView(columns);
+  const totals = result?.totals ?? {};
+  const summarised = (result?.columns ?? []).filter((column) => column.key in totals);
   return (
     <section aria-labelledby="report-title" className="grid gap-4">
-      <PageHeader
-        title={title}
-        titleId="report-title"
-        description={t(`list.${reportKey}.about`)}
-        actions={<ExportMenu code={code} parameters={parameters} />}
-      />
-      <QueryBoundary
-        query={query}
-        labels={labels}
-        isEmpty={(r) => r.result === null || r.result.rows.length === 0}
-        loadingFallback={
-          <TableContainer aria-label={title}>
-            <Table>
-              <TableBody>
-                <TableLoadingRows columns={4} label={labels.loading} />
-              </TableBody>
-            </Table>
-          </TableContainer>
-        }
-      >
-        {(r) => (
-          <ReportResult
-            run={r}
-            title={title}
-            toolbar={
-              <RangeToolbar
-                from={range.from}
-                to={range.to}
-                running={run.isPending}
-                onRun={(from, to) => setRange({ from, to })}
-              />
-            }
-          />
-        )}
-      </QueryBoundary>
-    </section>
-  );
-}
-
-function ReportResult({
-  run,
-  title,
-  toolbar,
-}: {
-  run: ReportRun;
-  title: string;
-  toolbar: ReactNode;
-}) {
-  const { t } = useTranslation('reports');
-  const result = run.result;
-  if (result === null) return null;
-  const totals = result.totals ?? {};
-  const summarised = result.columns.filter((column) => column.key in totals);
-  const [first, ...rest] = result.columns;
-  return (
-    <div className="grid gap-4">
+      <PageHeader title={title} titleId="report-title" description={t(`list.${reportKey}.about`)} />
       {summarised.length === 0 ? null : (
         <ul aria-label={t('summary')} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {summarised.map((column) => (
+          {summarised.map((column, index) => (
             <li key={column.key}>
-              <StatTile
+              <ReportTile
                 label={column.label}
                 value={cellText(column, totals[column.key])}
                 detail={t('total')}
+                icon={TILE[column.type].icon}
+                tone={TONES[index % TONES.length]}
               />
             </li>
           ))}
         </ul>
       )}
-      <div className="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
-        {toolbar}
-        <TableContainer aria-label={title} className="rounded-none border-0 shadow-none">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {result.columns.map((column) => (
-                  <TableHead
-                    key={column.key}
-                    numeric={column.type !== 'TEXT' && column.type !== 'DATE'}
-                  >
-                    {column.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {result.rows.map((row, index) => (
-                <TableRow key={index}>
-                  {first === undefined ? null : (
-                    <TableRowHeader>{cellText(first, row[first.key])}</TableRowHeader>
-                  )}
-                  {rest.map((column) => (
-                    <TableCell
-                      key={column.key}
-                      label={column.label}
-                      numeric={column.type !== 'TEXT' && column.type !== 'DATE'}
-                    >
-                      {cellText(column, row[column.key])}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <p className="border-t border-border px-4 py-3 text-control-sm text-fg-muted">
-          {t('asOf', {
-            when: formatDateTime(run.dataAsOf ?? run.createdAt),
-            count: run.rowCount ?? result.rows.length,
-          })}
-        </p>
-      </div>
-    </div>
+      {exporting.status}
+      <TableCard
+        view={view}
+        query={query}
+        labels={labels}
+        rows={(r) => (r.result?.rows ?? []) as Row[]}
+        rowKey={(_, index) => String(index)}
+        tableLabel={title}
+        exportName={`${title}, ${period.range.from} to ${period.range.to}`}
+        exports={exporting.items}
+        toolbar={period.menu}
+        footer={(r) => (
+          <p className="border-t border-border px-4 py-3 text-control-sm text-fg-muted">
+            {t('asOf', {
+              when: formatDateTime(r.dataAsOf ?? r.createdAt),
+              count: r.rowCount ?? r.result?.rows.length ?? 0,
+            })}
+          </p>
+        )}
+      />
+    </section>
   );
 }
 
-/** Profit and loss for a range, from the ledger (`getProfitAndLoss`): sections, their rows and totals. */
+type Statement = components['schemas']['FinancialStatement'];
+type Line = {
+  key: string;
+  label: string;
+  section: string;
+  amountPesewas: number;
+  negative: boolean;
+  total: boolean;
+};
+
+/** Profit and loss for a period, from the ledger (`getProfitAndLoss`): sections, their rows and totals. */
 function ProfitAndLoss() {
   const { t } = useTranslation(['reports', 'common']);
   const scope = useBranchScope();
-  const today = accraToday();
-  const [range, setRange] = useState({ from: monthStart(today), to: today });
+  const period = usePeriod();
   // A statement an owner reads and acts on: `live`.
   const statement = useApiQuery('getProfitAndLoss', {
-    query: { from: range.from, to: range.to, ...scope.query },
+    query: { from: period.range.from, to: period.range.to, ...scope.query },
   });
   const title = t('list.profit-and-loss.name');
   const labels = useStateLabels({
@@ -442,6 +353,54 @@ function ProfitAndLoss() {
     errorTitle: t('error', { name: title }),
     deniedTitle: t('denied'),
   });
+  // The statement's own order matters (a section's rows, then its total), so its lines do not sort.
+  const view = useTableView<Line>([
+    {
+      id: 'line',
+      head: t('pl.line'),
+      rowHeader: true,
+      cell: (line) =>
+        line.total ? (
+          <span className="font-bold">{t('pl.totalFor', { section: line.section })}</span>
+        ) : (
+          <span className="grid">
+            <span>{line.label}</span>
+            <span className="text-control-sm font-normal text-fg-muted">{line.section}</span>
+          </span>
+        ),
+    },
+    {
+      id: 'amount',
+      head: t('pl.amount'),
+      numeric: true,
+      cell: (line) => (
+        <>
+          <MoneyDisplay pesewas={line.amountPesewas} strong={line.total} />
+          {line.negative ? ` ${t('negativeShort')}` : ''}
+        </>
+      ),
+    },
+  ]);
+  const lines = (s: Statement): Line[] =>
+    s.sections.flatMap((section) => [
+      ...section.rows.map((row) => ({
+        key: `${section.key}-${row.label}`,
+        label: row.label,
+        section: section.label,
+        amountPesewas: row.amountPesewas,
+        negative: row.isNegative,
+        total: false,
+      })),
+      {
+        key: `${section.key}-total`,
+        label: section.label,
+        section: section.label,
+        amountPesewas: section.totalPesewas,
+        negative: false,
+        total: true,
+      },
+    ]);
+  const s = statement.data;
   return (
     <section aria-labelledby="report-title" className="grid gap-4">
       <PageHeader
@@ -449,75 +408,39 @@ function ProfitAndLoss() {
         titleId="report-title"
         description={t('list.profit-and-loss.about')}
       />
-      <QueryBoundary query={statement} labels={labels} isEmpty={(s) => s.sections.length === 0}>
-        {(s) => (
-          <div className="grid gap-4">
-            <ul aria-label={t('summary')} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {s.sections.map((section) => (
-                <li key={section.key}>
-                  <StatTile
-                    label={section.label}
-                    value={<MoneyDisplay pesewas={section.totalPesewas} />}
-                    detail={section.totalIsNegative ? t('negative') : t('total')}
-                  />
-                </li>
-              ))}
-            </ul>
-            <div className="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
-              <RangeToolbar
-                from={range.from}
-                to={range.to}
-                running={statement.isFetching}
-                onRun={(from, to) => setRange({ from, to })}
+      {s === undefined || s.sections.length === 0 ? null : (
+        <ul aria-label={t('summary')} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {s.sections.map((section, index) => (
+            <li key={section.key}>
+              <ReportTile
+                label={section.label}
+                value={<MoneyDisplay pesewas={section.totalPesewas} />}
+                detail={section.totalIsNegative ? t('negative') : t('total')}
+                icon={Banknote}
+                tone={TONES[index % TONES.length]}
               />
-              <TableContainer aria-label={title} className="rounded-none border-0 shadow-none">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('pl.line')}</TableHead>
-                      <TableHead numeric>{t('pl.amount')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {s.sections.flatMap((section) => [
-                      ...section.rows.map((row) => (
-                        <TableRow key={`${section.key}-${row.label}`}>
-                          <TableRowHeader>
-                            <span className="grid">
-                              <span>{row.label}</span>
-                              <span className="text-control-sm text-fg-muted">{section.label}</span>
-                            </span>
-                          </TableRowHeader>
-                          <TableCell numeric label={t('pl.amount')}>
-                            <MoneyDisplay pesewas={row.amountPesewas} />
-                            {row.isNegative ? ` ${t('negativeShort')}` : ''}
-                          </TableCell>
-                        </TableRow>
-                      )),
-                      <TableRow key={`${section.key}-total`}>
-                        <TableRowHeader>
-                          <span className="font-bold">
-                            {t('pl.totalFor', { section: section.label })}
-                          </span>
-                        </TableRowHeader>
-                        <TableCell numeric label={t('pl.amount')}>
-                          <MoneyDisplay pesewas={section.totalPesewas} strong />
-                        </TableCell>
-                      </TableRow>,
-                    ])}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              <p className="border-t border-border px-4 py-3 text-control-sm text-fg-muted">
-                {t('generated', { when: formatDateTime(s.generatedAt) })}
-              </p>
-            </div>
-            {s.checks.length === 0 ? null : (
-              <Alert severity="info" title={t('checks', { count: s.checks.length })} />
-            )}
-          </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      <TableCard
+        view={view}
+        query={statement}
+        labels={labels}
+        rows={lines}
+        rowKey={(line) => line.key}
+        tableLabel={title}
+        exportName={`${title}, ${period.range.from} to ${period.range.to}`}
+        toolbar={period.menu}
+        footer={(statementData) => (
+          <p className="border-t border-border px-4 py-3 text-control-sm text-fg-muted">
+            {t('generated', { when: formatDateTime(statementData.generatedAt) })}
+          </p>
         )}
-      </QueryBoundary>
+      />
+      {s === undefined || s.checks.length === 0 ? null : (
+        <Alert severity="info" title={t('checks', { count: s.checks.length })} />
+      )}
     </section>
   );
 }
