@@ -28,7 +28,16 @@ export type NavKey =
   | 'userDetail'
   | 'roleNew'
   | 'roleDetail'
-  | 'auditEvent';
+  | 'auditEvent'
+  | 'productNew'
+  | 'productDetail'
+  | 'categories'
+  | 'units'
+  | 'species'
+  | 'speciesDetail'
+  | 'priceLists'
+  | 'priceListDetail'
+  | 'priceListVersion';
 
 export function isRouteHandle(value: unknown): value is RouteHandle {
   return (

@@ -65,7 +65,16 @@
     "userDetail": "User",
     "roleNew": "New role",
     "roleDetail": "Role",
-    "auditEvent": "Audit event"
+    "auditEvent": "Audit event",
+    "productNew": "New product",
+    "productDetail": "Product",
+    "categories": "Categories",
+    "units": "Units",
+    "species": "Species, grades and bands",
+    "speciesDetail": "Species",
+    "priceLists": "Price lists",
+    "priceListDetail": "Price list",
+    "priceListVersion": "Price list version"
   },
   "placeholder": {
     "title": "This area is built in a later session",
