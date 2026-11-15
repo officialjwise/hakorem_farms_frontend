@@ -320,6 +320,136 @@ export const protectedRoutes: RouteObject[] = [
         ),
         handle: back('mdm.price_list.read', 'priceListVersion'),
       },
+      // F6, loaded on demand (ADR 0032). Livestock: each leaf's permission is the x-permission of its read.
+      {
+        path: 'animals',
+        handle: back('liv.animal.read', 'animals'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../livestock/AnimalsScreen').then((m) => m.AnimalsScreen),
+            ),
+            handle: back('liv.animal.read', 'animals'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../livestock/AnimalScreen').then((m) => m.AnimalScreen),
+            ),
+            handle: back('liv.animal.read', 'animal'),
+          },
+        ],
+      },
+      {
+        path: 'weights',
+        element: lazyScreen(() =>
+          import('../livestock/WeightsScreen').then((m) => m.WeightsScreen),
+        ),
+        handle: back('liv.weight.read', 'weights'),
+      },
+      {
+        path: 'health-events',
+        handle: back('liv.health.read', 'healthEvents'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../livestock/HealthScreens').then((m) => m.HealthEventsScreen),
+            ),
+            handle: back('liv.health.read', 'healthEvents'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../livestock/HealthScreens').then((m) => m.HealthEventScreen),
+            ),
+            handle: back('liv.health.read', 'healthEvent'),
+          },
+        ],
+      },
+      {
+        path: 'breeding',
+        handle: back('liv.breeding.read', 'breeding'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../livestock/BreedingScreens').then((m) => m.BreedingScreen),
+            ),
+            handle: back('liv.breeding.read', 'breeding'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../livestock/BreedingScreens').then((m) => m.BreedingRecordScreen),
+            ),
+            handle: back('liv.breeding.read', 'breedingRecord'),
+          },
+        ],
+      },
+      {
+        path: 'mortality',
+        handle: back('liv.mortality.read', 'mortality'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../livestock/MortalityScreens').then((m) => m.MortalityScreen),
+            ),
+            handle: back('liv.mortality.read', 'mortality'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../livestock/MortalityScreens').then((m) => m.MortalityRecordScreen),
+            ),
+            handle: back('liv.mortality.read', 'mortalityRecord'),
+          },
+        ],
+      },
+      {
+        path: 'feed',
+        element: lazyScreen(() => import('../livestock/FeedScreen').then((m) => m.FeedScreen)),
+        handle: back('liv.feed.read', 'feed'),
+      },
+      // F6, processing.
+      {
+        path: 'processing-orders',
+        handle: back('prc.order.read', 'processingOrders'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../processing/ProcessingOrdersScreen').then((m) => m.ProcessingOrdersScreen),
+            ),
+            handle: back('prc.order.read', 'processingOrders'),
+          },
+          {
+            path: 'new',
+            element: lazyScreen(() =>
+              import('../processing/NewProcessingOrderScreen').then(
+                (m) => m.NewProcessingOrderScreen,
+              ),
+            ),
+            handle: back('prc.order.create', 'processingOrderNew'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../processing/ProcessingOrderScreen').then((m) => m.ProcessingOrderScreen),
+            ),
+            handle: back('prc.order.read', 'processingOrder'),
+          },
+        ],
+      },
+      {
+        path: 'yield-standards',
+        element: lazyScreen(() =>
+          import('../processing/YieldStandardsScreen').then((m) => m.YieldStandardsScreen),
+        ),
+        handle: back('prc.yield_standard.read', 'yieldStandards'),
+      },
       {
         path: 'orders',
         element: <PlaceholderScreen area="orders" />,

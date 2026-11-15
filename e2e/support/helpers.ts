@@ -8,6 +8,7 @@ export const USERS = {
   manager: { identifier: 'kwabena.owusu@hakoremfarms.com', password: 'Mango-Season-2026!' },
   cashier: { identifier: 'adwoa.darko@hakoremfarms.com', password: 'Mango-Season-2026!' },
   storekeeper: { identifier: 'yaw.boateng@hakoremfarms.com', password: 'Mango-Season-2026!' },
+  farmHand: { identifier: 'kofi.adjei@hakoremfarms.com', password: 'Mango-Season-2026!' },
   temp: { identifier: 'new.staff@hakoremfarms.com', password: 'Temp-8841-Farm' },
 } as const;
 

@@ -187,6 +187,49 @@ const OWNER_F5B_PERMISSIONS = [
 /** What the owner holds for the F5c settings section: the business profile and the system settings. */
 const OWNER_F5C_PERMISSIONS = ['aud.setting.read'];
 
+/** What the owner holds for the F6 screens: every livestock and processing permission in the contract. */
+const OWNER_F6_PERMISSIONS = [
+  'liv.animal.read',
+  'liv.animal.update',
+  'liv.animal.move',
+  'liv.weight.read',
+  'liv.weight.record',
+  'liv.health.read',
+  'liv.health.record',
+  'liv.breeding.read',
+  'liv.breeding.record',
+  'liv.mortality.read',
+  'liv.mortality.report',
+  'liv.mortality.approve',
+  'liv.feed.read',
+  'liv.feed.record',
+  'liv.feed.manage',
+  'liv.batch.read',
+  'liv.batch.create',
+  'liv.batch.update',
+  'liv.report.read',
+  'prc.order.read',
+  'prc.order.create',
+  'prc.order.process',
+  'prc.yield_standard.read',
+  'prc.yield_standard.manage',
+];
+
+/**
+ * The Farm hand (backend A-158, contract 1.24.0): records weights, health, feed and mortality, and reads only
+ * weights, so the register and the health, mortality and feed lists are hidden from the role. Location and
+ * product reads are assumed (A-F6-02), so the forms can name a pen and a feed or medicine.
+ */
+const FARM_HAND_PERMISSIONS = [
+  'liv.weight.read',
+  'liv.weight.record',
+  'liv.health.record',
+  'liv.feed.record',
+  'liv.mortality.report',
+  'mdm.location.read',
+  'mdm.product.read',
+];
+
 /** Keyed by lower-case email. Permission codes are the contract's `x-permission` values. */
 export const FAKE_USERS: Record<string, FakeUser> = {
   'ama.mensah@hakoremfarms.com': {
@@ -203,6 +246,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
       ...STOCK_PERMISSIONS,
       ...OWNER_F5B_PERMISSIONS,
       ...OWNER_F5C_PERMISSIONS,
+      ...OWNER_F6_PERMISSIONS,
     ],
     moreBranches: SELLING_POINTS,
   },
@@ -240,6 +284,16 @@ export const FAKE_USERS: Record<string, FakeUser> = {
     roleCode: 'STOREKEEPER',
     roleName: 'Storekeeper',
     permissions: STOCK_PERMISSIONS,
+  },
+  'kofi.adjei@hakoremfarms.com': {
+    id: '019a7a86-7e21-7c3d-9a5b-1f4e6d8c2a35',
+    displayName: 'Kofi Adjei',
+    password: 'Mango-Season-2026!',
+    totp: false,
+    mustChangePassword: false,
+    roleCode: 'FARM_HAND',
+    roleName: 'Farm hand',
+    permissions: FARM_HAND_PERMISSIONS,
   },
   'new.staff@hakoremfarms.com': {
     id: '019a7a86-9d07-7e52-a1c3-6a4f1d0c2b90',
