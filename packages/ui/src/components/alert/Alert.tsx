@@ -37,7 +37,7 @@ export function Alert<T extends string>({
       data-slot="alert"
       data-severity={severity}
       role={severityRole(severity)}
-      className={cn('flex gap-3 rounded-md border border-s-4 px-3 py-2.5', box, className)}
+      className={cn('flex gap-3 rounded-lg border border-s-4 px-4 py-3', box, className)}
     >
       <Icon
         aria-hidden="true"

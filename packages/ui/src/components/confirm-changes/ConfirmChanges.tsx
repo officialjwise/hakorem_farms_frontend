@@ -125,7 +125,7 @@ export function ConfirmChanges<T extends string>({
           </p>
         )}
         {failure}
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className="flex flex-wrap justify-between gap-2 border-t border-border pt-4">
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
             {cancelLabel}
           </Button>

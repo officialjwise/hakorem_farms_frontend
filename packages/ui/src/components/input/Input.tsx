@@ -16,7 +16,7 @@ import { useRequireLabel } from '../../lib/useRequireLabel';
  */
 export const inputVariants = cva(
   [
-    'w-full min-w-0 rounded-md border border-border-strong bg-surface text-fg tabular-nums',
+    'w-full min-w-0 rounded-full border border-border-strong bg-surface text-fg tabular-nums',
     'placeholder:text-fg-muted',
     'outline-focus outline-offset-2 focus-visible:outline-2',
     'transition-colors duration-fast ease-standard',

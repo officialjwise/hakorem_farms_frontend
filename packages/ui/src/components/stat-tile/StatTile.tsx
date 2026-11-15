@@ -83,7 +83,7 @@ export function StatTile<L extends string>({
       aria-busy={loading || undefined}
       data-state={unavailable !== undefined ? 'unavailable' : loading ? 'loading' : 'ready'}
       className={cn(
-        'grid min-w-0 content-start gap-1 rounded-lg border border-border bg-surface p-4 text-fg',
+        'grid min-w-0 content-start gap-1.5 rounded-lg border border-border bg-surface p-5 text-fg shadow-sm',
         unavailable !== undefined && 'border-dashed bg-surface-sunken',
         asChild && [
           'cursor-pointer transition-colors duration-fast hover-enabled:bg-surface-hover',
@@ -116,9 +116,7 @@ export function StatTile<L extends string>({
         <Skeleton label={loadingLabel} shape="line" className="h-8" />
       ) : (
         <>
-          <span className="text-xl font-semibold break-words tabular-nums sm:text-2xl">
-            {value}
-          </span>
+          <span className="text-xl font-bold break-words tabular-nums sm:text-2xl">{value}</span>
           {detail === undefined ? null : (
             <span className="text-control-sm text-fg-muted">{detail}</span>
           )}

@@ -19,6 +19,8 @@ export type PageHeaderProps<T extends string = string> = {
   refresh?: { label: string; onRefresh: () => void; refreshing: boolean; refreshingLabel: string };
   /** The page's primary actions, on the right: buttons, links and an export menu. */
   actions?: ReactNode;
+  /** The trail to this page, beneath the title. */
+  breadcrumbs?: ReactNode;
   className?: string;
 };
 
@@ -33,6 +35,7 @@ export function PageHeader<T extends string>({
   generatedAt,
   refresh,
   actions,
+  breadcrumbs,
   className,
 }: PageHeaderProps<T>) {
   if (title.trim() === '') throw new Error('PageHeader needs a non-empty title.');
@@ -42,9 +45,10 @@ export function PageHeader<T extends string>({
       className={cn('flex flex-wrap items-start justify-between gap-3', className)}
     >
       <div className="grid min-w-0 gap-1">
-        <h1 id={titleId} className="text-2xl font-semibold text-fg">
+        <h1 id={titleId} className="text-2xl font-bold text-fg">
           {title}
         </h1>
+        {breadcrumbs}
         {description === undefined ? null : <p className="text-sm text-fg-muted">{description}</p>}
         {generatedAt === undefined && refresh === undefined ? null : (
           <p className="flex flex-wrap items-center gap-x-2 text-control-sm text-fg-muted">

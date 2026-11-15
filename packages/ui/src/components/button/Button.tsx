@@ -6,7 +6,7 @@ import { Spinner } from '../spinner/Spinner';
 
 export const buttonVariants = cva(
   [
-    'relative inline-flex shrink-0 items-center justify-center gap-2 rounded-md font-semibold whitespace-nowrap select-none',
+    'relative inline-flex shrink-0 items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap select-none',
     'transition-colors duration-fast ease-standard',
     'outline-focus outline-offset-2 focus-visible:outline-2',
     'press:translate-y-px motion-reduce:press:translate-y-0',
