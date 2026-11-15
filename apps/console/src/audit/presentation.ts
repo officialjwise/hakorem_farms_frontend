@@ -21,17 +21,6 @@ export const AUDIT_ACTIONS: readonly AuditAction[] = [
   'POST',
 ];
 
-/**
- * A day picked in the filter as the instant range the contract's `from` and `to` take. Accra is UTC+0 all
- * year (ADR 0027), so an Accra day is the UTC day: from its first millisecond to its last.
- */
-export function dayStart(day: string): string {
-  return `${day}T00:00:00.000Z`;
-}
-export function dayEnd(day: string): string {
-  return `${day}T23:59:59.999Z`;
-}
-
 export interface ChangeRow {
   field: string;
   before: string | null;

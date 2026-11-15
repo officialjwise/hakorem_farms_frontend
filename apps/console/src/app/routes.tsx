@@ -1,12 +1,4 @@
 import type { RouteObject } from 'react-router';
-import { AuditEventScreen } from '../audit/AuditEventScreen';
-import { AuditScreen } from '../audit/AuditScreen';
-import { RoleDetailScreen, RoleNewScreen } from '../iam/RoleScreen';
-import { RolesScreen } from '../iam/RolesScreen';
-import { SessionsScreen } from '../iam/SessionsScreen';
-import { UserCreateScreen } from '../iam/UserCreateScreen';
-import { UserDetailScreen } from '../iam/UserDetailScreen';
-import { UsersScreen } from '../iam/UsersScreen';
 import type { RouteHandle } from '../routing/handle';
 import { NotFoundScreen } from '../screens/NotFoundScreen';
 import { PlaceholderScreen } from '../screens/PlaceholderScreen';
@@ -209,6 +201,37 @@ export const protectedRoutes: RouteObject[] = [
           },
         ],
       },
+      // F5c: the settings section. Display is anyone's; the business and system settings need aud.setting.read.
+      {
+        path: 'settings',
+        handle: back(null, 'settings'),
+        element: lazyScreen(() =>
+          import('../settings/SettingsScreens').then((m) => m.SettingsLayout),
+        ),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../settings/SettingsScreens').then((m) => m.DisplaySettingsScreen),
+            ),
+            handle: back(null, 'settings'),
+          },
+          {
+            path: 'business',
+            element: lazyScreen(() =>
+              import('../settings/SettingsScreens').then((m) => m.BusinessProfileScreen),
+            ),
+            handle: back('aud.setting.read', 'settingsBusiness'),
+          },
+          {
+            path: 'system',
+            element: lazyScreen(() =>
+              import('../settings/SettingsScreens').then((m) => m.SystemSettingsScreen),
+            ),
+            handle: back('aud.setting.read', 'settingsSystem'),
+          },
+        ],
+      },
       // F4, each loaded on demand so the back office's first load stays in budget (PERFORMANCE_BUDGET).
       {
         path: 'products',
@@ -307,15 +330,23 @@ export const protectedRoutes: RouteObject[] = [
         path: 'users',
         handle: back('iam.user.read', 'users'),
         children: [
-          { index: true, element: <UsersScreen />, handle: back('iam.user.read', 'users') },
+          {
+            index: true,
+            element: lazyScreen(() => import('../iam/UsersScreen').then((m) => m.UsersScreen)),
+            handle: back('iam.user.read', 'users'),
+          },
           {
             path: 'new',
-            element: <UserCreateScreen />,
+            element: lazyScreen(() =>
+              import('../iam/UserCreateScreen').then((m) => m.UserCreateScreen),
+            ),
             handle: back('iam.user.create', 'userNew'),
           },
           {
             path: ':id',
-            element: <UserDetailScreen />,
+            element: lazyScreen(() =>
+              import('../iam/UserDetailScreen').then((m) => m.UserDetailScreen),
+            ),
             handle: back('iam.user.read', 'userDetail'),
           },
         ],
@@ -324,28 +355,42 @@ export const protectedRoutes: RouteObject[] = [
         path: 'roles',
         handle: back('iam.role.read', 'roles'),
         children: [
-          { index: true, element: <RolesScreen />, handle: back('iam.role.read', 'roles') },
-          { path: 'new', element: <RoleNewScreen />, handle: back('iam.role.manage', 'roleNew') },
+          {
+            index: true,
+            element: lazyScreen(() => import('../iam/RolesScreen').then((m) => m.RolesScreen)),
+            handle: back('iam.role.read', 'roles'),
+          },
+          {
+            path: 'new',
+            element: lazyScreen(() => import('../iam/RoleScreen').then((m) => m.RoleNewScreen)),
+            handle: back('iam.role.manage', 'roleNew'),
+          },
           {
             path: ':id',
-            element: <RoleDetailScreen />,
+            element: lazyScreen(() => import('../iam/RoleScreen').then((m) => m.RoleDetailScreen)),
             handle: back('iam.role.read', 'roleDetail'),
           },
         ],
       },
       {
         path: 'sessions',
-        element: <SessionsScreen />,
+        element: lazyScreen(() => import('../iam/SessionsScreen').then((m) => m.SessionsScreen)),
         handle: back('iam.session.read', 'sessions'),
       },
       {
         path: 'audit',
         handle: back('aud.audit.read', 'audit'),
         children: [
-          { index: true, element: <AuditScreen />, handle: back('aud.audit.read', 'audit') },
+          {
+            index: true,
+            element: lazyScreen(() => import('../audit/AuditScreen').then((m) => m.AuditScreen)),
+            handle: back('aud.audit.read', 'audit'),
+          },
           {
             path: ':id',
-            element: <AuditEventScreen />,
+            element: lazyScreen(() =>
+              import('../audit/AuditEventScreen').then((m) => m.AuditEventScreen),
+            ),
             handle: back('aud.audit.read', 'auditEvent'),
           },
         ],

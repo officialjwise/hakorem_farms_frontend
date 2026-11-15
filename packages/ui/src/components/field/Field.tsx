@@ -8,13 +8,19 @@ import { cn } from '../../lib/cn';
 /** Rejects an empty string literal at compile time. Dynamic blank strings are rejected at render. */
 type NonEmpty<T extends string> = T extends '' ? never : T;
 
-/** Required fields carry the `required` attribute and visible words, never an asterisk alone. */
-type RequiredProps =
-  | { required?: false; requiredLabel?: never }
+/**
+ * Required fields carry the `required` attribute and words, never an asterisk alone. With
+ * `requiredMark="asterisk"` (a modal, as the reference marks it) the label shows a red asterisk, the words
+ * stay for a screen reader, and the surrounding form must say what the asterisk means on screen (Dialog's
+ * `requiredNote`).
+ */
+export type RequiredProps =
+  | { required?: false; requiredLabel?: never; requiredMark?: never }
   | {
       required: true;
-      /** Visible text inside the label, for example "Required", already translated. */
+      /** Text inside the label, for example "Required", already translated. Visible unless `asterisk`. */
       requiredLabel: string;
+      requiredMark?: 'words' | 'asterisk';
     };
 
 export type FieldProps<L extends string = string> = RequiredProps & {
@@ -47,6 +53,7 @@ export function Field<L extends string>({
   error,
   required = false,
   requiredLabel,
+  requiredMark = 'words',
   children,
   className,
 }: FieldProps<L>) {
@@ -82,7 +89,14 @@ export function Field<L extends string>({
     >
       <label htmlFor={id} className="text-control-sm font-semibold text-fg">
         {label}
-        {required ? (
+        {required && requiredMark === 'asterisk' ? (
+          <>
+            <span aria-hidden="true" className="ms-0.5 text-critical-fg">
+              *
+            </span>
+            <span className="sr-only"> {requiredLabel}</span>
+          </>
+        ) : required ? (
           <>
             {' '}
             <span className="font-normal text-fg-muted">{requiredLabel}</span>

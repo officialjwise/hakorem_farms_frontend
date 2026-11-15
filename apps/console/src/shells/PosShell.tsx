@@ -2,7 +2,7 @@ import { LogOut } from 'lucide-react';
 import { useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Outlet, useNavigate } from 'react-router';
-import { Button, Dialog, Field, Input } from '@hakorem/ui';
+import { Button, Dialog, DialogActions, Field, Input } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { useBarcodeTrap } from '../pos/useBarcodeTrap';
 import { OfflineBanner, OfflineIndicator } from './OfflineIndicator';
@@ -51,6 +51,8 @@ export function PosShell() {
             title={t('pos.signOutTitle')}
             description={t('pos.signOutBody')}
             closeLabel={t('pos.close')}
+            icon={LogOut}
+            iconTone="critical"
             trigger={
               <Button variant="secondary" size="lg">
                 <LogOut aria-hidden="true" />
@@ -58,14 +60,12 @@ export function PosShell() {
               </Button>
             }
             footer={
-              <>
-                <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
-                  {t('pos.cancel')}
-                </Button>
+              <DialogActions cancelLabel={t('pos.cancel')} onCancel={() => setConfirmOpen(false)}>
                 <Button variant="danger" onClick={() => void signOut()}>
+                  <LogOut aria-hidden="true" />
                   {t('pos.signOutConfirm')}
                 </Button>
-              </>
+              </DialogActions>
             }
           />
         </div>

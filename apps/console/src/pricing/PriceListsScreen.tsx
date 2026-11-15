@@ -1,31 +1,19 @@
+import { Tags } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import type { components } from '@hakorem/api-client';
-import {
-  Field,
-  Pagination,
-  QueryBoundary,
-  Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableHeader,
-  TableLoadingRows,
-  TableRow,
-  TableRowHeader,
-} from '@hakorem/ui';
+import { Field, FilterMenu, IconChip, Select, useTableView, type TableColumn } from '@hakorem/ui';
 import { PageHeader } from '../lib/ScreenHeader';
 import { useApiQuery } from '../data/api';
 import { When } from '../iam/presentation';
 import { useStateLabels } from '../lib/states';
+import { TableCard } from '../lib/TableCard';
 import { useCursorPages } from '../lib/useCursorPages';
 
+type PriceList = components['schemas']['PriceList'];
 type Kind = components['schemas']['PriceListKind'];
 const KINDS: readonly Kind[] = ['BASE', 'CHANNEL', 'TIER', 'CUSTOMER'];
-const COLUMNS = 5;
 
 /** FR-MDM: price lists per channel and customer tier, each with the version in force and any draft. */
 export function PriceListsScreen() {
@@ -51,125 +39,116 @@ export function PriceListsScreen() {
     deniedTitle: t('priceLists.denied'),
   });
 
-  const header = (
-    <TableHeader>
-      <TableRow>
-        <TableHead>{t('priceLists.columns.name')}</TableHead>
-        <TableHead>{t('priceLists.columns.kind')}</TableHead>
-        <TableHead>{t('priceLists.columns.applies')}</TableHead>
-        <TableHead>{t('priceLists.columns.active')}</TableHead>
-        <TableHead>{t('priceLists.columns.draft')}</TableHead>
-      </TableRow>
-    </TableHeader>
-  );
+  const columns: TableColumn<PriceList>[] = [
+    {
+      id: 'name',
+      rowHeader: true,
+      head: t('priceLists.columns.name'),
+      sortValue: (list) => list.name,
+      cell: (list) => (
+        <span className="flex items-center gap-3">
+          <IconChip icon={Tags} tone="clay" size="sm" />
+          <span className="grid min-w-0">
+            <Link to={`/price-lists/${list.id}`} className="text-accent-text hover:underline">
+              {list.name}
+            </Link>
+            <code className="text-control-sm font-normal text-fg-muted">{list.code}</code>
+          </span>
+        </span>
+      ),
+    },
+    {
+      id: 'kind',
+      head: t('priceLists.columns.kind'),
+      sortValue: (list) => t(`kind.${list.kind}`),
+      cell: (list) => t(`kind.${list.kind}`),
+    },
+    {
+      id: 'applies',
+      head: t('priceLists.columns.applies'),
+      cell: (list) => <AppliesTo list={list} />,
+    },
+    {
+      id: 'active',
+      head: t('priceLists.columns.active'),
+      // ISO instants sort as text; a list with nothing in force goes last.
+      sortValue: (list) => list.activeVersion?.validFrom,
+      cell: (list) =>
+        list.activeVersion === null ? (
+          t('priceLists.noActive')
+        ) : (
+          <span>
+            {t('priceLists.versionNo', { number: list.activeVersion.versionNo })} ·{' '}
+            {t('priceLists.since')} <When instant={list.activeVersion.validFrom} />
+          </span>
+        ),
+    },
+    {
+      id: 'draft',
+      head: t('priceLists.columns.draft'),
+      cell: (list) =>
+        list.draftVersionId === null ? (
+          t('priceLists.noDraft')
+        ) : (
+          <Link
+            to={`/price-list-versions/${list.draftVersionId}`}
+            className="text-accent-text underline"
+            aria-label={t('priceLists.previewDraftOf', { name: list.name })}
+          >
+            {t('priceLists.previewDraft')}
+          </Link>
+        ),
+    },
+  ];
+  const view = useTableView(columns);
 
   return (
     <section aria-labelledby="price-lists-title" className="grid gap-4">
       <PageHeader title={t('priceLists.title')} titleId="price-lists-title" />
       <p className="text-fg-muted">{t('priceLists.intro')}</p>
-      <div className="max-w-xs">
-        <Field label={t('priceLists.filterKind')}>
-          <Select
-            value={kind}
-            onValueChange={(value) => {
-              setKind(KINDS.find((k) => k === value) ?? 'ALL');
-              pages.reset();
-            }}
-            options={[
-              { value: 'ALL', label: t('priceLists.allKinds') },
-              ...KINDS.map((k) => ({ value: k, label: t(`kind.${k}`) })),
-            ]}
-          />
-        </Field>
-      </div>
-      <QueryBoundary
+      <TableCard
+        view={view}
         query={lists}
         labels={labels}
-        isEmpty={(page) => page.data.length === 0}
-        loadingFallback={
-          <TableContainer aria-label={t('priceLists.table')}>
-            <Table>
-              {header}
-              <TableBody>
-                <TableLoadingRows columns={COLUMNS} label={labels.loading} />
-              </TableBody>
-            </Table>
-          </TableContainer>
-        }
-      >
-        {(page) => (
-          <div className="grid gap-3">
-            <TableContainer aria-label={t('priceLists.table')}>
-              <Table>
-                {header}
-                <TableBody>
-                  {page.data.map((list) => (
-                    <TableRow key={list.id}>
-                      <TableRowHeader>
-                        <Link to={`/price-lists/${list.id}`} className="text-accent-text underline">
-                          {list.name}
-                        </Link>
-                        <span className="block text-control-sm text-fg-muted">
-                          <code>{list.code}</code>
-                        </span>
-                      </TableRowHeader>
-                      <TableCell label={t('priceLists.columns.kind')}>
-                        {t(`kind.${list.kind}`)}
-                      </TableCell>
-                      <TableCell label={t('priceLists.columns.applies')}>
-                        <AppliesTo list={list} />
-                      </TableCell>
-                      <TableCell label={t('priceLists.columns.active')}>
-                        {list.activeVersion === null ? (
-                          t('priceLists.noActive')
-                        ) : (
-                          <span>
-                            {t('priceLists.versionNo', { number: list.activeVersion.versionNo })} ·{' '}
-                            {t('priceLists.since')} <When instant={list.activeVersion.validFrom} />
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell label={t('priceLists.columns.draft')}>
-                        {list.draftVersionId === null ? (
-                          t('priceLists.noDraft')
-                        ) : (
-                          <Link
-                            to={`/price-list-versions/${list.draftVersionId}`}
-                            className="text-accent-text underline"
-                            aria-label={t('priceLists.previewDraftOf', { name: list.name })}
-                          >
-                            {t('priceLists.previewDraft')}
-                          </Link>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            {pages.hasPrevious || page.page.hasMore ? (
-              <Pagination
-                label={t('priceLists.pages')}
-                hasPrevious={pages.hasPrevious}
-                hasNext={page.page.hasMore && page.page.nextCursor !== null}
-                onPrevious={pages.previous}
-                onNext={() => {
-                  if (page.page.nextCursor !== null) pages.next(page.page.nextCursor);
+        rows={(page) => page.data}
+        rowKey={(list) => list.id}
+        tableLabel={t('priceLists.table')}
+        exportName={t('priceLists.title')}
+        pages={{ state: pages, info: (page) => page.page, label: t('priceLists.pages') }}
+        toolbar={
+          <FilterMenu
+            label={t('common:table.filter')}
+            active={kind === 'ALL' ? 0 : 1}
+            reset={{
+              label: t('common:table.resetFilters'),
+              onReset: () => {
+                setKind('ALL');
+                pages.reset();
+              },
+            }}
+          >
+            <Field label={t('priceLists.filterKind')}>
+              <Select
+                value={kind}
+                onValueChange={(value) => {
+                  setKind(KINDS.find((k) => k === value) ?? 'ALL');
+                  pages.reset();
                 }}
-                previousLabel={t('common:pagination.previous')}
-                nextLabel={t('common:pagination.next')}
-                summary={t('common:pagination.page', { page: pages.page })}
+                options={[
+                  { value: 'ALL', label: t('priceLists.allKinds') },
+                  ...KINDS.map((k) => ({ value: k, label: t(`kind.${k}`) })),
+                ]}
               />
-            ) : null}
-          </div>
-        )}
-      </QueryBoundary>
+            </Field>
+          </FilterMenu>
+        }
+      />
     </section>
   );
 }
 
 /** Which sales a list applies to: its channel, tier and branch, or everything for the base list. */
-export function AppliesTo({ list }: { list: components['schemas']['PriceList'] }) {
+export function AppliesTo({ list }: { list: PriceList }) {
   const { t } = useTranslation('catalogue');
   const parts = [
     list.channel === null ? null : t(`channel.${list.channel}`),

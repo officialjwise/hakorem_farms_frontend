@@ -184,6 +184,9 @@ const OWNER_F5B_PERMISSIONS = [
   'fin.report.read',
 ];
 
+/** What the owner holds for the F5c settings section: the business profile and the system settings. */
+const OWNER_F5C_PERMISSIONS = ['aud.setting.read'];
+
 /** Keyed by lower-case email. Permission codes are the contract's `x-permission` values. */
 export const FAKE_USERS: Record<string, FakeUser> = {
   'ama.mensah@hakoremfarms.com': {
@@ -199,6 +202,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
       ...OWNER_CATALOGUE_PERMISSIONS,
       ...STOCK_PERMISSIONS,
       ...OWNER_F5B_PERMISSIONS,
+      ...OWNER_F5C_PERMISSIONS,
     ],
     moreBranches: SELLING_POINTS,
   },

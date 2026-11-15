@@ -1,5 +1,8 @@
+'use client';
+
 import { RefreshCw } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '../../lib/cn';
 import { Button } from '../button/Button';
 
@@ -21,12 +24,18 @@ export type PageHeaderProps<T extends string = string> = {
   actions?: ReactNode;
   /** The trail to this page, beneath the title. */
   breadcrumbs?: ReactNode;
+  /**
+   * Where the h1 goes when the app's top bar holds the page title (the reference layout). The rest of the
+   * header (breadcrumbs, description, actions) stays in the page. Null or absent: the h1 stays in the header.
+   */
+  titleSlot?: HTMLElement | null;
   className?: string;
 };
 
 /**
  * PageHeader. Every back office page opens the same way: its title, one line about it, when its figures
  * were generated with a refresh, and its primary actions on the right. On a phone the actions wrap below.
+ * With `titleSlot` the h1 renders into the app's top bar and the breadcrumbs lead the page instead.
  */
 export function PageHeader<T extends string>({
   title,
@@ -36,18 +45,28 @@ export function PageHeader<T extends string>({
   refresh,
   actions,
   breadcrumbs,
+  titleSlot,
   className,
 }: PageHeaderProps<T>) {
   if (title.trim() === '') throw new Error('PageHeader needs a non-empty title.');
+  const inTopBar = titleSlot !== undefined && titleSlot !== null;
+  const heading = (
+    <h1
+      id={titleId}
+      data-slot="page-title"
+      className={cn('font-bold text-fg', inTopBar ? 'truncate text-xl' : 'text-2xl')}
+    >
+      {title}
+    </h1>
+  );
   return (
     <header
       data-slot="page-header"
-      className={cn('flex flex-wrap items-start justify-between gap-3', className)}
+      className={cn('flex flex-wrap items-center justify-between gap-3', className)}
     >
+      {inTopBar ? createPortal(heading, titleSlot) : null}
       <div className="grid min-w-0 gap-1">
-        <h1 id={titleId} className="text-2xl font-bold text-fg">
-          {title}
-        </h1>
+        {inTopBar ? null : heading}
         {breadcrumbs}
         {description === undefined ? null : <p className="text-sm text-fg-muted">{description}</p>}
         {generatedAt === undefined && refresh === undefined ? null : (

@@ -1,5 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { toastLabels } from '../../test/toastLabels';
+import { UIProvider } from '../ui-provider/UIProvider';
 import { Pagination } from './Pagination';
 
 const labels = { label: 'Stock pages', previousLabel: 'Previous', nextLabel: 'Next' };
@@ -76,5 +78,52 @@ describe('Pagination', () => {
     expect(screen.getByRole('button', { name: 'Next' })).toHaveFocus();
     await userEvent.keyboard('{Enter}');
     expect(onNext).toHaveBeenCalledTimes(1);
+  });
+
+  it('numbers the pages reached, marks this one, and goes to another', async () => {
+    const onGoTo = vi.fn();
+    render(
+      <UIProvider theme="light" density="comfortable" toastLabels={toastLabels}>
+        <Pagination
+          label="Products pages"
+          hasPrevious
+          hasNext
+          onPrevious={() => undefined}
+          onNext={() => undefined}
+          previousLabel="Previous"
+          nextLabel="Next"
+          page={2}
+          reached={3}
+          onGoTo={onGoTo}
+          goToLabel="Go to page"
+          pageLabel={(n) => `Page ${n}`}
+        />
+      </UIProvider>,
+    );
+    expect(screen.getByRole('button', { name: 'Page 2' })).toHaveAttribute('aria-current', 'page');
+    await userEvent.click(screen.getByRole('button', { name: 'Page 3' }));
+    expect(onGoTo).toHaveBeenCalledWith(3);
+    expect(screen.getByRole('combobox', { name: 'Go to page' })).toBeInTheDocument();
+  });
+
+  it('offers no page numbers while only one page has been reached', () => {
+    render(
+      <Pagination
+        label="Products pages"
+        hasPrevious={false}
+        hasNext
+        onPrevious={() => undefined}
+        onNext={() => undefined}
+        previousLabel="Previous"
+        nextLabel="Next"
+        page={1}
+        reached={1}
+        onGoTo={() => undefined}
+        goToLabel="Go to page"
+        pageLabel={(n) => `Page ${n}`}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: 'Page 1' })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: 'Go to page' })).toBeNull();
   });
 });

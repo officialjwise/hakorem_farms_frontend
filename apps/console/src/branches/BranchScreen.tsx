@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { MapPin, Pencil, Plus, Power } from 'lucide-react';
+import { CircleCheck, MapPin, Pencil, Plus, Power } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,7 @@ import {
   Button,
   Checkbox,
   Dialog,
+  DialogActions,
   Form,
   FormField,
   FormSubmitButton,
@@ -166,6 +167,8 @@ function BranchView({ branch, canUpdate }: { branch: Branch; canUpdate: boolean 
         pendingLabel={t('form.saving')}
         pending={update.isPending}
         destructive={closing}
+        icon={Power}
+        confirmIcon={Power}
         error={update.error}
         failedTitle={closing ? t('detail.notClosed') : t('detail.notReopened')}
         onConfirm={() => {
@@ -342,6 +345,8 @@ function LocationDialog({
       title={t('locations.newTitle', { branch: branch.name })}
       description={t('locations.newBody')}
       closeLabel={t('common:actions.cancel')}
+      icon={MapPin}
+      requiredNote={t('common:field.requiredNote')}
     >
       <Form
         form={form}
@@ -362,13 +367,31 @@ function LocationDialog({
         onSubmitError={(error) => setFailure(toFailure(error))}
       >
         <WriteFailureView failure={failure} title={t('locations.notAdded')} />
-        <FormField name="code" label={t('locations.fields.code')} required requiredLabel={required}>
+        <FormField
+          name="code"
+          label={t('locations.fields.code')}
+          required
+          requiredLabel={required}
+          requiredMark="asterisk"
+        >
           {(field) => <Input {...field} autoComplete="off" autoCapitalize="characters" />}
         </FormField>
-        <FormField name="name" label={t('locations.fields.name')} required requiredLabel={required}>
+        <FormField
+          name="name"
+          label={t('locations.fields.name')}
+          required
+          requiredLabel={required}
+          requiredMark="asterisk"
+        >
           {(field) => <Input {...field} autoComplete="off" />}
         </FormField>
-        <FormField name="kind" label={t('locations.fields.kind')} required requiredLabel={required}>
+        <FormField
+          name="kind"
+          label={t('locations.fields.kind')}
+          required
+          requiredLabel={required}
+          requiredMark="asterisk"
+        >
           {(field) => (
             <Select
               ref={field.ref}
@@ -403,11 +426,12 @@ function LocationDialog({
             />
           )}
         </FormField>
-        <div className="flex justify-end">
+        <DialogActions cancelLabel={t('common:actions.cancel')} onCancel={onClose}>
           <FormSubmitButton loadingLabel={t('form.saving')}>
+            <CircleCheck aria-hidden="true" />
             {t('locations.create')}
           </FormSubmitButton>
-        </div>
+        </DialogActions>
       </Form>
     </Dialog>
   );

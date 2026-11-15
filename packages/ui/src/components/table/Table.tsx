@@ -217,7 +217,7 @@ export function TableHead({
           type="button"
           onClick={onSort}
           className={cn(
-            '-mx-1 inline-flex items-center gap-1 rounded-sm px-1 py-0.5 uppercase tracking-wide',
+            '-mx-1 inline-flex items-center gap-1 rounded-sm px-1 py-0.5',
             'hover-enabled:text-fg outline-focus outline-offset-1 focus-visible:outline-2',
             numeric && 'flex-row-reverse',
           )}

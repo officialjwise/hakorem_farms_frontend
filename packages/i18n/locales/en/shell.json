@@ -51,7 +51,8 @@
     "openPos": "Open the point of sale",
     "mainLabel": "Page content",
     "widen": "Show the menu's names",
-    "narrow": "Narrow the menu to icons"
+    "narrow": "Narrow the menu to icons",
+    "settings": "Settings"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -97,7 +98,10 @@
     "suppliers": "Suppliers",
     "registers": "Cash registers",
     "reports": "Reports",
-    "report": "Report"
+    "report": "Report",
+    "settings": "Settings",
+    "settingsBusiness": "Business profile",
+    "settingsSystem": "System settings"
   },
   "placeholder": {
     "title": "This area is built in a later session",
@@ -141,7 +145,8 @@
     "catalogue": "Catalogue",
     "business": "Business",
     "people": "People and access",
-    "reports": "Reports"
+    "reports": "Reports",
+    "settings": "Settings"
   },
   "branch": {
     "label": "Scope every screen to a branch",

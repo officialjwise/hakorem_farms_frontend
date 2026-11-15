@@ -16,6 +16,7 @@ import {
   Ruler,
   ScanBarcode,
   ScrollText,
+  Settings,
   ShieldCheck,
   ShoppingBasket,
   SlidersHorizontal,
@@ -36,7 +37,7 @@ export interface NavItem {
 }
 
 export type NavGroupKey =
-  'overview' | 'selling' | 'stock' | 'catalogue' | 'business' | 'reports' | 'people';
+  'overview' | 'selling' | 'stock' | 'catalogue' | 'business' | 'reports' | 'people' | 'settings';
 
 export interface NavGroup {
   key: NavGroupKey;
@@ -139,6 +140,10 @@ export const BACK_OFFICE_GROUPS: readonly NavGroup[] = [
       },
       { key: 'audit', path: '/audit', permission: 'aud.audit.read', icon: ScrollText },
     ],
+  },
+  {
+    key: 'settings',
+    items: [{ key: 'settings', path: '/settings', permission: null, icon: Settings }],
   },
 ];
 

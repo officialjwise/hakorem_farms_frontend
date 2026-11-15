@@ -41,7 +41,7 @@ export function BranchSwitcher() {
     );
   }
   return (
-    <div className="w-36 sm:w-48">
+    <div className="w-36 sm:w-44">
       <Select
         aria-label={t('branch.label')}
         value={scope.branchId ?? ALL_BRANCHES}
@@ -82,7 +82,7 @@ export function GlobalSearch() {
     <form
       role="search"
       onSubmit={submit}
-      className="relative hidden min-w-0 md:block md:w-56 xl:w-72"
+      className="relative hidden min-w-0 md:block md:w-48 xl:w-60"
     >
       <Search
         aria-hidden="true"
@@ -235,7 +235,8 @@ export function AccountMenu() {
       trigger={
         <Button variant="ghost" size="sm" aria-label={t('account.open', { name })}>
           <CircleUserRound aria-hidden="true" />
-          <span className="hidden max-w-32 truncate sm:inline">{name}</span>
+          {/* The name from 96rem; below that the icon alone, so the page title keeps its room. */}
+          <span className="hidden max-w-32 truncate 2xl:inline">{name}</span>
         </Button>
       }
     >

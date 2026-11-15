@@ -2,16 +2,13 @@ import {
   AlertTriangle,
   Banknote,
   Boxes,
-  CalendarClock,
+  CalendarRange,
   CircleAlert,
-  FileText,
+  CircleSlash,
   HandCoins,
-  PackageMinus,
-  PawPrint,
   Printer,
   ScanBarcode,
-  ShoppingCart,
-  Truck,
+  Wallet,
   type LucideIcon,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -25,12 +22,14 @@ import {
   MoneyDisplay,
   ProgressList,
   QueryBoundary,
+  IconChip,
+  StatGroup,
   StatTile,
   StatusBadge,
-  Unavailable,
   cn,
   formatQuantity,
   type BadgeTone,
+  type IconChipTone,
   type StatTrend,
 } from '@hakorem/ui';
 import { PageHeader } from '../lib/ScreenHeader';
@@ -42,7 +41,7 @@ import { When } from '../iam/presentation';
 import { lookup } from '../lib/lookup';
 import { useStateLabels } from '../lib/states';
 import { useUnits } from '../stock/units';
-import { isAvailable, type FigureKey, type OwnerDashboard } from './figures';
+import { isAvailable, UNAVAILABLE, type FigureKey, type OwnerDashboard } from './figures';
 
 /** A card with a heading, as the dashboard's panels are. */
 function Panel({
@@ -62,7 +61,7 @@ function Panel({
     <section
       aria-labelledby={id}
       className={cn(
-        'grid content-start gap-3 rounded-lg border border-border bg-surface p-4',
+        'grid content-start gap-3 rounded-lg border border-border bg-surface p-5 shadow-sm',
         className,
       )}
     >
@@ -111,23 +110,23 @@ export function DashboardScreen() {
     scope.branchId === null
       ? t('allBranches')
       : (scope.branches.find((branch) => branch.id === scope.branchId)?.name ?? '');
-  const unavailable = t('unavailable');
-  const unavailableBody = t('unavailableBody');
-  const off = (key: FigureKey) => (isAvailable(key) ? undefined : unavailable);
 
   const tile = (
     key: FigureKey,
     props: {
       label: string;
       icon: LucideIcon;
+      tone?: IconChipTone;
       value?: ReactNode;
       detail?: ReactNode;
       trend?: StatTrend;
       to?: string;
     },
   ) => {
-    const { to, ...rest } = props;
-    const common = { ...rest, unavailable: off(key) };
+    // A figure with no data source is in the strip below the row, not an empty cell in it.
+    if (!isAvailable(key)) return null;
+    const { to, tone, ...rest } = props;
+    const common = { ...rest, iconTone: tone, variant: 'cell' as const };
     return to === undefined ? (
       <StatTile {...common} />
     ) : (
@@ -214,31 +213,38 @@ export function DashboardScreen() {
           ) : undefined
         }
         loadingFallback={
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
-            {[0, 1, 2, 3, 4, 5].map((i) => (
-              <StatTile key={i} label={t('loadingTile')} loadingLabel={t('loading')} />
+          <StatGroup label={t('glance')}>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <StatTile
+                key={i}
+                variant="cell"
+                label={t('loadingTile')}
+                loadingLabel={t('loading')}
+              />
             ))}
-          </div>
+          </StatGroup>
         }
       >
         {(d) => (
           <div className="grid gap-4">
-            {/* The stat row: how today is going. */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+            {/* The stat row: how today is going, one card divided into columns (the reference's). */}
+            <StatGroup label={t('glance')}>
               {tile('salesToday', {
                 label: t('tiles.salesToday'),
                 icon: Banknote,
                 value: <MoneyDisplay pesewas={d.salesTodayPesewas} />,
                 trend: salesTrend(d),
               })}
-              {tile('purchasesToday', {
-                label: t('tiles.purchasesToday'),
-                icon: ShoppingCart,
-                to: auth.can('inv.goods_receipt.read') ? '/goods-receipts' : undefined,
+              {tile('salesMonthToDate', {
+                label: t('series.salesMonthToDate'),
+                icon: CalendarRange,
+                tone: 'sand',
+                value: <MoneyDisplay pesewas={d.salesMonthToDatePesewas} />,
               })}
               {tile('stockValue', {
                 label: t('tiles.stockValue'),
                 icon: Boxes,
+                tone: 'info',
                 value: <MoneyDisplay pesewas={d.stockValueAtCostPesewas} />,
                 detail: t('tiles.atCost'),
                 to: auth.can('inv.stock.read') ? '/stock' : undefined,
@@ -246,100 +252,23 @@ export function DashboardScreen() {
               {tile('receivables', {
                 label: t('tiles.receivables'),
                 icon: HandCoins,
+                tone: 'warning',
                 value: <MoneyDisplay pesewas={d.receivablesOutstandingPesewas} />,
                 detail: t('tiles.overdue', { amount: formatMoney(d.receivablesOverduePesewas) }),
               })}
-              {tile('lowStock', {
-                label: t('tiles.lowStock'),
-                icon: PackageMinus,
-                to: auth.can('inv.stock.read') ? '/lots' : undefined,
+              {tile('cash', {
+                label: t('tiles.cash'),
+                icon: Wallet,
+                tone: 'good',
+                value: <MoneyDisplay pesewas={d.cash.totalPesewas} />,
+                detail: t('tiles.cashDetail'),
               })}
-              {tile('animalsOnHand', { label: t('tiles.animals'), icon: PawPrint })}
-            </div>
+            </StatGroup>
 
-            <div className="grid gap-4 xl:grid-cols-3">
-              {/* Sales and purchases over the period, with the two comparison cards. */}
-              <Panel id="dash-series" title={t('series.title')} className="xl:col-span-2">
-                <Unavailable title={unavailable} description={t('series.unavailable')} />
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {tile('salesMonthToDate', {
-                    label: t('series.salesMonthToDate'),
-                    icon: Banknote,
-                    value: <MoneyDisplay pesewas={d.salesMonthToDatePesewas} />,
-                  })}
-                  {tile('purchasesPeriod', {
-                    label: t('series.purchasesMonthToDate'),
-                    icon: Truck,
-                    to: auth.can('inv.goods_receipt.read') ? '/goods-receipts' : undefined,
-                  })}
-                </div>
-              </Panel>
+            {/* Every figure with no data source yet, in one strip, saying what it arrives with. */}
+            <PendingFigures />
 
-              {/* Stock health on the deep teal panel: a dark-theme island (ADR 0001, amendment). */}
-              <section
-                data-theme="dark"
-                aria-labelledby="dash-health"
-                className="grid content-start gap-3 rounded-lg bg-panel p-4 text-fg"
-              >
-                <h2 id="dash-health" className="text-lg font-semibold">
-                  {t('health.title')}
-                </h2>
-                <p className="text-sm text-fg-muted">{t('health.summary')}</p>
-                {isAvailable('stockHealth') ? null : (
-                  <p className="flex items-center gap-2 rounded-md border border-dashed border-border-strong p-3 text-sm">
-                    <span className="font-semibold">{unavailable}</span>
-                    <span className="text-fg-muted">{t('health.unavailable')}</span>
-                  </p>
-                )}
-                {auth.can('inv.stock.read') ? (
-                  <Link to="/stock" className="text-sm text-accent-text underline">
-                    {t('health.open')}
-                  </Link>
-                ) : null}
-              </section>
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-              <Panel id="dash-attention" title={t('attention.title')}>
-                {d.alerts.length === 0 ? (
-                  <p className="text-sm text-fg-muted">{t('attention.none')}</p>
-                ) : (
-                  <ul className="grid gap-1">
-                    {d.alerts.map((alert, index) => {
-                      const look = lookup(SEVERITY, alert.severity, SEVERITY.INFO);
-                      const row = {
-                        icon: look.icon,
-                        tone: look.tone,
-                        title: alert.summary,
-                        status: (
-                          <StatusBadge
-                            tone={look.tone}
-                            icon={look.icon}
-                            label={t(`attention.severity.${alert.severity}`, {
-                              defaultValue: alert.severity,
-                            })}
-                          />
-                        ),
-                      };
-                      return (
-                        <li key={`${alert.kind}-${index}`}>
-                          {alert.link !== null && isConsoleRoute(alert.link) ? (
-                            <AlertRow {...row} asChild>
-                              <Link to={alert.link} />
-                            </AlertRow>
-                          ) : (
-                            <AlertRow {...row} />
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-                <p className="text-control-sm text-fg-muted">
-                  {t('attention.exceptions', { count: d.exceptionsToday })}
-                </p>
-              </Panel>
-
+            <div className="grid gap-4 lg:grid-cols-2">
               <Panel id="dash-movers" title={t('movers.title')}>
                 <TopMovers movers={d.topMovers} />
               </Panel>
@@ -365,6 +294,45 @@ export function DashboardScreen() {
                     </span>
                   }
                 />
+              </Panel>
+
+              <Panel id="dash-attention" title={t('attention.title')}>
+                {d.alerts.length === 0 ? (
+                  <p className="text-sm text-fg-muted">{t('attention.none')}</p>
+                ) : (
+                  <ul className="grid gap-1">
+                    {d.alerts.map((alert, index) => {
+                      const look = lookup(SEVERITY, alert.severity, SEVERITY.INFO);
+                      const row = {
+                        icon: look.icon,
+                        tone: look.tone,
+                        title: alert.summary,
+                        status: (
+                          <StatusBadge
+                            tone={look.tone}
+                            label={t(`attention.severity.${alert.severity}`, {
+                              defaultValue: alert.severity,
+                            })}
+                          />
+                        ),
+                      };
+                      return (
+                        <li key={`${alert.kind}-${index}`}>
+                          {alert.link !== null && isConsoleRoute(alert.link) ? (
+                            <AlertRow {...row} asChild>
+                              <Link to={alert.link} />
+                            </AlertRow>
+                          ) : (
+                            <AlertRow {...row} />
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+                <p className="text-control-sm text-fg-muted">
+                  {t('attention.exceptions', { count: d.exceptionsToday })}
+                </p>
               </Panel>
 
               <Panel id="dash-cash" title={t('cash.title')}>
@@ -393,54 +361,66 @@ export function DashboardScreen() {
                   </div>
                 </dl>
               </Panel>
-
-              <Panel id="dash-categories" title={t('categories.title')}>
-                <Unavailable title={unavailable} description={unavailableBody} />
-              </Panel>
-
-              <Panel id="dash-invoices" title={t('invoices.title')}>
-                <div className="grid gap-2">
-                  {(['total', 'paid', 'overdue'] as const).map((key) => (
-                    <StatTile
-                      key={key}
-                      label={t(`invoices.${key}`)}
-                      icon={FileText}
-                      unavailable={off('invoices')}
-                    />
-                  ))}
-                </div>
-              </Panel>
             </div>
-
-            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
-              {(
-                [
-                  ['stockAlerts', PackageMinus],
-                  ['expiringLots', CalendarClock],
-                  ['expiredLots', AlertTriangle],
-                  ['nearExpiry', CalendarClock],
-                ] as const
-              ).map(([key]) => (
-                <Panel key={key} id={`dash-${key}`} title={t(`lists.${key}`)}>
-                  <Unavailable title={unavailable} description={unavailableBody} />
-                  {key !== 'nearExpiry' && auth.can('inv.stock.read') ? (
-                    <Link to="/lots" className="text-sm text-accent-text underline">
-                      {t('lists.openLots')}
-                    </Link>
-                  ) : null}
-                </Panel>
-              ))}
-            </div>
-
-            <Panel id="dash-payments" title={t('payments.title')}>
-              <div className="grid gap-3 md:grid-cols-2">
-                <Unavailable title={unavailable} description={t('payments.splitUnavailable')} />
-                <Unavailable title={unavailable} description={t('payments.recentUnavailable')} />
-              </div>
-            </Panel>
           </div>
         )}
       </QueryBoundary>
+    </section>
+  );
+}
+
+/** Each figure with no data source yet, by the words it is known by on this screen. */
+const PENDING_LABEL = {
+  purchasesToday: 'tiles.purchasesToday',
+  lowStock: 'tiles.lowStock',
+  animalsOnHand: 'tiles.animals',
+  series: 'pending.series',
+  purchasesPeriod: 'series.purchasesMonthToDate',
+  stockHealth: 'health.title',
+  stockByCategory: 'categories.title',
+  stockAlerts: 'lists.stockAlerts',
+  expiringLots: 'lists.expiringLots',
+  expiredLots: 'lists.expiredLots',
+  nearExpiry: 'lists.nearExpiry',
+  invoices: 'invoices.title',
+  recentPayments: 'payments.title',
+  paymentSplit: 'pending.paymentSplit',
+} as const satisfies Partial<Record<FigureKey, string>>;
+
+/**
+ * The figures the server does not send yet (`figures.ts`), in one compact strip instead of a dozen empty
+ * boxes: what each is, and what it arrives with. A figure leaves the strip the moment its field is wired.
+ * Never a number: nothing here is a figure.
+ */
+function PendingFigures() {
+  const { t } = useTranslation('dashboard');
+  if (UNAVAILABLE.length === 0) return null;
+  return (
+    <section
+      aria-labelledby="dash-pending"
+      data-slot="pending-figures"
+      className="flex flex-wrap items-start gap-3 rounded-lg border border-dashed border-border-strong bg-surface p-4"
+    >
+      <IconChip icon={CircleSlash} tone="slate" size="sm" />
+      <div className="grid min-w-0 flex-1 gap-2">
+        <div className="grid gap-0.5">
+          <h2 id="dash-pending" className="text-sm font-semibold">
+            {t('pending.title')}
+          </h2>
+          <p className="text-control-sm text-fg-muted">{t('pending.body')}</p>
+        </div>
+        <ul aria-label={t('pending.list')} className="flex flex-wrap gap-1.5">
+          {UNAVAILABLE.map((key) => (
+            <li
+              key={key}
+              data-slot="pending-figure"
+              className="rounded-full bg-slate-subtle px-2.5 py-0.5 text-control-sm text-slate-fg"
+            >
+              {key in PENDING_LABEL ? t(PENDING_LABEL[key as keyof typeof PENDING_LABEL]) : key}
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }

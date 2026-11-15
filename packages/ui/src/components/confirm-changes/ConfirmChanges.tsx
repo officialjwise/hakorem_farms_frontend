@@ -1,9 +1,10 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { CircleAlert, CircleCheck, TriangleAlert } from 'lucide-react';
+import type { ComponentType, ReactNode, SVGProps } from 'react';
 import { cn } from '../../lib/cn';
 import { Button } from '../button/Button';
-import { Dialog } from '../dialog/Dialog';
+import { Dialog, DialogActions } from '../dialog/Dialog';
 
 /** Rejects an empty string literal at compile time. Dynamic blank strings are rejected at render. */
 type NonEmpty<T extends string> = T extends '' ? never : T;
@@ -41,6 +42,10 @@ export type ConfirmChangesProps<T extends string = string> = {
   failure?: ReactNode;
   /** `danger` for writes that remove, close or write off. */
   tone?: 'default' | 'danger';
+  /** The chip beside the title. Default: a circled alert, or a warning triangle for `danger`. */
+  icon?: ComponentType<SVGProps<SVGSVGElement>>;
+  /** The confirm button's icon. Default: a tick. */
+  confirmIcon?: ComponentType<SVGProps<SVGSVGElement>>;
 };
 
 /**
@@ -64,6 +69,8 @@ export function ConfirmChanges<T extends string>({
   onConfirm,
   failure,
   tone = 'default',
+  icon,
+  confirmIcon: ConfirmIcon = CircleCheck,
 }: ConfirmChangesProps<T>) {
   const showBefore = changes?.some((row) => row.before !== undefined) ?? false;
   return (
@@ -73,8 +80,10 @@ export function ConfirmChanges<T extends string>({
       title={title}
       description={description}
       closeLabel={cancelLabel}
+      icon={icon ?? (tone === 'danger' ? TriangleAlert : CircleAlert)}
+      iconTone={tone === 'danger' ? 'critical' : 'accent'}
     >
-      <div data-slot="confirm-changes" className="grid gap-3 pb-2">
+      <div data-slot="confirm-changes" className="grid gap-3">
         {changes === undefined || changes.length === 0 ? null : (
           <table className="w-full text-sm">
             {changeHeadings === undefined ? null : (
@@ -125,19 +134,17 @@ export function ConfirmChanges<T extends string>({
           </p>
         )}
         {failure}
-        <div className="flex flex-wrap justify-between gap-2 border-t border-border pt-4">
-          <Button variant="secondary" onClick={() => onOpenChange(false)}>
-            {cancelLabel}
-          </Button>
+        <DialogActions cancelLabel={cancelLabel} onCancel={() => onOpenChange(false)}>
           <Button
             variant={tone === 'danger' ? 'danger' : 'primary'}
             loading={pending}
             loadingLabel={pendingLabel}
             onClick={onConfirm}
           >
+            <ConfirmIcon aria-hidden="true" />
             {confirmLabel}
           </Button>
-        </div>
+        </DialogActions>
       </div>
     </Dialog>
   );

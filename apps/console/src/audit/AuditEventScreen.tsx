@@ -20,6 +20,7 @@ import {
 } from '@hakorem/ui';
 import { useApiQuery } from '../data/api';
 import { When } from '../iam/presentation';
+import { PageHeader } from '../lib/ScreenHeader';
 import { useStateLabels } from '../lib/states';
 import { changeRows, show, type AuditAction, type AuditEvent } from './presentation';
 
@@ -74,12 +75,11 @@ function EventDetail({ record, back }: { record: AuditEvent; back: ReactNode }) 
 
   return (
     <article aria-labelledby="event-title" className="grid gap-4">
-      <div className="grid gap-2">
-        {back}
-        <h1 id="event-title" className="text-2xl font-semibold break-words">
-          {t('event.title', { action, record: record.entityType })}
-        </h1>
-      </div>
+      <PageHeader
+        title={t('event.title', { action, record: record.entityType })}
+        titleId="event-title"
+        actions={back}
+      />
       <Card>
         <CardHeader>
           <CardTitle asChild>

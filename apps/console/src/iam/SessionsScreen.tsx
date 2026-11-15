@@ -1,25 +1,18 @@
-import { CircleCheck, CircleSlash, MonitorSmartphone } from 'lucide-react';
+import { MonitorSmartphone } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { components } from '@hakorem/api-client';
 import {
+  Alert,
   Button,
   Field,
-  Pagination,
-  QueryBoundary,
+  FilterMenu,
+  IconChip,
   Select,
   StatusBadge,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableHeader,
-  TableLoadingRows,
-  TableRow,
-  TableRowHeader,
   formatDateTime,
-  Alert,
+  useTableView,
+  type TableColumn,
 } from '@hakorem/ui';
 import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
@@ -28,11 +21,11 @@ import { useApiMutation, useApiQuery } from '../data/api';
 import { useIntentKey } from '../lib/queries';
 import { ReasonDialog } from '../lib/ReasonDialog';
 import { useStateLabels } from '../lib/states';
+import { TableCard } from '../lib/TableCard';
 import { useCursorPages } from '../lib/useCursorPages';
 import { When } from './presentation';
 
 type SessionRecord = components['schemas']['SessionRecord'];
-const COLUMNS = 7;
 type Show = 'active' | 'all';
 
 /**
@@ -65,21 +58,91 @@ export function SessionsScreen() {
   const canRevoke = auth.can('iam.session.revoke');
   const device = (session: SessionRecord) => session.deviceLabel ?? t('sessions.unknownDevice');
 
-  const header = (
-    <TableHeader>
-      <TableRow>
-        <TableHead>{t('sessions.columns.person')}</TableHead>
-        <TableHead>{t('sessions.columns.device')}</TableHead>
-        <TableHead>{t('sessions.columns.address')}</TableHead>
-        <TableHead>{t('sessions.columns.started')}</TableHead>
-        <TableHead>{t('sessions.columns.lastSeen')}</TableHead>
-        <TableHead>{t('sessions.columns.state')}</TableHead>
-        <TableHead>
-          <span className="sr-only">{t('sessions.revokeShort')}</span>
-        </TableHead>
-      </TableRow>
-    </TableHeader>
-  );
+  const columns: TableColumn<SessionRecord>[] = [
+    {
+      id: 'device',
+      rowHeader: true,
+      head: t('sessions.columns.device'),
+      sortValue: (session) => session.deviceLabel,
+      cell: (session) => (
+        <span className="flex items-center gap-3">
+          <IconChip icon={MonitorSmartphone} tone="info" size="sm" />
+          <span className="grid min-w-0">
+            <span>{device(session)}</span>
+            {session.userAgent === null ? null : (
+              <span className="text-control-sm font-normal break-all text-fg-muted">
+                {session.userAgent}
+              </span>
+            )}
+          </span>
+        </span>
+      ),
+    },
+    {
+      id: 'person',
+      head: t('sessions.columns.person'),
+      sortValue: (session) => session.principal.displayName,
+      cell: (session) => session.principal.displayName,
+    },
+    {
+      id: 'address',
+      head: t('sessions.columns.address'),
+      sortValue: (session) => session.ipAddress,
+      cell: (session) => session.ipAddress ?? '–',
+    },
+    {
+      id: 'started',
+      head: t('sessions.columns.started'),
+      // ISO instants sort as text.
+      sortValue: (session) => session.createdAt,
+      cell: (session) => <When instant={session.createdAt} />,
+    },
+    {
+      id: 'lastSeen',
+      head: t('sessions.columns.lastSeen'),
+      sortValue: (session) => session.lastSeenAt,
+      cell: (session) => <When instant={session.lastSeenAt} />,
+    },
+    {
+      id: 'state',
+      head: t('sessions.columns.state'),
+      // Signed in first, then ended.
+      sortValue: (session) => (session.revokedAt === null ? 0 : 1),
+      cell: (session) => (
+        <span className="flex flex-wrap gap-1">
+          {session.current ? <StatusBadge tone="info" label={t('sessions.current')} /> : null}
+          {session.revokedAt === null ? (
+            <StatusBadge tone="good" label={t('sessions.live')} />
+          ) : (
+            <StatusBadge
+              tone="warning"
+              label={t('sessions.ended', { time: formatDateTime(session.revokedAt) })}
+            />
+          )}
+        </span>
+      ),
+    },
+    {
+      id: 'revoke',
+      head: t('sessions.revokeShort'),
+      cell: (session) =>
+        canRevoke && session.revokedAt === null ? (
+          <Button
+            variant="secondary"
+            size="sm"
+            aria-label={t('sessions.revoke', { device: device(session) })}
+            onClick={() => {
+              revoke.reset();
+              setDone(null);
+              setRevoking(session);
+            }}
+          >
+            {t('sessions.revokeShort')}
+          </Button>
+        ) : null,
+    },
+  ];
+  const view = useTableView(columns);
 
   return (
     <section aria-labelledby="sessions-title" className="grid gap-4">
@@ -87,129 +150,45 @@ export function SessionsScreen() {
       <p className="text-fg-muted">
         {t('sessions.intro')} {t('common:time.zone')}
       </p>
-      <div className="max-w-xs">
-        <Field label={t('sessions.filter')}>
-          <Select
-            value={show}
-            onValueChange={(value) => {
-              setShow(value === 'all' ? 'all' : 'active');
-              pages.reset();
-            }}
-            options={[
-              { value: 'active', label: t('sessions.active') },
-              { value: 'all', label: t('sessions.all') },
-            ]}
-          />
-        </Field>
-      </div>
       {done !== null ? <Alert severity={'good'} title={done} /> : null}
-      <QueryBoundary
+      <TableCard
+        view={view}
         query={sessions}
         labels={labels}
-        isEmpty={(page) => page.data.length === 0}
-        loadingFallback={
-          <TableContainer aria-label={t('sessions.table')}>
-            <Table>
-              {header}
-              <TableBody>
-                <TableLoadingRows columns={COLUMNS} label={labels.loading} />
-              </TableBody>
-            </Table>
-          </TableContainer>
-        }
-      >
-        {(page) => (
-          <div className="grid gap-3">
-            <TableContainer aria-label={t('sessions.table')}>
-              <Table>
-                {header}
-                <TableBody>
-                  {page.data.map((session) => (
-                    <TableRow key={session.id} selected={session.current}>
-                      <TableRowHeader>{session.principal.displayName}</TableRowHeader>
-                      <TableCell label={t('sessions.columns.device')}>
-                        <span className="grid">
-                          <span>{device(session)}</span>
-                          {session.userAgent === null ? null : (
-                            <span className="text-control-sm break-all text-fg-muted">
-                              {session.userAgent}
-                            </span>
-                          )}
-                        </span>
-                      </TableCell>
-                      <TableCell label={t('sessions.columns.address')}>
-                        {session.ipAddress ?? '–'}
-                      </TableCell>
-                      <TableCell label={t('sessions.columns.started')}>
-                        <When instant={session.createdAt} />
-                      </TableCell>
-                      <TableCell label={t('sessions.columns.lastSeen')}>
-                        <When instant={session.lastSeenAt} />
-                      </TableCell>
-                      <TableCell label={t('sessions.columns.state')}>
-                        <span className="flex flex-wrap gap-1">
-                          {session.current ? (
-                            <StatusBadge
-                              tone="info"
-                              icon={MonitorSmartphone}
-                              label={t('sessions.current')}
-                            />
-                          ) : null}
-                          {session.revokedAt === null ? (
-                            <StatusBadge
-                              tone="good"
-                              icon={CircleCheck}
-                              label={t('sessions.live')}
-                            />
-                          ) : (
-                            <StatusBadge
-                              tone="warning"
-                              icon={CircleSlash}
-                              label={t('sessions.ended', {
-                                time: formatDateTime(session.revokedAt),
-                              })}
-                            />
-                          )}
-                        </span>
-                      </TableCell>
-                      <TableCell label={t('sessions.revokeShort')}>
-                        {canRevoke && session.revokedAt === null ? (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            aria-label={t('sessions.revoke', { device: device(session) })}
-                            onClick={() => {
-                              revoke.reset();
-                              setDone(null);
-                              setRevoking(session);
-                            }}
-                          >
-                            {t('sessions.revokeShort')}
-                          </Button>
-                        ) : null}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            {pages.hasPrevious || page.page.hasMore ? (
-              <Pagination
-                label={t('sessions.pages')}
-                hasPrevious={pages.hasPrevious}
-                hasNext={page.page.hasMore && page.page.nextCursor !== null}
-                onPrevious={pages.previous}
-                onNext={() => {
-                  if (page.page.nextCursor !== null) pages.next(page.page.nextCursor);
+        rows={(page) => page.data}
+        rowKey={(session) => session.id}
+        rowProps={(session) => ({ selected: session.current })}
+        tableLabel={t('sessions.table')}
+        exportName={t('sessions.title')}
+        pages={{ state: pages, info: (page) => page.page, label: t('sessions.pages') }}
+        toolbar={
+          <FilterMenu
+            label={t('common:table.filter')}
+            active={show === 'active' ? 0 : 1}
+            reset={{
+              label: t('common:table.resetFilters'),
+              onReset: () => {
+                setShow('active');
+                pages.reset();
+              },
+            }}
+          >
+            <Field label={t('sessions.filter')}>
+              <Select
+                value={show}
+                onValueChange={(value) => {
+                  setShow(value === 'all' ? 'all' : 'active');
+                  pages.reset();
                 }}
-                previousLabel={t('common:pagination.previous')}
-                nextLabel={t('common:pagination.next')}
-                summary={t('common:pagination.page', { page: pages.page })}
+                options={[
+                  { value: 'active', label: t('sessions.active') },
+                  { value: 'all', label: t('sessions.all') },
+                ]}
               />
-            ) : null}
-          </div>
-        )}
-      </QueryBoundary>
+            </Field>
+          </FilterMenu>
+        }
+      />
       {revoking !== null ? (
         <ReasonDialog
           open

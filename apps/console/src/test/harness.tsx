@@ -55,6 +55,7 @@ export async function renderApp(
       'labels',
       'lists',
       'reports',
+      'settings',
     ],
   });
   const router = createMemoryRouter(routes, {

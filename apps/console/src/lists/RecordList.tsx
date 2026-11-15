@@ -1,38 +1,19 @@
 import type { ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
-import {
-  Pagination,
-  QueryBoundary,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableHeader,
-  TableLoadingRows,
-  TableRow,
-  TableRowHeader,
-  type FailureLike,
-  type QueryLike,
-} from '@hakorem/ui';
+import { useTableView, type FailureLike, type QueryLike, type TableColumn } from '@hakorem/ui';
 import { PageHeader } from '../lib/ScreenHeader';
 import { useStateLabels, type ScreenStateWords } from '../lib/states';
-import type { useCursorPages } from '../lib/useCursorPages';
+import { TableCard } from '../lib/TableCard';
+import type { CursorPages } from '../lib/useCursorPages';
 
 interface Paged<T> {
   data: T[];
   page: { hasMore: boolean; nextCursor: string | null };
 }
 
-export interface ListColumn<T> {
-  head: string;
-  numeric?: boolean;
-  cell: (row: T) => ReactNode;
-}
-
 /**
- * A read-only list screen: title, filters, a stacked table on a phone, pages, and the four states
- * (F5b's reference lists: lots, movements, suppliers, cash registers). Every figure is the API's.
+ * A read-only list screen: title, the reference's table card (toolbar, sortable columns, pages), a stacked
+ * table on a phone, and the four states (F5b's lots, movements, suppliers and cash registers). Every
+ * figure is the API's.
  */
 export function RecordList<T>({
   id,
@@ -41,10 +22,8 @@ export function RecordList<T>({
   words,
   query,
   pages,
-  filters,
+  toolbar,
   rowKey,
-  name,
-  nameHead,
   columns,
   tableLabel,
   pagesLabel,
@@ -54,94 +33,31 @@ export function RecordList<T>({
   description?: ReactNode;
   words: ScreenStateWords;
   query: QueryLike<Paged<T>, FailureLike>;
-  pages: ReturnType<typeof useCursorPages>;
-  filters?: ReactNode;
+  pages: CursorPages;
+  /** Search, date range and filter pills, in that order. */
+  toolbar?: ReactNode;
   rowKey: (row: T, index: number) => string;
-  name: (row: T) => ReactNode;
-  nameHead: string;
-  columns: ListColumn<T>[];
+  /** The first column names the row (`rowHeader`). */
+  columns: TableColumn<T>[];
   tableLabel: string;
   pagesLabel: string;
 }) {
-  const { t } = useTranslation('common');
   const labels = useStateLabels(words);
-  const header = (
-    <TableHeader>
-      <TableRow>
-        <TableHead>{nameHead}</TableHead>
-        {columns.map((column) => (
-          <TableHead key={column.head} numeric={column.numeric ?? false}>
-            {column.head}
-          </TableHead>
-        ))}
-      </TableRow>
-    </TableHeader>
-  );
+  const view = useTableView(columns);
   return (
     <section aria-labelledby={id} className="grid gap-4">
       <PageHeader title={title} titleId={id} description={description} />
-      {/* The reference's table card: filters as a toolbar, then the table, in one card. */}
-      <div className="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
-        {filters === undefined ? null : (
-          <div className="flex flex-wrap items-end gap-3 border-b border-border p-4">{filters}</div>
-        )}
-        <QueryBoundary
-          query={query}
-          labels={labels}
-          isEmpty={(page) => page.data.length === 0}
-          loadingFallback={
-            <TableContainer aria-label={tableLabel} className="rounded-none border-0 shadow-none">
-              <Table>
-                {header}
-                <TableBody>
-                  <TableLoadingRows columns={columns.length + 1} label={labels.loading} />
-                </TableBody>
-              </Table>
-            </TableContainer>
-          }
-        >
-          {(page) => (
-            <div className="grid">
-              <TableContainer aria-label={tableLabel} className="rounded-none border-0 shadow-none">
-                <Table>
-                  {header}
-                  <TableBody>
-                    {page.data.map((row, index) => (
-                      <TableRow key={rowKey(row, index)}>
-                        <TableRowHeader>{name(row)}</TableRowHeader>
-                        {columns.map((column) => (
-                          <TableCell
-                            key={column.head}
-                            numeric={column.numeric ?? false}
-                            label={column.head}
-                          >
-                            {column.cell(row)}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              {pages.hasPrevious || page.page.hasMore ? (
-                <div className="border-t border-border p-3">
-                  <Pagination
-                    label={pagesLabel}
-                    hasPrevious={pages.hasPrevious}
-                    hasNext={page.page.hasMore && page.page.nextCursor !== null}
-                    onPrevious={pages.previous}
-                    onNext={() => {
-                      if (page.page.nextCursor !== null) pages.next(page.page.nextCursor);
-                    }}
-                    previousLabel={t('pagination.previous')}
-                    nextLabel={t('pagination.next')}
-                  />
-                </div>
-              ) : null}
-            </div>
-          )}
-        </QueryBoundary>
-      </div>
+      <TableCard
+        view={view}
+        query={query}
+        labels={labels}
+        rows={(page) => page.data}
+        rowKey={rowKey}
+        tableLabel={tableLabel}
+        exportName={title}
+        toolbar={toolbar}
+        pages={{ state: pages, info: (page) => page.page, label: pagesLabel }}
+      />
     </section>
   );
 }

@@ -58,7 +58,10 @@ export type NavKey =
   | 'suppliers'
   | 'registers'
   | 'reports'
-  | 'report';
+  | 'report'
+  | 'settings'
+  | 'settingsBusiness'
+  | 'settingsSystem';
 
 export function isRouteHandle(value: unknown): value is RouteHandle {
   return (

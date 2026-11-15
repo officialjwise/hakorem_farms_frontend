@@ -2,7 +2,9 @@ import { Slot, Slottable } from '@radix-ui/react-slot';
 import { ArrowDownRight, ArrowUpRight, CircleSlash, Minus } from 'lucide-react';
 import type { ComponentType, ReactNode, SVGProps } from 'react';
 import { cn } from '../../lib/cn';
+import { IconChip, type IconChipTone } from '../icon-chip/IconChip';
 import { Skeleton } from '../skeleton/Skeleton';
+import { Sparkline } from '../sparkline/Sparkline';
 
 /** Rejects an empty string literal at compile time. Dynamic blank strings are rejected at render. */
 type NonEmpty<T extends string> = T extends '' ? never : T;
@@ -26,8 +28,17 @@ export type StatTileProps<L extends string = string> = {
   /** A second line under the figure, such as "of which GH₵ 1,200.00 overdue". */
   detail?: ReactNode;
   trend?: StatTrend;
-  /** A decorative icon that says which area the figure belongs to. */
+  /** A decorative icon that says which area the figure belongs to, on a tinted chip. */
   icon?: ComponentType<SVGProps<SVGSVGElement>>;
+  /** The chip's tint. Default: the accent. */
+  iconTone?: IconChipTone;
+  /**
+   * The API's series behind the figure, oldest first, and what it shows. Drawn as a sparkline beside the
+   * figure; absent (or fewer than two points), nothing is drawn.
+   */
+  series?: { values: readonly number[]; label: string };
+  /** `card` stands alone; `cell` sits inside a StatGroup, which draws the card and the rules between. */
+  variant?: 'card' | 'cell';
   /** While the figure loads: a skeleton with this label in place of value, detail and trend. */
   loadingLabel?: string;
   /**
@@ -64,7 +75,10 @@ export function StatTile<L extends string>({
   value,
   detail,
   trend,
-  icon: Icon,
+  icon,
+  iconTone = 'accent',
+  series,
+  variant = 'card',
   loadingLabel,
   unavailable,
   asChild = false,
@@ -83,24 +97,21 @@ export function StatTile<L extends string>({
       aria-busy={loading || undefined}
       data-state={unavailable !== undefined ? 'unavailable' : loading ? 'loading' : 'ready'}
       className={cn(
-        'grid min-w-0 content-start gap-1.5 rounded-lg border border-border bg-surface p-5 text-fg shadow-sm',
+        'grid min-w-0 content-start gap-1.5 bg-surface p-5 text-fg',
+        variant === 'card' && 'rounded-lg border border-border shadow-sm',
         unavailable !== undefined && 'border-dashed bg-surface-sunken',
         asChild && [
           'cursor-pointer transition-colors duration-fast hover-enabled:bg-surface-hover',
-          'outline-focus outline-offset-2 focus-visible:outline-2',
+          'outline-focus focus-visible:outline-2',
+          // A cell's ring goes inside: the group clips anything outside its edge.
+          variant === 'cell' ? '-outline-offset-4' : 'outline-offset-2',
         ],
         className,
       )}
     >
       <Slottable>{children}</Slottable>
-      <span className="flex items-center gap-2 text-sm text-fg-muted">
-        {Icon === undefined ? null : (
-          <Icon
-            aria-hidden="true"
-            focusable="false"
-            className="size-icon-md shrink-0 stroke-accent"
-          />
-        )}
+      <span className="flex items-center gap-2.5 text-sm text-fg-muted">
+        {icon === undefined ? null : <IconChip icon={icon} tone={iconTone} size="sm" />}
         <span className="min-w-0">{label}</span>
       </span>
       {unavailable !== undefined ? (
@@ -116,7 +127,14 @@ export function StatTile<L extends string>({
         <Skeleton label={loadingLabel} shape="line" className="h-8" />
       ) : (
         <>
-          <span className="text-xl font-bold break-words tabular-nums sm:text-2xl">{value}</span>
+          <span className="flex items-end justify-between gap-3">
+            <span className="min-w-0 text-xl font-bold break-words tabular-nums sm:text-2xl">
+              {value}
+            </span>
+            {series === undefined ? null : (
+              <Sparkline values={series.values} label={series.label} />
+            )}
+          </span>
           {detail === undefined ? null : (
             <span className="text-control-sm text-fg-muted">{detail}</span>
           )}

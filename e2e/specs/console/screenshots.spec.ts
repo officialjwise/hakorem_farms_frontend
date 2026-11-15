@@ -122,11 +122,11 @@ PHASES.F05b = [
   { name: 'roles', path: '/roles', ready: 'Cashier' },
   { name: 'sessions', path: '/sessions', ready: 'This device' },
   { name: 'reports', path: '/reports', ready: 'Stock valuation' },
-  { name: 'report-sales', path: '/reports/sales', ready: 'Run report' },
+  { name: 'report-sales', path: '/reports/sales', ready: 'Export' },
   {
     name: 'report-stock-valuation',
     path: '/reports/stock-valuation',
-    ready: 'Run report',
+    ready: 'Export',
   },
   {
     name: 'report-profit-and-loss',
@@ -179,6 +179,99 @@ PHASES.F05b = [
       await page.getByText('fewer than sent').first().waitFor();
     },
   },
+];
+
+/** F5c, the closer pass: every back office screen, re-shot beside the reference. */
+PHASES.F05c = [
+  { name: 'dashboard', path: '/', ready: 'Selling best today' },
+  { name: 'dashboard-dark', path: '/', ready: 'Selling best today', theme: 'dark' },
+  { name: 'products', path: '/products', ready: 'LIV-GOAT' },
+  {
+    name: 'products-columns-menu',
+    path: '/products',
+    ready: 'LIV-GOAT',
+    act: async (page) => {
+      await page.getByRole('button', { name: /^Columns/ }).click();
+      await page.getByRole('dialog', { name: 'Columns' }).waitFor();
+    },
+  },
+  {
+    name: 'products-page-2',
+    path: '/products',
+    ready: 'LIV-GOAT',
+    act: async (page) => {
+      await page.getByRole('button', { name: 'Next' }).click();
+      await page.getByRole('combobox', { name: 'Go to page' }).waitFor();
+    },
+  },
+  {
+    name: 'products-sort-menu',
+    path: '/products',
+    ready: 'LIV-GOAT',
+    act: async (page) => {
+      await page.getByRole('button', { name: /^Sort by/ }).click();
+      await page.getByRole('dialog', { name: 'Sort by' }).waitFor();
+    },
+  },
+  {
+    name: 'product',
+    path: '/products/019a7a8d-137d-74bf-b9f8-54cda260cdab',
+    ready: 'Stock-keeping facts',
+  },
+  { name: 'product-new', path: '/products/new', ready: 'Create product' },
+  { name: 'categories', path: '/categories', ready: 'Feed and medication' },
+  { name: 'units', path: '/units', ready: 'Kilogram' },
+  { name: 'species', path: '/species', ready: 'Local chicken' },
+  { name: 'price-lists', path: '/price-lists', ready: 'Royal Palm Hotel contract prices' },
+  { name: 'stock-on-hand', path: '/stock', ready: 'Stock value at cost' },
+  { name: 'lots', path: '/lots', ready: 'G-0142' },
+  { name: 'movements', path: '/movements', ready: 'Sale issue' },
+  { name: 'stock-takes', path: '/stock-takes', ready: 'Feed and produce store' },
+  { name: 'adjustments', path: '/stock-adjustments', ready: 'ADJ-2026-DDW-000038' },
+  { name: 'transfers', path: '/stock-transfers', ready: 'TRF-2026-DDW-00009' },
+  { name: 'goods-receipts', path: '/goods-receipts', ready: 'GRN-2026-DDW-000072' },
+  { name: 'suppliers', path: '/suppliers', ready: 'Kpone Livestock Traders' },
+  { name: 'registers', path: '/registers', ready: 'Shift open' },
+  { name: 'branches', path: '/branches', ready: 'HaKorem Farms, Dodowa' },
+  { name: 'branch', path: `/branches/${ID}`, ready: 'Locations in this branch' },
+  {
+    name: 'branch-new-modal',
+    path: '/branches',
+    ready: 'HaKorem Farms, Dodowa',
+    act: async (page) => {
+      await page.getByRole('button', { name: 'New branch' }).click();
+      await page.getByRole('dialog').waitFor();
+    },
+  },
+  {
+    name: 'branch-close-modal',
+    path: `/branches/${ID}`,
+    ready: 'Locations in this branch',
+    act: async (page) => {
+      await page.getByRole('button', { name: 'Close the branch' }).click();
+      await page.getByRole('dialog').waitFor();
+    },
+  },
+  { name: 'labels', path: '/labels', ready: 'LIV-GOAT' },
+  { name: 'reports', path: '/reports', ready: 'Stock valuation' },
+  { name: 'report-sales', path: '/reports/sales', ready: 'Export' },
+  { name: 'report-stock-valuation', path: '/reports/stock-valuation', ready: 'Export' },
+  {
+    name: 'report-profit-and-loss',
+    path: '/reports/profit-and-loss',
+    ready: 'Sales, live animals',
+  },
+  { name: 'users', path: '/users', ready: 'Akua Mensah' },
+  { name: 'roles', path: '/roles', ready: 'Cashier' },
+  { name: 'sessions', path: '/sessions', ready: 'This device' },
+  { name: 'audit', path: '/audit', ready: '2026-11-13 08:03' },
+  { name: 'settings', path: '/settings', ready: 'Menu width' },
+  {
+    name: 'settings-business',
+    path: '/settings/business',
+    ready: 'Taxpayer identification number',
+  },
+  { name: 'settings-system', path: '/settings/system', ready: 'tax.registered' },
 ];
 
 const WIDTHS = [1280, 360] as const;

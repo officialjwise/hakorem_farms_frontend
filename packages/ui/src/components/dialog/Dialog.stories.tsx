@@ -4,7 +4,10 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { parseHex } from '../../tokens/contrast';
 import { colors } from '../../tokens/palette';
 import { Button } from '../button/Button';
-import { Dialog } from './Dialog';
+import { Building2, CircleCheck } from 'lucide-react';
+import { Field } from '../field/Field';
+import { Input } from '../input/Input';
+import { Dialog, DialogActions } from './Dialog';
 
 const meta = { title: 'Primitives/Dialog' } satisfies Meta;
 
@@ -185,4 +188,35 @@ export const ThemedInDarkCompact: Story = {
       else root.setAttribute('data-theme', previous);
     }
   },
+};
+
+/** The reference's modal: an icon chip beside the title, the asterisk explained, Cancel left, primary right. */
+export const ReferenceShape: Story = {
+  parameters: { matrix: true },
+  render: () => (
+    <Dialog
+      defaultOpen
+      trigger={<Button>New branch</Button>}
+      title="New branch"
+      description="A shop, farm or depot that sells or holds stock."
+      closeLabel="Close"
+      icon={Building2}
+      requiredNote="Required field"
+    >
+      <div className="grid gap-3">
+        <Field label="Code" required requiredLabel="Required" requiredMark="asterisk">
+          <Input />
+        </Field>
+        <Field label="Address">
+          <Input />
+        </Field>
+      </div>
+      <DialogActions cancelLabel="Cancel" onCancel={() => undefined}>
+        <Button>
+          <CircleCheck aria-hidden="true" />
+          Create branch
+        </Button>
+      </DialogActions>
+    </Dialog>
+  ),
 };

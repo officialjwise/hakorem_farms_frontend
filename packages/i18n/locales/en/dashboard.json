@@ -14,8 +14,6 @@
   "receiveStock": "Receive stock",
   "error": "Today's figures could not be loaded",
   "denied": "The dashboard is for the owner",
-  "unavailable": "No data source yet",
-  "unavailableBody": "The API does not provide this figure yet. It appears here when it does, never as a zero.",
   "yesterday": "Yesterday {{amount}}",
   "tiles": {
     "salesToday": "Sales today",
@@ -25,19 +23,16 @@
     "receivables": "Owed by customers",
     "overdue": "{{amount}} overdue",
     "lowStock": "Low stock",
-    "animals": "Animals on hand"
+    "animals": "Animals on hand",
+    "cash": "Cash on hand",
+    "cashDetail": "Tills, safe, drivers, mobile money and bank"
   },
   "series": {
-    "title": "Sales and purchases",
-    "unavailable": "The day-by-day sales and purchases chart arrives when the API provides the series.",
     "salesMonthToDate": "Sales this month",
     "purchasesMonthToDate": "Purchases this month"
   },
   "health": {
-    "title": "Stock health",
-    "summary": "Products low on stock, available, and out of stock.",
-    "unavailable": "The counts arrive when the API provides them.",
-    "open": "Open stock on hand"
+    "title": "Stock health"
   },
   "attention": {
     "title": "Needs attention",
@@ -78,21 +73,23 @@
     "title": "Stock by category"
   },
   "invoices": {
-    "title": "Invoices",
-    "total": "All invoices",
-    "paid": "Paid",
-    "overdue": "Overdue"
+    "title": "Invoices"
   },
   "lists": {
     "stockAlerts": "Stock alerts",
     "expiringLots": "Expiring lots",
     "expiredLots": "Expired lots",
-    "nearExpiry": "Expiring by month",
-    "openLots": "Open lots and expiry"
+    "nearExpiry": "Expiring by month"
   },
   "payments": {
-    "title": "Recent transactions",
-    "splitUnavailable": "Today's split by payment method arrives when the API provides it.",
-    "recentUnavailable": "The latest payments arrive when the API provides them."
+    "title": "Recent transactions"
+  },
+  "glance": "Today at a glance",
+  "pending": {
+    "title": "Figures still to come from the server",
+    "body": "The server does not send these figures yet. They arrive with its next dashboard update, and each one appears here as soon as it is sent, never as a zero.",
+    "list": "Figures still to come",
+    "series": "Sales and purchases chart",
+    "paymentSplit": "Payments by method"
   }
 }

@@ -30,6 +30,26 @@ describe('useCursorPages', () => {
     act(() => result.current.reset());
     expect(result.current).toMatchObject({ cursor: undefined, page: 1, hasPrevious: false });
   });
+
+  it('goes to any page reached, keeps the pages beyond, and drops them for a different cursor', () => {
+    const { result } = renderHook(() => useCursorPages());
+    act(() => result.current.next('c2'));
+    act(() => result.current.next('c3'));
+    act(() => result.current.goTo(1));
+    expect(result.current).toMatchObject({ cursor: undefined, page: 1, reached: 3 });
+    act(() => result.current.goTo(3));
+    expect(result.current).toMatchObject({ cursor: 'c3', page: 3, reached: 3 });
+    // A page not reached yet is not offered.
+    act(() => result.current.goTo(4));
+    expect(result.current.page).toBe(3);
+    act(() => result.current.goTo(1));
+    act(() => result.current.next('c2'));
+    expect(result.current).toMatchObject({ cursor: 'c2', page: 2, reached: 3 });
+    // The list changed under us: a new cursor after page 1 forgets the old pages 2 and 3.
+    act(() => result.current.goTo(1));
+    act(() => result.current.next('other'));
+    expect(result.current).toMatchObject({ cursor: 'other', page: 2, reached: 2 });
+  });
 });
 
 describe('useIntentKey', () => {
@@ -174,7 +194,8 @@ describe('useStepUp', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'The code is wrong or already used.',
     );
-    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    // The action row's Cancel (its words on screen), not the header's close button, also named Cancel.
+    await userEvent.click(screen.getByText('Cancel'));
     await waitFor(() => expect(results).toEqual([null]));
     expect(calls).toBe(1);
   });

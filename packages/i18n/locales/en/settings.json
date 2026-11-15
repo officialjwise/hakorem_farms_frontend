@@ -1,0 +1,67 @@
+{
+  "title": "Settings",
+  "menu": "Settings sections",
+  "sections": {
+    "display": "Display",
+    "displayAbout": "How the back office looks on this device",
+    "business": "Business profile",
+    "businessAbout": "The name, address and tax numbers on receipts and invoices",
+    "system": "System settings",
+    "systemAbout": "Rules the server applies: tax, tills, checkout and refunds"
+  },
+  "elsewhere": "Managed on their own screens",
+  "display": {
+    "description": "These choices are kept in this browser only. Other people and other devices keep their own.",
+    "theme": "Theme",
+    "themeHint": "System follows the device's own light or dark setting.",
+    "sidebar": "Menu width",
+    "sidebarWide": "Full menu with words",
+    "sidebarNarrow": "Icons only",
+    "saved": "Saved on this device",
+    "themes": {
+      "system": "Same as the device",
+      "light": "Light",
+      "dark": "Dark"
+    }
+  },
+  "business": {
+    "description": "As the server holds it. Receipts, invoices and the online shop show these details.",
+    "loading": "Loading the business profile",
+    "empty": "No business profile yet",
+    "error": "The business profile could not be loaded",
+    "denied": "You do not have access to the business settings",
+    "legalName": "Legal name",
+    "tradingName": "Trading name",
+    "tin": "Taxpayer identification number",
+    "vat": "VAT number",
+    "address": "Address",
+    "phone": "Phone",
+    "email": "Email",
+    "none": "Not given",
+    "updated": "Last changed"
+  },
+  "system": {
+    "description": "The settings and feature switches the server applies, for the branch chosen in the header.",
+    "search": "Settings whose key starts with",
+    "searchPlaceholder": "Search settings by key",
+    "loading": "Loading the system settings",
+    "empty": "No settings match",
+    "emptyBody": "Try the start of another key, such as tax or pos.",
+    "error": "The system settings could not be loaded",
+    "denied": "You do not have access to the system settings",
+    "table": "Settings and switches",
+    "pages": "Pages of settings",
+    "columns": {
+      "setting": "Setting",
+      "value": "Value",
+      "appliesTo": "Applies to",
+      "validFrom": "In force from",
+      "updated": "Last changed"
+    },
+    "yes": "On",
+    "no": "Off",
+    "everyBranch": "Every branch",
+    "oneBranch": "One branch",
+    "by": "{{name}}, {{when}}"
+  }
+}

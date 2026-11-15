@@ -26,8 +26,6 @@
   "range": "Report period",
   "from": "From",
   "to": "To",
-  "run": "Run report",
-  "running": "Running",
   "loading": "Running the {{name}}",
   "empty": "Nothing in this period",
   "emptyBody": "Try a longer period or another branch.",
@@ -53,5 +51,6 @@
     "line": "Line",
     "amount": "Amount",
     "totalFor": "Total {{section}}"
-  }
+  },
+  "thisMonth": "This month"
 }

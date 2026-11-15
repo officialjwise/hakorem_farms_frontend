@@ -1,28 +1,16 @@
-import { ShieldCheck, Wrench } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-import {
-  Button,
-  Pagination,
-  QueryBoundary,
-  StatusBadge,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableHeader,
-  TableLoadingRows,
-  TableRow,
-  TableRowHeader,
-} from '@hakorem/ui';
+import type { components } from '@hakorem/api-client';
+import { Button, IconChip, StatusBadge, useTableView, type TableColumn } from '@hakorem/ui';
 import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiQuery } from '../data/api';
 import { useStateLabels } from '../lib/states';
+import { TableCard } from '../lib/TableCard';
 import { useCursorPages } from '../lib/useCursorPages';
 
-const COLUMNS = 6;
+type Role = components['schemas']['Role'];
 
 /** FR-IAM-008: the seeded roles and any the owner added, with what each carries. */
 export function RolesScreen() {
@@ -43,18 +31,57 @@ export function RolesScreen() {
     deniedTitle: t('roles.denied'),
   });
 
-  const header = (
-    <TableHeader>
-      <TableRow>
-        <TableHead>{t('roles.columns.name')}</TableHead>
-        <TableHead>{t('roles.columns.code')}</TableHead>
-        <TableHead>{t('roles.columns.kind')}</TableHead>
-        <TableHead>{t('roles.columns.totp')}</TableHead>
-        <TableHead numeric>{t('roles.columns.permissions')}</TableHead>
-        <TableHead numeric>{t('roles.columns.users')}</TableHead>
-      </TableRow>
-    </TableHeader>
-  );
+  const columns: TableColumn<Role>[] = [
+    {
+      id: 'name',
+      rowHeader: true,
+      head: t('roles.columns.name'),
+      sortValue: (role) => role.name,
+      cell: (role) => (
+        <span className="flex items-center gap-3">
+          <IconChip icon={ShieldCheck} tone={role.isSystem ? 'slate' : 'clay'} size="sm" />
+          <span className="grid min-w-0">
+            <Link to={`/roles/${role.id}`} className="text-accent-text hover:underline">
+              {role.name}
+            </Link>
+            <code className="text-control-sm font-normal text-fg-muted">{role.code}</code>
+          </span>
+        </span>
+      ),
+    },
+    {
+      id: 'kind',
+      head: t('roles.columns.kind'),
+      sortValue: (role) => (role.isSystem ? 0 : 1),
+      cell: (role) =>
+        role.isSystem ? (
+          <StatusBadge tone="slate" label={t('roles.system')} />
+        ) : (
+          <StatusBadge tone="clay" label={t('roles.custom')} />
+        ),
+    },
+    {
+      id: 'totp',
+      head: t('roles.columns.totp'),
+      sortValue: (role) => (role.requiresTotp ? 0 : 1),
+      cell: (role) => (role.requiresTotp ? t('roles.totpRequired') : t('roles.totpOptional')),
+    },
+    {
+      id: 'permissions',
+      head: t('roles.columns.permissions'),
+      numeric: true,
+      sortValue: (role) => role.permissions.length,
+      cell: (role) => role.permissions.length,
+    },
+    {
+      id: 'users',
+      head: t('roles.columns.users'),
+      numeric: true,
+      sortValue: (role) => role.userCount,
+      cell: (role) => role.userCount,
+    },
+  ];
+  const view = useTableView(columns);
 
   return (
     <section aria-labelledby="roles-title" className="grid gap-4">
@@ -71,75 +98,16 @@ export function RolesScreen() {
           </>
         }
       />
-      <QueryBoundary
+      <TableCard
+        view={view}
         query={roles}
         labels={labels}
-        isEmpty={(page) => page.data.length === 0}
-        loadingFallback={
-          <TableContainer aria-label={t('roles.table')}>
-            <Table>
-              {header}
-              <TableBody>
-                <TableLoadingRows columns={COLUMNS} label={labels.loading} />
-              </TableBody>
-            </Table>
-          </TableContainer>
-        }
-      >
-        {(page) => (
-          <div className="grid gap-3">
-            <TableContainer aria-label={t('roles.table')}>
-              <Table>
-                {header}
-                <TableBody>
-                  {page.data.map((role) => (
-                    <TableRow key={role.id}>
-                      <TableRowHeader>
-                        <Link to={`/roles/${role.id}`} className="text-accent-text underline">
-                          {role.name}
-                        </Link>
-                      </TableRowHeader>
-                      <TableCell label={t('roles.columns.code')}>
-                        <code>{role.code}</code>
-                      </TableCell>
-                      <TableCell label={t('roles.columns.kind')}>
-                        {role.isSystem ? (
-                          <StatusBadge tone="slate" icon={ShieldCheck} label={t('roles.system')} />
-                        ) : (
-                          <StatusBadge tone="clay" icon={Wrench} label={t('roles.custom')} />
-                        )}
-                      </TableCell>
-                      <TableCell label={t('roles.columns.totp')}>
-                        {role.requiresTotp ? t('roles.totpRequired') : t('roles.totpOptional')}
-                      </TableCell>
-                      <TableCell numeric label={t('roles.columns.permissions')}>
-                        {role.permissions.length}
-                      </TableCell>
-                      <TableCell numeric label={t('roles.columns.users')}>
-                        {role.userCount}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            {pages.hasPrevious || page.page.hasMore ? (
-              <Pagination
-                label={t('roles.pages')}
-                hasPrevious={pages.hasPrevious}
-                hasNext={page.page.hasMore && page.page.nextCursor !== null}
-                onPrevious={pages.previous}
-                onNext={() => {
-                  if (page.page.nextCursor !== null) pages.next(page.page.nextCursor);
-                }}
-                previousLabel={t('common:pagination.previous')}
-                nextLabel={t('common:pagination.next')}
-                summary={t('common:pagination.page', { page: pages.page })}
-              />
-            ) : null}
-          </div>
-        )}
-      </QueryBoundary>
+        rows={(page) => page.data}
+        rowKey={(role) => role.id}
+        tableLabel={t('roles.table')}
+        exportName={t('roles.title')}
+        pages={{ state: pages, info: (page) => page.page, label: t('roles.pages') }}
+      />
     </section>
   );
 }

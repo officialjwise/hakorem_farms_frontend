@@ -12,6 +12,7 @@ const repo = resolve(__dirname, '../../../..');
 
 /** Components a person operates with a keyboard. Each needs a `KeyboardPath` story that proves it. */
 const INTERACTIVE = [
+  'table-toolbar',
   'button',
   'input',
   'textarea',
@@ -44,6 +45,8 @@ const INTERACTIVE = [
 
 /** Everything else is display only and needs no key handling. */
 const DISPLAY_ONLY = [
+  'icon-chip',
+  'sparkline',
   'affix-input',
   'animal-tag',
   'avatar',

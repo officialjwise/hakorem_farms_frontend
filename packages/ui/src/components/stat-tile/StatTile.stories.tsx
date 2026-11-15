@@ -34,6 +34,14 @@ export const Falling: Story = {
     trend: { direction: 'up', tone: 'critical', label: '5 more than yesterday' },
   },
 };
+/** With the API's series: the sparkline beside the figure, named for a screen reader. */
+export const WithSparkline: Story = {
+  args: {
+    iconTone: 'sand',
+    trend: { direction: 'up', tone: 'good', label: 'Yesterday GH₵ 7,210.00' },
+    series: { values: [6100, 7400, 6900, 8800, 7210, 8492], label: 'Sales over the last 6 days' },
+  },
+};
 export const Unavailable: Story = {
   args: { label: 'Animals on hand', unavailable: 'No data source yet' },
 };

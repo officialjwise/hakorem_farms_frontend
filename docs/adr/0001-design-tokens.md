@@ -101,3 +101,62 @@ Every other pair in the matrix is unchanged and still passes.
 The owner then set the accent explicitly: `#0D5C55` in light mode and `#3DBE98` in dark mode. These are the F0 values. So `accent`, `accent-hover`, `accent-text` and `focus` are back to their F0 values (`#0D5C55`/`#3DBE98`, `#09463F`/`#62CDAD`, `#0D5C55`/`#52C6A3`, `#0D5C55`/`#3DBE98`). The brighter values in the table above are withdrawn.
 
 The panel and the second series stay. Re-run: 219 contrast tests pass. On the panel, `accent-text` is 5.96:1 (minimum 4.5) and `accent` 5.0:1 or better (minimum 3).
+
+### Amendment, 2026-11-15 (F5c): the console's UI face is Plus Jakarta Sans, self-hosted
+
+**Why.** The owner approved a geometric typeface for the closer pass against the reference template, from three free faces: Figtree, Plus Jakarta Sans and Outfit. Each was set beside the reference's own type (a body face, plus a geometric face for headings and figures) on the same card: the title, a subtitle, a section heading, a figure with its label, a body line and a menu line, at the reference's sizes.
+
+- **Plus Jakarta Sans** matched the reference's set width: every line broke at the same word, and its open geometric capitals and figures read closest to the reference's headings.
+- **Figtree and Outfit** set narrower, so the same lines broke later, and Outfit's round forms read further from the body face.
+
+**What ships.**
+
+- **Plus Jakarta Sans** (OFL, `@fontsource-variable/plus-jakarta-sans` 5.3.0, a dev dependency). `scripts/build-cedi-font.ts` subsets it into `src/styles/fonts/hakorem-ui.woff2`, beside the cedi face, and `pnpm fonts:check` keeps it honest in CI.
+- **One variable file.** The weight axis is cut to 400 to 700, the only weights the UI uses (`font-normal`, `font-medium`, `font-semibold`, `font-bold`).
+- **Latin only.** Basic Latin, Latin-1, dashes, quotes, the bullet, the ellipsis, the euro, arrows and the minus sign.
+- **Measured: 17,860 bytes (17.9 KB)**, the only font a back office page needs besides the 1.3 KB cedi face. Four static Latin weights would be 48.6 KB.
+- **`font-display: swap`,** with the system stack behind it. Text paints at once in the device's own face and swaps when the file lands, so a 3G connection never shows a blank page, and a failed download changes nothing but the face.
+- **The cedi sign.** The face has no U+20B5, so `'HaKorem Cedi'` stays first in every stack and draws that one glyph.
+- **Tabular figures.** These survive the subset: `font-variant-numeric: tabular-nums` sets 1111 and 0000 to the same width, so money and weight columns still align.
+
+**Where.**
+
+- **The console only, both documents** (`apps/console/src/styles.css`), and Storybook, so stories look like the console.
+- **Not the storefront.** It keeps the system stack, as the storefront performance rules require ("No web fonts for UI", fonts under 20 KB). The face is declared in the design system but downloaded only where a stack names it. Using it on public pages is a separate owner decision (A-F0-02).
+- **Not a JavaScript cost.** The bundle budget does not count it.
+
+**The light grey page.** The same pass moved the page off cream so that white cards stand out; see "Amendment (F5c): a light grey page and white cards" below.
+
+### Amendment, 2026-11-15 (F5c): a light grey page and white cards
+
+**Why.** The owner asked for a light grey page with white cards, in both themes, so that every card stands out as it does in the reference. On the cream page (`bg` `#F7F4EC`, `surface` `#FFFCF6`) a card was only one step lighter than the page.
+
+**Values changed.** Text, accent, status and categorical tokens are unchanged.
+
+| Token            | Light, was → now      | Dark, was → now       |
+| ---------------- | --------------------- | --------------------- |
+| `bg`             | `#F7F4EC` → `#F2F4F3` | `#13120E` → `#0F1110` |
+| `surface`        | `#FFFCF6` → `#FFFFFF` | `#1C1A15` → `#1C1F1D` |
+| `surface-sunken` | `#EEE8DB` → `#EBEFED` | `#0D0C09` → `#0B0D0C` |
+| `surface-hover`  | `#F2ECE0` → `#F1F4F3` | `#2A2720` → `#272B29` |
+| `border`         | `#D6CDBA` → `#DCE2DF` | `#332F26` → `#313633` |
+| `border-strong`  | unchanged             | `#7A7262` → `#878070` |
+
+- **The light page** is a grey with a trace of the pine accent, so it sits with the accent rather than against it.
+- **The dark theme** follows the same rule: the page is darker than the cards, and a card is one clear step lighter.
+- **Dark `border-strong`** was lifted because the new dark hover surface left a control boundary on a hovered row at 3.01:1. It is now 3.66:1.
+
+**Re-run, 2026-11-15:** `pnpm --filter @hakorem/ui exec vitest run --project unit src/tokens`, 219 tests, all passed. The tightest pairs on the changed neutrals:
+
+| Pair                                | Theme | Ratio | Minimum |
+| ----------------------------------- | ----- | ----- | ------- |
+| `border-strong` on `surface-hover`  | dark  | 3.66  | 3       |
+| `border-strong` on `surface-sunken` | light | 3.84  | 3       |
+| `good` on `bg`                      | light | 3.91  | 3       |
+| `border-strong` on `bg`             | light | 4.03  | 3       |
+| `accent-text` on `surface-sunken`   | light | 6.76  | 4.5     |
+| `accent-text` on `surface-hover`    | dark  | 6.81  | 4.5     |
+| `fg-muted` on `surface-hover`       | dark  | 6.97  | 4.5     |
+| `fg` on every page surface          | both  | ≥ 7   | 7       |
+
+**Scope.** The neutrals are shared, so the storefront's page also turns grey with white cards. Its F1 shell has no marketing surfaces yet, and the marketing tokens are untouched.

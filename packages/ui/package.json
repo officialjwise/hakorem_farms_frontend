@@ -49,6 +49,7 @@
   },
   "devDependencies": {
     "@fontsource-variable/noto-sans": "5.3.0",
+    "@fontsource-variable/plus-jakarta-sans": "5.3.0",
     "@storybook/addon-a11y": "10.6.5",
     "@storybook/addon-docs": "10.6.5",
     "@storybook/addon-vitest": "10.6.5",

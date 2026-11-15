@@ -34,4 +34,26 @@ describe('PageHeader', () => {
     );
     expect(screen.getByRole('button', { name: 'Refreshing' })).toHaveAttribute('aria-busy', 'true');
   });
+
+  it('puts the h1 in the top bar slot and keeps the breadcrumbs and actions in the page', () => {
+    const slot = document.createElement('div');
+    slot.dataset.testid = 'top-bar';
+    document.body.append(slot);
+    render(
+      <main>
+        <PageHeader
+          title="Products"
+          titleSlot={slot}
+          breadcrumbs={<nav aria-label="Breadcrumb">Dashboard</nav>}
+          actions={<button type="button">New product</button>}
+        />
+      </main>,
+    );
+    const heading = screen.getByRole('heading', { level: 1, name: 'Products' });
+    expect(slot).toContainElement(heading);
+    expect(screen.getByRole('main')).not.toContainElement(heading);
+    expect(screen.getByRole('main')).toContainElement(screen.getByRole('navigation'));
+    expect(screen.getByRole('main')).toContainElement(screen.getByRole('button'));
+    slot.remove();
+  });
 });

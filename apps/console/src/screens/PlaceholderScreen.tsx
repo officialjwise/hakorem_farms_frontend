@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { EmptyState } from '@hakorem/ui';
+import { PageHeader } from '../lib/ScreenHeader';
 
 type Area = 'dashboard' | 'stock' | 'products' | 'orders';
 
@@ -11,9 +12,7 @@ export function PlaceholderScreen({ area }: { area: Area }) {
   const { t } = useTranslation('shell');
   return (
     <section aria-labelledby="placeholder-title">
-      <h1 id="placeholder-title" className="mb-3 text-2xl font-semibold">
-        {t(`nav.${area}`)}
-      </h1>
+      <PageHeader title={t(`nav.${area}`)} titleId="placeholder-title" className="mb-3" />
       <EmptyState
         title={t('placeholder.title')}
         description={t('placeholder.body', { area: t(`placeholder.area.${area}`) })}

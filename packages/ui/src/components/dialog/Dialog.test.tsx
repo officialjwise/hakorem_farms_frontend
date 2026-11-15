@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { toastLabels } from '../../test/toastLabels';
 import { Button } from '../button/Button';
 import { UIProvider } from '../ui-provider/UIProvider';
-import { Dialog, type DialogProps } from './Dialog';
+import { Building2 } from 'lucide-react';
+import { Dialog, DialogActions, type DialogProps } from './Dialog';
 
 function setup(props: Partial<DialogProps> = {}) {
   return render(
@@ -93,5 +94,35 @@ describe('Dialog', () => {
     expect(() => setup({ title: '   ' })).toThrow(/title/);
     expect(() => setup({ closeLabel: ' ' })).toThrow(/closeLabel/);
     quiet.mockRestore();
+  });
+
+  it('carries an icon chip beside the title, says what the asterisk means, and closes from Cancel', async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <UIProvider theme="light" density="comfortable" toastLabels={toastLabels}>
+        <Dialog
+          open
+          onOpenChange={onOpenChange}
+          title="New branch"
+          closeLabel="Close"
+          icon={Building2}
+          requiredNote="Required field"
+        >
+          <DialogActions cancelLabel="Cancel" onCancel={() => onOpenChange(false)}>
+            <Button>Create branch</Button>
+          </DialogActions>
+        </Dialog>
+      </UIProvider>,
+    );
+    const dialog = await screen.findByRole('dialog', { name: 'New branch' });
+    expect(dialog.querySelector('[data-slot="icon-chip"]')).not.toBeNull();
+    expect(dialog).toHaveTextContent('*Required field');
+    const actions = dialog.querySelector('[data-slot="dialog-actions"]') as HTMLElement;
+    const [cancel, primary] = Array.from(actions.querySelectorAll('button'));
+    // Cancel first (left), the primary last (right).
+    expect(cancel).toHaveTextContent('Cancel');
+    expect(primary).toHaveTextContent('Create branch');
+    await userEvent.click(cancel as HTMLElement);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });

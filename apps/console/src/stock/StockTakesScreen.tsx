@@ -1,23 +1,19 @@
+import { CircleCheck, ClipboardCheck } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
+import type { components } from '@hakorem/api-client';
 import {
   Button,
   Dialog,
+  DialogActions,
   Field,
+  FilterMenu,
+  IconChip,
   MutationFailure,
-  Pagination,
-  QueryBoundary,
   Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableHeader,
-  TableLoadingRows,
-  TableRow,
-  TableRowHeader,
+  useTableView,
+  type TableColumn,
 } from '@hakorem/ui';
 import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
@@ -26,20 +22,39 @@ import { useApiMutation, useApiQuery } from '../data/api';
 import { When } from '../iam/presentation';
 import { useIntentKey } from '../lib/queries';
 import { useStateLabels } from '../lib/states';
+import { TableCard } from '../lib/TableCard';
 import { useCursorPages } from '../lib/useCursorPages';
+import { ANY, FilterSelect, countSet, param } from './filters';
 import { useLocations } from './locations';
 import { StockTakeStatusBadge } from './presentation';
 
-const COLUMNS = 4;
+type Take = components['schemas']['StockTake'];
 
-/** FR-INV stock takes: each count, where, how far along, and its state. */
+const TAKE_STATUSES = [
+  'DRAFT',
+  'COUNTING',
+  'REVIEW',
+  'PENDING_APPROVAL',
+  'POSTED',
+  'CANCELLED',
+] as const;
+
+/** FR-INV stock takes: each count, where, how far along, and its state, filtered by both. */
 export function StockTakesScreen() {
   const { t } = useTranslation(['stock', 'common']);
   const auth = useAuth();
   const pages = useCursorPages();
   const [creating, setCreating] = useState(false);
+  const locations = useLocations();
+  const [status, setStatus] = useState(ANY);
+  const [locationId, setLocationId] = useState(ANY);
+  // `status` and `locationId` are the API's own filters.
   const takes = useApiQuery('listStockTakes', {
-    query: pages.cursor === undefined ? {} : { cursor: pages.cursor },
+    query: {
+      ...param('status', status),
+      ...param('locationId', locationId),
+      ...(pages.cursor === undefined ? {} : { cursor: pages.cursor }),
+    },
   });
   const labels = useStateLabels({
     loading: t('takes.loading'),
@@ -48,16 +63,53 @@ export function StockTakesScreen() {
     errorTitle: t('takes.error'),
     deniedTitle: t('takes.denied'),
   });
-  const header = (
-    <TableHeader>
-      <TableRow>
-        <TableHead>{t('takes.columns.take')}</TableHead>
-        <TableHead>{t('takes.columns.status')}</TableHead>
-        <TableHead numeric>{t('takes.columns.progress')}</TableHead>
-        <TableHead>{t('takes.columns.created')}</TableHead>
-      </TableRow>
-    </TableHeader>
-  );
+  const columns: TableColumn<Take>[] = [
+    {
+      id: 'take',
+      rowHeader: true,
+      head: t('takes.columns.take'),
+      sortValue: (take) => take.location.name,
+      cell: (take) => (
+        <span className="flex items-center gap-3">
+          <IconChip icon={ClipboardCheck} tone="info" size="sm" />
+          <span className="grid min-w-0">
+            <Link to={`/stock-takes/${take.id}`} className="text-accent-text underline">
+              {take.location.name}
+            </Link>
+            <span className="text-control-sm font-normal text-fg-muted">
+              {take.stockTakeNo ?? t('take.unnumbered')} · {t(`scope.${take.scope}`)}
+            </span>
+          </span>
+        </span>
+      ),
+    },
+    {
+      id: 'status',
+      head: t('takes.columns.status'),
+      sortValue: (take) => take.status,
+      cell: (take) => <StockTakeStatusBadge status={take.status} />,
+    },
+    {
+      id: 'progress',
+      head: t('takes.columns.progress'),
+      numeric: true,
+      // The API's count of lines counted, compared as it is.
+      sortValue: (take) => take.countedLineCount,
+      cell: (take) => t('take.progress', { counted: take.countedLineCount, total: take.lineCount }),
+    },
+    {
+      id: 'created',
+      head: t('takes.columns.created'),
+      // ISO instants sort as text.
+      sortValue: (take) => take.createdAt,
+      cell: (take) => (
+        <>
+          {take.createdBy.displayName} · <When instant={take.createdAt} />
+        </>
+      ),
+    },
+  ];
+  const view = useTableView(columns);
   return (
     <section aria-labelledby="takes-title" className="grid gap-4">
       <PageHeader
@@ -72,71 +124,51 @@ export function StockTakesScreen() {
           </>
         }
       />
-      <QueryBoundary
+      <TableCard
+        view={view}
         query={takes}
         labels={labels}
-        isEmpty={(page) => page.data.length === 0}
-        loadingFallback={
-          <TableContainer aria-label={t('takes.table')}>
-            <Table>
-              {header}
-              <TableBody>
-                <TableLoadingRows columns={COLUMNS} label={labels.loading} />
-              </TableBody>
-            </Table>
-          </TableContainer>
+        rows={(page) => page.data}
+        rowKey={(take) => take.id}
+        tableLabel={t('takes.table')}
+        exportName={t('takes.title')}
+        pages={{ state: pages, info: (page) => page.page, label: t('takes.pages') }}
+        toolbar={
+          <FilterMenu
+            label={t('common:table.filter')}
+            active={countSet(status, locationId)}
+            reset={{
+              label: t('common:table.resetFilters'),
+              onReset: () => {
+                setStatus(ANY);
+                setLocationId(ANY);
+                pages.reset();
+              },
+            }}
+          >
+            <FilterSelect
+              label={t('filters.status')}
+              anyLabel={t('filters.anyStatus')}
+              value={status}
+              onChange={(value) => {
+                setStatus(value);
+                pages.reset();
+              }}
+              options={TAKE_STATUSES.map((value) => ({ value, label: t(`takeStatus.${value}`) }))}
+            />
+            <FilterSelect
+              label={t('filters.location')}
+              anyLabel={t('filters.anyLocation')}
+              value={locationId}
+              onChange={(value) => {
+                setLocationId(value);
+                pages.reset();
+              }}
+              options={locations.options}
+            />
+          </FilterMenu>
         }
-      >
-        {(page) => (
-          <div className="grid gap-3">
-            <TableContainer aria-label={t('takes.table')}>
-              <Table>
-                {header}
-                <TableBody>
-                  {page.data.map((take) => (
-                    <TableRow key={take.id}>
-                      <TableRowHeader>
-                        <Link to={`/stock-takes/${take.id}`} className="text-accent-text underline">
-                          {take.location.name}
-                        </Link>
-                        <span className="block text-control-sm text-fg-muted">
-                          {take.stockTakeNo ?? t('take.unnumbered')} · {t(`scope.${take.scope}`)}
-                        </span>
-                      </TableRowHeader>
-                      <TableCell label={t('takes.columns.status')}>
-                        <StockTakeStatusBadge status={take.status} />
-                      </TableCell>
-                      <TableCell numeric label={t('takes.columns.progress')}>
-                        {t('take.progress', {
-                          counted: take.countedLineCount,
-                          total: take.lineCount,
-                        })}
-                      </TableCell>
-                      <TableCell label={t('takes.columns.created')}>
-                        {take.createdBy.displayName} · <When instant={take.createdAt} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            {pages.hasPrevious || page.page.hasMore ? (
-              <Pagination
-                label={t('takes.pages')}
-                hasPrevious={pages.hasPrevious}
-                hasNext={page.page.hasMore && page.page.nextCursor !== null}
-                onPrevious={pages.previous}
-                onNext={() => {
-                  if (page.page.nextCursor !== null) pages.next(page.page.nextCursor);
-                }}
-                previousLabel={t('common:pagination.previous')}
-                nextLabel={t('common:pagination.next')}
-                summary={t('common:pagination.page', { page: pages.page })}
-              />
-            ) : null}
-          </div>
-        )}
-      </QueryBoundary>
+      />
       {creating ? <NewTake onClose={() => setCreating(false)} /> : null}
     </section>
   );
@@ -167,6 +199,8 @@ function NewTake({ onClose }: { onClose: () => void }) {
       title={t('takes.newTitle')}
       description={t('takes.newBody')}
       closeLabel={t('common:actions.cancel')}
+      icon={ClipboardCheck}
+      requiredNote={t('common:field.requiredNote')}
     >
       <form
         className="grid gap-3 pb-2"
@@ -189,6 +223,7 @@ function NewTake({ onClose }: { onClose: () => void }) {
           label={t('takes.location')}
           required
           requiredLabel={t('common:field.required')}
+          requiredMark="asterisk"
           error={missing ? t('common:field.required') : undefined}
         >
           <Select
@@ -201,14 +236,12 @@ function NewTake({ onClose }: { onClose: () => void }) {
             options={locations.options}
           />
         </Field>
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button type="button" variant="secondary" onClick={onClose}>
-            {t('common:actions.cancel')}
-          </Button>
+        <DialogActions cancelLabel={t('common:actions.cancel')} onCancel={onClose}>
           <Button type="submit" loading={create.isPending} loadingLabel={t('takes.creating')}>
+            <CircleCheck aria-hidden="true" />
             {t('takes.create')}
           </Button>
-        </div>
+        </DialogActions>
       </form>
     </Dialog>
   );
