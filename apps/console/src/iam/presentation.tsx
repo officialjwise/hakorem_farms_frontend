@@ -2,6 +2,7 @@ import { CircleCheck, CircleSlash, LockKeyhole } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { components } from '@hakorem/api-client';
 import { StatusBadge, formatDateTime } from '@hakorem/ui';
+import { lookup, UNKNOWN } from '../lib/lookup';
 
 export type UserAccount = components['schemas']['UserAccount'];
 export type UserStatus = UserAccount['status'];
@@ -18,9 +19,9 @@ export function UserStatusBadge({ status }: { status: UserStatus }) {
   const { t } = useTranslation('iam');
   return (
     <StatusBadge
-      tone={STATUS[status].tone}
-      icon={STATUS[status].icon}
-      label={t(`status.${status}`)}
+      tone={lookup(STATUS, status, UNKNOWN).tone}
+      icon={lookup(STATUS, status, UNKNOWN).icon}
+      label={t(`status.${status}`, { defaultValue: status })}
     />
   );
 }
