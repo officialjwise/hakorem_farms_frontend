@@ -160,7 +160,7 @@ test.describe('the shell at 1280 px', () => {
   }) => {
     await signInWithTotp(page, USERS.owner, '/');
     const nav = page.getByRole('navigation', { name: 'Main navigation' });
-    const stockGroup = nav.getByRole('button', { name: 'Stock' });
+    const stockGroup = nav.getByRole('button', { name: 'Stock', exact: true });
     await stockGroup.focus();
     await page.keyboard.press('Enter');
     await expect(stockGroup).toHaveAttribute('aria-expanded', 'false');
