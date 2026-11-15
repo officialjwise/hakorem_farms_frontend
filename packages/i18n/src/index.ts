@@ -11,6 +11,7 @@ import { initReactI18next } from 'react-i18next';
 import type audit from '../locales/en/audit.json';
 import type auth from '../locales/en/auth.json';
 import type catalogueNs from '../locales/en/catalogue.json';
+import type stockNs from '../locales/en/stock.json';
 import type common from '../locales/en/common.json';
 import type iam from '../locales/en/iam.json';
 import type shell from '../locales/en/shell.json';
@@ -33,6 +34,7 @@ export const NAMESPACES = [
   'iam',
   'audit',
   'catalogue',
+  'stock',
 ] as const;
 export type Namespace = (typeof NAMESPACES)[number];
 
@@ -50,6 +52,7 @@ export const catalogue: Record<
     iam: () => import('../locales/en/iam.json'),
     audit: () => import('../locales/en/audit.json'),
     catalogue: () => import('../locales/en/catalogue.json'),
+    stock: () => import('../locales/en/stock.json'),
   },
 };
 
@@ -112,6 +115,7 @@ declare module 'i18next' {
       iam: typeof iam;
       audit: typeof audit;
       catalogue: typeof catalogueNs;
+      stock: typeof stockNs;
     };
   }
 }

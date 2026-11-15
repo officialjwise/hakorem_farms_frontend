@@ -37,10 +37,108 @@ export const protectedRoutes: RouteObject[] = [
         element: <PlaceholderScreen area="dashboard" />,
         handle: back(null, 'dashboard'),
       },
+      // F5, loaded on demand (ADR 0032).
       {
         path: 'stock',
-        element: <PlaceholderScreen area="stock" />,
+        element: lazyScreen(() =>
+          import('../stock/StockOnHandScreen').then((m) => m.StockOnHandScreen),
+        ),
         handle: back('inv.stock.read', 'stock'),
+      },
+      {
+        path: 'stock-takes',
+        handle: back('inv.stock_take.read', 'stockTakes'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../stock/StockTakesScreen').then((m) => m.StockTakesScreen),
+            ),
+            handle: back('inv.stock_take.read', 'stockTakes'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../stock/StockTakeScreen').then((m) => m.StockTakeScreen),
+            ),
+            handle: back('inv.stock_take.read', 'stockTake'),
+          },
+        ],
+      },
+      {
+        path: 'stock-adjustments',
+        handle: back('inv.adjustment.read', 'adjustments'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../stock/MoveScreens').then((m) => m.AdjustmentsScreen),
+            ),
+            handle: back('inv.adjustment.read', 'adjustments'),
+          },
+          {
+            path: 'new',
+            element: lazyScreen(() =>
+              import('../stock/NewMoveScreens').then((m) => m.AdjustmentNewScreen),
+            ),
+            handle: back('inv.adjustment.create', 'adjustmentNew'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../stock/MoveScreens').then((m) => m.AdjustmentScreen),
+            ),
+            handle: back('inv.adjustment.read', 'adjustment'),
+          },
+        ],
+      },
+      {
+        path: 'stock-transfers',
+        handle: back('inv.transfer.read', 'transfers'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../stock/MoveScreens').then((m) => m.TransfersScreen),
+            ),
+            handle: back('inv.transfer.read', 'transfers'),
+          },
+          {
+            path: 'new',
+            element: lazyScreen(() =>
+              import('../stock/NewMoveScreens').then((m) => m.TransferNewScreen),
+            ),
+            handle: back('inv.transfer.create', 'transferNew'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() => import('../stock/MoveScreens').then((m) => m.TransferScreen)),
+            handle: back('inv.transfer.read', 'transfer'),
+          },
+        ],
+      },
+      {
+        path: 'goods-receipts',
+        handle: back('inv.goods_receipt.read', 'receipts'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() => import('../stock/MoveScreens').then((m) => m.ReceiptsScreen)),
+            handle: back('inv.goods_receipt.read', 'receipts'),
+          },
+          {
+            path: 'new',
+            element: lazyScreen(() =>
+              import('../stock/NewMoveScreens').then((m) => m.ReceiptNewScreen),
+            ),
+            handle: back('inv.goods_receipt.create', 'receiptNew'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() => import('../stock/MoveScreens').then((m) => m.ReceiptScreen)),
+            handle: back('inv.goods_receipt.read', 'receipt'),
+          },
+        ],
       },
       // F4, each loaded on demand so the back office's first load stays in budget (PERFORMANCE_BUDGET).
       {

@@ -37,7 +37,18 @@ export type NavKey =
   | 'speciesDetail'
   | 'priceLists'
   | 'priceListDetail'
-  | 'priceListVersion';
+  | 'priceListVersion'
+  | 'stockTakes'
+  | 'stockTake'
+  | 'adjustments'
+  | 'adjustmentNew'
+  | 'adjustment'
+  | 'transfers'
+  | 'transferNew'
+  | 'transfer'
+  | 'receipts'
+  | 'receiptNew'
+  | 'receipt';
 
 export function isRouteHandle(value: unknown): value is RouteHandle {
   return (

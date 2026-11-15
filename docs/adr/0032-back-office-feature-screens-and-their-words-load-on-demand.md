@@ -1,6 +1,6 @@
 # 0032. Back office feature screens, and their words, load on demand
 
-- Status: proposed (F4, 2026-11-15; reversible, taken as the conservative option and listed in the F4 report)
+- Status: accepted (owner, 2026-11-15: "ADR 0032 and lazy loading" approved)
 - Date: 2026-11-15
 - Session: F4
 

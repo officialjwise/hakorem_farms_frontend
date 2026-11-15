@@ -122,6 +122,27 @@ const OWNER_CATALOGUE_PERMISSIONS = [
   'mdm.price_list.update',
 ];
 
+/** What a storekeeper holds for the F5 screens (and the owner too): stock, counts and movements. */
+const STOCK_PERMISSIONS = [
+  'inv.stock.read',
+  'mdm.product.read',
+  'mdm.location.read',
+  'mdm.reason_code.read',
+  'inv.stock_take.read',
+  'inv.stock_take.create',
+  'inv.stock_take.count',
+  'inv.stock_take.post',
+  'inv.adjustment.read',
+  'inv.adjustment.create',
+  'inv.transfer.read',
+  'inv.transfer.create',
+  'inv.transfer.dispatch',
+  'inv.transfer.receive',
+  'inv.goods_receipt.read',
+  'inv.goods_receipt.create',
+  'inv.goods_receipt.post',
+];
+
 /** Keyed by lower-case email. Permission codes are the contract's `x-permission` values. */
 export const FAKE_USERS: Record<string, FakeUser> = {
   'ama.mensah@hakoremfarms.com': {
@@ -132,7 +153,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
     mustChangePassword: false,
     roleCode: 'OWNER',
     roleName: 'Owner',
-    permissions: [...OWNER_PERMISSIONS, ...OWNER_CATALOGUE_PERMISSIONS],
+    permissions: [...OWNER_PERMISSIONS, ...OWNER_CATALOGUE_PERMISSIONS, ...STOCK_PERMISSIONS],
   },
   'kwabena.owusu@hakoremfarms.com': {
     id: '019a7a86-4f35-7afd-b035-b8ab03a83188',
@@ -167,7 +188,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
     mustChangePassword: false,
     roleCode: 'STOREKEEPER',
     roleName: 'Storekeeper',
-    permissions: ['inv.stock.read', 'mdm.product.read'],
+    permissions: STOCK_PERMISSIONS,
   },
   'new.staff@hakoremfarms.com': {
     id: '019a7a86-9d07-7e52-a1c3-6a4f1d0c2b90',
