@@ -9,10 +9,11 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { queryClient } from '../data/api';
 import { renderApp, signedIn } from '../test/harness';
 import { holdResponses, mock } from '../test/integration-setup';
-import { UNAVAILABLE } from './figures';
+import { NOT_IN_CONTRACT } from './figures';
 
 const PRISM_500_REFERENCE = '019a7b1e-32bc-78e3-8e1c-970f89c10fed';
-const PRISM_422_REFERENCE = '019a7b1d-f4de-751c-aa55-5aa0965fd37e';
+// updateBranch's first named 422 example, farmBranch (CR-017, contract 1.21.0).
+const PRISM_422_REFERENCE = '019a7b20-1c4e-7a10-9f3e-2b6d8c1a0e11';
 const ANY_ID = '019a7a86-3046-711a-a652-1a7389f79351';
 
 afterEach(() => {
@@ -32,28 +33,66 @@ describe('the dashboard against the Prism mock', () => {
     expect(await screen.findByText('Selling best today')).toBeInTheDocument();
   });
 
-  it('shows the API’s figures, and every figure with no data source in words, never as a number', async () => {
+  it('shows the API’s figures, with the series behind them, and names only what the contract lacks', async () => {
     await renderApp('/', await signedIn('owner'));
     expect(await screen.findByRole('heading', { level: 1, name: 'Dashboard' })).toBeInTheDocument();
-    // Live in contract 1.17.0: sales today (16,223.00 in the example), stock at cost, receivables.
-    const sales = (await screen.findByText('Sales today')).closest(
-      '[data-slot="stat-tile"]',
-    ) as HTMLElement;
-    expect(sales).toHaveTextContent('16,223.00');
-    expect(sales).toHaveTextContent('Yesterday');
+    const tileOf = (label: string) =>
+      screen.getByText(label).closest('[data-slot="stat-tile"]') as HTMLElement;
+    // allFiguresLive, the mock's default (1.21.1): every figure the contract carries is filled.
+    await screen.findByText('Sales today');
+    expect(tileOf('Sales today')).toHaveTextContent('16,223.00');
+    expect(tileOf('Sales today')).toHaveTextContent('Yesterday');
+    // 1.21.0's new figures, each leaving the pending strip.
+    expect(tileOf('Purchases today')).toHaveTextContent('18,435.01 over the week, 6 receipts');
+    expect(tileOf('Low stock')).toHaveTextContent('1 product');
+    expect(tileOf('Animals on hand')).toHaveTextContent('6 head');
+    expect(tileOf('Animals on hand')).toHaveTextContent('Goat 4 · Sheep 2');
+    // The series are the API's points, drawn and named with the dates they cover.
+    expect(
+      screen.getByRole('img', { name: /Sales per day, 2026-11-09 to 2026-11-15/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('img', { name: /Purchases per day at cost, 2026-11-09 to 2026-11-15/ }),
+    ).toBeInTheDocument();
     expect(screen.getByText('Goat')).toBeInTheDocument();
-    // Not in the contract yet: named in the one strip that says what they arrive with, with no figure.
+    // What the contract has no field for at all is still named in the strip, with no figure.
     const pending = screen.getByRole('region', { name: 'Figures still to come from the server' });
-    expect(pending).toHaveTextContent('next dashboard update');
-    for (const label of ['Purchases today', 'Low stock', 'Animals on hand']) {
-      const item = within(pending).getByText(label);
-      expect(item).toHaveAttribute('data-slot', 'pending-figure');
+    for (const label of ['Stock health', 'Invoices', 'Payments by method']) {
+      expect(within(pending).getByText(label)).toHaveAttribute('data-slot', 'pending-figure');
+    }
+    expect(within(pending).queryByText('Animals on hand')).toBeNull();
+    expect(pending.textContent).not.toMatch(/\d/);
+    expect(NOT_IN_CONTRACT).not.toContain('animalsOnHand');
+  });
+
+  it('before sales and billing: each figure the server lists as pending is named, never a zero', async () => {
+    mock.prefer = 'example=beforeSalesAndBilling';
+    mock.preferPath = '/dashboard';
+    await renderApp('/', await signedIn('owner'));
+    const pending = await screen.findByRole('region', {
+      name: 'Figures still to come from the server',
+    });
+    for (const label of [
+      'Sales today',
+      'Sales per day',
+      'Sales this month',
+      'Owed by customers',
+      'Cash on hand',
+      'Sales by channel today',
+      'Selling best today',
+      'Needs attention',
+      'Exceptions recorded today',
+    ]) {
+      expect(within(pending).getByText(label)).toHaveAttribute('data-slot', 'pending-figure');
     }
     expect(pending.textContent).not.toMatch(/\d/);
-    // And never as an empty cell in the stat row.
+    // The row carries only what the server sent; nothing pending appears there, as zero or otherwise.
     const row = screen.getByRole('region', { name: 'Today at a glance' });
-    expect(within(row).queryByText('Purchases today')).toBeNull();
-    expect(UNAVAILABLE).toContain('animalsOnHand');
+    expect(within(row).queryByText('Sales today')).toBeNull();
+    expect(within(row).queryByText('Cash on hand')).toBeNull();
+    expect(within(row).getByText('Stock value')).toBeInTheDocument();
+    expect(within(row).getByText('Animals on hand')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Where the cash is' })).toBeNull();
   });
 
   it('the stat tiles lead to the screens behind them', async () => {
@@ -138,7 +177,7 @@ describe('branches against the Prism mock', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Close the branch' }));
     const refusal = await within(dialog).findByRole('alert');
     expect(refusal).toHaveTextContent('The branch was not closed');
-    expect(refusal).toHaveTextContent('Goat G-0163 is under a veterinary withdrawal period');
+    expect(refusal).toHaveTextContent('This branch cannot be closed.');
     expect(refusal).toHaveTextContent(PRISM_422_REFERENCE);
   });
 });

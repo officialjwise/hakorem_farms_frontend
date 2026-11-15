@@ -296,3 +296,15 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 
 - Sort stays on the page on screen, with its label.
 - When a sort parameter appears in a synced contract, the Sort menu sends it for that list and the label goes.
+
+## CR-020. A named in-review example for a stock take's lines (examples only)
+
+- **Raised by:** frontend F6, the F5 stock take gate (`e2e/specs/console/stock.spec.ts`), after syncing 1.24.0
+- **Contract read first:**
+  - Since CR-012 (1.20.0), `listStockTakeLines` has one example: the take of `getStockTake`'s example while it is counting, so `expectedQty`, `varianceQty`, `varianceValuePesewas` and `varianceDirection` are null, as a blind count shows them. That was the right fix.
+  - No example shows the same lines once counting has closed, so nothing in the contract shows what the review screen reads.
+- **What happens today:** the e2e gate serves the review values itself once counting closes, from 1.17.0's example (yam 40 expected, 34 counted, a loss of 12,000 pesewas, and so on).
+
+**Request:** a second named example on `listStockTakeLines`, `inReview` (the default stays the counting one), with the same six lines and their expected quantities and variances filled, agreeing with `getStockTake`'s gain and loss totals for the take in `REVIEW`. No shape change.
+
+**Until this lands:** the gate keeps its table of review values, marked with this request.
