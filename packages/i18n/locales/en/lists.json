@@ -1,0 +1,96 @@
+{
+  "lots": {
+    "title": "Lots and expiry",
+    "description": "Every lot and animal on hand, where it is and when it expires.",
+    "location": "Location",
+    "allLocations": "All locations",
+    "expiring": "Expiring",
+    "within": {
+      "ALL": "Any time",
+      "7": "Within 7 days",
+      "30": "Within 30 days"
+    },
+    "loading": "Loading lots",
+    "empty": "No lots here",
+    "emptyBody": "Nothing on hand matches. Try all locations or any expiry.",
+    "error": "Lots could not be loaded",
+    "denied": "You do not have access to stock",
+    "table": "Lots",
+    "pages": "Pages of lots",
+    "onHold": "On hold",
+    "status": {
+      "ACTIVE": "On hand",
+      "SOLD": "Sold",
+      "CONSUMED": "Consumed",
+      "WRITTEN_OFF": "Written off",
+      "DEPLETED": "Used up"
+    },
+    "columns": {
+      "lot": "Lot or animal",
+      "where": "Where",
+      "expires": "Expires",
+      "onHand": "On hand",
+      "value": "Value at cost",
+      "status": "Status"
+    }
+  },
+  "movements": {
+    "title": "Stock movements",
+    "description": "The stock ledger: every movement, with where it came from, where it went and who moved it.",
+    "location": "Location",
+    "allLocations": "All locations",
+    "loading": "Loading stock movements",
+    "empty": "No movements yet",
+    "error": "Stock movements could not be loaded",
+    "denied": "You do not have access to stock movements",
+    "table": "Stock movements",
+    "pages": "Pages of movements",
+    "route": "{{from}} to {{to}}",
+    "columns": {
+      "what": "Product and movement",
+      "when": "When",
+      "route": "From and to",
+      "qty": "Quantity",
+      "value": "Value at cost",
+      "source": "Document",
+      "by": "By"
+    }
+  },
+  "suppliers": {
+    "title": "Suppliers",
+    "description": "Who the farm buys animals, feed and produce from.",
+    "loading": "Loading suppliers",
+    "empty": "No suppliers yet",
+    "error": "Suppliers could not be loaded",
+    "denied": "You do not have access to suppliers",
+    "table": "Suppliers",
+    "pages": "Pages of suppliers",
+    "status": {
+      "ACTIVE": "Active",
+      "BLOCKED": "Blocked"
+    },
+    "columns": {
+      "supplier": "Supplier",
+      "contact": "Contact",
+      "status": "Status"
+    }
+  },
+  "registers": {
+    "title": "Cash registers",
+    "description": "Each till in this branch and whether a shift is open on it now.",
+    "loading": "Loading cash registers",
+    "empty": "No cash registers yet",
+    "error": "Cash registers could not be loaded",
+    "denied": "You do not have access to cash registers",
+    "table": "Cash registers",
+    "pages": "Pages of registers",
+    "open": "Shift open",
+    "closed": "No shift open",
+    "columns": {
+      "register": "Register",
+      "where": "Where",
+      "shift": "Shift",
+      "devices": "Devices"
+    }
+  }
+}

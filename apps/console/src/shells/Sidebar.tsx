@@ -98,7 +98,7 @@ export function Sidebar() {
       aria-label={t('backOffice.navLabel')}
       data-width={width}
       className={cn(
-        'hidden shrink-0 flex-col gap-2 overflow-y-auto border-e border-border bg-surface p-2 lg:flex',
+        'hidden shrink-0 flex-col gap-2 overflow-y-auto border-e border-border bg-surface p-2 lg:flex print:hidden',
         narrow ? 'w-16' : 'w-60',
       )}
     >

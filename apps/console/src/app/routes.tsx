@@ -164,6 +164,31 @@ export const protectedRoutes: RouteObject[] = [
           },
         ],
       },
+      {
+        path: 'labels',
+        element: lazyScreen(() => import('../labels/LabelsScreen').then((m) => m.LabelsScreen)),
+        handle: back('mdm.product.read', 'labels'),
+      },
+      {
+        path: 'lots',
+        element: lazyScreen(() => import('../lists/ListScreens').then((m) => m.LotsScreen)),
+        handle: back('inv.stock.read', 'lots'),
+      },
+      {
+        path: 'movements',
+        element: lazyScreen(() => import('../lists/ListScreens').then((m) => m.MovementsScreen)),
+        handle: back('inv.movement.read', 'movements'),
+      },
+      {
+        path: 'suppliers',
+        element: lazyScreen(() => import('../lists/ListScreens').then((m) => m.SuppliersScreen)),
+        handle: back('mdm.supplier.read', 'suppliers'),
+      },
+      {
+        path: 'registers',
+        element: lazyScreen(() => import('../lists/ListScreens').then((m) => m.RegistersScreen)),
+        handle: back('pos.register.read', 'registers'),
+      },
       // F4, each loaded on demand so the back office's first load stays in budget (PERFORMANCE_BUDGET).
       {
         path: 'products',

@@ -142,3 +142,89 @@ describe('branches against the Prism mock', () => {
     expect(refusal).toHaveTextContent(PRISM_422_REFERENCE);
   });
 });
+
+interface ListCase {
+  screen: string;
+  path: string;
+  ready: string | RegExp;
+  loading: string;
+  empty: string;
+  error: string;
+  denied: string;
+}
+
+const LISTS: ListCase[] = [
+  {
+    screen: 'lots and expiry',
+    path: '/lots',
+    ready: 'G-0142',
+    loading: 'Loading lots',
+    empty: 'No lots here',
+    error: 'Lots could not be loaded',
+    denied: 'You do not have access to stock',
+  },
+  {
+    screen: 'stock movements',
+    path: '/movements',
+    ready: /Sale issue/,
+    loading: 'Loading stock movements',
+    empty: 'No movements yet',
+    error: 'Stock movements could not be loaded',
+    denied: 'You do not have access to stock movements',
+  },
+  {
+    screen: 'suppliers',
+    path: '/suppliers',
+    ready: 'Kpone Livestock Traders',
+    loading: 'Loading suppliers',
+    empty: 'No suppliers yet',
+    error: 'Suppliers could not be loaded',
+    denied: 'You do not have access to suppliers',
+  },
+  {
+    screen: 'cash registers',
+    path: '/registers',
+    ready: 'Shift open',
+    loading: 'Loading cash registers',
+    empty: 'No cash registers yet',
+    error: 'Cash registers could not be loaded',
+    denied: 'You do not have access to cash registers',
+  },
+  {
+    screen: 'labels',
+    path: '/labels',
+    ready: 'LIV-GOAT',
+    loading: 'Loading products',
+    empty: 'No products match',
+    error: 'Products could not be loaded',
+    denied: 'You do not have access to products',
+  },
+];
+
+describe.each(LISTS)('the $screen screen against the Prism mock', (c) => {
+  it('loading, then the data the mock served', async () => {
+    const release = holdResponses();
+    await renderApp(c.path, await signedIn('owner'));
+    expect((await screen.findAllByText(c.loading)).length).toBeGreaterThan(0);
+    release();
+    expect((await screen.findAllByText(c.ready)).length).toBeGreaterThan(0);
+  });
+
+  it('empty, error with its reference, and permission denied, in words', async () => {
+    mock.noRows = true;
+    await renderApp(c.path, await signedIn('owner'));
+    expect((await screen.findAllByText(c.empty)).length).toBeGreaterThan(0);
+    queryClient.clear();
+    mock.noRows = false;
+    mock.prefer = 'code=500';
+    await renderApp(c.path, await signedIn('owner'));
+    await waitFor(() => expect(alertWith(c.error)).toHaveTextContent(PRISM_500_REFERENCE));
+    queryClient.clear();
+    mock.prefer = 'code=403';
+    await renderApp(c.path, await signedIn('owner'));
+    await waitFor(() => expect(alertWith(c.denied)).toBeDefined());
+    expect(
+      within(alertWith(c.denied) as HTMLElement).queryByRole('button', { name: 'Try again' }),
+    ).toBeNull();
+  });
+});

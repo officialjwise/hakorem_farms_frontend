@@ -14,6 +14,8 @@ import type catalogueNs from '../locales/en/catalogue.json';
 import type stockNs from '../locales/en/stock.json';
 import type dashboardNs from '../locales/en/dashboard.json';
 import type branchesNs from '../locales/en/branches.json';
+import type labelsNs from '../locales/en/labels.json';
+import type listsNs from '../locales/en/lists.json';
 import type common from '../locales/en/common.json';
 import type iam from '../locales/en/iam.json';
 import type shell from '../locales/en/shell.json';
@@ -39,6 +41,8 @@ export const NAMESPACES = [
   'stock',
   'dashboard',
   'branches',
+  'labels',
+  'lists',
 ] as const;
 export type Namespace = (typeof NAMESPACES)[number];
 
@@ -59,6 +63,8 @@ export const catalogue: Record<
     stock: () => import('../locales/en/stock.json'),
     dashboard: () => import('../locales/en/dashboard.json'),
     branches: () => import('../locales/en/branches.json'),
+    labels: () => import('../locales/en/labels.json'),
+    lists: () => import('../locales/en/lists.json'),
   },
 };
 
@@ -124,6 +130,8 @@ declare module 'i18next' {
       stock: typeof stockNs;
       dashboard: typeof dashboardNs;
       branches: typeof branchesNs;
+      labels: typeof labelsNs;
+      lists: typeof listsNs;
     };
   }
 }

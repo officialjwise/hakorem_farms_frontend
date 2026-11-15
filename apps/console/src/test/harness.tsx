@@ -52,6 +52,8 @@ export async function renderApp(
       'stock',
       'dashboard',
       'branches',
+      'labels',
+      'lists',
     ],
   });
   const router = createMemoryRouter(routes, {

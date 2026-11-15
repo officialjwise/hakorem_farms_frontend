@@ -34,7 +34,7 @@ export function BackOfficeShell() {
       >
         {t('app.skipToContent')}
       </a>
-      <header className="sticky top-0 z-sticky flex items-center gap-2 border-b border-border bg-surface px-3 py-2">
+      <header className="sticky top-0 z-sticky flex print:hidden items-center gap-2 border-b border-border bg-surface px-3 py-2">
         <div className="lg:hidden">
           <Sheet
             side="start"
@@ -86,7 +86,7 @@ export function BackOfficeShell() {
           aria-label={t('backOffice.mainLabel')}
           className="min-w-0 flex-1 p-4 outline-none"
         >
-          <div className="mb-3 xl:hidden">
+          <div className="mb-3 xl:hidden print:hidden">
             <Breadcrumbs />
           </div>
           <PermissionGate>
