@@ -187,6 +187,19 @@ const OWNER_F5B_PERMISSIONS = [
 /** What the owner holds for the F5c settings section: the business profile and the system settings. */
 const OWNER_F5C_PERMISSIONS = ['aud.setting.read'];
 
+/**
+ * What the owner holds for the F6b work: the approval inbox, files (a death's photograph), reversing a
+ * processing order (1.26.0), and approving a purchase order (the PURCHASE_ORDER policy's `approverPermission`).
+ */
+const OWNER_F6B_PERMISSIONS = [
+  'iam.approval.read',
+  'iam.approval.cancel.own',
+  'platform.file.upload',
+  'platform.file.read',
+  'prc.order.reverse',
+  'pur.purchase_order.approve',
+];
+
 /** What the owner holds for the F6 screens: every livestock and processing permission in the contract. */
 const OWNER_F6_PERMISSIONS = [
   'liv.animal.read',
@@ -216,18 +229,59 @@ const OWNER_F6_PERMISSIONS = [
 ];
 
 /**
- * The Farm hand (backend A-158, contract 1.24.0): records weights, health, feed and mortality, and reads only
- * weights, so the register and the health, mortality and feed lists are hidden from the role. Location and
- * product reads are assumed (A-F6-02), so the forms can name a pen and a feed or medicine.
+ * The Farm hand, from what the contract says the role holds (1.28.0; the seed itself is not readable here,
+ * CR-023 asks for it):
+ * - weights, read and recorded (1.24.0, A-158);
+ * - nine writes it "holds ... but not the read", so it uses their care twins (1.26.0, ADR-0052): health
+ *   events, feed, reporting and submitting a death, editing and moving an animal, and creating, updating
+ *   and closing a batch;
+ * - the care register, health events, rations and batches through `liv.care.read` (1.26.0);
+ * - breeding and growth (1.25.0: "The Vet or Farm hand now holds the edits, moves, batches, growth and
+ *   breeding");
+ * - location and product reads, so a pen and a feed or medicine can be named, and the file upload a death's
+ *   photograph needs: assumed (A-F6-02, A-F6b-02).
  */
 const FARM_HAND_PERMISSIONS = [
   'liv.weight.read',
   'liv.weight.record',
+  'liv.care.read',
   'liv.health.record',
   'liv.feed.record',
   'liv.mortality.report',
+  'liv.animal.update',
+  'liv.animal.move',
+  'liv.batch.create',
+  'liv.batch.update',
+  'liv.breeding.read',
+  'liv.breeding.record',
+  'liv.report.read',
   'mdm.location.read',
   'mdm.product.read',
+  'platform.file.upload',
+];
+
+/**
+ * The Manager: the four approving permissions the contract's `listRoles` example gives the role, the
+ * approval inbox they are decided in (`iam.approval.read`), the reads a decision's evidence opens (a death
+ * and its photograph), and reversing a completed processing order (1.26.0: "the Owner and the Manager").
+ */
+const MANAGER_PERMISSIONS = [
+  ...CASHIER_PERMISSIONS,
+  'iam.user.read',
+  'iam.approval.read',
+  'iam.approval.cancel.own',
+  'ord.order.void.approve',
+  'inv.adjustment.approve',
+  'liv.mortality.approve',
+  'mdm.price_list.approve',
+  'liv.animal.read',
+  'liv.mortality.read',
+  'liv.mortality.report',
+  'platform.file.read',
+  'platform.file.upload',
+  'prc.order.read',
+  'prc.order.create',
+  'prc.order.reverse',
 ];
 
 /** Keyed by lower-case email. Permission codes are the contract's `x-permission` values. */
@@ -247,6 +301,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
       ...OWNER_F5B_PERMISSIONS,
       ...OWNER_F5C_PERMISSIONS,
       ...OWNER_F6_PERMISSIONS,
+      ...OWNER_F6B_PERMISSIONS,
     ],
     moreBranches: SELLING_POINTS,
   },
@@ -258,12 +313,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
     mustChangePassword: false,
     roleCode: 'MANAGER',
     roleName: 'Manager',
-    permissions: [
-      ...CASHIER_PERMISSIONS,
-      'iam.user.read',
-      'inv.adjustment.approve',
-      'mdm.price_list.approve',
-    ],
+    permissions: MANAGER_PERMISSIONS,
   },
   'adwoa.darko@hakoremfarms.com': {
     id: '019a7a86-ac02-78a8-ade0-935170bb0c2f',

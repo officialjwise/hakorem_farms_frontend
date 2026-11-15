@@ -18,6 +18,7 @@ import {
   Textarea,
   WeightInput,
 } from '@hakorem/ui';
+import { useAuth } from '../auth/AuthProvider';
 import { useApiMutation } from '../data/api';
 import { newRecordId } from '../lib/clientId';
 import { ConfirmDialog } from '../lib/ConfirmDialog';
@@ -184,7 +185,12 @@ export function HealthEventDialog({
   const [notes, setNotes] = useState('');
   const [problems, setProblems] = useState<string[]>([]);
   const [confirming, setConfirming] = useState(false);
-  const record = useApiMutation('recordHealthEvent');
+  // The Farm hand records but cannot read health events, so the full write refuses them (contract 1.26.0,
+  // `x-answer-permission`): they record through the care twin, whose answer carries no cost.
+  const auth = useAuth();
+  const full = useApiMutation('recordHealthEvent');
+  const care = useApiMutation('recordCareHealthEvent');
+  const record = auth.can('liv.health.read') ? full : care;
   const keyFor = useIntentKey();
   const qtyUsed = qty === '' ? null : toQuantity(qty);
   const location = locations.items.find((row) => row.id === locationId);

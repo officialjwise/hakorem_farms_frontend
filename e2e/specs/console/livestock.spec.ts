@@ -88,17 +88,21 @@ test('a pen is weighed from a phone: each weight typed down the list, sent toget
   expect(sent).toHaveLength(1);
 });
 
-test('the Farm hand records at the pen from the weights page and never meets an empty list', async ({
+test('the Farm hand records at the pen from the weights page and finds an animal by its tag', async ({
   page,
+  api,
 }) => {
   await signIn(page, USERS.farmHand, '/weights');
   await expect(page.getByRole('heading', { level: 1, name: 'Weights' })).toBeVisible();
   const work = page.getByRole('region', { name: 'Other pen work' });
   await expect(work.getByRole('button', { name: 'Record feed given' })).toBeVisible();
   await page.getByRole('button', { name: 'Weigh one animal' }).click();
-  await expect(page.getByRole('dialog', { name: 'Which animal?' })).toContainText(
-    'Your role cannot look animals up by tag yet',
-  );
+  const choose = page.getByRole('dialog', { name: 'Which animal?' });
+  // The care register (contract 1.26.0): the Farm hand searches by tag and is never shown a cost.
+  await choose.getByRole('combobox', { name: 'Animal' }).fill('G-01');
+  await expect(page.getByRole('option', { name: 'G-0142, Goat' })).toBeVisible();
+  expect(api.log.some((e) => e.operationId === 'listCareAnimals')).toBe(true);
+  expect(api.log.some((e) => e.operationId === 'listAnimals')).toBe(false);
   await expectNoAxeViolations(page);
   await expectNoHorizontalScroll(page);
 });
