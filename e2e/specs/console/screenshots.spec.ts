@@ -62,6 +62,27 @@ const PHASES: Record<string, Shot[]> = {
     { name: 'adjustment-new', path: '/stock-adjustments/new', ready: 'Save the draft' },
     { name: 'transfers', path: '/stock-transfers', ready: 'TRF-2026-DDW-00009' },
     { name: 'transfer', path: `/stock-transfers/${ID}`, ready: 'Goat meat, 15 kg pack' },
+    {
+      name: 'transfer-receive',
+      path: `/stock-transfers/${ID}`,
+      ready: 'Receive what arrived',
+      prepare: (api) =>
+        api.rewrite('getStockTransfer', (body) => {
+          const transfer = body as { lines: Record<string, unknown>[] };
+          return {
+            ...transfer,
+            status: 'DISPATCHED',
+            receivedAt: null,
+            receivedBy: null,
+            lines: transfer.lines.map((l) => ({
+              ...l,
+              qtyReceived: null,
+              varianceQty: null,
+              varianceReasonCode: null,
+            })),
+          };
+        }),
+    },
     { name: 'transfer-new', path: '/stock-transfers/new', ready: 'Save the draft' },
     { name: 'goods-receipts', path: '/goods-receipts', ready: 'GRN-2026-DDW-000072' },
     { name: 'goods-receipt', path: `/goods-receipts/${ID}`, ready: 'Total at cost' },
