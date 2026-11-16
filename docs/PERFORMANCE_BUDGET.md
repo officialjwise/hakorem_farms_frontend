@@ -44,6 +44,28 @@ lhci autorun --config=lighthouse/lighthouserc.json --collect.url=<storefront lis
 
 `next build` of `apps/storefront`, first-load JavaScript, gzipped: **103 kB shared** by every page (React 19 and the Next runtime) and **181 kB** on the home, category and checkout pages, which carry the one `UIProvider` with its Radix toast, tooltip and dialog code and the cart Sheet. That is about 60 kB over the provisional 120 KB script sub-budget (A-F0-06). Nothing is enforced before F13, and a Lighthouse run against a listing page is the real test. Levers, in order: load the cart drawer on first use, split the toast viewport so a page that never toasts does not pay for it, and review what the Radix packages pull in. The 300 KB listing page total is not measured yet.
 
+### Re-measured in F7, against the real listing page (2026-11-16)
+
+`/c/meat` at 360 px in Chromium on the Prism mock, a first visit, transfer as encoded on the wire:
+
+| Part                                                                      | Before F7's cuts | After      | Budget               |
+| ------------------------------------------------------------------------- | ---------------- | ---------- | -------------------- |
+| Script                                                                    | 231 KB           | 202 KB     | 120 KB (provisional) |
+| Document (HTML with its inline data)                                      | 31 KB            | 31 KB      |                      |
+| Stylesheet                                                                | 11 KB            | 11 KB      | 30 KB                |
+| Font (the cedi glyph only)                                                | 2 KB             | 2 KB       | 20 KB                |
+| **Without photographs**                                                   | 275 KB           | **246 KB** |                      |
+| Photographs: twelve `thumb` WebPs, at the API's declared 9,214 bytes each | 111 KB           | 111 KB     |                      |
+| **The page**                                                              | 386 KB           | **357 KB** | **300 KB**           |
+
+Twelve photographs load at once although they are `loading="lazy"`: on a slow connection Chrome fetches lazy images well below the fold, and a phone listing is three screens tall.
+
+**The largest paint is under 2.5 s** on the 3G profile (300 ms, 700 Kbps, 4x CPU): the e2e spec asserts it on `/c/meat`. The paint is the page's own text, which arrives with the HTML; the script does not block it.
+
+**F7's cuts** (ADR 0041): the data layer loads with the basket, not with every page (about 30 kB gzipped), and product links do not prefetch.
+
+**What is left, and whose decision it is.** `next build` reports 191 kB of first-load script on a listing: 103 kB is Next and React, and nearly all of the rest is the `UIProvider` (ADR 0006), whose Radix toast and tooltip load with every page, about 85 kB with their shared Radix code and icons. The storefront shows no toast and no tooltip. Loading them on first use is a change to UIProvider, one of the reference components, so it is the owner's (CLAUDE.md). With it, the listing's script would fall to about 120 kB and the page to about 270 KB with its photographs. The other levers, smaller: a listing page of eight products instead of twelve (about 37 KB of photographs), and the generated operation table split per surface (about 12 kB, only once the basket loads).
+
 ## Console
 
 Set on 2026-11-14 when the till and the back office became two documents (ADR 0030). The numbers were confirmed by the owner the same day (A-F3-17, resolved), and changing one is an owner decision. Vite's 500 kB chunk warning is the bundler's default, not this budget, and it is switched off.
