@@ -56,7 +56,7 @@ export function CatchWeightNotice<T extends string>({
         <span className={compact ? undefined : 'text-lg'}>{title}</span>
       </p>
       {facts.length === 0 ? null : (
-        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1">
+        <dl className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 gap-y-1">
           {facts.map((fact) => (
             <div key={fact.term} className="contents">
               <dt className="text-fg-muted">{fact.term}</dt>

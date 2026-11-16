@@ -1,31 +1,25 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { Button, EmptyState } from '@hakorem/ui';
-import { getT } from '../../i18n/server';
+import { CheckoutFlow } from '../../components/checkout/CheckoutFlow';
+import { getT, getWords } from '../../i18n/server';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT('storefront');
   return { title: t('meta.checkoutTitle'), robots: { index: false, follow: false } };
 }
 
-/** The checkout route skeleton. Checkout itself (address, delivery slot, payment) is F7. */
+/**
+ * The checkout route. The flow is a client component because the cart is the browser's: it is proved by
+ * the guest cookie the API set, which this server never holds (contract 1.32.0).
+ */
 export default async function CheckoutPage() {
-  const t = await getT('storefront');
+  const [t, words] = await Promise.all([
+    getT('storefront'),
+    getWords('checkout', 'cart', 'price', 'refusals'),
+  ]);
   return (
-    <section aria-labelledby="checkout-title" className="grid gap-4">
-      <h1 id="checkout-title" className="text-3xl font-semibold">
-        {t('checkout.title')}
-      </h1>
-      <p className="text-fg-muted">{t('checkout.body')}</p>
-      <EmptyState
-        title={t('checkout.empty.title')}
-        description={t('checkout.empty.body')}
-        action={
-          <Button asChild variant="secondary">
-            <Link href="/">{t('checkout.back')}</Link>
-          </Button>
-        }
-      />
-    </section>
+    <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6">
+      <h1 className="text-3xl font-bold">{t('checkout.title')}</h1>
+      <CheckoutFlow words={words} />
+    </div>
   );
 }
