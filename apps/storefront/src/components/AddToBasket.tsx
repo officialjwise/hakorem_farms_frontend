@@ -6,12 +6,13 @@ import { newIdempotencyKey } from '@hakorem/api-client';
 import { Button, QuantityStepper } from '@hakorem/ui';
 import { refusal, word, type Words } from '../lib/words';
 import { useAddToCart } from './cart/useCart';
+import { ShopData } from './ShopData';
 
 /**
  * How many, and "Add to basket", on a product page. Whole units of the sale unit (contract 1.32.0). The
  * answer is said in words beside the button: added, or why not, and that stays until the next try.
  */
-export function AddToBasket({
+function Add({
   productId,
   unitPlural,
   words,
@@ -79,5 +80,13 @@ export function AddToBasket({
         </p>
       )}
     </div>
+  );
+}
+
+export function AddToBasket(props: Parameters<typeof Add>[0]) {
+  return (
+    <ShopData>
+      <Add {...props} />
+    </ShopData>
   );
 }

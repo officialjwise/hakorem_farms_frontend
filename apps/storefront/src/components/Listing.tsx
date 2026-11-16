@@ -59,6 +59,7 @@ function ChoiceRow({
               aria-current={choice.current ? 'true' : undefined}
               className={choice.current ? on : off}
               scroll={false}
+              prefetch={false}
             >
               {choice.label}
             </Link>

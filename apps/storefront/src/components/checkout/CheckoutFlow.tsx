@@ -29,6 +29,7 @@ import {
   type DetailsErrors,
 } from './details';
 import { DetailsForm } from './DetailsForm';
+import { ShopData } from '../ShopData';
 import { Done } from './Done';
 import { Review } from './Review';
 
@@ -46,7 +47,7 @@ type S = components['schemas'];
  * Every figure is the API's. Each write carries one idempotency key per intent, so a retry on a weak
  * connection cannot reserve or charge twice. A failure stays on screen in words, with its reference.
  */
-export function CheckoutFlow({ words }: { words: Words }) {
+function Flow({ words }: { words: Words }) {
   const w = (path: string) => word(words, `checkout.${path}`);
   const { id: cartId, query: cart } = useCart();
   const checkoutId = useCheckoutId();
@@ -243,6 +244,14 @@ export function CheckoutFlow({ words }: { words: Words }) {
         )}
       </section>
     </div>
+  );
+}
+
+export function CheckoutFlow({ words }: { words: Words }) {
+  return (
+    <ShopData>
+      <Flow words={words} />
+    </ShopData>
   );
 }
 

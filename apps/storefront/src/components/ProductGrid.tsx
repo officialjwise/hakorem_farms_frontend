@@ -43,7 +43,12 @@ export function ProductGrid({
         return (
           <li key={item.productId}>
             <ProductCard
-              nameLink={<Link href={`/p/${item.slug}`}>{item.name}</Link>}
+              nameLink={
+                // No prefetch: twelve product routes fetched ahead on 3G cost more than a tap waits.
+                <Link href={`/p/${item.slug}`} prefetch={false}>
+                  {item.name}
+                </Link>
+              }
               photo={cardPhoto(item.image)}
               photoLabel={item.name}
               placeholderIcon={tile.icon}

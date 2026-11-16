@@ -6,13 +6,14 @@ import { Button, EmptyState, MoneyDisplay, QueryBoundary, Sheet } from '@hakorem
 import { word, type Words } from '../../lib/words';
 import { CartLines } from './CartLines';
 import { useCart } from './useCart';
+import { ShopData } from '../ShopData';
 
 /**
  * The basket drawer: its lines, the API's estimated subtotal and what it does not include, and the way on
  * to checkout. Its four states: loading, empty (no cart yet, or none of its lines), the error with its
  * reference and a retry, and the lines. A public cart has no permission to deny.
  */
-export function CartSheet({
+function Drawer({
   open,
   onOpenChange,
   words,
@@ -80,5 +81,13 @@ export function CartSheet({
         </QueryBoundary>
       )}
     </Sheet>
+  );
+}
+
+export function CartSheet(props: Parameters<typeof Drawer>[0]) {
+  return (
+    <ShopData>
+      <Drawer {...props} />
+    </ShopData>
   );
 }

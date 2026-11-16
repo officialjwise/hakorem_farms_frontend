@@ -1,16 +1,12 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
-import { createQueryClient, QueryClientProvider } from '@hakorem/data';
+import type { ReactNode } from 'react';
 import { UIProvider, type ThemePreference, type ToastLabels } from '@hakorem/ui';
 
 /**
  * The storefront's one UIProvider (ADR 0006): theme, comfortable density, toasts and the themed portal for
- * the cart drawer. It is the only client boundary at the root, and takes its words as props from the server.
- *
- * It also mounts the one QueryClientProvider (ADR 0022), beside UIProvider. The client is created per
- * mount, not once per module, because this component also renders on the server and a module-level
- * client would be shared between visitors.
+ * the basket drawer. It is the only client boundary at the root, and takes its words as props from the
+ * server. The data layer is not mounted here: the islands that use the basket mount it (ADR 0041).
  */
 export function Providers({
   theme,
@@ -21,12 +17,9 @@ export function Providers({
   toastLabels: ToastLabels;
   children: ReactNode;
 }) {
-  const [queryClient] = useState(createQueryClient);
   return (
-    <QueryClientProvider client={queryClient}>
-      <UIProvider theme={theme} density="comfortable" toastLabels={toastLabels}>
-        {children}
-      </UIProvider>
-    </QueryClientProvider>
+    <UIProvider theme={theme} density="comfortable" toastLabels={toastLabels}>
+      {children}
+    </UIProvider>
   );
 }
