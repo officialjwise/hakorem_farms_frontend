@@ -57,7 +57,7 @@ The till loads its shell and sale screen with the document. Every other till scr
 
 `dist/.vite/manifest.json` is the chunk graph that `pnpm budget:console` reads. It names only files the documents already link to, so serving it does no harm, but the console image may leave it out.
 
-## 4. The shop and the API share one origin: no CORS (owner, 2026-11-16)
+## 4. The shop, the console and the API share origins: no CORS (owner, 2026-11-16)
 
 **The decision.** The storefront and the API are served from the same domain, with the API under a path, through the VPS's reverse proxy. The shop on the apex (`https://hakoremfarms.com`), the API under a path of it (for example `https://hakoremfarms.com/api/v1`). There is no CORS for the shop: the browser's calls are same-origin. This replaces, for the shop, the shared brief's "the API on another subdomain" (Deployment, "Data and secrets") and closes A-F7-02.
 
@@ -82,10 +82,24 @@ The till loads its shell and sale screen with the document. Every other till scr
 
 4. **The API allows the shop's own origin.** Same-origin requests still send `Origin` on a write, and `createCart` "requires an allowed `Origin`". The API's allowed origins list holds `https://hakoremfarms.com` (and staging's), and no CORS headers are needed for it.
 
-**Not decided here: the console.** The decision names the shop. The console is on its own subdomain (shared brief) with its own cookie and CSRF (ADR 0024). The same arrangement on the console's host (its own `/api` path to the same API) would remove CORS there too. F13 asks the owner before wiring it.
+**The console too (owner, 2026-11-16, answering the F8 report).** The console's subdomain also sends `/api` to the API through the reverse proxy, like the shop. There is no CORS anywhere in the system.
+
+- **The variable.** Build the console with `HK_API_BASE_URL=/api/v1`. The console is static files with no server of its own, so the bare same-origin path is enough (the e2e build already runs this way with `/mock`, ADR 0025). Staging's build is the same, on its own host.
+- **The proxy.** In the console's Caddy block, before the static files and the two-document rule of section 1:
+
+  ```caddyfile
+  	handle_path /api/* {
+  		reverse_proxy api:3000
+  	}
+  ```
+
+- **The cookies stay the console's own.** The staff cookies (`__Host-hk_s_at`, `__Host-hk_s_rt`) and the CSRF token are host-only, so they are set on and sent to the console's host only, never the shop's.
+- **The till's device credential** (`X-Device-Credential`, ADR 0044) is a request header, not a cookie, and goes to the same origin with no preflight.
+- **The API allows the console's origin**, `https://app.hakoremfarms.com` (and staging's), for the `Origin` check on writes.
 
 **How to check it** (F13 smoke suite, against staging and after every deploy):
 
 - `GET https://<shop>/api/v1/health` answers from the API, and `GET https://<shop>/` from the storefront.
 - On a product page, "Add to basket" succeeds with no CORS preflight (`OPTIONS`) in the network log, and the response sets `__Host-hk_guest` on the shop's host.
 - A category page renders its products with the network log showing no browser call to the API (the read happened on the server).
+- `GET https://<console>/api/v1/health` answers from the API; signing in on the console and opening the till make no `OPTIONS` request and no request to another host.

@@ -1,4 +1,5 @@
 import { formatMoney } from '../../../packages/ui/src/format/format';
+import { FakeApi } from '../../support/fakeApi';
 import { expect, test } from '../../support/test';
 import {
   expectNoAxeViolations,
@@ -196,6 +197,33 @@ test('a debit note is issued after a confirmation of each charge, and opens as t
   await confirm.getByRole('button', { name: 'Issue the debit note' }).click();
   await expect(page.getByText('The debit note was issued')).toBeVisible();
   expect(api.log.filter((e) => e.operationId === 'issueDebitNote')).toHaveLength(1);
+});
+
+test('who raises a credit note (owner, 2026-11-16): a manager may, a cashier may not', async ({
+  page,
+  browser,
+}) => {
+  // The Manager raises it; approving it is for an Owner or Manager who did not raise it, which the
+  // approval screen already holds (no Approve on one's own request) and the server refuses (MAKER_CANNOT_CHECK).
+  await signInWithTotp(page, USERS.manager, `/billing-documents/${RECEIPT}`);
+  await expect(page.getByRole('link', { name: 'Raise a credit note' })).toBeVisible();
+
+  // A cashier reads and reprints the receipt but is never offered a credit note, and its address says no.
+  const context = await browser.newContext({
+    viewport: { width: 360, height: 740 },
+    baseURL: test.info().project.use.baseURL,
+  });
+  const cashierApi = new FakeApi();
+  await cashierApi.install(context);
+  const cashier = await context.newPage();
+  await signIn(cashier, USERS.cashier, `/billing-documents/${RECEIPT}`);
+  await expect(cashier.getByRole('heading', { level: 1, name: NAME })).toBeVisible();
+  await expect(cashier.getByRole('link', { name: 'Raise a credit note' })).toHaveCount(0);
+  await cashier.goto(`/billing-documents/${RECEIPT}/credit-note`);
+  await expect(
+    cashier.getByText(/do not have access|does not include the permission/i).first(),
+  ).toBeVisible();
+  await context.close();
 });
 
 test('a storekeeper opening the documents sees permission denied in words', async ({ page }) => {
