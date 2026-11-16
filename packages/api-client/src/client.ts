@@ -58,6 +58,36 @@ export interface ApiClient {
     operation: Op,
     ...args: CallArguments<Op>
   ): Promise<OperationData<Op>>;
+  /**
+   * Calls an operation the frontend has asked the backend for and the contract does not list yet
+   * (`docs/CONTRACT_REQUESTS.md`, ADR 0046), through the same transport as `call`. The caller describes it
+   * with a row shaped like the generated manifest's and owns its types, which are the request's, never a
+   * guess. Only the console's `requested/` module calls it, and only in a build that switches the request
+   * on; it is deleted once the contract carries the operation.
+   */
+  callRequested(
+    operation: RequestedOperation,
+    input?: { path?: Record<string, string>; query?: Record<string, unknown>; body?: unknown },
+    options?: CallOptions & { idempotencyKey?: string },
+  ): Promise<unknown>;
+}
+
+/** One row of the generated manifest: how an operation is sent. */
+export type OperationRow = (typeof operationManifest)[OperationId];
+
+/** An operation a contract request asks for, described as the manifest would describe it. */
+export interface RequestedOperation {
+  /** The request in `docs/CONTRACT_REQUESTS.md` that asks for it, for example `CR-032`. */
+  request: string;
+  operationId: string;
+  method: 'get' | 'post' | 'put' | 'patch' | 'delete';
+  path: string;
+  permission: string | null;
+  idempotent: boolean;
+  csrf: 'none' | 'required';
+  public: boolean;
+  body: 'none' | 'json';
+  device: boolean;
 }
 
 /** The slice of openapi-fetch this file uses, typed loosely on purpose: the public types above carry the contract. */
@@ -75,6 +105,8 @@ interface RawClient {
     init: RawRequestInit,
   ): Promise<{ data?: unknown; error?: unknown; response: Response }>;
 }
+
+type SendInput = { path?: unknown; query?: unknown; body?: unknown };
 
 const CSRF_HEADER = 'X-CSRF-Token';
 /** The enrolled till's credential (contract `deviceCredential`, ADR 0044). Sent only where the contract asks. */
@@ -162,10 +194,41 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     operation: Op,
     ...args: CallArguments<Op>
   ): Promise<OperationData<Op>> {
-    const row = operationManifest[operation];
-    const input = (args[0] ?? {}) as { path?: unknown; query?: unknown; body?: unknown };
-    const callOptions = (args[1] ?? {}) as CallOptions & { idempotencyKey?: string };
+    return send(
+      operation,
+      operationManifest[operation],
+      (args[0] ?? {}) as SendInput,
+      (args[1] ?? {}) as CallOptions & { idempotencyKey?: string },
+    ) as Promise<OperationData<Op>>;
+  }
 
+  function callRequested(
+    operation: RequestedOperation,
+    input: SendInput = {},
+    options: CallOptions & { idempotencyKey?: string } = {},
+  ): Promise<unknown> {
+    if (operation.operationId in operationManifest) {
+      throw new Error(
+        `${operation.operationId} (${operation.request}) is in the contract now: call it with call() and delete the request.`,
+      );
+    }
+    return send(operation.operationId, operation, input, options);
+  }
+
+  async function send(
+    operation: string,
+    row: {
+      method: string;
+      path: string;
+      idempotent: boolean;
+      csrf: string;
+      public: boolean;
+      device: boolean;
+      body: string;
+    },
+    input: SendInput,
+    callOptions: CallOptions & { idempotencyKey?: string },
+  ): Promise<unknown> {
     const headers: Record<string, string> = {};
     if (row.idempotent) {
       if (callOptions.idempotencyKey === undefined || callOptions.idempotencyKey === '') {
@@ -202,7 +265,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         whenAborted(controller.signal),
       ]);
       if (!result.response.ok) throw normaliseError(result.response, result.error);
-      return result.data as OperationData<Op>;
+      return result.data;
     } catch (error) {
       if (error instanceof ApiError) throw error;
       if (timedOut) throw new NetworkError(CLIENT_ERROR_CODES.TIMEOUT);
@@ -214,5 +277,5 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     }
   }
 
-  return { baseUrl, call };
+  return { baseUrl, call, callRequested };
 }

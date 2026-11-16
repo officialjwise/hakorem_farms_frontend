@@ -28,6 +28,12 @@ const lazyApi: ApiClient = {
       .catch((error: unknown) => {
         throw error instanceof ApiError ? inWords(error) : error;
       }),
+  callRequested: (...args) =>
+    getApi()
+      .callRequested(...args)
+      .catch((error: unknown) => {
+        throw error instanceof ApiError ? inWords(error) : error;
+      }),
 };
 
 /**
