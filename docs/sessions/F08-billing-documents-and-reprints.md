@@ -184,6 +184,7 @@ A-F7-02 is resolved by the owner (one origin). A-F7-03 waits on CR-028. New:
 - **The React hooks rule refused a state set in an effect** for the reprint's PDF link; the link is now derived, and a replaced copy's link is released.
 - **Prism answers `issueCreditNote` with its 201**, not the 202 a credit note raised on its own always gets; the integration test asks for the 202, as the e2e spec does.
 - **The contract's examples disagree with their operations** in six places (CR-030); the specs give the answers the descriptions promise.
+- **CI's first run failed one livestock integration test**, not re-run. "Weights, by pen and date" waited 1 s for a list opened cold for the first time in its file: 964 ms on `main`, 1,091 ms here. The five cold first visits in that group now get the 5 s allowance the file's others already had (`cb469bb`). The cause is named on the PR.
 - **The per-line levy table is long at 360 px** (nine stacked rows for three lines). It is kept open: the brief asks for the full breakdown on the document. A later pass could fold it.
 
 ## For the owner
