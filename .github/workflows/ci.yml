@@ -55,7 +55,9 @@ jobs:
           HK_API_BASE_URL: /mock
       - name: Console bundle budget, per document (ADR 0030, PERFORMANCE_BUDGET.md)
         run: pnpm budget:console
-      - name: Build the storefront (Next.js)
+      - name: Build the storefront (Next.js), against the Prism mock the e2e suite starts
         run: pnpm build:storefront
+        env:
+          HK_API_BASE_URL: http://127.0.0.1:4010
       - name: End to end at 360 px, with axe (Playwright)
         run: pnpm --filter @hakorem/e2e test
