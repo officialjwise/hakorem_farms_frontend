@@ -11,6 +11,12 @@ import { queryClient } from '../data/api';
 import { renderApp, signedIn } from '../test/harness';
 import { holdResponses, mock } from '../test/integration-setup';
 
+/**
+ * How long a list may take on its first visit in this file, while its lazy chunk and words download: the
+ * 5 s allowance F5b gave a cold screen. findBy's 1 s default is for a screen already loaded; on a busy CI
+ * runner the weights list took 964 ms on main and 1,091 ms on F8's branch, and failed.
+ */
+const COLD_SCREEN_MS = 5000;
 const PRISM_500_REFERENCE = '019a7b1e-32bc-78e3-8e1c-970f89c10fed';
 const ANY_ID = '019a7a86-3046-711a-a652-1a7389f79351';
 
@@ -157,7 +163,10 @@ describe('one animal: the F6 gate', () => {
 describe('the records behind an animal', () => {
   it('weights, by pen and date, with how each was taken', async () => {
     await renderApp('/weights', await signedIn('owner'));
-    const row = (await screen.findByRole('link', { name: 'G-0142' })).closest('tr') as HTMLElement;
+    // The first visit to /weights in this file: its chunk and words load cold (F5b's allowance).
+    const row = (
+      await screen.findByRole('link', { name: 'G-0142' }, { timeout: COLD_SCREEN_MS })
+    ).closest('tr') as HTMLElement;
     expect(row).toHaveTextContent('26.400');
     expect(row).toHaveTextContent('Scale');
     expect(screen.getByRole('button', { name: 'Weigh a pen' })).toBeEnabled();
@@ -165,7 +174,9 @@ describe('the records behind an animal', () => {
 
   it('health events name the animal or the pen, the medicine, the cost and the withdrawal', async () => {
     await renderApp('/health-events', await signedIn('owner'));
-    expect(await screen.findByText('Every animal in Broiler house 1')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Every animal in Broiler house 1', {}, { timeout: COLD_SCREEN_MS }),
+    ).toBeInTheDocument();
     const row = screen.getByRole('link', { name: 'G-0163' }).closest('tr') as HTMLElement;
     expect(row).toHaveTextContent('Oxytetracycline 20% injection, 100 ml');
     expect(row).toHaveTextContent('42.50');
@@ -173,7 +184,9 @@ describe('the records behind an animal', () => {
 
   it('deaths and culls, with the cost written off and where each stands', async () => {
     await renderApp('/mortality', await signedIn('owner'));
-    const row = (await screen.findByRole('link', { name: 'G-0171' })).closest('tr') as HTMLElement;
+    const row = (
+      await screen.findByRole('link', { name: 'G-0171' }, { timeout: COLD_SCREEN_MS })
+    ).closest('tr') as HTMLElement;
     expect(row).toHaveTextContent('Waiting for approval');
     expect(row).toHaveTextContent('589.00');
     expect(screen.getAllByText('Written off').length).toBeGreaterThan(0);
@@ -191,7 +204,9 @@ describe('the records behind an animal', () => {
   it('breeding: matings, due dates and births, and one record with its young', async () => {
     await renderApp('/breeding', await signedIn('owner'));
     // 1.25.0: each record names its own dam, and G-0122's mating that did not take is listed.
-    expect(await screen.findByRole('link', { name: 'Dam G-0118' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('link', { name: 'Dam G-0118' }, { timeout: COLD_SCREEN_MS }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('table')).toHaveTextContent('Did not take');
     queryClient.clear();
     await renderApp(`/breeding/${ANY_ID}`, await signedIn('owner'));
@@ -205,7 +220,9 @@ describe('the records behind an animal', () => {
   it('feed given, and how one issue’s cost was shared over the animals', async () => {
     const user = userEvent.setup();
     await renderApp('/feed', await signedIn('owner'));
-    await user.click(await screen.findByRole('button', { name: /^Goat pen 1, / }));
+    await user.click(
+      await screen.findByRole('button', { name: /^Goat pen 1, / }, { timeout: COLD_SCREEN_MS }),
+    );
     const detail = await screen.findByRole('dialog', { name: 'Feed given' });
     await waitFor(() => expect(within(detail).getAllByRole('row').length).toBe(4));
     expect(detail).toHaveTextContent('2,080.00');
