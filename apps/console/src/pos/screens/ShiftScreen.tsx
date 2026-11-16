@@ -1,5 +1,5 @@
 import type { components } from '@hakorem/api-client';
-import { Banknote, ClipboardCheck, FileText, LockKeyhole } from 'lucide-react';
+import { Banknote, ClipboardCheck, FileText, KeyRound, LockKeyhole } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -22,9 +22,12 @@ import { ConfirmDialog } from '../../lib/ConfirmDialog';
 import { useIntentKey } from '../../lib/queries';
 import { useStateLabels } from '../../lib/states';
 import { useOnlineStatus } from '../../lib/useOnlineStatus';
+import { requestedOn } from '../../requested/switch';
 import { pendingCount } from '../offline/sync';
 import { getTill, useTill } from '../offline/till';
-import type { OfflinePack, ShiftRecord, TillSnapshot } from '../offline/types';
+import type { OfflinePack, PinApprovalRecord, ShiftRecord, TillSnapshot } from '../offline/types';
+import { approvers } from '../pin/pin';
+import { PinApprovalField } from '../pin/PinCheck';
 
 type Shift = components['schemas']['Shift'];
 type ShiftReport = components['schemas']['ShiftReport'];
@@ -163,7 +166,17 @@ function CashMovement({ pack, online }: { pack: OfflinePack; online: boolean }) 
     ),
   ];
   const needsReason = kind !== 'CASH_DROP';
-  const ready = amount !== null && amount > 0 && (!needsReason || reason !== '');
+  // A cash drop's witness enters their PIN on this till (OFFLINE_SYNC section 10, CR-032).
+  const { snapshot } = useTill();
+  const localAuth = requestedOn('CR-032') ? (snapshot?.localAuth ?? null) : null;
+  const [witness, setWitness] = useState<PinApprovalRecord | null>(null);
+  const witnesses = localAuth === null ? [] : approvers(localAuth.verifiers, 'CASH_DROP_WITNESS');
+  const needsWitness = kind === 'CASH_DROP' && witnesses.length > 0;
+  const ready =
+    amount !== null &&
+    amount > 0 &&
+    (!needsReason || reason !== '') &&
+    (!needsWitness || witness !== null);
 
   return (
     <section
@@ -206,6 +219,27 @@ function CashMovement({ pack, online }: { pack: OfflinePack; online: boolean }) 
       <Field label={t('cash.note')}>
         <Input value={note} onChange={(event) => setNote(event.target.value)} autoComplete="off" />
       </Field>
+      {kind === 'CASH_DROP' && localAuth !== null ? (
+        witness !== null ? (
+          <p className="flex items-center gap-2" data-slot="cash-witness">
+            <KeyRound aria-hidden="true" className="size-icon-md" />
+            {t('cash.witnessed', { name: witness.displayName })}
+          </p>
+        ) : needsWitness ? (
+          <div className="grid gap-2">
+            <p className="text-sm text-fg-muted">{t('cash.witnessHint')}</p>
+            <PinApprovalField
+              approval="CASH_DROP_WITNESS"
+              approvers={witnesses}
+              policy={localAuth.policy}
+              label={t('cash.witness')}
+              onApproved={setWitness}
+            />
+          </div>
+        ) : (
+          <p className="text-sm text-fg-muted">{t('cash.noWitness')}</p>
+        )
+      ) : null}
       <Button
         variant="secondary"
         onClick={() => {
@@ -230,13 +264,20 @@ function CashMovement({ pack, online }: { pack: OfflinePack; online: boolean }) 
         onConfirm={() => {
           if (amount === null) return;
           void getTill()
-            .recordCashMovement({
-              kind,
-              amountPesewas: amount,
-              ...(needsReason ? { reasonCode: reason } : {}),
-              ...(note.trim() !== '' ? { note: note.trim() } : {}),
-            })
+            .recordCashMovement(
+              {
+                kind,
+                amountPesewas: amount,
+                ...(needsReason ? { reasonCode: reason } : {}),
+                ...(note.trim() !== '' ? { note: note.trim() } : {}),
+                ...(kind === 'CASH_DROP' && witness !== null
+                  ? { witnessId: witness.principalId }
+                  : {}),
+              },
+              kind === 'CASH_DROP' && witness !== null ? [witness] : [],
+            )
             .then(() => {
+              setWitness(null);
               setConfirming(false);
               setRecorded(t('cash.recorded', { kind: t(`queue.cash.${kind}`) }));
               setAmount(null);
@@ -250,6 +291,9 @@ function CashMovement({ pack, online }: { pack: OfflinePack; online: boolean }) 
           <span>{t(`queue.cash.${kind}`)}</span>
           <MoneyDisplay pesewas={amount ?? 0} />
         </p>
+        {kind === 'CASH_DROP' && witness !== null ? (
+          <p>{t('cash.witnessed', { name: witness.displayName })}</p>
+        ) : null}
       </ConfirmDialog>
     </section>
   );

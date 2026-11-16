@@ -1,4 +1,4 @@
-import { CloudUpload, LogOut } from 'lucide-react';
+import { CloudUpload, LockKeyhole, LogOut } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router';
@@ -6,6 +6,7 @@ import { Button, Dialog, DialogActions, Field, Input, StatusBadge } from '@hakor
 import { useAuth } from '../auth/AuthProvider';
 import { pendingCount } from '../pos/offline/sync';
 import { getTill, hasTill, useTill } from '../pos/offline/till';
+import { TillLocked } from '../pos/pin/TillLocked';
 import { preloadTillScreens } from '../pos/routes';
 import { emitScan } from '../pos/scans';
 import { useBarcodeTrap } from '../pos/useBarcodeTrap';
@@ -24,10 +25,29 @@ export function PosShell() {
   const [lastScan, setLastScan] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const till = useTill();
-  useBarcodeTrap(barcode);
+  const locked = till.snapshot?.meta.locked === true && hasTill() && getTill().canLock();
+  useBarcodeTrap(barcode, !locked);
   const waiting = till.snapshot === null ? 0 : pendingCount(till.snapshot);
   const device = till.snapshot?.device ?? null;
   const shift = till.snapshot?.shift ?? null;
+  const canLock = till.snapshot !== null && hasTill() && getTill().canLock();
+  const idleSeconds = till.snapshot?.localAuth?.policy.idleLockSeconds ?? null;
+
+  // The till locks itself after the policy's time with no touch, scan or key (CR-032).
+  useEffect(() => {
+    if (!canLock || locked || idleSeconds === null || idleSeconds <= 0) return undefined;
+    let timer = setTimeout(() => void getTill().lock(), idleSeconds * 1000);
+    const touched = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => void getTill().lock(), idleSeconds * 1000);
+    };
+    const events = ['pointerdown', 'keydown'] as const;
+    events.forEach((name) => document.addEventListener(name, touched, true));
+    return () => {
+      clearTimeout(timer);
+      events.forEach((name) => document.removeEventListener(name, touched, true));
+    };
+  }, [canLock, locked, idleSeconds]);
 
   // The queue is sent as soon as the browser says the network is back (OFFLINE_SYNC 6.4), and the till's
   // other screens are fetched while it has one, so they open offline later (ADR 0043).
@@ -51,13 +71,15 @@ export function PosShell() {
 
   const signOut = async () => {
     setConfirmOpen(false);
+    // The PIN verifiers and the lock go with the cashier (OFFLINE_SYNC section 3); the queue stays.
+    if (hasTill()) await getTill().forgetPins();
     await auth.logout();
     navigate('/login', { replace: true });
   };
 
   return (
     <div data-shell="pos" className="flex min-h-dvh flex-col">
-      <header className="flex flex-wrap items-center gap-3 border-b border-border bg-surface px-4 py-3 print:hidden">
+      <header className="flex flex-wrap items-center gap-3 border-b border-border bg-surface px-4 py-3">
         <h1 className="text-xl font-semibold">{t('pos.title')}</h1>
         <OfflineIndicator />
         <Link to="/pos/queue" data-slot="queue-count" className="rounded-md">
@@ -79,9 +101,17 @@ export function PosShell() {
           </p>
         ) : null}
         <div className="ms-auto flex flex-wrap items-center justify-end gap-2">
-          <Button asChild variant="secondary" size="lg">
-            <Link to="/">{t('pos.backOffice')}</Link>
-          </Button>
+          {canLock && !locked ? (
+            <Button variant="secondary" size="lg" onClick={() => void getTill().lock()}>
+              <LockKeyhole aria-hidden="true" />
+              {t('pos.lock')}
+            </Button>
+          ) : null}
+          {locked ? null : (
+            <Button asChild variant="secondary" size="lg">
+              <Link to="/">{t('pos.backOffice')}</Link>
+            </Button>
+          )}
           <Dialog
             open={confirmOpen}
             onOpenChange={setConfirmOpen}
@@ -109,9 +139,15 @@ export function PosShell() {
           />
         </div>
       </header>
+      {locked ? (
+        <div className="p-4">
+          <TillLocked />
+        </div>
+      ) : null}
       <nav
+        hidden={locked}
         aria-label={t('pos.navLabel')}
-        className="flex flex-wrap gap-2 border-b border-border bg-surface px-4 py-2 print:hidden"
+        className="flex flex-wrap gap-2 border-b border-border bg-surface px-4 py-2"
       >
         {(
           [
@@ -134,12 +170,11 @@ export function PosShell() {
             </NavLink>
           ))}
       </nav>
-      <div className="print:hidden">
-        <OfflineBanner />
-      </div>
+      <OfflineBanner />
       <form
+        hidden={locked}
         onSubmit={submit}
-        className="border-b border-border bg-surface-sunken p-4 print:hidden"
+        className="border-b border-border bg-surface-sunken p-4"
         data-slot="barcode-bar"
       >
         <Field label={t('pos.barcode')} hint={t('pos.barcodeHint')}>
@@ -159,7 +194,8 @@ export function PosShell() {
           {lastScan === null ? t('pos.scannedNone') : t('pos.scanned', { code: lastScan })}
         </p>
       </form>
-      <main id="main" className="min-w-0 flex-1 p-4">
+      {/* Kept mounted while locked, so a sale under way is as it was when the till opens again. */}
+      <main id="main" hidden={locked} className="min-w-0 flex-1 p-4">
         <Outlet />
       </main>
     </div>

@@ -174,7 +174,8 @@
       "queue": "Sales to send",
       "returns": "Returns",
       "setup": "Set up"
-    }
+    },
+    "lock": "Lock the till"
   },
   "offline": {
     "online": "Online",
