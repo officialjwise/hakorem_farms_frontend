@@ -52,7 +52,7 @@ pnpm dev:mock          # Prism on 4010, from contract/openapi.yaml
 pnpm test:integration  # screens and the data layer against the real Prism (starts it itself)
 ```
 
-Set `HK_API_BASE_URL` to choose the API. Nothing else decides it. For the mock in a browser, run `pnpm dev:mock` and `HK_API_BASE_URL=/mock pnpm dev:console`: the console's dev and preview servers forward `/mock` to Prism and add the staff cookie (ADR 0025). Node tests use `http://127.0.0.1:4010` directly.
+Set `HK_API_BASE_URL` to choose the API. Nothing else decides it. `HK_REQUESTED_CONTRACT` (`CR-032,CR-033`) builds the console against contract requests not yet in the contract; only the e2e and CI builds set it, never a deploy (ADR 0046). For the mock in a browser, run `pnpm dev:mock` and `HK_API_BASE_URL=/mock pnpm dev:console`: the console's dev and preview servers forward `/mock` to Prism and add the staff cookie (ADR 0025). Node tests use `http://127.0.0.1:4010` directly.
 
 Arrive later, named in `docs/BUILD_PROMPT.md`: `test:e2e:staging` and `lighthouse` (F13).
 

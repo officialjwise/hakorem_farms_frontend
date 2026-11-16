@@ -30,7 +30,7 @@ A breaking change carries a version bump and a changelog entry. When one lands: 
 
 ## A request, not an invention
 
-When a screen needs something the contract does not offer, append to `docs/CONTRACT_REQUESTS.md`: an id, the date, the screen that needs it, and the exact shape you want, including units (`Pesewas` integer, `Kilograms` three-place string, cost and price as separately named fields). Then carry on against a local mock override. **Read the contract first.** CR-002 was withdrawn because the shapes already existed.
+When a screen needs something the contract does not offer, append to `docs/CONTRACT_REQUESTS.md`: an id, the date, the screen that needs it, and the exact shape you want, including units (`Pesewas` integer, `Kilograms` three-place string, cost and price as separately named fields). Then carry on against a local mock override: the requested shapes in `apps/console/src/requested/<module>.ts`, sent with `callRequested` and switched on by `HK_REQUESTED_CONTRACT` (ADR 0046), answered in e2e by `e2e/support/requested.ts`. When the request lands, delete its module and its id, and call the generated client. **Read the contract first.** CR-002 was withdrawn because the shapes already existed.
 
 ## Facts to check before raising a request
 

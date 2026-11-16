@@ -103,3 +103,9 @@ The till loads its shell and sale screen with the document. Every other till scr
 - On a product page, "Add to basket" succeeds with no CORS preflight (`OPTIONS`) in the network log, and the response sets `__Host-hk_guest` on the shop's host.
 - A category page renders its products with the network log showing no browser call to the API (the read happened on the server).
 - `GET https://<console>/api/v1/health` answers from the API; signing in on the console and opening the till make no `OPTIONS` request and no request to another host.
+
+## 5. Never set `HK_REQUESTED_CONTRACT` for a deployed console (ADR 0046)
+
+`HK_REQUESTED_CONTRACT` names the contract requests a build is built against before the contract carries them (`CR-032,CR-033` in the e2e and CI builds, whose fake answers them). A staging or production build leaves it **unset**: the console then calls nothing the contract lacks, and the till says in words that the PIN lock, offline mobile money, the cash drop witness and the receipt link wait for the server. A build that sets it against an API without the operations gets a refusal wherever a request is used.
+
+**How to check it:** the deploy workflow's console build step sets `HK_API_BASE_URL` and nothing named `HK_REQUESTED_CONTRACT`.
