@@ -96,9 +96,13 @@ function FoundReceipt({ documentNo }: { documentNo: string }) {
     deniedTitle: t('returns.denied'),
   });
   return (
-    <QueryBoundary query={found} labels={labels} isEmpty={(page) => page.data.length === 0}>
+    <QueryBoundary
+      query={found}
+      labels={labels}
+      isEmpty={(page) => matching(page.data, documentNo) === undefined}
+    >
       {(page) => {
-        const receipt = page.data[0];
+        const receipt = matching(page.data, documentNo);
         if (receipt === undefined) return null;
         return receipt.order === null ? (
           <Alert
@@ -111,6 +115,15 @@ function FoundReceipt({ documentNo }: { documentNo: string }) {
       }}
     </QueryBoundary>
   );
+}
+
+/** The receipt whose number is the one typed: the filter narrows the list, the number decides. */
+function matching<T extends { documentNo: string | null }>(
+  rows: readonly T[],
+  documentNo: string,
+): T | undefined {
+  const wanted = documentNo.trim().toUpperCase();
+  return rows.find((row) => (row.documentNo ?? '').toUpperCase() === wanted);
 }
 
 function OrderToReturn({ orderId, receiptNo }: { orderId: string; receiptNo: string }) {

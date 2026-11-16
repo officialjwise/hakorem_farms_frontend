@@ -78,8 +78,14 @@ function OpenShift({
     { path: { id: shift.id } },
     { enabled: online && shift.confirmed },
   );
+  // The close's own answer reveals the expected figures at once; the shift read afterwards carries on from it.
+  const [answered, setAnswered] = useState<Shift | null>(null);
+  const known =
+    answered !== null && (server.data === undefined || server.data.status === 'OPEN')
+      ? answered
+      : server.data;
   const sales = snapshot.entries.filter((e) => e.kind === 'SALE' && e.shiftId === shift.id).length;
-  const status = server.data?.status ?? 'OPEN';
+  const status = known?.status ?? 'OPEN';
   const isCashier = auth.session?.principal.id === shift.cashierId;
 
   return (
@@ -116,14 +122,20 @@ function OpenShift({
           shift={shift}
           pack={pack}
           online={online}
-          onClosed={() => void server.refetch()}
+          onClosed={(closed) => {
+            setAnswered(closed);
+            void server.refetch();
+          }}
         />
       ) : null}
-      {server.data !== undefined && status !== 'OPEN' ? (
+      {known !== undefined && status !== 'OPEN' ? (
         <Closing
-          shift={server.data}
+          shift={known}
           isCashier={isCashier}
-          onApproved={() => void server.refetch()}
+          onApproved={(closed) => {
+            setAnswered(closed);
+            void server.refetch();
+          }}
         />
       ) : null}
     </div>
@@ -341,7 +353,7 @@ function Close({
   shift: ShiftRecord;
   pack: OfflinePack;
   online: boolean;
-  onClosed: () => void;
+  onClosed: (shift: Shift) => void;
 }) {
   const { t } = useTranslation('pos');
   const close = useApiMutation('closeShift', { invalidates: ['getShift', 'listShifts'] });
@@ -421,9 +433,9 @@ function Close({
               { path: { id: shift.id }, body },
               { idempotencyKey: keyFor({ shift: shift.id, ...body }) },
             )
-            .then(() => {
+            .then((closed) => {
               setConfirming(false);
-              onClosed();
+              onClosed(closed);
             })
             .catch(() => undefined);
         }}
@@ -450,7 +462,7 @@ function Closing({
 }: {
   shift: Shift;
   isCashier: boolean;
-  onApproved: () => void;
+  onApproved: (shift: Shift) => void;
 }) {
   const { t } = useTranslation('pos');
   const auth = useAuth();
@@ -468,15 +480,11 @@ function Closing({
       <h3 id="closing-title" className="text-lg font-semibold">
         {shift.status === 'CLOSED' ? t('closing.closed') : t('closing.title')}
       </h3>
-      <dl className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 gap-y-1 text-sm">
-        <dt className="font-semibold">{t('closing.method')}</dt>
-        <dd className="text-end font-semibold">{t('closing.declared')}</dd>
-        <dd className="text-end font-semibold">{t('closing.expected')}</dd>
-        <dd className="text-end font-semibold">{t('closing.variance')}</dd>
+      <ul className="grid gap-2 sm:grid-cols-2">
         {shift.tenders.map((tender) => (
           <TenderCount key={tender.paymentMethod.id} tender={tender} />
         ))}
-      </dl>
+      </ul>
       {shift.overShortDirection !== null && shift.overShortPesewas !== null ? (
         <p className="text-lg font-semibold" data-slot="over-short">
           {t(`closing.direction.${shift.overShortDirection}`)}{' '}
@@ -523,10 +531,10 @@ function Closing({
                     { path: { id: shift.id }, body },
                     { idempotencyKey: keyFor({ shift: shift.id, ...body }) },
                   )
-                  .then(async () => {
+                  .then(async (closed) => {
                     setConfirming(false);
                     await getTill().endShift();
-                    onApproved();
+                    onApproved(closed);
                   })
                   .catch(() => undefined);
               }}
@@ -544,28 +552,33 @@ function Closing({
 function TenderCount({ tender }: { tender: Shift['tenders'][number] }) {
   const { t } = useTranslation('pos');
   return (
-    <>
-      <dt>{tender.paymentMethod.name}</dt>
-      <dd className="text-end">
-        <MoneyDisplay pesewas={tender.declaredPesewas} />
-      </dd>
-      <dd className="text-end">
-        {tender.expectedPesewas === null ? (
-          t('closing.hidden')
-        ) : (
-          <MoneyDisplay pesewas={tender.expectedPesewas} />
-        )}
-      </dd>
-      <dd className="text-end">
-        {tender.variancePesewas === null || tender.varianceDirection === null ? (
-          t('closing.hidden')
-        ) : (
-          <>
-            {t(`closing.direction.${tender.varianceDirection}`)}{' '}
-            <MoneyDisplay pesewas={tender.variancePesewas} />
-          </>
-        )}
-      </dd>
-    </>
+    <li className="rounded-md border border-border p-3">
+      <p className="font-semibold">{tender.paymentMethod.name}</p>
+      <dl className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-sm">
+        <dt>{t('closing.declared')}</dt>
+        <dd className="text-end">
+          <MoneyDisplay pesewas={tender.declaredPesewas} />
+        </dd>
+        <dt>{t('closing.expected')}</dt>
+        <dd className="text-end">
+          {tender.expectedPesewas === null ? (
+            t('closing.hidden')
+          ) : (
+            <MoneyDisplay pesewas={tender.expectedPesewas} />
+          )}
+        </dd>
+        <dt>{t('closing.variance')}</dt>
+        <dd className="text-end">
+          {tender.variancePesewas === null || tender.varianceDirection === null ? (
+            t('closing.hidden')
+          ) : (
+            <>
+              {t(`closing.direction.${tender.varianceDirection}`)}{' '}
+              <MoneyDisplay pesewas={tender.variancePesewas} />
+            </>
+          )}
+        </dd>
+      </dl>
+    </li>
   );
 }
