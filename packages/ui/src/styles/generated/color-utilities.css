@@ -1130,6 +1130,14 @@
   background-color: var(--slate-subtle);
 }
 
+@utility bg-shop-bg {
+  background-color: var(--shop-bg);
+}
+
+@utility bg-shop-band {
+  background-color: var(--shop-band);
+}
+
 @utility bg-brand-marketing {
   background-color: var(--brand-marketing);
 }

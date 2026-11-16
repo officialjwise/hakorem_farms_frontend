@@ -113,7 +113,10 @@ export function renderColorUtilitiesCss(): string {
 export interface TokenManifest {
   readonly note: string;
   readonly utilityRoles: Record<string, Role>;
-  readonly tokens: Record<string, { roles: readonly Role[]; scope: 'app' | 'marketing' }>;
+  readonly tokens: Record<
+    string,
+    { roles: readonly Role[]; scope: 'app' | 'marketing' | 'storefront' }
+  >;
 }
 
 export function renderManifest(): string {
@@ -122,7 +125,10 @@ export function renderManifest(): string {
     utilityRoles: Object.fromEntries(Object.entries(UTILITIES).map(([p, u]) => [p, u.role])),
     tokens: Object.fromEntries(
       (Object.keys(colors) as ColorName[]).map((name) => {
-        const t = colors[name] as { roles: readonly Role[]; scope?: 'app' | 'marketing' };
+        const t = colors[name] as {
+          roles: readonly Role[];
+          scope?: 'app' | 'marketing' | 'storefront';
+        };
         return [name, { roles: t.roles, scope: t.scope ?? 'app' }];
       }),
     ),

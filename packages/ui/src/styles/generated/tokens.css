@@ -62,6 +62,8 @@
   --slate: #5E6670;
   --slate-fg: #454C55;
   --slate-subtle: #ECEEF0;
+  --shop-bg: #F6F0E3;
+  --shop-band: #EBDFC6;
   --brand-marketing: #2DB84B;
   --brand-marketing-fg: #06200D;
   --brand-marketing-highlight: #FFD23F;
@@ -128,6 +130,8 @@
     --slate: #9AA3AD;
     --slate-fg: #C0C7CE;
     --slate-subtle: #262A2F;
+    --shop-bg: #15130E;
+    --shop-band: #231D13;
     --brand-marketing: #2DB84B;
     --brand-marketing-fg: #06200D;
     --brand-marketing-highlight: #FFD23F;
@@ -194,6 +198,8 @@
   --slate: #9AA3AD;
   --slate-fg: #C0C7CE;
   --slate-subtle: #262A2F;
+  --shop-bg: #15130E;
+  --shop-band: #231D13;
   --brand-marketing: #2DB84B;
   --brand-marketing-fg: #06200D;
   --brand-marketing-highlight: #FFD23F;
