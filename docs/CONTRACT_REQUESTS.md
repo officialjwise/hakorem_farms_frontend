@@ -484,3 +484,28 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 6. The reason example lists the seeded `REFUND`, `RETURN` and `BILLING_ADJUSTMENT` codes.
 
 **Until this lands:** nothing is blocked. The mock shows the debit note form with no reason to choose.
+
+## CR-031. The offline pack says whether its prices include tax, and the sync result carries the server's total (additive)
+
+- **Raised by:** frontend F9, the till's sale screen and its queue.
+- **Contract read first (1.42.0):** `OfflinePack.products[].priceBand` carries list, floor and ceiling prices and `taxCells` carries the levies, but nothing says whether the pack's prices include tax. `PriceList.taxInclusive` exists on the back office's price lists, not in the pack. `SyncResultItem` carries the outcome, the order and receipt numbers and the exceptions, but not the total the server recorded.
+- **Why it matters:** the till totals the offline cart itself (BUILD_PROMPT, the one exception) and the customer pays that figure. For a tax-exclusive price the till would have to add the levies on top; it cannot tell which. After a sync the till compares its total with the server's and flags a difference to a person; today it reads each synced order back (`getOrder`, one request per sale) to learn the server's figure.
+
+**Request:**
+
+1. `OfflinePack.taxInclusive: boolean`, or the same flag on each `OfflineProduct` if a pack can mix price lists of both kinds.
+2. `SyncResultItem.grossPesewas` (the order's total as recorded, the `Pesewas` integer) with `currency` on the result, so the till compares without a second request.
+
+**Until this lands:** the till treats the pack's prices as what the customer pays (A-F9-02) and reads each synced order's `finalTotalPesewas` back.
+
+## CR-032. The cash movement reasons in the offline pack, and the offline PIN verifiers (additive)
+
+- **Raised by:** frontend F9, the shift screen and the offline unlock.
+- **Contract read first (1.42.0):** `recordCashMovement` needs a `reasonCode` for a pay-out or pay-in, and `listReasonCodes` has a `CASH_MOVEMENT` domain, but the pack example carries only `PRICE_OVERRIDE` and `VOID` reasons, so a till that went offline before reading them cannot record a pay-out. OFFLINE_SYNC section 3 describes a `local_auth` store with a slow hash of the cashier's and each supervisor's PIN, created at online sign-in, for the offline unlock, the supervisor's approval of an unverified mobile money tender and a cash drop's witness; the contract has no operation that sets or reads a PIN.
+
+**Request:**
+
+1. The pack's `reasonCodes` include the `CASH_MOVEMENT` domain (an example change if the server already sends them).
+2. The PIN: an operation for a staff member to set their till PIN, and what the device stores to check it offline (a salted verifier and its parameters), or a statement in OFFLINE_SYNC that the verifier is made on the device from the PIN typed at an online sign-in.
+
+**Until this lands:** a pay-out offline is possible only with reasons the pack carries; the offline unlock, the supervisor approval offline and the cash drop's witness are not built (A-F9-04).
