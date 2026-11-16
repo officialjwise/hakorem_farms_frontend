@@ -95,7 +95,7 @@ export function Select({
             position="popper"
             sideOffset={4}
             className={cn(
-              'z-dropdown w-(--radix-select-trigger-width) overflow-hidden rounded-md border border-border-strong bg-surface text-fg shadow-md',
+              'z-popover w-(--radix-select-trigger-width) overflow-hidden rounded-md border border-border-strong bg-surface text-fg shadow-md',
               'max-h-(--radix-select-content-available-height)',
             )}
           >
