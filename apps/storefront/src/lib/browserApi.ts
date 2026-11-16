@@ -20,6 +20,7 @@ const lazyApi: ApiClient = {
     return browserApi().baseUrl;
   },
   call: (...args) => browserApi().call(...args),
+  callRequested: (...args) => browserApi().callRequested(...args),
 };
 
 /** The hooks the cart and checkout use. Components never import TanStack Query or call `fetch`. */

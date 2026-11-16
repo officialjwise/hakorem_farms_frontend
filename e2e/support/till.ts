@@ -8,14 +8,26 @@ import { createHash } from 'node:crypto';
 import { expect, type Page } from '@playwright/test';
 import type { FakeApi } from './fakeApi';
 import { signIn, signInWithTotp, USERS } from './helpers';
+import { MOMO_METHOD_ID, RECEIPT_LINK_TEMPLATE } from './requested';
 
 export interface SentSale {
   id: string;
   deviceCounter: number;
   provisionalRef: string;
   occurredAt: string;
+  customerPhone?: string;
   lines: Record<string, unknown>[];
-  tenders: { paymentMethodId: string; amountPesewas: number; tenderedPesewas?: number }[];
+  tenders: {
+    paymentMethodId: string;
+    amountPesewas: number;
+    tenderedPesewas?: number;
+    unverifiedMobileMoney?: {
+      payerPhone: string;
+      network: string;
+      providerReference?: string;
+      approvedById: string;
+    };
+  }[];
   payloadHash: string;
 }
 
@@ -47,14 +59,34 @@ export function expectedHash(sale: SentSale): string {
     .digest('hex');
 }
 
-export function installTillServer(api: FakeApi, lineTotal: (sale: SentSale) => number): TillServer {
+export interface TillServerOptions {
+  /** The branch allows unverified mobile money offline: the pack lists the method (OFFLINE_SYNC 5.2). */
+  offlineMobileMoney?: boolean;
+}
+
+export function installTillServer(
+  api: FakeApi,
+  lineTotal: (sale: SentSale) => number,
+  options: TillServerOptions = {},
+): TillServer {
   const server: TillServer = { batches: [], applied: new Map(), totals: new Map() };
   let receipt = 6200;
-  api.rewrite('getOfflinePack', (body) => ({
-    ...(body as object),
-    generatedAt: new Date().toISOString(),
-    validUntil: new Date(Date.now() + 24 * 3_600_000).toISOString(),
-  }));
+  api.rewrite('getOfflinePack', (body) => {
+    const pack = body as { policy: { offlineTenderMethodIds: string[] } };
+    return {
+      ...pack,
+      generatedAt: new Date().toISOString(),
+      validUntil: new Date(Date.now() + 24 * 3_600_000).toISOString(),
+      policy: {
+        ...pack.policy,
+        offlineTenderMethodIds: options.offlineMobileMoney
+          ? [...pack.policy.offlineTenderMethodIds, MOMO_METHOD_ID]
+          : pack.policy.offlineTenderMethodIds,
+      },
+      // CR-033, requested: the customer's receipt page (ADR 0046).
+      receiptLinkTemplate: RECEIPT_LINK_TEMPLATE,
+    };
+  });
   api.respond('openShift', (request) => {
     const body = request as {
       id: string;
@@ -106,6 +138,11 @@ export function installTillServer(api: FakeApi, lineTotal: (sale: SentSale) => n
           orderNo: `SO-2026-DDW-00${String(4300 + sale.deviceCounter)}`,
           receiptNo,
           exceptions: [],
+          // CR-033, requested: the server sends the SMS once, on the sale's first sync.
+          receiptMessage: {
+            channel: 'SMS',
+            status: sale.customerPhone === undefined ? 'NO_PHONE' : 'SENT',
+          },
         };
       }),
       cashMovementResults: [],

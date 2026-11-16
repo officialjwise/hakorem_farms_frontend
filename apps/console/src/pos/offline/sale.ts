@@ -73,6 +73,9 @@ export async function buildSale(
       paymentMethodId: tender.paymentMethodId,
       amountPesewas: tender.amountPesewas,
       ...(tender.paymentId !== undefined ? { paymentId: tender.paymentId } : {}),
+      ...(tender.unverifiedMobileMoney !== undefined
+        ? { unverifiedMobileMoney: tender.unverifiedMobileMoney }
+        : {}),
     })),
     ...(split.cashAppliedPesewas > 0 || others.length === 0
       ? [
@@ -116,6 +119,12 @@ export async function buildSale(
         name: tender.method.name,
         amountPesewas: tender.amountPesewas,
         tenderedPesewas: null,
+        ...(tender.unverifiedMobileMoney !== undefined
+          ? {
+              unverified: true,
+              reference: tender.unverifiedMobileMoney.providerReference ?? null,
+            }
+          : {}),
       })),
       ...(split.cashAppliedPesewas > 0 || others.length === 0
         ? [

@@ -11,6 +11,10 @@ export const test = base.extend<{ api: FakeApi }>({
       const api = new FakeApi();
       await api.install(context);
       await use(api);
+      // A request the page sent as the test ended (a list's next page, say) may still be in the fake's
+      // hands: its route.fetch then fails with "Test ended" outside any test, and the worker's next test
+      // does not run. Drop the routes and ignore what is in flight.
+      await context.unrouteAll({ behavior: 'ignoreErrors' });
     },
     { auto: true },
   ],

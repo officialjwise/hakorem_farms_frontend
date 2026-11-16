@@ -6,6 +6,8 @@ export {
   type ApiClientOptions,
   type CallOptions,
   type CallOptionsFor,
+  type OperationRow,
+  type RequestedOperation,
 } from './client';
 export {
   ApiError,

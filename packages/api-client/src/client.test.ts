@@ -144,6 +144,48 @@ describe('building the request from the contract', () => {
   });
 });
 
+describe('an operation a contract request asks for (ADR 0046)', () => {
+  const requested = {
+    request: 'CR-032',
+    operationId: 'listTillPinVerifiers',
+    method: 'get',
+    path: '/registers/{id}/pin-verifiers',
+    permission: 'pos.shift.open',
+    idempotent: false,
+    csrf: 'none',
+    public: false,
+    body: 'none',
+    device: true,
+  } as const;
+
+  it('goes through the same transport: path, cookies, the till credential, and a refusal as an ApiError', async () => {
+    const hooks = session({ getDeviceCredential: () => 'hkdev_T1.test' });
+    const { client, seen } = harness(
+      (_request, attempt) =>
+        attempt === 1 ? json({ verifiers: [] }) : json(envelope('FORBIDDEN'), 403),
+      { session: hooks },
+    );
+    expect(await client.callRequested(requested, { path: { id: 'r/1' } })).toEqual({
+      verifiers: [],
+    });
+    const request = nth(seen, 0);
+    expect(request.method).toBe('GET');
+    expect(request.url).toBe('http://api.test/v1/registers/r%2F1/pin-verifiers');
+    expect(request.headers.get('X-Device-Credential')).toBe('hkdev_T1.test');
+    expect(request.credentials).toBe('include');
+    await expect(client.callRequested(requested, { path: { id: 'r1' } })).rejects.toBeInstanceOf(
+      ApiError,
+    );
+  });
+
+  it('refuses to call a requested operation the contract now lists, so the request is deleted', () => {
+    const { client } = harness(() => json({}));
+    expect(() =>
+      client.callRequested({ ...requested, operationId: 'getOfflinePack' }, { path: { id: 'r1' } }),
+    ).toThrow(/is in the contract now/);
+  });
+});
+
 describe('error normalisation (one envelope)', () => {
   it('turns a non-2xx envelope into an ApiError carrying status, code, message and correlation id', async () => {
     const { client } = harness(() => json(envelope('FORBIDDEN'), 403));

@@ -11,6 +11,9 @@
 import { useSyncExternalStore } from 'react';
 import type { ApiClient, components } from '@hakorem/api-client';
 import { newRecordId } from '../../lib/clientId';
+import { requestedOn } from '../../requested/switch';
+import { listTillPinVerifiers, type PinApproval, type PinVerifier } from '../../requested/tillPin';
+import { NO_ATTEMPTS, afterFailure, lockoutRemainingMs, pinMatches, pinShapeOk } from '../pin/pin';
 import type { CartLine, OtherTender } from './cart';
 import { buildSale } from './sale';
 import { indexedDbStore, memoryStore, type TillStore } from './store';
@@ -21,6 +24,7 @@ import type {
   DeviceRecord,
   EntryFailure,
   HeldLocal,
+  PinApprovalRecord,
   SaleEntry,
   ShiftOpenEntry,
   ShiftRecord,
@@ -50,9 +54,19 @@ export interface TillState {
 
 const PROBE_MS = 30_000;
 
+/** How a PIN fared (CR-032). A wrong one says how many tries are left; a lockout says until when. */
+export type PinOutcome =
+  | { kind: 'ok'; verifier: PinVerifier; record: PinApprovalRecord | null }
+  | { kind: 'wrong'; attemptsLeft: number }
+  | { kind: 'locked-out'; until: string }
+  | { kind: 'not-a-pin' }
+  | { kind: 'no-verifier' };
+
 export interface TillDeps {
   store: TillStore;
   call: ApiClient['call'];
+  /** For the operations the contract does not list yet (ADR 0046). */
+  callRequested?: ApiClient['callRequested'];
   now?: () => Date;
   random?: () => number;
   /** Timers, for tests. */
@@ -75,6 +89,7 @@ export class Till {
   private readonly listeners = new Set<() => void>();
   private readonly store: TillStore;
   private readonly call: ApiClient['call'];
+  private readonly callRequested: ApiClient['callRequested'] | null;
   private readonly now: () => Date;
   private readonly random: () => number;
   private readonly setTimer: (run: () => void, ms: number) => unknown;
@@ -89,6 +104,7 @@ export class Till {
   constructor(deps: TillDeps) {
     this.store = deps.store;
     this.call = deps.call;
+    this.callRequested = deps.callRequested ?? null;
     this.now = deps.now ?? (() => new Date());
     this.random =
       deps.random ?? (() => (crypto.getRandomValues(new Uint32Array(1))[0] ?? 0) / 2 ** 32);
@@ -274,6 +290,118 @@ export class Till {
     await this.store.savePack(pack);
     const at = this.now().toISOString();
     await this.store.saveMeta({ ...meta, packFetchedAt: at, lastReachedServerAt: at });
+    await this.refreshPins(device.registerId);
+    await this.reload();
+  }
+
+  /**
+   * The PIN verifiers for this till, fetched with the pack while a staff session and the network are here
+   * (CR-032, `local_auth`). A refusal keeps what the till already holds; the lock screen says when there
+   * is no verifier to check a PIN against.
+   */
+  private async refreshPins(registerId: string): Promise<void> {
+    if (!requestedOn('CR-032') || this.callRequested === null) return;
+    const callRequested = this.callRequested;
+    try {
+      const issued = await listTillPinVerifiers({ callRequested }, registerId);
+      await this.store.saveLocalAuth(issued);
+    } catch {
+      // Kept as it was: an earlier verifier still checks a PIN, and none means no PIN on this till.
+    }
+  }
+
+  /** The verifier of the person, if the till holds one. */
+  private verifierFor(principalId: string): PinVerifier | null {
+    return (
+      this.state.snapshot?.localAuth?.verifiers.find((v) => v.principalId === principalId) ?? null
+    );
+  }
+
+  /**
+   * Checks one person's PIN on this till, counting a wrong one against them and locking them out at the
+   * policy's limit. With `approval`, the person must hold it, and the record of what approved it is made.
+   */
+  async checkPin(principalId: string, pin: string, approval?: PinApproval): Promise<PinOutcome> {
+    const { meta, localAuth } = this.snapshotOrThrow();
+    const verifier = this.verifierFor(principalId);
+    if (localAuth === null || verifier === null) return { kind: 'no-verifier' };
+    if (approval !== undefined && !verifier.approves.includes(approval)) {
+      return { kind: 'no-verifier' };
+    }
+    const now = this.now();
+    const attempts = meta.pinAttempts[principalId] ?? NO_ATTEMPTS;
+    if (lockoutRemainingMs(attempts, now) > 0 && attempts.lockedUntil !== null) {
+      return { kind: 'locked-out', until: attempts.lockedUntil };
+    }
+    if (!pinShapeOk(pin, localAuth.policy)) return { kind: 'not-a-pin' };
+    const matches = await pinMatches(pin, verifier);
+    const { meta: current } = this.snapshotOrThrow();
+    if (!matches) {
+      const next = afterFailure(attempts, localAuth.policy, now);
+      await this.store.saveMeta({
+        ...current,
+        pinAttempts: { ...current.pinAttempts, [principalId]: next },
+      });
+      await this.reload();
+      return next.lockedUntil !== null
+        ? { kind: 'locked-out', until: next.lockedUntil }
+        : { kind: 'wrong', attemptsLeft: localAuth.policy.maxAttempts - next.failures };
+    }
+    await this.store.saveMeta({
+      ...current,
+      pinAttempts: { ...current.pinAttempts, [principalId]: NO_ATTEMPTS },
+    });
+    await this.reload();
+    return {
+      kind: 'ok',
+      verifier,
+      record:
+        approval === undefined
+          ? null
+          : {
+              approval,
+              principalId,
+              displayName: verifier.displayName,
+              verifierVersion: verifier.version,
+              at: now.toISOString(),
+            },
+    };
+  }
+
+  /** Whether the shift's cashier can lock this till: only with a verifier to open it again. */
+  canLock(): boolean {
+    const shift = this.state.snapshot?.shift ?? null;
+    return shift !== null && this.verifierFor(shift.cashierId) !== null;
+  }
+
+  /** Locks the till until the shift's cashier enters their PIN. Selling, scanning and paying stop. */
+  async lock(): Promise<void> {
+    if (!this.canLock()) return;
+    const { meta } = this.snapshotOrThrow();
+    if (meta.locked) return;
+    await this.store.saveMeta({ ...meta, locked: true });
+    await this.reload();
+  }
+
+  /** Opens the till with the shift's cashier's PIN, on the device, with or without the network. */
+  async unlock(pin: string): Promise<PinOutcome> {
+    const { shift } = this.snapshotOrThrow();
+    if (shift === null) return { kind: 'no-verifier' };
+    const outcome = await this.checkPin(shift.cashierId, pin);
+    if (outcome.kind === 'ok') {
+      const { meta } = this.snapshotOrThrow();
+      await this.store.saveMeta({ ...meta, locked: false });
+      await this.reload();
+    }
+    return outcome;
+  }
+
+  /** Forgets the PIN verifiers and the lock: at shift close and at sign-out (OFFLINE_SYNC section 3). */
+  async forgetPins(): Promise<void> {
+    const snapshot = this.state.snapshot;
+    if (snapshot === null) return;
+    await this.store.saveLocalAuth(null);
+    await this.store.saveMeta({ ...snapshot.meta, pinAttempts: {}, locked: false });
     await this.reload();
   }
 
@@ -337,15 +465,14 @@ export class Till {
     others: (OtherTender & { method: PaymentMethodRef })[];
     cashHandedPesewas: number;
     customerPhone: string | null;
+    approvals?: PinApprovalRecord[];
   }): Promise<SaleEntry> {
     const { device, shift } = this.snapshotOrThrow();
     if (device === null || shift === null) throw new Error('There is no open shift on this till.');
-    const { entry, discountGivenPesewas } = await buildSale({
-      device,
-      shift,
-      ...input,
-      now: this.now(),
-    });
+    const { approvals = [], ...sale } = input;
+    const built = await buildSale({ device, shift, ...sale, now: this.now() });
+    const entry: SaleEntry = approvals.length > 0 ? { ...built.entry, approvals } : built.entry;
+    const { discountGivenPesewas } = built;
     await this.store.commitSale(entry, discountGivenPesewas);
     await this.reload();
     this.kick();
@@ -355,6 +482,7 @@ export class Till {
   /** A cash drop, pay-out or pay-in (section 10), queued like a sale. */
   async recordCashMovement(
     input: Omit<CashMovementCreate, 'id' | 'occurredAt'>,
+    approvals: PinApprovalRecord[] = [],
   ): Promise<CashMovementEntry> {
     const { shift } = this.snapshotOrThrow();
     if (shift === null) throw new Error('There is no open shift on this till.');
@@ -372,6 +500,7 @@ export class Till {
       failure: null,
       payload: { ...input, id, occurredAt: now.toISOString() },
       serverResult: null,
+      ...(approvals.length > 0 ? { approvals } : {}),
     };
     await this.store.putEntries([entry]);
     await this.reload();
@@ -400,10 +529,13 @@ export class Till {
   async endShift(): Promise<void> {
     const { shift, meta } = this.snapshotOrThrow();
     await this.store.saveShift(null);
+    await this.store.saveLocalAuth(null);
     await this.store.saveMeta({
       ...meta,
       counterGaps: [],
       lastShiftSeq: shift?.shiftSeq ?? meta.lastShiftSeq,
+      pinAttempts: {},
+      locked: false,
     });
     await this.reload();
   }

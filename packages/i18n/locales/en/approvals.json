@@ -55,6 +55,7 @@
     "CREDIT_NOTE": "Credit note",
     "PAYMENT_REVERSAL": "Payment reversal",
     "PERIOD_REOPEN": "Reopen a closed period",
+    "RECONCILIATION_BREAK": "Reconciliation break resolution",
     "MORTALITY_WRITE_OFF": "Death or cull write-off",
     "SUPPLIER_CREDIT_NOTE": "Supplier credit note",
     "SUPPLIER_INVOICE_VARIANCE": "Supplier invoice difference",

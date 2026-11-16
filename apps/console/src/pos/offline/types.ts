@@ -4,6 +4,8 @@
  * API shape here is the contract's; the rest is the till's own bookkeeping.
  */
 import type { components } from '@hakorem/api-client';
+import type { PinApproval, TillPinVerifiers } from '../../requested/tillPin';
+import type { PinAttempts } from '../pin/pin';
 import type { CartLine } from './cart';
 
 type Schemas = components['schemas'];
@@ -95,9 +97,30 @@ export interface ReceiptContent {
     amountPesewas: number;
   }[];
   totalPesewas: number;
-  tenders: { name: string; amountPesewas: number; tenderedPesewas: number | null }[];
+  tenders: {
+    name: string;
+    amountPesewas: number;
+    tenderedPesewas: number | null;
+    /** Mobile money taken offline on a supervisor's PIN (OFFLINE_SYNC 5.3): not yet verified. */
+    unverified?: boolean;
+    /** The reference the customer showed for it, if any. */
+    reference?: string | null;
+  }[];
   changePesewas: number;
   customerPhone: string | null;
+}
+
+/**
+ * A PIN that approved something on this till (CR-032): who, and which of their verifiers it was checked
+ * against. The contract carries the approver's id (`approvedById`, `witnessId`) but not the verifier
+ * version yet, so the version is kept here, beside the record, and shown on the queue screen.
+ */
+export interface PinApprovalRecord {
+  approval: PinApproval;
+  principalId: string;
+  displayName: string;
+  verifierVersion: number;
+  at: string;
 }
 
 export interface SaleEntry extends EntryBase {
@@ -109,12 +132,16 @@ export interface SaleEntry extends EntryBase {
   serverResult: SyncResultItem | null;
   /** The server's total for the order, read back after sync. Null until read. */
   serverTotalPesewas: number | null;
+  /** The PINs that approved part of this sale (an unverified mobile money tender). */
+  approvals?: PinApprovalRecord[];
 }
 
 export interface CashMovementEntry extends EntryBase {
   kind: 'CASH_MOVEMENT';
   payload: CashMovementCreate;
   serverResult: CashMovementSyncItem | null;
+  /** The witness's PIN, for a cash drop. */
+  approvals?: PinApprovalRecord[];
 }
 
 export interface ShiftOpenEntry extends EntryBase {
@@ -149,6 +176,10 @@ export interface TillMeta {
   packFetchedAt: string | null;
   /** The last shift's sequence on this register, for the next shift's provisional references. */
   lastShiftSeq: number | null;
+  /** Wrong PINs and lockouts on this till, by person (CR-032). */
+  pinAttempts: Record<string, PinAttempts>;
+  /** The till is locked until its cashier's PIN opens it. Kept, so a reload stays locked. */
+  locked: boolean;
 }
 
 export interface TillSnapshot {
@@ -156,6 +187,8 @@ export interface TillSnapshot {
   pack: OfflinePack | null;
   shift: ShiftRecord | null;
   meta: TillMeta;
+  /** The PIN verifiers the server issued for this till (`local_auth`, CR-032). Null where there are none. */
+  localAuth: TillPinVerifiers | null;
   /** In the order they were made. */
   entries: QueueEntry[];
   held: HeldLocal[];
@@ -167,6 +200,8 @@ export const EMPTY_META: TillMeta = {
   lastReachedServerAt: null,
   packFetchedAt: null,
   lastShiftSeq: null,
+  pinAttempts: {},
+  locked: false,
 };
 
 /** The statuses a record waits in. The rest are final, or need a person. */

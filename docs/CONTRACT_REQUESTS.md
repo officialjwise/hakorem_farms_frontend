@@ -514,6 +514,35 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 
 **Until this lands:** no offline unlock (a till whose session has expired offline cannot sell until it reconnects), no supervisor approval offline (so no unverified mobile money), and no cash drop witness (A-F9-04).
 
+**The exact shape (F10, 2026-11-16).** Read against 1.44.0 first: `TenderInput.unverifiedMobileMoney` already carries `payerPhone`, `network`, `providerReference` and `approvedById`, and `CashMovementCreate.witnessId` carries a drop's witness, so items 4 and 5 need only the verifier version. F10 builds the till against exactly this, behind `HK_REQUESTED_CONTRACT` (ADR 0046, ADR 0047):
+
+1. `listTillPinVerifiers`: `GET /registers/{id}/pin-verifiers`, staff session plus `X-Device-Credential` (security `deviceCredential`), permission `pos.shift.open`. 200 `TillPinVerifiers`; 401 `DEVICE_CREDENTIAL_INVALID` or `DEVICE_REVOKED` as for a sync.
+   ```yaml
+   TillPinVerifiers:
+     registerId: uuid
+     issuedAt: date-time
+     policy: # every till applies the same rule offline
+       minDigits: integer # 4
+       maxDigits: integer # 6
+       maxAttempts: integer # wrong PINs in a row before that person is locked out on the till
+       lockoutSeconds: integer
+       idleLockSeconds: integer # the till locks itself after this long untouched
+     verifiers: # the signed-in operator's, and each supervisor's at the register's branch
+       - principalId: uuid
+         displayName: string
+         version: integer # rises each time the PIN is set or reset
+         algorithm: PBKDF2-SHA256 # enum; Web Crypto has no Argon2 (ADR 0047)
+         iterations: integer
+         salt: string # base64, at least 16 bytes
+         hash: string # base64, 32 bytes: PBKDF2(PIN as UTF-8, salt, iterations)
+         approves: [OFFLINE_MOBILE_MONEY | CASH_DROP_WITNESS] # from the person's permissions at the branch
+   ```
+   Never the PIN. How a PIN is set, with its permission and audit, is the backend's to define.
+2. `UnverifiedMobileMoneyInput.approvedByVerifierVersion` (integer, required when the field lands) and `CashMovementCreate.witnessVerifierVersion` (integer, with `witnessId`): the verifier the PIN was checked against. The server records an approval by a revoked operator, a superseded verifier or someone without the approving permission as an exception, never silently. Until then the till keeps the version on its own record and shows it on the queue screen.
+3. The pack's `reasonCodes` include the `CASH_MOVEMENT` domain (unchanged from item 6).
+
+The PIN unlocks the till and records approvals only. The till enforces the attempt limit and the lockout per person, on the device.
+
 ## CR-033. A digital receipt the customer can open from a link (additive)
 
 - **Raised by:** frontend, ADR 0045 (owner, 2026-11-16): every sale produces a digital receipt, by SMS or a link; a printer is optional.
@@ -526,3 +555,9 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 3. **The SMS is sent once on sync** for a sale that carried `customerPhone`, with the link, the official number and the sale reference; and the sync result (or the order) says whether it was sent.
 
 **Until this lands:** the till shows the sale reference and its own receipt on screen; nothing reaches the customer's phone.
+
+**The exact shape (F10, 2026-11-16).** F10 builds the till's side against exactly this, behind `HK_REQUESTED_CONTRACT` (ADR 0046); the customer's page on the storefront waits for item 3:
+
+1. `OfflinePack.receiptLinkTemplate` (string, an absolute `https` URL containing `{saleId}`, for example `https://hakoremfarms.com/r/{saleId}`): the till makes the link offline from the sale's client id, so it can show and print it before the sale reaches the server.
+2. `SyncResultItem.receiptMessage` (object or null): `{ channel: SMS, status: QUEUED | SENT | FAILED | NO_PHONE }`. The server sends the SMS once, on the sale's first sync, to the sale's `customerPhone`, with the link, the official number and the sale reference; a resend (`DUPLICATE`) answers the first result's status and sends nothing.
+3. `getPublicReceipt`: `GET /shop/receipts/{saleId}`, public, cacheable for a recorded sale. 200 `PublicReceipt`: `{ saleId, state: RECORDING | RECORDED, saleReference, receiptNo (null while RECORDING), occurredAt, business: { name, phone }, lines: [{ name, quantity, saleUom, weightKg, stockUnitIdentifier, unitPricePesewas, amountPesewas }], totalPesewas, tenders: [{ name, amountPesewas, tenderedPesewas, unverified }], changePesewas, currency }`. An id the server has never seen answers 200 `RECORDING` with only `saleId` and `state`, never 404, so a link shown at the counter works before the sale syncs and says nothing about whether an id exists. `quantity` and `weightKg` are the contract's three-place strings.

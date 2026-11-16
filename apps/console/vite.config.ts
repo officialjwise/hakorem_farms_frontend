@@ -60,7 +60,17 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
     plugins: [react(), tailwindcss(), entryDocuments],
-    define: { 'process.env.HK_API_BASE_URL': JSON.stringify(env['HK_API_BASE_URL'] ?? '') },
+    // HK_REQUESTED_CONTRACT names the contract requests this build is built against (ADR 0046): the
+    // end-to-end build's fake server answers them; a build for a real API leaves it unset. Unit tests
+    // (mode `test`) read it live, so a test can switch a request on.
+    define: {
+      'process.env.HK_API_BASE_URL': JSON.stringify(env['HK_API_BASE_URL'] ?? ''),
+      ...(mode === 'test'
+        ? {}
+        : {
+            'process.env.HK_REQUESTED_CONTRACT': JSON.stringify(env['HK_REQUESTED_CONTRACT'] ?? ''),
+          }),
+    },
     build: {
       sourcemap: true,
       // dist/.vite/manifest.json: the chunk graph `pnpm budget:console` reads to tell a document's initial

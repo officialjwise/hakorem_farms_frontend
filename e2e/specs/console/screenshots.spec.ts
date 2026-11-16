@@ -3,6 +3,7 @@ import { expect, test } from '../../support/test';
 import type { FakeApi } from '../../support/fakeApi';
 import { signInWithTotp, USERS } from '../../support/helpers';
 import { installTillServer, openTillShift, scan } from '../../support/till';
+import { PEOPLE, installTillPins } from '../../support/requested';
 
 /**
  * Screenshots of every screen a phase built, for the owner to review from a phone (owner, 2026-11-15).
@@ -594,6 +595,162 @@ for (const shot of TILL_SHOTS) {
       await shot.act(page, api, (off) => api.setNetwork(context, !off));
       await page.screenshot({
         path: `../docs/screenshots/F09/${shot.name}-${width}.png`,
+        fullPage: true,
+        scale: 'css',
+      });
+    });
+  }
+}
+
+/**
+ * F10, the till PIN and the receipt, against CR-032 and CR-033 as requested (ADR 0046). As F09: the device
+ * is till T1 with the cashier's shift open first.
+ */
+const PRINTER_SCRIPT = () => {
+  const server = {
+    connected: true,
+    getPrimaryService: async () => ({
+      getCharacteristics: async () => [
+        {
+          properties: { write: true, writeWithoutResponse: false },
+          writeValue: async () => undefined,
+        },
+      ],
+    }),
+  };
+  Object.defineProperty(Navigator.prototype, 'bluetooth', {
+    configurable: true,
+    get: () => ({
+      getAvailability: async () => true,
+      requestDevice: async () => ({
+        name: 'MTP-II',
+        gatt: { connected: true, connect: async () => server },
+      }),
+    }),
+  });
+};
+
+async function sellTomatoes(page: Page, phone: string | null) {
+  await page.getByRole('button', { name: 'Tomatoes, crate' }).click();
+  await page.getByRole('button', { name: 'Take payment' }).click();
+  await page.getByRole('textbox', { name: /^Cash handed over/ }).fill('700');
+  if (phone !== null) {
+    await page.getByRole('textbox', { name: /^Customer's phone for the receipt/ }).fill(phone);
+  }
+  await page.getByRole('button', { name: 'Review the sale' }).click();
+  await page.getByRole('button', { name: 'Complete the sale' }).click();
+}
+
+async function approveMomoOffline(page: Page, offline: (off: boolean) => Promise<void>) {
+  await offline(true);
+  await page.getByRole('button', { name: 'Tomatoes, crate' }).click();
+  await page.getByRole('button', { name: 'Take payment' }).click();
+  const momo = page.getByRole('group', { name: 'Mobile money without the network' });
+  await momo.getByRole('textbox', { name: /^Amount/ }).fill('200');
+  await momo
+    .getByRole('textbox', { name: /^Customer's mobile money number/ })
+    .fill('+233245550142');
+  await momo.getByRole('textbox', { name: /^Transaction id/ }).fill('MP261113.1149.C41872');
+  await momo.getByLabel(/^PIN/).fill(PEOPLE.manager.pin);
+  await momo.getByRole('button', { name: 'Approve with this PIN' }).click();
+  await expect(page.getByText(/not yet verified, approved by Kwabena Owusu/)).toBeVisible();
+  await page.getByRole('textbox', { name: /^Cash handed over/ }).fill('500');
+}
+
+interface TenShot extends TillShot {
+  printer?: boolean;
+  offlineMobileMoney?: boolean;
+}
+
+const TEN_SHOTS: TenShot[] = [
+  {
+    name: 'till-locked',
+    act: async (page) => {
+      await page.getByRole('button', { name: 'Lock the till' }).click();
+      await page.getByLabel(/^PIN/).fill('1111');
+      await page.getByRole('button', { name: 'Open the till' }).click();
+      await expect(page.getByText(/^Wrong PIN\. 2 more wrong tries/)).toBeVisible();
+    },
+  },
+  {
+    name: 'pay-unverified-momo',
+    offlineMobileMoney: true,
+    act: async (page, _api, offline) => approveMomoOffline(page, offline),
+  },
+  {
+    name: 'sale-done-unverified-momo',
+    offlineMobileMoney: true,
+    act: async (page, _api, offline) => {
+      await approveMomoOffline(page, offline);
+      await page.getByRole('button', { name: 'Review the sale' }).click();
+      await page.getByRole('button', { name: 'Complete the sale' }).click();
+      await expect(page.locator('[data-slot="receipt-unverified"]')).toBeVisible();
+    },
+  },
+  {
+    name: 'cash-drop-witness',
+    act: async (page) => {
+      await page.getByRole('link', { name: 'Shift', exact: true }).click();
+      await page.getByRole('textbox', { name: /^Amount/ }).fill('500');
+      await page.getByLabel(/^PIN/).fill(PEOPLE.manager.pin);
+      await page.getByRole('button', { name: 'Approve with this PIN' }).click();
+      await expect(page.locator('[data-slot="cash-witness"]')).toBeVisible();
+    },
+  },
+  {
+    name: 'sale-done-digital-receipt',
+    act: async (page) => {
+      await sellTomatoes(page, '+233244550199');
+      await expect(page.getByText('Sent by SMS to +233244550199.')).toBeVisible();
+      await expect(page.locator('[data-slot="printer-unsupported"]')).toBeVisible();
+    },
+  },
+  {
+    name: 'sale-done-printer',
+    printer: true,
+    act: async (page) => {
+      await sellTomatoes(page, null);
+      await page.getByRole('button', { name: 'Connect a receipt printer' }).click();
+      await page.getByRole('button', { name: 'Print on MTP-II' }).click();
+      await expect(page.getByText('Printed on MTP-II.')).toBeVisible();
+    },
+  },
+  {
+    name: 'queue-approval',
+    offlineMobileMoney: true,
+    act: async (page, _api, offline) => {
+      await approveMomoOffline(page, offline);
+      await page.getByRole('button', { name: 'Review the sale' }).click();
+      await page.getByRole('button', { name: 'Complete the sale' }).click();
+      await page.getByRole('link', { name: 'See sales to send' }).click();
+      await expect(page.locator('[data-slot="queue-approvals"]')).toBeVisible();
+    },
+  },
+];
+
+for (const shot of TEN_SHOTS) {
+  for (const width of WIDTHS) {
+    test(`@screenshots F10 ${shot.name} at ${width}`, async ({ page, context, api }) => {
+      if (shot.printer === true) await page.addInitScript(PRINTER_SCRIPT);
+      else {
+        // Chromium on Linux has no Web Bluetooth, as Safari on iOS has none: the words show.
+        await page.addInitScript(() => {
+          Object.defineProperty(Navigator.prototype, 'bluetooth', {
+            configurable: true,
+            get: () => undefined,
+          });
+        });
+      }
+      installTillServer(api, (sale) => sale.tenders.reduce((sum, t) => sum + t.amountPesewas, 0), {
+        offlineMobileMoney: shot.offlineMobileMoney === true,
+      });
+      installTillPins(api);
+      await page.emulateMedia({ colorScheme: 'light' });
+      await page.setViewportSize({ width, height: width === 360 ? 800 : 900 });
+      await openTillShift(page);
+      await shot.act(page, api, (off) => api.setNetwork(context, !off));
+      await page.screenshot({
+        path: `../docs/screenshots/F10/${shot.name}-${width}.png`,
         fullPage: true,
         scale: 'css',
       });

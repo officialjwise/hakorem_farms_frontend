@@ -153,6 +153,16 @@ export interface OtherTender {
   amountPesewas: number;
   /** A provider payment already cleared online (mobile money, card): the tender references it. */
   paymentId?: string;
+  /**
+   * Mobile money taken offline on a supervisor's PIN, not verified (OFFLINE_SYNC 5.3 and 9.9): the
+   * contract's `UnverifiedMobileMoneyInput`. Offered only where the pack lists the method offline.
+   */
+  unverifiedMobileMoney?: {
+    payerPhone: string;
+    network: 'MTN' | 'TELECEL' | 'AIRTELTIGO';
+    providerReference?: string;
+    approvedById: string;
+  };
 }
 
 export interface TenderSplit {

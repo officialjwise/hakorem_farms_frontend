@@ -24,10 +24,11 @@ const RETURN_GRACE_MS = 150;
  *
  * It never overrides Radix's trap or its focus return; it acts after them.
  */
-export function useBarcodeTrap(field: RefObject<HTMLInputElement | null>): void {
+export function useBarcodeTrap(field: RefObject<HTMLInputElement | null>, enabled = true): void {
   useEffect(() => {
     const input = field.current;
-    if (input === null) return;
+    // A locked till (CR-032) takes no scans: the PIN field has the keys.
+    if (input === null || !enabled) return;
 
     const overlayOpen = () => document.querySelector(OVERLAY) !== null;
     const take = () => {
@@ -95,5 +96,5 @@ export function useBarcodeTrap(field: RefObject<HTMLInputElement | null>): void 
       document.removeEventListener('pointerdown', onPointerDown, true);
       input.removeEventListener('focusout', onFocusOut);
     };
-  }, [field]);
+  }, [field, enabled]);
 }

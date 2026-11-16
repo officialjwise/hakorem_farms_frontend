@@ -6,6 +6,7 @@ import { PermissionGate } from '../routing/gates';
 import type { RouteHandle } from '../routing/handle';
 import { PosShell } from '../shells/PosShell';
 import { posAuthRoutes } from './authRoutes';
+import { TILL_PARTS } from './parts';
 import { SaleScreen } from './screens/SaleScreen';
 
 const till = (permission: string, crumb: RouteHandle['crumb']): RouteHandle => ({
@@ -28,7 +29,9 @@ const SCREENS = {
 };
 
 export function preloadTillScreens(): Promise<unknown> {
-  return Promise.allSettled(Object.values(SCREENS).map((load) => load()));
+  return Promise.allSettled(
+    [...Object.values(SCREENS), ...Object.values(TILL_PARTS)].map((load) => load()),
+  );
 }
 
 /**

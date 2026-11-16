@@ -136,6 +136,24 @@ test.describe('stock documents', () => {
       status: 'DRAFT',
       adjustmentNo: null,
     }));
+    // The write-off reason this test means. The contract's example dropped it in 1.43.0 (CR-030
+    // rewrote the list around the billing reasons), so the test names it rather than lean on the example.
+    api.rewrite('listReasonCodes', (body) => {
+      const list = body as { data: Record<string, unknown>[] };
+      return {
+        ...list,
+        data: [
+          ...list.data,
+          {
+            code: 'EXPIRED',
+            domain: 'WASTAGE',
+            description: 'Past expiry date',
+            requiresNote: false,
+            lossAccountGroup: 'WASTAGE',
+          },
+        ],
+      };
+    });
     await signIn(page, USERS.storekeeper, '/stock-adjustments/new');
     await expect(page.getByRole('heading', { name: 'New adjustment', level: 1 })).toBeVisible();
     const pick = async (label: RegExp, option: string) => {

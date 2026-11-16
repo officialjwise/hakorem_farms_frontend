@@ -176,7 +176,11 @@
     "saving": "Keeping the sale on this till",
     "sendsNow": "It is sent to the server at once; the official receipt number follows.",
     "queuedOffline": "The till is offline: the sale waits on this till and is sent when it reconnects.",
-    "failed": "The sale was not completed"
+    "failed": "The sale was not completed",
+    "phone": "Customer's phone for the receipt (optional)",
+    "phoneHint": "With the country code, for example +233244512876. The receipt goes by SMS.",
+    "phoneError": "A phone number starts with + and the country code.",
+    "phoneConfirm": "Receipt by SMS to {{phone}}"
   },
   "momo": {
     "amount": "Mobile money amount (GH₵)",
@@ -204,9 +208,10 @@
     "queued": "Kept on this till as {{ref}}; the official number follows when it is sent.",
     "refused": "The server refused this sale",
     "exceptions": "The server recorded the sale and raised these for a manager",
-    "print": "Print the receipt",
+    "print": "Print on the receipt printer",
     "next": "Next sale",
-    "queue": "See sales to send"
+    "queue": "See sales to send",
+    "receiptHeading": "The customer's receipt"
   },
   "receipt": {
     "label": "Receipt {{ref}}",
@@ -215,7 +220,7 @@
     "cashier": "Served by {{name}}",
     "provisional": "Sale reference",
     "official": "Receipt no.",
-    "officialFollows": "Follows when sent",
+    "officialFollows": "Follows when the sale is recorded",
     "lines": "Items",
     "item": "Item",
     "amount": "Amount",
@@ -224,7 +229,11 @@
     "handed": "{{name}} handed over",
     "saleId": "Sale id",
     "thanks": "Thank you",
-    "copyMarker": "COPY: reprint of a receipt already given, not a new sale"
+    "copyMarker": "COPY: reprint of a receipt already given, not a new sale",
+    "unverified": "Mobile money, not yet verified",
+    "reference": "Ref.",
+    "scan": "Scan for your receipt",
+    "printCopy": "COPY: reprint, not a new sale"
   },
   "held": {
     "hold": "Hold this sale",
@@ -289,10 +298,15 @@
     "differsServer": "The server recorded",
     "differsBody": "The server's figure stands. Tell a manager, so the difference is looked at.",
     "refused": "The server refused this record",
-    "copy": "Print a copy",
-    "copyNamed": "Print a copy of {{ref}}",
+    "copy": "Copy of the receipt",
+    "copyNamed": "Copy of the receipt {{ref}}",
     "copyTitle": "A copy of the receipt",
-    "printCopy": "Print the copy"
+    "printCopy": "Print a copy on the printer",
+    "approvedBy": "{{what}}: {{name}}'s PIN (version {{version}})",
+    "approval": {
+      "OFFLINE_MOBILE_MONEY": "Mobile money approved",
+      "CASH_DROP_WITNESS": "Witnessed"
+    }
   },
   "setup": {
     "title": "Set up this till",
@@ -373,7 +387,11 @@
     "record": "Record it",
     "recording": "Recording",
     "recorded": "{{kind}} recorded on this till.",
-    "failed": "It was not recorded"
+    "failed": "It was not recorded",
+    "witness": "Witness to the cash drop",
+    "witnessHint": "The person who takes the cash enters their PIN on this till.",
+    "witnessed": "Witnessed by {{name}}",
+    "noWitness": "No one on this till can witness a cash drop with a PIN. It is recorded without a witness."
   },
   "report": {
     "titleX": "X report: the shift so far",
@@ -492,5 +510,68 @@
     "doneTitle": "Return {{number}} is done",
     "doneRefund": "Refund",
     "doneCreditNote": "Credit note {{number}}"
+  },
+  "digital": {
+    "title": "Digital receipt",
+    "smsPending": "It goes by SMS to {{phone}} once the server has recorded the sale.",
+    "smsQueued": "The server is sending it by SMS to {{phone}}.",
+    "smsSent": "Sent by SMS to {{phone}}.",
+    "smsFailed": "The SMS to {{phone}} did not go",
+    "smsFailedBody": "Show the customer the receipt link, or read them the sale reference.",
+    "smsNoServer": "The phone number {{phone}} goes with the sale. This server does not send receipts by SMS yet.",
+    "noPhone": "No phone number was given, so no SMS goes.",
+    "link": "Receipt link",
+    "linkBody": "The customer opens it on their own phone. It shows the sale as being recorded until the server has it.",
+    "noLink": "This server offers no receipt link yet: the receipt is the one on this screen."
+  },
+  "printer": {
+    "title": "Receipt printer",
+    "optional": "A printer is optional. The sale is complete without one.",
+    "unsupported": "This browser cannot use a Bluetooth printer. Safari on iPhone and iPad has no Web Bluetooth; Chrome on Android has. The customer's receipt is the digital one.",
+    "off": "Bluetooth is off or missing on this device. Turn it on to print a receipt.",
+    "connect": "Connect a receipt printer",
+    "connecting": "Choosing a printer",
+    "print": "Print on {{name}}",
+    "printUnnamed": "Print on the printer",
+    "printing": "Printing",
+    "printed": "Printed on {{name}}.",
+    "cancelled": "No printer was chosen.",
+    "connectFailed": "The printer did not connect",
+    "connectFailedBody": "Check it is on, near the till and not connected to another device, then try again.",
+    "printFailed": "The printer did not print",
+    "printFailedBody": "Check it is on and has paper, then print again. The sale is complete either way.",
+    "checking": "Checking for Bluetooth"
+  },
+  "pin": {
+    "label": "PIN",
+    "hint": "{{min}} to {{max}} digits.",
+    "who": "Whose PIN",
+    "wrong_one": "Wrong PIN. {{count}} more wrong try locks {{name}} out on this till.",
+    "wrong_other": "Wrong PIN. {{count}} more wrong tries lock {{name}} out on this till.",
+    "lockedOut": "{{name}} is locked out on this till until {{time}}.",
+    "notAPin": "A PIN is {{min}} to {{max}} digits.",
+    "noVerifier": "This till holds no PIN for {{name}}. They must sign in on this till while it is online first.",
+    "approve": "Approve with this PIN",
+    "checking": "Checking the PIN",
+    "approvedBy": "Approved by {{name}}'s PIN",
+    "noneHere": "No one who can approve this has a PIN on this till. A supervisor must sign in on it while it is online first."
+  },
+  "lock": {
+    "title": "This till is locked",
+    "body": "{{name}}'s shift. Enter your PIN to open it. It opens with or without the network.",
+    "open": "Open the till",
+    "opening": "Checking the PIN",
+    "signOut": "Locked out, or not your shift? Sign out. Nothing on this till is lost: the sales wait to be sent."
+  },
+  "unverified": {
+    "title": "Mobile money without the network",
+    "body": "The till cannot check this payment. A supervisor approves it with their PIN, the receipt says it is not yet verified, and it is matched to the provider's statement later.",
+    "amount": "Amount (GH₵)",
+    "phone": "Customer's mobile money number",
+    "reference": "Transaction id the customer shows (if any)",
+    "approver": "Supervisor approving",
+    "taken": "{{name}}, not yet verified, approved by {{approver}}",
+    "add": "Take it as not yet verified",
+    "unavailable": "Mobile money without the network needs a supervisor's PIN on this till, which it does not hold. Take cash."
   }
 }

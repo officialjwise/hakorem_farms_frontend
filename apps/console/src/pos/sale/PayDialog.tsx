@@ -16,27 +16,44 @@ import {
 import { useAuth } from '../../auth/AuthProvider';
 import { useApiMutation } from '../../data/api';
 import { newRecordId } from '../../lib/clientId';
-import { cartTotal, lineAmount, splitTender, type CartLine } from '../offline/cart';
-import { getTill } from '../offline/till';
-import type { OfflinePack, SaleEntry } from '../offline/types';
+import { requestedOn } from '../../requested/switch';
+import {
+  cartTotal,
+  lineAmount,
+  splitTender,
+  type CartLine,
+  type OtherTender,
+} from '../offline/cart';
+import { getTill, useTill } from '../offline/till';
+import type { OfflinePack, PinApprovalRecord, SaleEntry } from '../offline/types';
+import { approvers } from '../pin/pin';
+import { PinApprovalField } from '../pin/PinCheck';
 import { tenderMethods } from './catalogue';
 
 type PaymentMethodRef = components['schemas']['PaymentMethodRef'];
 type Payment = components['schemas']['Payment'];
 
+/** A tender other than cash, taken before cash pays the rest: cleared online, or unverified offline. */
 interface ClearedTender {
+  key: string;
   method: PaymentMethodRef;
   paymentMethodId: string;
   amountPesewas: number;
-  paymentId: string;
-  reference: string;
+  paymentId?: string;
+  unverifiedMobileMoney?: OtherTender['unverifiedMobileMoney'];
+  /** What the cashier and the confirmation read. */
+  label: string;
+  /** The supervisor's PIN that approved an unverified tender (CR-032). */
+  approval?: PinApprovalRecord;
 }
 
 /**
  * Taking payment (FR-POS split tender): cash, and, while online, mobile money the customer approves on
- * their phone, which counts only once the provider has cleared it (a verified payment, OFFLINE_SYNC 5.3).
- * Offline the till takes only the pack's offline methods: cash. Change comes from cash only. Then a
- * confirmation with every amount before anything is written (BUILD_PROMPT), and the sale is queued.
+ * their phone, which counts only once the provider has cleared it (a verified payment). Offline the till
+ * takes only the pack's offline methods: cash, and mobile money only where the pack lists it, as an
+ * unverified tender a supervisor approves with their PIN (OFFLINE_SYNC 5.3, CR-032). Change comes from
+ * cash only. The customer's phone, if given, takes the digital receipt (ADR 0045). Then a confirmation with
+ * every amount before anything is written (BUILD_PROMPT), and the sale is queued.
  */
 export function PayDialog({
   lines,
@@ -62,9 +79,13 @@ export function PayDialog({
   const [step, setStep] = useState<'tender' | 'confirm'>('tender');
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
+  const [customerPhone, setCustomerPhone] = useState('');
+  const phone = customerPhone.replace(/\s+/g, '');
+  const phoneOk = phone === '' || PHONE.test(phone);
 
   const split = splitTender(total, cleared, handed ?? 0);
-  const canReview = cash !== null && !split.otherExceedsTotal && split.shortPesewas === 0;
+  const canReview =
+    cash !== null && !split.otherExceedsTotal && split.shortPesewas === 0 && phoneOk;
 
   const complete = () => {
     if (cash === null) return;
@@ -74,14 +95,18 @@ export function PayDialog({
       .completeSale({
         lines,
         cashMethod: cash,
-        others: cleared.map(({ method, paymentMethodId, amountPesewas, paymentId }) => ({
-          method,
-          paymentMethodId,
-          amountPesewas,
-          paymentId,
-        })),
+        others: cleared.map(
+          ({ method, paymentMethodId, amountPesewas, paymentId, unverifiedMobileMoney }) => ({
+            method,
+            paymentMethodId,
+            amountPesewas,
+            ...(paymentId !== undefined ? { paymentId } : {}),
+            ...(unverifiedMobileMoney !== undefined ? { unverifiedMobileMoney } : {}),
+          }),
+        ),
         cashHandedPesewas: handed ?? 0,
-        customerPhone: null,
+        customerPhone: phone === '' ? null : phone,
+        approvals: cleared.flatMap((tender) => (tender.approval ? [tender.approval] : [])),
       })
       .then(onDone)
       .catch((error: unknown) => setFailed(error instanceof Error ? error.message : String(error)))
@@ -124,14 +149,18 @@ export function PayDialog({
         {step === 'tender' ? (
           <>
             {cleared.map((tender) => (
-              <p key={tender.paymentId} className="flex flex-wrap justify-between gap-2">
-                <span>
-                  {t('pay.cleared', { name: tender.method.name, reference: tender.reference })}
-                </span>
+              <p key={tender.key} className="flex flex-wrap justify-between gap-2">
+                <span>{tender.label}</span>
                 <MoneyDisplay pesewas={tender.amountPesewas} />
               </p>
             ))}
-            {momo !== null && auth.can('pay.payment.initiate') ? (
+            {momo !== null && !online ? (
+              <UnverifiedMobileMoney
+                method={momo}
+                remaining={split.cashAppliedPesewas}
+                onTaken={(tender) => setCleared((current) => [...current, tender])}
+              />
+            ) : momo !== null && auth.can('pay.payment.initiate') ? (
               <MobileMoney
                 method={momo}
                 remaining={split.cashAppliedPesewas}
@@ -144,6 +173,19 @@ export function PayDialog({
             )}
             <Field label={t('pay.handed')} hint={t('pay.handedHint')}>
               <MoneyInput value={handed} onValueChange={setHanded} />
+            </Field>
+            <Field
+              label={t('pay.phone')}
+              hint={t('pay.phoneHint')}
+              error={phoneOk ? undefined : t('pay.phoneError')}
+            >
+              <Input
+                type="tel"
+                inputMode="tel"
+                value={customerPhone}
+                onChange={(event) => setCustomerPhone(event.target.value)}
+                autoComplete="off"
+              />
             </Field>
             <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1">
               <dt>{t('pay.cashDue')}</dt>
@@ -180,11 +222,7 @@ export function PayDialog({
             </ul>
             <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-border pt-2">
               {cleared.map((tender) => (
-                <Row
-                  key={tender.paymentId}
-                  term={tender.method.name}
-                  pesewas={tender.amountPesewas}
-                />
+                <Row key={tender.key} term={tender.label} pesewas={tender.amountPesewas} />
               ))}
               {split.cashAppliedPesewas > 0 || cleared.length === 0 ? (
                 <>
@@ -194,6 +232,7 @@ export function PayDialog({
               ) : null}
               <Row term={t('pay.changeDue')} pesewas={split.changePesewas} strong />
             </dl>
+            {phone !== '' ? <p>{t('pay.phoneConfirm', { phone })}</p> : null}
             <p className="text-sm">{online ? t('pay.sendsNow') : t('pay.queuedOffline')}</p>
             {failed !== null ? (
               <Alert severity="critical" title={t('pay.failed')}>
@@ -257,11 +296,15 @@ function MobileMoney({
     setPayment(answer);
     if (answer.status === 'CLEARED') {
       onCleared({
+        key: answer.id,
         method,
         paymentMethodId: method.id,
         amountPesewas: answer.amountPesewas,
         paymentId: answer.id,
-        reference: answer.paymentNo ?? answer.providerReference ?? answer.id,
+        label: t('pay.cleared', {
+          name: method.name,
+          reference: answer.paymentNo ?? answer.providerReference ?? answer.id,
+        }),
       });
       setPayment(null);
       setAmount(null);
@@ -368,6 +411,105 @@ function MobileMoney({
             ? ` ${t('referenceIs', { reference: error.correlationId })}`
             : ''}
         </Alert>
+      ) : null}
+    </fieldset>
+  );
+}
+
+/**
+ * Mobile money with no network (OFFLINE_SYNC 5.3 and 9.9): offered only where the pack lists the method
+ * offline (the branch's setting), and taken only on a supervisor's PIN checked on this till (CR-032). The
+ * receipt says it is not yet verified; the server puts it on the unmatched payment queue.
+ */
+function UnverifiedMobileMoney({
+  method,
+  remaining,
+  onTaken,
+}: {
+  method: PaymentMethodRef;
+  remaining: number;
+  onTaken: (tender: ClearedTender) => void;
+}) {
+  const { t } = useTranslation('pos');
+  const { snapshot } = useTill();
+  const [amount, setAmount] = useState<number | null>(null);
+  const [phone, setPhone] = useState('');
+  const [network, setNetwork] = useState<(typeof NETWORKS)[number]>('MTN');
+  const [reference, setReference] = useState('');
+  const [round, setRound] = useState(0);
+  const localAuth = snapshot?.localAuth ?? null;
+  const payer = phone.replace(/\s+/g, '');
+  const ready = amount !== null && amount > 0 && amount <= remaining && PHONE.test(payer);
+
+  if (!requestedOn('CR-032') || localAuth === null) {
+    return <p className="text-sm text-fg-muted">{t('unverified.unavailable')}</p>;
+  }
+  return (
+    <fieldset
+      className="grid gap-3 rounded-md border border-border p-3"
+      data-slot="unverified-momo"
+    >
+      <legend className="px-1 font-semibold">
+        <Smartphone aria-hidden="true" className="me-1 inline size-icon-md" />
+        {t('unverified.title')}
+      </legend>
+      <p className="text-sm">{t('unverified.body')}</p>
+      <Field label={t('unverified.amount')}>
+        <MoneyInput value={amount} onValueChange={setAmount} />
+      </Field>
+      <Field label={t('unverified.phone')} hint={t('momo.phoneHint')}>
+        <Input
+          type="tel"
+          inputMode="tel"
+          value={phone}
+          onChange={(event) => setPhone(event.target.value)}
+          autoComplete="off"
+        />
+      </Field>
+      <Field label={t('momo.network')}>
+        <Select
+          value={network}
+          onValueChange={(value) => setNetwork(value as (typeof NETWORKS)[number])}
+          options={NETWORKS.map((value) => ({ value, label: t(`momo.networks.${value}`) }))}
+        />
+      </Field>
+      <Field label={t('unverified.reference')}>
+        <Input
+          value={reference}
+          onChange={(event) => setReference(event.target.value)}
+          autoComplete="off"
+        />
+      </Field>
+      {ready ? (
+        <PinApprovalField
+          key={round}
+          approval="OFFLINE_MOBILE_MONEY"
+          approvers={approvers(localAuth.verifiers, 'OFFLINE_MOBILE_MONEY')}
+          policy={localAuth.policy}
+          label={t('unverified.approver')}
+          onApproved={(record) => {
+            if (amount === null) return;
+            const providerReference = reference.trim();
+            onTaken({
+              key: newRecordId(),
+              method,
+              paymentMethodId: method.id,
+              amountPesewas: amount,
+              unverifiedMobileMoney: {
+                payerPhone: payer,
+                network,
+                ...(providerReference !== '' ? { providerReference } : {}),
+                approvedById: record.principalId,
+              },
+              label: t('unverified.taken', { name: method.name, approver: record.displayName }),
+              approval: record,
+            });
+            setAmount(null);
+            setPhone('');
+            setReference('');
+            setRound((n) => n + 1);
+          }}
+        />
       ) : null}
     </fieldset>
   );

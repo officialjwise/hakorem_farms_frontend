@@ -1,4 +1,4 @@
-import { CloudUpload, Printer } from 'lucide-react';
+import { CloudUpload, KeyRound, ReceiptText } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Button, EmptyState, MoneyDisplay, Skeleton, formatDateTime } from '@hakorem/ui';
@@ -7,12 +7,14 @@ import { needsAttention, pendingCount, totalDiffers } from '../offline/sync';
 import { getTill, useTill } from '../offline/till';
 import type { QueueEntry, SaleEntry } from '../offline/types';
 import { EntryStatus, Receipt } from '../presentation';
+import { LazyReceiptOut } from '../parts';
 
 /**
  * The till's queue (OFFLINE_SYNC section 6): every sale, cash movement and shift open on this device that the
  * server has not confirmed, or confirmed in the last 24 hours. A record the server refused stays here in
  * words, with its reference, for a manager; a sale whose total on the server differs from the till's says
- * both figures. Counter gaps the server reports are shown. A copy of a provisional receipt prints marked as
+ * both figures. Counter gaps the server reports are shown. A PIN that approved a record is named with its
+ * verifier version (CR-032). A copy of a provisional receipt prints marked as
  * a copy. Permission: the till's (`pos.sale.create`).
  */
 export function QueueScreen() {
@@ -28,7 +30,7 @@ export function QueueScreen() {
 
   return (
     <div className="grid gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-bold">{t('queue.title')}</h2>
         <Button
           size="lg"
@@ -41,11 +43,7 @@ export function QueueScreen() {
           {t('queue.sendNow')}
         </Button>
       </div>
-      <section
-        aria-labelledby="queue-summary"
-        className="grid gap-2 print:hidden"
-        data-slot="queue-summary"
-      >
+      <section aria-labelledby="queue-summary" className="grid gap-2" data-slot="queue-summary">
         <h3 id="queue-summary" className="sr-only">
           {t('queue.summary')}
         </h3>
@@ -100,7 +98,7 @@ export function QueueScreen() {
           description={t('queue.emptyBody')}
         />
       ) : (
-        <ol className="grid gap-2 print:hidden" aria-label={t('queue.records')}>
+        <ol className="grid gap-2" aria-label={t('queue.records')}>
           {[...snapshot.entries].reverse().map((entry) => (
             <Row key={entry.id} entry={entry} onCopy={setCopy} />
           ))}
@@ -108,16 +106,13 @@ export function QueueScreen() {
       )}
       {copy !== null ? (
         <section aria-label={t('queue.copyTitle')} className="grid gap-2">
-          <div className="flex flex-wrap gap-2 print:hidden">
-            <Button onClick={() => window.print()}>
-              <Printer aria-hidden="true" />
-              {t('queue.printCopy')}
-            </Button>
+          <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setCopy(null)}>
               {t('close')}
             </Button>
           </div>
           <Receipt receipt={copy.receipt} officialNo={copy.serverResult?.receiptNo ?? null} copy />
+          <LazyReceiptOut entry={copy} copy />
         </section>
       ) : null}
     </div>
@@ -173,7 +168,7 @@ function Row({ entry, onCopy }: { entry: QueueEntry; onCopy: (entry: SaleEntry) 
               onClick={() => onCopy(entry)}
               aria-label={t('queue.copyNamed', { ref: entry.payload.provisionalRef })}
             >
-              <Printer aria-hidden="true" />
+              <ReceiptText aria-hidden="true" />
               {t('queue.copy')}
             </Button>
           </div>
@@ -187,6 +182,23 @@ function Row({ entry, onCopy }: { entry: QueueEntry; onCopy: (entry: SaleEntry) 
           {t('queue.float')} <MoneyDisplay pesewas={entry.payload.openingFloatPesewas} />
         </p>
       )}
+      {entry.kind !== 'SHIFT_OPEN' && (entry.approvals ?? []).length > 0 ? (
+        <ul className="grid gap-1 text-sm" data-slot="queue-approvals">
+          {(entry.approvals ?? []).map((record) => (
+            <li
+              key={`${record.approval}-${record.principalId}`}
+              className="flex items-center gap-1"
+            >
+              <KeyRound aria-hidden="true" className="size-icon-sm" />
+              {t('queue.approvedBy', {
+                what: t(`queue.approval.${record.approval}`),
+                name: record.displayName,
+                version: record.verifierVersion,
+              })}
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {entry.failure !== null ? (
         <Alert severity="critical" title={t('queue.refused')}>
           {entry.failure.message}

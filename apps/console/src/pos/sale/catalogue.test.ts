@@ -123,6 +123,7 @@ const snapshot = (over: Partial<TillSnapshot> = {}): TillSnapshot => ({
   pack: PACK,
   shift: null,
   meta: { ...EMPTY_META, lastReachedServerAt: '2026-11-16T08:00:00Z' },
+  localAuth: null,
   entries: [],
   held: [],
   syncLog: [],

@@ -4,6 +4,7 @@
  * the device counter's increment and the queue record are written in the same transaction (section 4.2),
  * so a sale that fails to save does not consume a counter, and a counter is never reused.
  */
+import type { TillPinVerifiers } from '../../requested/tillPin';
 import {
   EMPTY_META,
   type DeviceRecord,
@@ -23,6 +24,7 @@ export interface TillStore {
   savePack(pack: OfflinePack | null): Promise<void>;
   saveShift(shift: ShiftRecord | null): Promise<void>;
   saveMeta(meta: TillMeta): Promise<void>;
+  saveLocalAuth(localAuth: TillPinVerifiers | null): Promise<void>;
   putEntries(entries: readonly QueueEntry[]): Promise<void>;
   removeEntries(ids: readonly string[]): Promise<void>;
   /**
@@ -64,7 +66,8 @@ export function memoryStore(initial?: Partial<TillSnapshot>): TillStore {
   let device = initial?.device ?? null;
   let pack = initial?.pack ?? null;
   let shift = initial?.shift ?? null;
-  let meta: TillMeta = initial?.meta ?? { ...EMPTY_META };
+  let meta: TillMeta = { ...EMPTY_META, ...initial?.meta };
+  let localAuth = initial?.localAuth ?? null;
   const queue = new Map<string, QueueEntry>((initial?.entries ?? []).map((e) => [e.id, e]));
   const held = new Map<string, HeldLocal>((initial?.held ?? []).map((h) => [h.id, h]));
   let syncLog: SyncLogEntry[] = initial?.syncLog ?? [];
@@ -75,6 +78,7 @@ export function memoryStore(initial?: Partial<TillSnapshot>): TillStore {
         pack,
         shift,
         meta,
+        localAuth,
         entries: sortEntries([...queue.values()]),
         held: [...held.values()],
         syncLog,
@@ -83,6 +87,7 @@ export function memoryStore(initial?: Partial<TillSnapshot>): TillStore {
     savePack: async (value) => void (pack = copy(value)),
     saveShift: async (value) => void (shift = copy(value)),
     saveMeta: async (value) => void (meta = copy(value)),
+    saveLocalAuth: async (value) => void (localAuth = copy(value)),
     putEntries: async (entries) => entries.forEach((e) => queue.set(e.id, copy(e))),
     removeEntries: async (ids) => ids.forEach((id) => queue.delete(id)),
     commitSale: async (entry, discountGivenPesewas) => {
@@ -139,7 +144,7 @@ export function indexedDbStore(): TillStore {
   let db: Promise<IDBDatabase> | null = null;
   const database = () => (db ??= open());
 
-  async function put(name: 'device' | 'pack' | 'shift' | 'meta', value: unknown) {
+  async function put(name: 'device' | 'pack' | 'shift' | 'meta' | 'local_auth', value: unknown) {
     const tx = (await database()).transaction(RECORDS, 'readwrite');
     tx.objectStore(RECORDS).put(value, name);
     await done(tx);
@@ -149,11 +154,12 @@ export function indexedDbStore(): TillStore {
     async read() {
       const tx = (await database()).transaction([RECORDS, QUEUE, HELD, SYNC_LOG], 'readonly');
       const records = tx.objectStore(RECORDS);
-      const [device, pack, shift, meta, entries, held, syncLog] = await Promise.all([
+      const [device, pack, shift, meta, localAuth, entries, held, syncLog] = await Promise.all([
         request(records.get('device')),
         request(records.get('pack')),
         request(records.get('shift')),
         request(records.get('meta')),
+        request(records.get('local_auth')),
         request(tx.objectStore(QUEUE).getAll()),
         request(tx.objectStore(HELD).getAll()),
         request(tx.objectStore(SYNC_LOG).getAll()),
@@ -163,6 +169,7 @@ export function indexedDbStore(): TillStore {
         pack: (pack as OfflinePack | undefined) ?? null,
         shift: (shift as ShiftRecord | undefined) ?? null,
         meta: { ...EMPTY_META, ...((meta as TillMeta | undefined) ?? {}) },
+        localAuth: (localAuth as TillPinVerifiers | undefined) ?? null,
         entries: sortEntries(entries as QueueEntry[]),
         held: held as HeldLocal[],
         syncLog: syncLog as SyncLogEntry[],
@@ -172,6 +179,7 @@ export function indexedDbStore(): TillStore {
     savePack: (value) => put('pack', value),
     saveShift: (value) => put('shift', value),
     saveMeta: (value) => put('meta', value),
+    saveLocalAuth: (value) => put('local_auth', value),
     async putEntries(entries) {
       const tx = (await database()).transaction(QUEUE, 'readwrite');
       entries.forEach((entry) => tx.objectStore(QUEUE).put(entry));
