@@ -213,7 +213,7 @@
     "business": "HaKorem Farms",
     "register": "{{name}} ({{code}})",
     "cashier": "Served by {{name}}",
-    "provisional": "Till reference",
+    "provisional": "Sale reference",
     "official": "Receipt no.",
     "officialFollows": "Follows when sent",
     "lines": "Items",
