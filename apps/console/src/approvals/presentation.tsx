@@ -40,6 +40,7 @@ const KIND_ORDER: Record<ApprovalKind, number> = {
   CREDIT_NOTE: 25,
   PAYMENT_REVERSAL: 26,
   PERIOD_REOPEN: 27,
+  RECONCILIATION_BREAK: 28,
 };
 export const APPROVAL_KINDS: readonly ApprovalKind[] = (
   Object.keys(KIND_ORDER) as ApprovalKind[]
