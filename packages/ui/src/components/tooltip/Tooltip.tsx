@@ -47,16 +47,34 @@ export function Tooltip<L extends string>({ content, children, className }: Tool
   const container = usePortalContainer();
   const [loaded, setLoaded] = useState<Radix | null>(radix);
   const anchor = useRef<HTMLSpanElement>(null);
-  const refocus = useRef(false);
+  // Whether keyboard focus is inside the anchor, kept by focus events, not read once when Radix arrives:
+  // a person can tab onto the trigger after Radix has loaded and before React swaps the trigger in.
+  const focused = useRef(false);
   if (content.trim() === '') throw new Error('Tooltip needs non-empty content.');
+
+  useEffect(() => {
+    const node = anchor.current;
+    if (node === null) return undefined;
+    const enter = () => {
+      focused.current = true;
+    };
+    // Focus moving to another element inside the anchor is still inside it.
+    const leave = (event: FocusEvent) => {
+      focused.current = node.contains(event.relatedTarget as Node | null);
+    };
+    node.addEventListener('focusin', enter);
+    node.addEventListener('focusout', leave);
+    return () => {
+      node.removeEventListener('focusin', enter);
+      node.removeEventListener('focusout', leave);
+    };
+  }, []);
 
   useEffect(() => {
     if (loaded !== null) return;
     let live = true;
     void loadRadix().then((module) => {
       if (!live) return;
-      const active = document.activeElement;
-      refocus.current = active !== null && anchor.current?.contains(active) === true;
       setLoaded(module);
     });
     return () => {
@@ -64,10 +82,13 @@ export function Tooltip<L extends string>({ content, children, className }: Tool
     };
   }, [loaded]);
 
-  // The trigger remounts inside Radix's; put focus back where the person left it.
+  // The trigger remounts inside Radix's. Removing the focused trigger drops focus onto the page without a
+  // blur, so `focused` still says it was here: put focus back where the person left it.
   useLayoutEffect(() => {
-    if (loaded === null || !refocus.current) return;
-    refocus.current = false;
+    if (loaded === null || !focused.current) return;
+    // Only from the page itself: never take focus from wherever else it now is.
+    const active = document.activeElement;
+    if (active !== null && active !== document.body) return;
     const target = anchor.current?.querySelector<HTMLElement>(FOCUSABLE);
     target?.focus();
   }, [loaded]);
