@@ -375,7 +375,7 @@ function Selling({
 
       <section
         aria-labelledby="cart-title"
-        className="grid content-start gap-3 rounded-lg border border-border bg-surface p-4"
+        className="order-first grid content-start gap-3 rounded-lg border border-border bg-surface p-4 lg:order-none"
         data-slot="cart"
       >
         <h2 id="cart-title" className="text-lg font-semibold">
