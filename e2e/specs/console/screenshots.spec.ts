@@ -353,6 +353,59 @@ PHASES.F06b = [
   },
 ];
 
+/** F8: billing. The receipt in `getBillingDocument`'s example; the reprint is given a PDF (CR-030). */
+const RECEIPT = '019a7ae2-fd46-7b80-a0b9-c0e09cf739be';
+const PDF_BASE64 =
+  'JVBERi0xLjQKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgMjAwIDEwMF0+PmVuZG9iagp0cmFpbGVyPDwvUm9vdCAxIDAgUj4+CiUlRU9GCg==';
+
+PHASES.F08 = [
+  { name: 'billing-documents', path: '/billing-documents', ready: 'Invoice INV-2026-DDW-001198' },
+  { name: 'billing-document', path: `/billing-documents/${RECEIPT}`, ready: 'Reprint history' },
+  {
+    name: 'billing-document-reprinted',
+    path: `/billing-documents/${RECEIPT}`,
+    ready: 'Reprint history',
+    prepare: (api) =>
+      api.rewrite('reprintBillingDocument', () => ({
+        copyNo: 2,
+        channel: 'PDF',
+        url: null,
+        escPosBase64: null,
+        pdfBase64: PDF_BASE64,
+        expiresAt: null,
+      })),
+    act: async (page) => {
+      await page.getByRole('button', { name: 'Reprint as PDF' }).click();
+      await page
+        .getByRole('dialog', { name: 'Reprint this document?' })
+        .getByRole('button', { name: 'Reprint as PDF' })
+        .click();
+      await expect(
+        page.getByRole('region', { name: 'Reprint 2: a copy, not a new document' }),
+      ).toBeVisible();
+    },
+  },
+  {
+    name: 'billing-document-dark',
+    path: `/billing-documents/${RECEIPT}`,
+    ready: 'Reprint history',
+    theme: 'dark',
+  },
+  {
+    name: 'credit-note',
+    path: `/billing-documents/${RECEIPT}/credit-note`,
+    ready: 'What to credit',
+  },
+  { name: 'debit-note', path: `/billing-documents/${RECEIPT}/debit-note`, ready: 'Charges' },
+  { name: 'statements', path: '/statements', ready: 'STM-2026-DDW-000031' },
+  {
+    name: 'statement',
+    path: '/statements/019a7b05-ca26-7b67-a09f-bf4984173827',
+    ready: 'Balance brought forward',
+  },
+  { name: 'statement-new', path: '/statements/new', ready: 'Draw up a statement' },
+];
+
 const WIDTHS = [1280, 360] as const;
 
 for (const [phase, shots] of Object.entries(PHASES)) {

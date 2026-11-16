@@ -39,6 +39,6 @@ Option 3.
 ## Consequences
 
 - The console is unchanged. A future screen in `packages/ui` cannot reach for the sand by accident: the lint rule refuses it.
-- The shop's buttons are the system's pine teal on sand. A storefront-only button colour would need option 2, which is the owner's decision.
+- The shop's buttons are the system's pine green on sand. **The owner decided on 2026-11-16 that they stay pine green, with no separate shop theme** (F8), so option 2 is not taken.
 - When the brand's print colours arrive (A-F0-01), the hero band and promotional surfaces can take them in `apps/storefront/src/marketing/` without touching this.
 - Revisit if the owner wants the shop to look more different from the console than surfaces and photographs allow.

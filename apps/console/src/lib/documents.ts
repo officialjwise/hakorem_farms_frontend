@@ -11,11 +11,17 @@ const DOCUMENT_PATH: Record<string, string> = {
   MORTALITY_RECORD: '/mortality/',
   BREEDING_RECORD: '/breeding/',
   PROCESSING_ORDER: '/processing-orders/',
+  // F8: a billing document's kind is its docType (`ArchivedDocument.businessDocument`).
+  INVOICE: '/billing-documents/',
+  RECEIPT: '/billing-documents/',
+  PROFORMA: '/billing-documents/',
+  CREDIT_NOTE: '/billing-documents/',
+  DEBIT_NOTE: '/billing-documents/',
 };
 
 /**
  * The console path of a document the API names, or undefined when it is not one of the console's own
- * screens (a sale, an invoice), so a document becomes a link only where it leads somewhere.
+ * screens (a sale, an order), so a document becomes a link only where it leads somewhere.
  */
 export function documentHref(document: { docType: string; id: string }): string | undefined {
   const base = DOCUMENT_PATH[document.docType];

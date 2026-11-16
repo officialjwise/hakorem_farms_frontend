@@ -479,6 +479,68 @@ export const protectedRoutes: RouteObject[] = [
         ),
         handle: back('prc.yield_standard.read', 'yieldStandards'),
       },
+      // F8: invoices, receipts, credit and debit notes, the document viewer and reprints; statements.
+      {
+        path: 'billing-documents',
+        handle: back('bil.document.read', 'billingDocuments'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../billing/BillingDocumentsScreen').then((m) => m.BillingDocumentsScreen),
+            ),
+            handle: back('bil.document.read', 'billingDocuments'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../billing/BillingDocumentScreen').then((m) => m.BillingDocumentScreen),
+            ),
+            handle: back('bil.document.read', 'billingDocument'),
+          },
+          {
+            path: ':id/credit-note',
+            element: lazyScreen(() =>
+              import('../billing/CreditNoteScreen').then((m) => m.CreditNoteScreen),
+            ),
+            handle: back('bil.credit_note.create', 'creditNote'),
+          },
+          {
+            path: ':id/debit-note',
+            element: lazyScreen(() =>
+              import('../billing/DebitNoteScreen').then((m) => m.DebitNoteScreen),
+            ),
+            handle: back('bil.debit_note.create', 'debitNote'),
+          },
+        ],
+      },
+      {
+        path: 'statements',
+        handle: back('whl.statement.read', 'statements'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../billing/StatementScreens').then((m) => m.StatementsScreen),
+            ),
+            handle: back('whl.statement.read', 'statements'),
+          },
+          {
+            path: 'new',
+            element: lazyScreen(() =>
+              import('../billing/StatementScreens').then((m) => m.StatementNewScreen),
+            ),
+            handle: back('whl.statement.create', 'statementNew'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../billing/StatementScreens').then((m) => m.StatementScreen),
+            ),
+            handle: back('whl.statement.read', 'statement'),
+          },
+        ],
+      },
       {
         path: 'orders',
         element: <PlaceholderScreen area="orders" />,

@@ -9,6 +9,10 @@ const config: NextConfig = {
   env: { HK_API_BASE_URL: process.env.HK_API_BASE_URL ?? '' },
   // The workspace root, so Next traces files from the packages and not from a stray lockfile in a parent folder.
   outputFileTracingRoot: fileURLToPath(new URL('../..', import.meta.url)),
+  // Import each @hakorem/ui component from its own module rather than the package's index, so a page's
+  // client bundle carries only the components it renders (ADR 0042). Without it, every client component
+  // the index exports reached the listing's script.
+  experimental: { optimizePackageImports: ['@hakorem/ui'] },
   poweredByHeader: false,
   reactStrictMode: true,
   // ESLint runs once, from the repository root (`pnpm lint`), with the token and a11y rules. Next's own pass would be a second, weaker copy.

@@ -77,7 +77,14 @@ export type NavKey =
   | 'report'
   | 'settings'
   | 'settingsBusiness'
-  | 'settingsSystem';
+  | 'settingsSystem'
+  | 'billingDocuments'
+  | 'billingDocument'
+  | 'creditNote'
+  | 'debitNote'
+  | 'statements'
+  | 'statement'
+  | 'statementNew';
 
 export function isRouteHandle(value: unknown): value is RouteHandle {
   return (

@@ -19,3 +19,5 @@ Theme, density, the Toast viewport and the themed portal target (ADR 0004) all n
 
 - A screen that only toasts a failed sale, payment, adjustment or transfer fails review.
 - Storybook's decorator mounts `UIProvider` too, so stories exercise the same setup as the apps.
+
+- Amended by ADR 0042 (F8): the viewport and Radix Toast load with the first toast, and the tooltip provider moved into Tooltip, which loads Radix on first use. One provider at each root still holds.
