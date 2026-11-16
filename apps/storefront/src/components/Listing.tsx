@@ -1,5 +1,4 @@
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
 import type { ApiError, components } from '@hakorem/api-client';
 import { Button, EmptyState } from '@hakorem/ui';
 import type { ShopT } from '../lib/present';
@@ -54,15 +53,18 @@ function ChoiceRow({
       <ul className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         {choices.map((choice) => (
           <li key={choice.href} className="shrink-0">
-            <Link
+            {/*
+              A plain link, not Next's: the browser navigates itself and shows its own progress. Next's
+              client navigation left a tap without effect for over 5 s on a page still busy hydrating, as
+              on a cheap phone (F7, found by the e2e suite under load).
+            */}
+            <a
               href={choice.href}
               aria-current={choice.current ? 'true' : undefined}
               className={choice.current ? on : off}
-              scroll={false}
-              prefetch={false}
             >
               {choice.label}
-            </Link>
+            </a>
           </li>
         ))}
       </ul>
@@ -115,7 +117,8 @@ export function ListingFilters({
 /**
  * A listing's products in their four states: the cards, the empty state with a way out, and the error
  * with its reference and a retry. Loading is the route's `loading.tsx`. A public listing has nothing to
- * deny. Paging is by the API's cursor, forward, with a way back to the first products.
+ * deny. Paging is by the API's cursor, forward, with a way back to the first products. Filters and
+ * paging are plain links over the same address, which the browser loads itself.
  */
 export function ListingResults({
   page,
@@ -154,7 +157,7 @@ export function ListingResults({
         action={
           filtered ? (
             <Button asChild variant="secondary">
-              <Link href={listingHref(base, { q: params.q })}>{t('listing.empty.action')}</Link>
+              <a href={listingHref(base, { q: params.q })}>{t('listing.empty.action')}</a>
             </Button>
           ) : undefined
         }
@@ -169,18 +172,18 @@ export function ListingResults({
         <nav aria-label={t('listing.paging')} className="flex flex-wrap justify-center gap-3">
           {params.cursor === undefined ? null : (
             <Button asChild variant="secondary">
-              <Link href={listingHref(base, params)}>
+              <a href={listingHref(base, params)}>
                 <ArrowLeft aria-hidden="true" />
                 {t('listing.firstPage')}
-              </Link>
+              </a>
             </Button>
           )}
           {next === null ? null : (
             <Button asChild>
-              <Link href={listingHref(base, params, { cursor: next })}>
+              <a href={listingHref(base, params, { cursor: next })}>
                 {t('listing.more')}
                 <ArrowRight aria-hidden="true" />
-              </Link>
+              </a>
             </Button>
           )}
         </nav>

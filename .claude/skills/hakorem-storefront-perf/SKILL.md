@@ -11,6 +11,7 @@ The storefront opens on cheap Android phones over 3G. Read `docs/PERFORMANCE_BUD
 
 - The budget is **recorded, not enforced**: `lighthouse/budget.json`, `lighthouse/lighthouserc.json` and `docs/PERFORMANCE_BUDGET.md`, plus a unit test that keeps them equal to the brief.
 - **Built (F1):** `apps/storefront`, with server components by default, `getT()` for server side translation and the theme cookie (ADR 0015). First measurement: 103 kB shared, 181 kB on pages with the cart drawer, over the 120 KB sub-budget (`docs/PERFORMANCE_BUDGET.md`).
+- **Built (F7):** the catalogue, product pages, basket and checkout. Pages read on the server (`lib/api.ts`). The data layer loads only with the basket's islands, each wrapped in `ShopData` (ADR 0041). Photographs are `ProductPhoto`, with a tile for none. The e2e spec asserts a listing's largest paint under 2.5 s on the 3G profile, and checkout completing on it. F7's measurement of the listing on the wire is in `docs/PERFORMANCE_BUDGET.md`.
 - **Not built yet:** `@lhci/cli` and the `pnpm lighthouse` script (F13).
 
 ## The budget
