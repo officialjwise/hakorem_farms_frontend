@@ -42,7 +42,7 @@ F6 left four dead ends:
 
 ## Consequences
 
-- **The Farm hand reports and sends from the pen, and is never left without a next step.** The one gap left is a lost phone with an unsent report. CR-024 asks for the read that closes it, `listCareMortalityRecords` limited to the caller's own records.
-- **No reason list means no report.** If the role cannot read the death reasons, the page says so in words and sends nothing. The fake assumes the Farm hand can read them (A-F6b-02, CR-023).
+- **The Farm hand reports and sends from the pen, and is never left without a next step.** The one gap left is a lost phone with an unsent report. The owner accepted it (CR-024, closed): the missing animal shows up at the next stock take.
+- **No reason list means no report.** If a role cannot read the death reasons, the page says so in words and sends nothing. The owner confirmed that the Farm hand reads them (A-F6b-02).
 - **The photograph is required even below the threshold,** which costs a cheap cull one picture. Revisit if the care shapes ever say whether a photograph is needed.
-- **Revisit** when the contract answers CR-024, and drop the device memory then. Revisit too when F9's offline queue exists, which could carry the whole report.
+- **Revisit** when F9's offline queue exists, which could carry the whole report.

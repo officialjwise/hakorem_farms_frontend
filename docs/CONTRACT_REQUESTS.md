@@ -25,10 +25,10 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-019 | 2026-11-15 | Open                     |
 | CR-020 | 2026-11-15 | Open                     |
 | CR-021 | 2026-11-15 | Answered (1.26.0)        |
-| CR-022 | 2026-11-15 | Open                     |
+| CR-022 | 2026-11-15 | Closed                   |
 | CR-023 | 2026-11-15 | Open                     |
-| CR-024 | 2026-11-15 | Open                     |
-| CR-025 | 2026-11-15 | Open                     |
+| CR-024 | 2026-11-15 | Closed                   |
+| CR-025 | 2026-11-15 | Answered (B06r, to come) |
 | CR-026 | 2026-11-15 | Open                     |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
@@ -350,6 +350,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 
 **Until this lands:** the assumptions above (A-F6b-02). An approver refused the photograph is told in words that it cannot be shown, and the rest of the evidence is still on screen.
 
+**Status:** closed 2026-11-16. The owner says the backend confirmed `EVIDENCE` is the intended purpose for a death's photograph. The owner also approved a photograph on every death report, and the backend is being asked to enforce it for Farm hand reports (A-F6b-03). Points 2 to 4 stay open questions for the backend to answer in the contract's descriptions.
+
 ## CR-023. Publish the seeded role matrix, and confirm the Farm hand's (clarification)
 
 - **Raised by:** frontend F6b, aligning the test fake's roles with the real seed. The owner has told the backend.
@@ -381,6 +383,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 
 **Until this lands:** the device keeps the reminder, and a lost phone's unsent report needs a manager to find it in the deaths list.
 
+**Status:** closed 2026-11-16, accepted by the owner as a known gap. If a phone is lost with an unsent report, the missing animal shows up at the next stock take. The device's reminder (ADR 0039) stays.
+
 ## CR-025. Should reversing a completed processing order need a second person? (question)
 
 - **Raised by:** frontend F6b, the approvals inbox. The owner listed "processing reversals" among what an approver sees.
@@ -395,6 +399,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 **Request:** decide, and say it in `cancelProcessingOrder`'s description. Either a reversal answers 202 with `STOCK_REVERSAL`, or a new `PROCESSING_REVERSAL` with a `PROCESSING_ORDER` subject, for a different person to approve. Or it stays a single-person action, and the description says why. The screen handles a 202 either way.
 
 **Until this lands:** a reversal is immediate, as the contract says.
+
+**Status:** answered by the owner 2026-11-16. A reversal at or above the threshold will need a second approver, and the backend is adding it in B06r. When the contract carries it, the order page handles the 202 and the inbox shows the kind, its subject linked to the order.
 
 ## CR-026. The approval examples name the wrong subject (example fix)
 

@@ -158,9 +158,17 @@ A-F6-02 is partly resolved; A-F6-03, A-F6-06 and A-F6-07 are resolved. A-F6b-01 
 
 ## For the owner
 
-- **This branch has no pull request.** None was asked for this session. CI will run once one is opened.
-- **The one assumption that can block a farm hand** is A-F6b-02. Without `mdm.reason_code.read` the role cannot pick a reason, and the page says so.
 - **The first load.** The back office's is 277.0 of 300 kB (5.6 kB more, mostly the refusal words) and the till's 207.9 of 250 kB.
+
+## The owner's decisions after the session (2026-11-16)
+
+1. **Pull requests:** every phase opens its PR and merges it once CI is green, without asking. This is now in `CLAUDE.md`, and this branch's PR was opened under it.
+2. **A-F6b-02:** the Farm hand reads the death reasons, and the backend has been asked to grant it.
+3. **A-F6b-03:** approved, a photograph on every death report. The backend is being asked to enforce it for Farm hand reports too.
+4. **A-F6b-05:** F7 runs in its own session.
+5. **CR-022:** `EVIDENCE` is the intended purpose; the backend confirmed it, and the request is closed.
+6. **CR-024:** closed as a known gap. A phone lost with an unsent report shows up as a missing animal at the next stock take.
+7. **CR-025:** a processing reversal at or above the threshold will need a second approver, which the backend adds in B06r. The inbox takes it when the contract carries it.
 
 ## Opening message for the next session
 
@@ -168,8 +176,8 @@ A-F6-02 is partly resolved; A-F6-03, A-F6-06 and A-F6-07 are resolved. A-F6b-01 
 Read CLAUDE.md, docs/SHARED_BRIEF.md and docs/sessions/F06b-approvals-deaths-and-refusals.md.
 
 First: pnpm sync-contract:github and read .contract-upstream/CONTRACT_CHANGELOG.md after 1.28.0. Answer
-what it changes before anything else, including CR-022 to CR-026 and the role matrix (CR-023): align the
-test fake's roles with it if it is published.
+what it changes before anything else: B06r's approval for processing reversals (CR-025, wire it into the
+order page and the inbox), CR-023 (align the test fake's roles with the matrix if it is published) and CR-026.
 
 Then F7 as BUILD_PROMPT describes: storefront catalogue, search, filters, product detail, cart, checkout and
 delivery slots. Gate: checkout completes on a throttled 3G connection and the catch-weight estimate is
