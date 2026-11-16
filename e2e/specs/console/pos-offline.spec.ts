@@ -209,3 +209,41 @@ test('a cashier sells offline from the tiles, with the scanner refusing an anima
   await expectNoAxeViolations(page);
   await expectNoHorizontalScroll(page);
 });
+
+test('fifty sales with the network off land exactly once each when it returns (SHARED_BRIEF scenario 6)', async ({
+  page,
+  context,
+  api,
+}) => {
+  test.slow();
+  const server = installTillServer(api, serverTotal);
+  await openTillShift(page);
+  await api.setNetwork(context, false);
+  for (let n = 1; n <= 50; n += 1) {
+    await page.getByRole('button', { name: 'Tomatoes, crate' }).click();
+    await page.getByRole('button', { name: 'Take payment' }).click();
+    await page.getByRole('textbox', { name: /^Cash handed over/ }).fill('650');
+    await page.getByRole('button', { name: 'Review the sale' }).click();
+    await page.getByRole('button', { name: 'Complete the sale' }).click();
+    await expect(
+      page.getByText(`Kept on this till as P-T1-312-${String(n).padStart(4, '0')}`),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Next sale' }).click();
+  }
+  await expect(page.locator('[data-slot="queue-count"]')).toContainText('50 to send');
+  expect(server.batches).toHaveLength(0);
+
+  await api.setNetwork(context, true);
+  await expect(page.locator('[data-slot="queue-count"]')).toContainText('All sent', {
+    timeout: 20_000,
+  });
+  const sent = server.batches.flatMap((batch) => batch.sales);
+  expect(sent).toHaveLength(50);
+  expect(sent.map((sale) => sale.deviceCounter)).toEqual(
+    Array.from({ length: 50 }, (_, i) => i + 1),
+  );
+  expect(new Set(sent.map((sale) => sale.id)).size).toBe(50);
+  expect(sent.every((sale) => sale.payloadHash === expectedHash(sale))).toBe(true);
+  expect(server.applied.size).toBe(50);
+  expect(new Set(server.applied.values()).size).toBe(50);
+});
