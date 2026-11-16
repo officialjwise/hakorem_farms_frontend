@@ -1,6 +1,6 @@
 # 0043. Every till sale goes through the offline queue, kept in IndexedDB, read through one till store
 
-- Status: accepted
+- Status: accepted; the receipt bullet amended by 0045 (owner, 2026-11-16)
 - Date: 2026-11-16
 - Session: F9
 

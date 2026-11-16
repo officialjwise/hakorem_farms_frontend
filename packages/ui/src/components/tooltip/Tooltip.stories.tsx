@@ -53,6 +53,22 @@ async function tabFromTheStory(canvasElement: HTMLElement) {
   start.remove();
 }
 
+/**
+ * Waits until the trigger is Radix's (it carries `data-state`): the Radix half loads on first use (ADR
+ * 0042), and on a cold story server it can take longer than a query's one-second default. These stories
+ * test what a Tab does once it has arrived; a Tab before it arrives is the unit tests' (Tooltip.test.tsx).
+ */
+async function radixArrived(canvasElement: HTMLElement) {
+  // Queried each time: the trigger is remounted inside Radix's when it arrives.
+  await waitFor(
+    () =>
+      expect(within(canvasElement).getByRole('button', { name: 'Re-weigh' })).toHaveAttribute(
+        'data-state',
+      ),
+    { timeout: 10_000 },
+  );
+}
+
 /** Open on keyboard focus. Axe runs on the open state. */
 export const Open: Story = {
   render: () => (
@@ -61,6 +77,7 @@ export const Open: Story = {
     </div>
   ),
   play: async ({ canvasElement }) => {
+    await radixArrived(canvasElement);
     await tabFromTheStory(canvasElement);
     await expect(within(canvasElement).getByRole('button', { name: 'Re-weigh' })).toHaveFocus();
     const tip = await within(document.body).findByRole('tooltip');
@@ -77,6 +94,7 @@ export const OpenDarkCompact: Story = {
     </div>
   ),
   play: async ({ canvasElement }) => {
+    await radixArrived(canvasElement);
     await tabFromTheStory(canvasElement);
     await expect(within(canvasElement).getByRole('button', { name: 'Re-weigh' })).toHaveFocus();
     await within(document.body).findByRole('tooltip');
@@ -106,6 +124,7 @@ export const KeyboardPath: Story = {
     </div>
   ),
   play: async ({ canvasElement }) => {
+    await radixArrived(canvasElement);
     await tabFromTheStory(canvasElement);
     await expect(within(canvasElement).getByRole('button', { name: 'Re-weigh' })).toHaveFocus();
     await within(document.body).findByRole('tooltip');
