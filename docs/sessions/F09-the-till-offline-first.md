@@ -204,17 +204,41 @@ A-F8-01 confirmed and A-F8-03 replaced by the owner. New:
 2. **The official number on paper.** Every receipt is printed at completion with the till's reference; the official number shows on screen a moment later when online. Should an online sale wait for the official number before printing?
 3. **The supervisor's PIN.** Offline unlock, a supervisor's approval offline (needed for unverified mobile money) and a cash drop's witness all rest on a till PIN the contract does not have yet (CR-032). Confirm the PIN approach, so the backend can add it.
 
+## The owner's answers (after the merge, 2026-11-16)
+
+1. **The printer: do not design the till around one.** Every sale produces a digital receipt, by SMS or a link, which works on every phone with no hardware. A printer is an optional capability the till detects, 58 mm ESC/POS over Bluetooth where used. The reason is the stack: Web Bluetooth works in Chrome on Android and does not exist in Safari on iOS, and the business does not control which phones staff bring. Recorded in **ADR 0045**; A-F9-03 replaced; the receipt link is **CR-033**. Separately, as a question for whoever answers the business's tax questions, not a design decision: whether a farm selling retail at these volumes must issue a numbered receipt or a VAT invoice (**Q-TAX-01**, `docs/OPEN_QUESTIONS.md`).
+2. **Never wait for the official number, even online.** A till that usually answers at once and sometimes waits on a round trip is worse than one that never waits. The till prints or shows the **sale reference** at once, labelled as a sale reference, never as a receipt number (the receipt now reads "Sale reference"). The official number comes at sync and appears on the digital receipt and in the records, with the sale reference beside it on both (ADR 0045).
+3. **The PIN: yes, and it is a backend request, not an open question.** The server issues each operator's PIN as a hash; the till verifies locally and the PIN never authenticates to the server; four to six digits, with attempt limits and a lockout; an approval made offline records which PIN approved it and the server checks it at sync, flagging a revoked or wrong one; a revoked till is still refused at sync. **CR-032**, rewritten to say exactly that.
+4. **B9b before F10.** The gate proves the till against a mock written from the same assumptions as the till, so it cannot catch a wrong assumption, and every item under "What still needs the real API" sits on the server's side of it. The quote builder does not go on top of a sync contract where both ends came from one guess. The opening message below makes it an instruction.
+
+**What this repository can and cannot do about B9b.** The frontend never edits `../backend/` (CLAUDE.md), so it cannot build B9b. The backend track builds B9b (POS, shifts, offline sync, with CR-031 to CR-033); the frontend's next session closes the F9 gate against it, and does not start F10 until it has. If B9b is not live when that session starts, it stops and says so.
+
 ## Opening message for the next session
 
 ```text
-Read CLAUDE.md, docs/SHARED_BRIEF.md and docs/sessions/F09-the-till-offline-first.md.
+Read CLAUDE.md, docs/SHARED_BRIEF.md and docs/sessions/F09-the-till-offline-first.md, including "The owner's
+answers (after the merge)". Read ADR 0043, ADR 0044 and ADR 0045.
 
-First: pnpm sync-contract:github and read .contract-upstream/CONTRACT_CHANGELOG.md after 1.42.0. Answer
-what it changes before anything else, including CR-023, CR-027 to CR-032 if they landed. If B9b (POS,
-shifts, offline sync) went live, run the till against the real API and close the F9 gate's list "What
-still needs the real API"; say which items moved. If CR-028 landed, show the shop's phone and WhatsApp
-on live animal pages (owner, 2026-11-16). Read the owner's answers to the F9 report's "For the owner".
+This session closes the F9 gate against the real API. It does not start F10. F10 (the quote builder) does
+not begin until every item under "What still needs the real API (B9b)" in the F9 report is proved against
+the backend's B9b or recorded as a defect with its cause: the owner's instruction of 2026-11-16, because the
+F9 gate was proved only against a mock written from the same assumptions as the till.
 
-Then F10 as BUILD_PROMPT describes: the quote builder, the public request-for-quote form, revisions,
-acceptance, wholesale accounts and ageing. Gate: a customer accepts a quote from a link on their phone.
+1. pnpm sync-contract:github and read .contract-upstream/CONTRACT_CHANGELOG.md after 1.42.0. Answer what it
+   changes, including CR-023 and CR-027 to CR-033.
+2. If B9b (POS, shifts, offline sync) is not live in the backend, stop here. Write a short report saying so,
+   and what the backend still lacks. Do not start F10 and do not build on the mock.
+3. With B9b live: run the till against it, against the backend's local or staging API, never Prism. Take the
+   eleven items under "What still needs the real API" one by one, first among them that the server applies
+   a sale exactly once by its id and recomputes the same payload hash as the till. For each, prove it with
+   a test against the real API (test:integration or test:e2e:staging) or record the defect, its cause and
+   which side it is on. Fix the frontend's side here; raise the backend's in docs/CONTRACT_REQUESTS.md.
+4. Then, against the real API: the till PIN if CR-032 landed (offline unlock, supervisor approval offline,
+   the server's check at sync), and ADR 0045's receipt (the digital receipt by SMS or link once CR-033
+   landed; a Bluetooth 58 mm ESC/POS printer detected where the browser has Web Bluetooth; the F9 print-to-page
+   receipt removed). The till never waits on the network for any of it.
+5. Say in the report which till operations moved from the mock to the real API.
+
+If CR-028 landed, show the shop's phone and WhatsApp on live animal pages (owner, 2026-11-16).
+F10 is the session after this one, and only once step 3 is complete.
 ```
