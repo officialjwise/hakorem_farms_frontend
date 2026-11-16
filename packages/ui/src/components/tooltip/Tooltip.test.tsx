@@ -67,3 +67,23 @@ describe('Tooltip', () => {
     quiet.mockRestore();
   });
 });
+
+describe('Tooltip, loaded on first use (ADR 0042)', () => {
+  it('renders the trigger before Radix arrives, and keeps keyboard focus on it when it does', async () => {
+    vi.resetModules();
+    const fresh = await import('./Tooltip');
+    const { UIProvider: FreshProvider } = await import('../ui-provider/UIProvider');
+    render(
+      <FreshProvider theme="light" density="compact" toastLabels={toastLabels}>
+        <fresh.Tooltip content="Weigh again: F2">
+          <Button>Re-weigh</Button>
+        </fresh.Tooltip>
+      </FreshProvider>,
+    );
+    const before = screen.getByRole('button', { name: 'Re-weigh' });
+    before.focus();
+    const tip = await screen.findByRole('tooltip');
+    expect(tip).toHaveTextContent('Weigh again: F2');
+    expect(screen.getByRole('button', { name: 'Re-weigh' })).toHaveFocus();
+  });
+});

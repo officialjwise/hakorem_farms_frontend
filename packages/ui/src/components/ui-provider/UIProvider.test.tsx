@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import { useEffect } from 'react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { createPortal } from 'react-dom';
 import { toastLabels } from '../../test/toastLabels';
 import { UIProvider, usePortalContainer, useToast } from './UIProvider';
@@ -77,13 +78,30 @@ describe('UIProvider', () => {
     spy.mockRestore();
   });
 
-  it('puts the toast viewport inside the themed portal target, named by the supplied label', () => {
+  it('loads no toast viewport until the first toast, then keeps it in the themed portal target', async () => {
+    const holder: { api: ReturnType<typeof useToast> | null } = { api: null };
+    function Raise() {
+      const toast = useToast();
+      useEffect(() => {
+        holder.api = toast;
+      }, [toast]);
+      return null;
+    }
     const { container } = render(
       <UIProvider theme="dark" density="compact" toastLabels={toastLabels}>
-        <p>App</p>
+        <Raise />
       </UIProvider>,
     );
     const portal = container.querySelector('[data-slot="ui-portal"]');
+    expect(portal?.querySelector('[aria-label^="Notifications"]')).toBeNull();
+    let id = '';
+    act(() => {
+      id = holder.api?.show({ tone: 'info', title: 'Receipt sent' }) ?? '';
+    });
+    await screen.findByText('Receipt sent');
+    expect(portal?.querySelector('[aria-label^="Notifications"]')).not.toBeNull();
+    act(() => holder.api?.dismiss(id));
+    await waitFor(() => expect(screen.queryByText('Receipt sent')).toBeNull());
     expect(portal?.querySelector('[aria-label^="Notifications"]')).not.toBeNull();
   });
 });

@@ -1,9 +1,9 @@
 'use client';
 
-import * as ToastPrimitive from '@radix-ui/react-toast';
-import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import {
   createContext,
+  lazy,
+  Suspense,
   useCallback,
   useContext,
   useMemo,
@@ -11,7 +11,13 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { ToastItem, type ToastInput } from '../toast/Toast';
+import type { ToastInput } from '../toast/Toast';
+import type { QueuedToast } from '../toast/ToastLayer';
+
+/** Radix Toast and the queue's markup, loaded with the first toast (ADR 0042). */
+const ToastLayer = lazy(() =>
+  import('../toast/ToastLayer').then((module) => ({ default: module.ToastLayer })),
+);
 
 /** `system` follows the device's light or dark preference. */
 export type ThemePreference = 'light' | 'dark' | 'system';
@@ -52,15 +58,13 @@ export interface UIProviderProps {
   className?: string;
 }
 
-interface QueuedToast {
-  id: string;
-  toast: ToastInput;
-}
-
 /**
  * UIProvider. Mount exactly one, at each app root (ADR 0006). It carries
- * theme, density, the themed portal target (ADR 0004), the toast queue and
- * viewport, and the tooltip delay group.
+ * theme, density, the themed portal target (ADR 0004), and the toast queue.
+ *
+ * The toast viewport and Radix Toast load with the first toast, and stay
+ * mounted after it; Radix Tooltip loads with the first Tooltip (ADR 0042). A
+ * page that shows neither, like every storefront page, downloads neither.
  *
  * Overlays render into the portal target, a sibling of the app root that
  * carries the same data-theme and data-density. Content portaled to <body>
@@ -75,12 +79,15 @@ export function UIProvider({ theme, density, toastLabels, children, className }:
   }
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const [toasts, setToasts] = useState<QueuedToast[]>([]);
+  // Once the first toast is raised, the layer stays, so its region does not come and go.
+  const [toastLayer, setToastLayer] = useState(false);
   const nextId = useRef(0);
 
   const show = useCallback((toast: ToastInput<string>) => {
     nextId.current += 1;
     const id = `toast-${nextId.current}`;
     setToasts((queue) => [...queue, { id, toast }]);
+    setToastLayer(true);
     return id;
   }, []);
   const dismiss = useCallback((id: string) => {
@@ -95,40 +102,21 @@ export function UIProvider({ theme, density, toastLabels, children, className }:
 
   return (
     <UIContext.Provider value={value}>
-      <TooltipPrimitive.Provider delayDuration={300} skipDelayDuration={200}>
-        <ToastPrimitive.Provider label={toastLabels.announcement} swipeDirection="right">
-          <div
-            data-slot="ui-root"
-            data-theme={themeAttr}
-            data-density={density}
-            className={className}
-          >
-            {children}
-          </div>
-          <div
-            ref={setPortalContainer}
-            data-slot="ui-portal"
-            data-theme={themeAttr}
-            data-density={density}
-          >
-            {toasts.map(({ id, toast }) => (
-              <ToastItem
-                key={id}
-                toast={toast}
-                closeLabel={toastLabels.close}
-                open
-                onOpenChange={(open) => {
-                  if (!open) dismiss(id);
-                }}
-              />
-            ))}
-            <ToastPrimitive.Viewport
-              label={toastLabels.region}
-              className="fixed inset-x-0 bottom-0 z-toast m-0 flex list-none flex-col gap-2 p-3 outline-none sm:start-auto sm:w-[26rem]"
-            />
-          </div>
-        </ToastPrimitive.Provider>
-      </TooltipPrimitive.Provider>
+      <div data-slot="ui-root" data-theme={themeAttr} data-density={density} className={className}>
+        {children}
+      </div>
+      <div
+        ref={setPortalContainer}
+        data-slot="ui-portal"
+        data-theme={themeAttr}
+        data-density={density}
+      >
+        {toastLayer ? (
+          <Suspense fallback={null}>
+            <ToastLayer toasts={toasts} labels={toastLabels} dismiss={dismiss} />
+          </Suspense>
+        ) : null}
+      </div>
     </UIContext.Provider>
   );
 }

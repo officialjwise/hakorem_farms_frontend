@@ -66,6 +66,26 @@ Twelve photographs load at once although they are `loading="lazy"`: on a slow co
 
 **What is left, and whose decision it is.** `next build` reports 191 kB of first-load script on a listing: 103 kB is Next and React, and nearly all of the rest is the `UIProvider` (ADR 0006), whose Radix toast and tooltip load with every page, about 85 kB with their shared Radix code and icons. The storefront shows no toast and no tooltip. Loading them on first use is a change to UIProvider, one of the reference components, so it is the owner's (CLAUDE.md). With it, the listing's script would fall to about 120 kB and the page to about 270 KB with its photographs. The other levers, smaller: a listing page of eight products instead of twelve (about 37 KB of photographs), and the generated operation table split per surface (about 12 kB, only once the basket loads).
 
+### Re-measured in F8, after the owner's lever (2026-11-16)
+
+The owner approved loading toast and tooltip on first use (ADR 0042). That change alone moved the listing's first-load script from 191 kB to 189 kB, because the weight was not the provider: Next bundled the whole `@hakorem/ui` index into the listing's client script. `optimizePackageImports` for `@hakorem/ui` fixed that (ADR 0042). `/c/meat` at 360 px in Chromium on the Prism mock, a first visit, measured as F7 did:
+
+| Part                                            | F7         | F8, provider only | F8         | Budget     |
+| ----------------------------------------------- | ---------- | ----------------- | ---------- | ---------- |
+| First-load script, `next build`                 | 191 kB     | 189 kB            | **118 kB** | 120 kB     |
+| Script, on the wire                             | 202 KB     |                   | **136 KB** |            |
+| Document                                        | 31 KB      |                   | 31 KB      |            |
+| Stylesheet                                      | 11 KB      |                   | 11 KB      | 30 KB      |
+| **Without photographs**                         | 244 KB     |                   | **178 KB** |            |
+| Photographs: twelve `thumb` WebPs (as declared) | 111 KB     |                   | 111 KB     |            |
+| **The page**                                    | **357 KB** |                   | **289 KB** | **300 KB** |
+
+The home and search pages fell the same way (`/` 176 KB without photographs). A product page's first-load script is 151 kB (was 220 kB) and the checkout's 200 kB (was 205 kB); neither is a listing.
+
+**The console** (the same build, `pnpm budget:console`): the till's initial script 209.3 kB to **190.8 kB**, the back office's 278.5 kB to **273.9 kB**. Vite already tree-shook the package index, so the console's gain is the provider change alone.
+
+A-F0-06 can now be judged on a page under budget: the provisional 120 kB script sub-budget holds on the listing with 2 kB to spare.
+
 ## Console
 
 Set on 2026-11-14 when the till and the back office became two documents (ADR 0030). The numbers were confirmed by the owner the same day (A-F3-17, resolved), and changing one is an owner decision. Vite's 500 kB chunk warning is the bundler's default, not this budget, and it is switched off.
