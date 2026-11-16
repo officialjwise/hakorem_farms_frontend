@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 import { Alert, Button, MoneyDisplay } from '@hakorem/ui';
 import type { SaleEntry } from '../offline/types';
 import { EntryStatus, Receipt } from '../presentation';
-import { ReceiptOut } from './ReceiptOut';
+import { LazyReceiptOut } from '../parts';
 
 /**
  * The sale just completed: the change to hand over, where the sale is (queued on this till, or sent with its
@@ -64,7 +64,7 @@ export function SaleDone({ entry, onNext }: { entry: SaleEntry; onNext: () => vo
             <Link to="/pos/queue">{t('done.queue')}</Link>
           </Button>
         </div>
-        <ReceiptOut entry={entry} />
+        <LazyReceiptOut entry={entry} />
       </section>
       <Receipt receipt={entry.receipt} officialNo={officialNo} />
     </div>

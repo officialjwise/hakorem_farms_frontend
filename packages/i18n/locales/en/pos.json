@@ -299,7 +299,7 @@
     "differsBody": "The server's figure stands. Tell a manager, so the difference is looked at.",
     "refused": "The server refused this record",
     "copy": "Copy of the receipt",
-    "copyNamed": "Print a copy of {{ref}}",
+    "copyNamed": "Copy of the receipt {{ref}}",
     "copyTitle": "A copy of the receipt",
     "printCopy": "Print a copy on the printer",
     "approvedBy": "{{what}}: {{name}}'s PIN (version {{version}})",

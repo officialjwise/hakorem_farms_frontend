@@ -103,12 +103,13 @@ export function PinApprovalField({
         loading={checking}
         loadingLabel={t('pin.checking')}
         onClick={() => {
+          const entered = pin;
+          setPin('');
           setChecking(true);
           void getTill()
-            .checkPin(who, pin, approval)
+            .checkPin(who, entered, approval)
             .then((result) => {
               setOutcome(result);
-              setPin('');
               if (result.kind === 'ok' && result.record !== null) onApproved(result.record);
             })
             .finally(() => setChecking(false));

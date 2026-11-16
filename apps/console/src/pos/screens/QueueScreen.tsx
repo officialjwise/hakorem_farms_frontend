@@ -7,7 +7,7 @@ import { needsAttention, pendingCount, totalDiffers } from '../offline/sync';
 import { getTill, useTill } from '../offline/till';
 import type { QueueEntry, SaleEntry } from '../offline/types';
 import { EntryStatus, Receipt } from '../presentation';
-import { ReceiptOut } from '../sale/ReceiptOut';
+import { LazyReceiptOut } from '../parts';
 
 /**
  * The till's queue (OFFLINE_SYNC section 6): every sale, cash movement and shift open on this device that the
@@ -112,7 +112,7 @@ export function QueueScreen() {
             </Button>
           </div>
           <Receipt receipt={copy.receipt} officialNo={copy.serverResult?.receiptNo ?? null} copy />
-          <ReceiptOut entry={copy} copy />
+          <LazyReceiptOut entry={copy} copy />
         </section>
       ) : null}
     </div>

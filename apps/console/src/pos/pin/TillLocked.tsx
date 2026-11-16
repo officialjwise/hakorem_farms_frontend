@@ -24,13 +24,13 @@ export function TillLocked() {
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
+    // The field empties as the PIN is taken, so digits typed during the check are the next try's.
+    const entered = pin;
+    setPin('');
     setChecking(true);
     void getTill()
-      .unlock(pin)
-      .then((result) => {
-        setOutcome(result);
-        setPin('');
-      })
+      .unlock(entered)
+      .then(setOutcome)
       .finally(() => setChecking(false));
   };
 

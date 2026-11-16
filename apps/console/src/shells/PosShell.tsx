@@ -6,7 +6,7 @@ import { Button, Dialog, DialogActions, Field, Input, StatusBadge } from '@hakor
 import { useAuth } from '../auth/AuthProvider';
 import { pendingCount } from '../pos/offline/sync';
 import { getTill, hasTill, useTill } from '../pos/offline/till';
-import { TillLocked } from '../pos/pin/TillLocked';
+import { LazyTillLocked } from '../pos/parts';
 import { preloadTillScreens } from '../pos/routes';
 import { emitScan } from '../pos/scans';
 import { useBarcodeTrap } from '../pos/useBarcodeTrap';
@@ -71,9 +71,9 @@ export function PosShell() {
 
   const signOut = async () => {
     setConfirmOpen(false);
-    // The PIN verifiers and the lock go with the cashier (OFFLINE_SYNC section 3); the queue stays.
-    if (hasTill()) await getTill().forgetPins();
-    await auth.logout();
+    // The PIN verifiers and the lock go with the cashier (OFFLINE_SYNC section 3); the queue stays. The
+    // sign-out request starts at once, beside the store write, as it did before there were PINs.
+    await Promise.all([hasTill() ? getTill().forgetPins() : Promise.resolve(), auth.logout()]);
     navigate('/login', { replace: true });
   };
 
@@ -141,7 +141,7 @@ export function PosShell() {
       </header>
       {locked ? (
         <div className="p-4">
-          <TillLocked />
+          <LazyTillLocked />
         </div>
       ) : null}
       <nav
