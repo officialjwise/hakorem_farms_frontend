@@ -498,31 +498,14 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 
 **Until this lands:** the till treats the pack's prices as what the customer pays (A-F9-02) and reads each synced order's `finalTotalPesewas` back.
 
-## CR-032. The till PIN, verified on the device and checked again at sync; and the cash movement reasons in the pack (additive)
+## CR-032. The cash movement reasons in the offline pack, and the offline PIN verifiers (additive)
 
-- **Raised by:** frontend F9, the offline unlock, supervisor approvals offline and the shift screen. **Made a firm request by the owner (2026-11-16):** "Without one, an offline till either cannot be unlocked or can be unlocked by anyone, and both defeat the design."
-- **Contract read first (1.42.0):** OFFLINE_SYNC section 3 describes a `local_auth` store with a slow hash of each operator's PIN for the offline unlock, a supervisor's approval offline (an unverified mobile money tender, 5.3) and a cash drop's witness (10). No operation sets, issues or reads a PIN, and nothing in a synced sale says which PIN approved what. `recordCashMovement` needs a `reasonCode` for a pay-out or pay-in, but the pack example carries only `PRICE_OVERRIDE` and `VOID` reasons.
-
-**Request, as the owner set it out:**
-
-1. **The server issues each operator's PIN as a hash.** An operation for the till to fetch, at an online sign-in on an enrolled device, the PIN verifier of the signed-in operator and of each supervisor at the register's branch: a salted, slow hash and its parameters (algorithm, cost, salt), never the PIN. How an operator sets or is given a PIN is the backend's to define (with its own permission and audit).
-2. **The till verifies locally; the PIN never authenticates to the server.** No operation accepts a PIN. It unlocks the device and records approvals; the staff session and the device credential stay the server's controls.
-3. **Four to six digits**, with **attempt limits and a lockout** the till enforces offline and the pack states (attempts before lockout, lockout duration), so every till applies the same rule.
-4. **An approval made offline records which PIN approved it**: the approver's principal id and the verifier version it was checked against, on the sale line or tender (the price override, the unverified mobile money tender) and on a cash drop's witness. **The server verifies it at sync**: an approval by a revoked operator, a superseded verifier, or someone without the approving permission is recorded and flagged as an exception, never silently accepted.
-5. **The PIN is never the only control.** A revoked till is still refused at sync (`DEVICE_REVOKED`) whatever PIN unlocked it.
-6. The pack's `reasonCodes` include the `CASH_MOVEMENT` domain.
-
-**Until this lands:** no offline unlock (a till whose session has expired offline cannot sell until it reconnects), no supervisor approval offline (so no unverified mobile money), and no cash drop witness (A-F9-04).
-
-## CR-033. A digital receipt the customer can open from a link (additive)
-
-- **Raised by:** frontend, ADR 0045 (owner, 2026-11-16): every sale produces a digital receipt, by SMS or a link; a printer is optional.
-- **Contract read first (1.42.0):** a sale carries `customerPhone` "for an SMS or WhatsApp receipt", and `sendBillingDocument` is planned (202). `BillingDocument.provisionalRef` carries the sale reference beside the official number. There is no page or public read a customer can open from a link without an account, and nothing says when the SMS is sent for a sale made offline.
+- **Raised by:** frontend F9, the shift screen and the offline unlock.
+- **Contract read first (1.42.0):** `recordCashMovement` needs a `reasonCode` for a pay-out or pay-in, and `listReasonCodes` has a `CASH_MOVEMENT` domain, but the pack example carries only `PRICE_OVERRIDE` and `VOID` reasons, so a till that went offline before reading them cannot record a pay-out. OFFLINE_SYNC section 3 describes a `local_auth` store with a slow hash of the cashier's and each supervisor's PIN, created at online sign-in, for the offline unlock, the supervisor's approval of an unverified mobile money tender and a cash drop's witness; the contract has no operation that sets or reads a PIN.
 
 **Request:**
 
-1. **A public receipt read** (no session) by an unguessable token: the official receipt number, the sale reference (`provisionalRef`), the lines, the tenders, the change and the business's details, and, until the sale has synced, a state saying the receipt is being recorded.
-2. **The link can be made on the till offline**, so it can be shown as a QR code at the counter before the sale reaches the server. The simplest shape: the link names the sale's client id (a UUIDv7, 74 random bits), and the public read answers "being recorded" until that sale arrives. If the backend prefers a server-signed token, say how the till gets one offline.
-3. **The SMS is sent once on sync** for a sale that carried `customerPhone`, with the link, the official number and the sale reference; and the sync result (or the order) says whether it was sent.
+1. The pack's `reasonCodes` include the `CASH_MOVEMENT` domain (an example change if the server already sends them).
+2. The PIN: an operation for a staff member to set their till PIN, and what the device stores to check it offline (a salted verifier and its parameters), or a statement in OFFLINE_SYNC that the verifier is made on the device from the PIN typed at an online sign-in.
 
-**Until this lands:** the till shows the sale reference and its own receipt on screen; nothing reaches the customer's phone.
+**Until this lands:** a pay-out offline is possible only with reasons the pack carries; the offline unlock, the supervisor approval offline and the cash drop's witness are not built (A-F9-04).
