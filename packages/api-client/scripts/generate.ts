@@ -50,6 +50,8 @@ interface ManifestRow {
   public: boolean;
   /** How the request body travels: JSON, `multipart/form-data` (a file upload), or no body at all. */
   body: 'json' | 'multipart' | 'none';
+  /** A security requirement names `deviceCredential`: an enrolled till sends `X-Device-Credential` (ADR 0044). */
+  device: boolean;
 }
 
 function bodyOf(operation: RawOperation): ManifestRow['body'] {
@@ -88,6 +90,7 @@ function buildManifest(document: RawDocument): Record<string, ManifestRow> {
         csrf: csrfOf(parameters),
         public: Array.isArray(operation.security) && operation.security.length === 0,
         body: bodyOf(operation),
+        device: (operation.security ?? []).some((requirement) => 'deviceCredential' in requirement),
       };
     }
   }

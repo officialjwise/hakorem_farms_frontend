@@ -81,6 +81,44 @@ describe('building the request from the contract', () => {
     expect(await request.json()).toEqual({ version: 3, reason: 'Discontinued' });
   });
 
+  it('sends the till credential only where the contract names deviceCredential (ADR 0044)', async () => {
+    const hooks = session({ getDeviceCredential: () => 'hkdev_T1.test' });
+    const { client, seen } = harness(
+      () =>
+        json({
+          shiftId: 's1',
+          results: [],
+          cashMovementResults: [],
+          counterGaps: [],
+          serverTime: '',
+        }),
+      { session: hooks },
+    );
+    await client.call('syncOfflineSales', {
+      body: { deviceId: 'd1', shiftId: 's1', sales: [] },
+    });
+    expect(nth(seen, 0).headers.get('X-Device-Credential')).toBe('hkdev_T1.test');
+
+    await client.call('listProducts', { query: {} });
+    expect(nth(seen, 1).headers.has('X-Device-Credential')).toBe(false);
+  });
+
+  it('sends no till credential from a browser that is not a till', async () => {
+    const { client, seen } = harness(
+      () =>
+        json({
+          shiftId: 's1',
+          results: [],
+          cashMovementResults: [],
+          counterGaps: [],
+          serverTime: '',
+        }),
+      { session: session() },
+    );
+    await client.call('syncOfflineSales', { body: { deviceId: 'd1', shiftId: 's1', sales: [] } });
+    expect(nth(seen, 0).headers.has('X-Device-Credential')).toBe(false);
+  });
+
   it('refuses a mutation with no idempotency key instead of sending it', async () => {
     const { client, seen } = harness(() => json({}));
     const call = client.call as unknown as (
