@@ -44,7 +44,12 @@ describe('reads, typed from the contract', () => {
     const page = await clientWith().call('listProducts', { query: { limit: 5 } });
     expect(page.data.length).toBeGreaterThan(0);
     expect(page.page).toMatchObject({ hasMore: expect.any(Boolean), limit: expect.any(Number) });
-    expect(page.data[0]).toMatchObject({ id: expect.any(String), sku: 'LIV-GOAT', name: 'Goat' });
+    // Newest first since 1.33.0, so the example's first row is the last product added.
+    expect(page.data[0]).toMatchObject({
+      id: expect.any(String),
+      sku: 'EGG-BIG',
+      name: 'Eggs, big, crate of 30',
+    });
   });
 });
 

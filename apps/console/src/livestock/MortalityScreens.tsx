@@ -35,7 +35,7 @@ import { MortalityStatusBadge } from './presentation';
 import { rangeQuery } from './range';
 
 type MortalityRecord = components['schemas']['MortalityRecord'];
-const STATUSES = ['REPORTED', 'PENDING_APPROVAL', 'POSTED', 'REJECTED'] as const;
+const STATUSES = ['REPORTED', 'PENDING_APPROVAL', 'POSTED', 'REJECTED', 'RETURNED'] as const;
 const KINDS = ['DEATH', 'CULL'] as const;
 
 function Who({ record }: { record: MortalityRecord }) {
@@ -328,6 +328,11 @@ function RecordDetail({ record, back }: { record: MortalityRecord; back: ReactNo
       {posted ? <Alert severity="good" title={t('mortalityRecord.posted')} /> : null}
       {record.status === 'PENDING_APPROVAL' && pending === null ? (
         <Alert severity="info" title={t('mortalityRecord.awaiting')} />
+      ) : null}
+      {record.status === 'RETURNED' ? (
+        <Alert severity="warning" title={t('mortalityRecord.returnedTitle')}>
+          {t(`mortalityRecord.returnedReason.${record.returnedReason ?? 'UNKNOWN'}`)}
+        </Alert>
       ) : null}
       {record.status === 'REPORTED' ? (
         <p className="text-sm text-fg-muted">{t('mortalityRecord.onlyReporter')}</p>

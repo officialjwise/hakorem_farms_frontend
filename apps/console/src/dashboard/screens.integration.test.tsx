@@ -79,8 +79,6 @@ describe('the dashboard against the Prism mock', () => {
       'Sales today',
       'Sales per day',
       'Sales this month',
-      'Owed by customers',
-      'Cash on hand',
       'Sales by channel today',
       'Selling best today',
       'Needs attention',
@@ -89,13 +87,18 @@ describe('the dashboard against the Prism mock', () => {
       expect(within(pending).getByText(label)).toHaveAttribute('data-slot', 'pending-figure');
     }
     expect(pending.textContent).not.toMatch(/\d/);
+    // Receivables (1.39.0) and cash (1.37.0) answer from the ledger now, so they are no longer pending.
+    expect(within(pending).queryByText('Owed by customers')).toBeNull();
+    expect(within(pending).queryByText('Cash on hand')).toBeNull();
     // The row carries only what the server sent; nothing pending appears there, as zero or otherwise.
-    // The sales and money row has nothing to show, so it is not drawn at all.
-    expect(screen.queryByRole('region', { name: 'Today at a glance' })).toBeNull();
+    // The money row shows what is owed and the cash, and none of the pending sales figures.
+    const money = screen.getByRole('region', { name: 'Today at a glance' });
+    expect(within(money).getByText('Owed by customers')).toBeInTheDocument();
+    expect(within(money).getByText('Cash on hand')).toBeInTheDocument();
+    expect(within(money).queryByText('Sales today')).toBeNull();
     const row = screen.getByRole('region', { name: 'Stock and animals' });
     expect(within(row).getByText('Stock value')).toBeInTheDocument();
     expect(within(row).getByText('Animals on hand')).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Where the cash is' })).toBeNull();
   });
 
   it('the stat tiles lead to the screens behind them', async () => {
