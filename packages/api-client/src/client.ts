@@ -77,6 +77,8 @@ interface RawClient {
 }
 
 const CSRF_HEADER = 'X-CSRF-Token';
+/** The enrolled till's credential (contract `deviceCredential`, ADR 0044). Sent only where the contract asks. */
+const DEVICE_HEADER = 'X-Device-Credential';
 
 /**
  * A multipart body (ADR 0037): each field of the object as a form field, a `Blob` as a file part with its
@@ -175,6 +177,8 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     }
     const csrf = session?.getCsrfToken() ?? null;
     if (row.csrf !== 'none' && csrf !== null) headers[CSRF_HEADER] = csrf;
+    const device = row.device ? (session?.getDeviceCredential?.() ?? null) : null;
+    if (device !== null) headers[DEVICE_HEADER] = device;
 
     const controller = new AbortController();
     let timedOut = false;

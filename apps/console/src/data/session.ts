@@ -6,6 +6,13 @@ import { ApiError, type SessionHooks } from '@hakorem/api-client';
  */
 let owner: SessionHooks | null = null;
 
+/** Where the enrolled till's credential comes from (ADR 0044). Only the till document sets one. */
+let deviceCredential: () => string | null = () => null;
+
+export function attachDeviceCredential(source: () => string | null): void {
+  deviceCredential = source;
+}
+
 export function attachSession(hooks: SessionHooks): () => void {
   owner = hooks;
   return () => {
@@ -27,4 +34,5 @@ export const sessionHooks: SessionHooks = {
       : owner.refresh(),
   onExpired: () => owner?.onExpired(),
   getCsrfToken: () => owner?.getCsrfToken() ?? null,
+  getDeviceCredential: () => deviceCredential(),
 };

@@ -64,6 +64,11 @@
     "sessions": "Sessions",
     "audit": "Audit log",
     "pos": "Point of sale",
+    "posSetup": "Set up this till",
+    "posShiftOpen": "Open a shift",
+    "posShift": "Shift",
+    "posQueue": "Sales to send",
+    "posReturns": "Returns",
     "userNew": "New user",
     "userDetail": "User",
     "roleNew": "New role",
@@ -153,7 +158,22 @@
     "close": "Close",
     "empty": {
       "title": "No sale in progress",
-      "body": "Scan an item to start a sale. Selling arrives in a later session."
+      "body": "Scan an item to start a sale."
+    },
+    "allSent": "All sent",
+    "waiting_one": "{{count}} to send",
+    "waiting_other": "{{count}} to send",
+    "till": "{{register}}",
+    "tillShift": "{{register}}, {{cashier}}'s shift",
+    "signOutWaiting_one": "{{count}} record on this device is not sent yet. It stays here and is sent when someone signs in on this till.",
+    "signOutWaiting_other": "{{count}} records on this device are not sent yet. They stay here and are sent when someone signs in on this till.",
+    "navLabel": "Till",
+    "nav": {
+      "sale": "Sale",
+      "shift": "Shift",
+      "queue": "Sales to send",
+      "returns": "Returns",
+      "setup": "Set up"
     }
   },
   "offline": {

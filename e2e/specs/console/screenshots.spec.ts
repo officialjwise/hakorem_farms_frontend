@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect, test } from '../../support/test';
 import type { FakeApi } from '../../support/fakeApi';
 import { signInWithTotp, USERS } from '../../support/helpers';
+import { installTillServer, openTillShift, scan } from '../../support/till';
 
 /**
  * Screenshots of every screen a phase built, for the owner to review from a phone (owner, 2026-11-15).
@@ -450,4 +451,152 @@ function previewWithChanges(api: FakeApi) {
       ),
     };
   });
+}
+
+/**
+ * F09, the till: each shot sets the device up as till T1 and opens the cashier's shift first (the manager
+ * enrols, the cashier opens), as a till is used, then takes the screen to its state.
+ */
+interface TillShot {
+  name: string;
+  theme?: 'light' | 'dark';
+  act: (page: Page, api: FakeApi, offline: (off: boolean) => Promise<void>) => Promise<void>;
+}
+
+async function cart(page: Page) {
+  await scan(page, 'G-0142');
+  await page.getByRole('button', { name: 'Beef, 15 kg pack' }).click();
+  const line = page.getByRole('dialog', { name: 'Change Beef, 15 kg pack' });
+  await line.getByRole('textbox', { name: /^Weight \(kg\)/ }).fill('15.250');
+  await line.getByRole('button', { name: 'Save the item' }).click();
+  await expect(line).toBeHidden();
+}
+
+async function payOffline(page: Page, offline: (off: boolean) => Promise<void>) {
+  await offline(true);
+  await cart(page);
+  await page.getByRole('button', { name: 'Take payment' }).click();
+  await page.getByRole('textbox', { name: /^Cash handed over/ }).fill('1400');
+}
+
+const TILL_SHOTS: TillShot[] = [
+  { name: 'sale-empty', act: async () => undefined },
+  { name: 'sale-cart', act: async (page) => cart(page) },
+  { name: 'sale-cart-dark', theme: 'dark', act: async (page) => cart(page) },
+  {
+    name: 'line-agreed-price',
+    act: async (page) => {
+      await scan(page, 'G-0142');
+      await page.getByRole('button', { name: 'Change Goat G-0142' }).click();
+      const line = page.getByRole('dialog', { name: 'Change G-0142' });
+      await line.getByRole('textbox', { name: /^Agreed price a head/ }).fill('789.99');
+      await line.getByRole('combobox', { name: /^Why the price differs/ }).click();
+      await page.getByRole('option', { name: 'Regular customer, agreed price' }).click();
+      await line.getByRole('button', { name: 'Save the item' }).click();
+      await expect(
+        line.getByText('That discount is more than you may give on one item'),
+      ).toBeVisible();
+    },
+  },
+  { name: 'pay-offline', act: async (page, _api, offline) => payOffline(page, offline) },
+  {
+    name: 'pay-confirm',
+    act: async (page, _api, offline) => {
+      await payOffline(page, offline);
+      await page.getByRole('button', { name: 'Review the sale' }).click();
+    },
+  },
+  {
+    name: 'sale-done-offline',
+    act: async (page, _api, offline) => {
+      await payOffline(page, offline);
+      await page.getByRole('button', { name: 'Review the sale' }).click();
+      await page.getByRole('button', { name: 'Complete the sale' }).click();
+      await expect(page.getByText('Kept on this till as P-T1-312-0001')).toBeVisible();
+    },
+  },
+  {
+    name: 'sale-done-synced',
+    act: async (page, _api, offline) => {
+      await payOffline(page, offline);
+      await page.getByRole('button', { name: 'Review the sale' }).click();
+      await page.getByRole('button', { name: 'Complete the sale' }).click();
+      await offline(false);
+      await expect(page.getByText('Official receipt RCP-2026-DDW-T1-006201')).toBeVisible();
+    },
+  },
+  {
+    name: 'queue-offline',
+    act: async (page, _api, offline) => {
+      await payOffline(page, offline);
+      await page.getByRole('button', { name: 'Review the sale' }).click();
+      await page.getByRole('button', { name: 'Complete the sale' }).click();
+      await page.getByRole('link', { name: 'See sales to send' }).click();
+      await expect(page.getByText('1 record is waiting on this till.')).toBeVisible();
+    },
+  },
+  {
+    name: 'shift',
+    act: async (page) => {
+      await page.getByRole('link', { name: 'Shift', exact: true }).click();
+      await expect(
+        page.getByText('What the till expected is shown only after you declare.'),
+      ).toBeVisible();
+    },
+  },
+  {
+    name: 'shift-counted',
+    act: async (page) => {
+      await page.getByRole('link', { name: 'Shift', exact: true }).click();
+      await page.getByRole('textbox', { name: /^Cash counted/ }).fill('8225');
+      await page.getByRole('textbox', { name: /^Mobile money counted/ }).fill('4120');
+      await page.getByRole('button', { name: 'Declare the count' }).click();
+      await page
+        .getByRole('dialog', { name: 'Declare this count?' })
+        .getByRole('button', { name: 'Declare the count' })
+        .click();
+      await expect(page.locator('[data-slot="over-short"]')).toBeVisible();
+    },
+  },
+  {
+    name: 'returns',
+    act: async (page, api) => {
+      api.rewrite('listReasonCodes', () => ({
+        data: [
+          {
+            code: 'CHANGED_MIND',
+            domain: 'RETURN',
+            description: 'Customer changed their mind',
+            requiresNote: false,
+            lossAccountGroup: null,
+          },
+        ],
+        page: { nextCursor: null, limit: 100, hasMore: false },
+      }));
+      await page.getByRole('link', { name: 'Returns' }).click();
+      await page.getByRole('textbox', { name: /^Receipt number/ }).fill('RCP-2026-DDW-T1-018834');
+      await page.getByRole('button', { name: 'Find the receipt' }).click();
+      await page.getByRole('textbox', { name: /^Returning of Eggs/ }).fill('1');
+    },
+  },
+];
+
+for (const shot of TILL_SHOTS) {
+  for (const width of WIDTHS) {
+    test(`@screenshots F09 ${shot.name} at ${width}`, async ({ page, context, api }) => {
+      installTillServer(api, (sale) => sale.tenders.reduce((sum, t) => sum + t.amountPesewas, 0));
+      await page.emulateMedia({ colorScheme: shot.theme ?? 'light' });
+      await page.setViewportSize({ width, height: width === 360 ? 800 : 900 });
+      await openTillShift(page);
+      if (shot.theme === 'dark') {
+        await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+      }
+      await shot.act(page, api, (off) => api.setNetwork(context, !off));
+      await page.screenshot({
+        path: `../docs/screenshots/F09/${shot.name}-${width}.png`,
+        fullPage: true,
+        scale: 'css',
+      });
+    });
+  }
 }

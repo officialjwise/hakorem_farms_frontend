@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { parseHex } from '../../tokens/contrast';
 import { colors } from '../../tokens/palette';
+import { Dialog } from '../dialog/Dialog';
 import { Field } from '../field/Field';
 import { Select } from './Select';
 
@@ -125,5 +126,36 @@ export const KeyboardPath: Story = {
     await userEvent.keyboard('{ArrowDown}{Enter}');
     await waitFor(() => expect(trigger).toHaveTextContent('Sheep'));
     await expect(trigger).toHaveFocus();
+  },
+};
+
+/**
+ * Inside a Dialog (F9, the till's line and payment dialogs): the list opens above the Dialog's scrim, on
+ * the popover layer, so its options can be pointed at and chosen. Before F9 it sat on the dropdown layer,
+ * under the scrim, and a click on an option landed on the scrim.
+ */
+export const InsideDialog: Story = {
+  render: (args) => (
+    <Dialog open title="Change the item" closeLabel="Close">
+      <Field label="Species">
+        <Select {...args} />
+      </Field>
+    </Dialog>
+  ),
+  play: async () => {
+    const page = within(document.body);
+    await userEvent.click(page.getByRole('combobox', { name: 'Species' }));
+    const list = await page.findByRole('listbox');
+    const scrim = document.querySelector('[data-slot="dialog-overlay"]');
+    const layer = (element: Element | null) =>
+      Number(
+        element
+          ? getComputedStyle(element.closest('[data-radix-popper-content-wrapper]') ?? element)
+              .zIndex
+          : 0,
+      );
+    await waitFor(() => expect(layer(list)).toBeGreaterThan(layer(scrim)));
+    await userEvent.click(page.getByRole('option', { name: 'Sheep' }));
+    await expect(page.getByRole('combobox', { name: 'Species' })).toHaveTextContent('Sheep');
   },
 };

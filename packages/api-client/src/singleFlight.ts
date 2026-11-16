@@ -12,6 +12,11 @@ export interface SessionHooks {
   onExpired: () => void;
   /** The CSRF token of the current session, for `X-CSRF-Token`. Null when there is no session. */
   getCsrfToken: () => string | null;
+  /**
+   * The credential of the enrolled till this browser is (ADR 0044), for `X-Device-Credential` on the
+   * operations whose security names `deviceCredential`. Null, or absent, on a browser that is not a till.
+   */
+  getDeviceCredential?: () => string | null;
 }
 
 export type RefreshOutcome = 'refreshed' | 'expired' | 'unreachable';

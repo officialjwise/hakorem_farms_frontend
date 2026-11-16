@@ -160,7 +160,11 @@ test.describe('POS shell chrome', () => {
     page,
   }) => {
     await openPos(page);
-    await expect(page.getByRole('navigation')).toHaveCount(0);
+    // No sidebar: the till's one navigation (F9) is a row across the top, as wide as the screen.
+    await expect(page.getByRole('navigation')).toHaveCount(1);
+    const nav = await page.getByRole('navigation', { name: 'Till' }).boundingBox();
+    expect(nav?.width ?? 0).toBeGreaterThanOrEqual(355);
+    expect(nav?.y ?? 0).toBeLessThan(200);
     const size = await page.getByRole('button', { name: 'Sign out' }).boundingBox();
     expect(size?.height ?? 0).toBeGreaterThanOrEqual(44);
     const overflow = await page.evaluate(

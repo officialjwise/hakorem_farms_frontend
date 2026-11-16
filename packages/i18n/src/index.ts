@@ -10,6 +10,7 @@ import i18next, { type BackendModule, type i18n } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import type approvalsNs from '../locales/en/approvals.json';
 import type billingNs from '../locales/en/billing.json';
+import type posNs from '../locales/en/pos.json';
 import type audit from '../locales/en/audit.json';
 import type auth from '../locales/en/auth.json';
 import type catalogueNs from '../locales/en/catalogue.json';
@@ -55,6 +56,7 @@ export const NAMESPACES = [
   'processing',
   'approvals',
   'billing',
+  'pos',
 ] as const;
 export type Namespace = (typeof NAMESPACES)[number];
 
@@ -83,6 +85,7 @@ export const catalogue: Record<
     processing: () => import('../locales/en/processing.json'),
     approvals: () => import('../locales/en/approvals.json'),
     billing: () => import('../locales/en/billing.json'),
+    pos: () => import('../locales/en/pos.json'),
   },
 };
 
@@ -156,6 +159,7 @@ declare module 'i18next' {
       processing: typeof processingNs;
       approvals: typeof approvalsNs;
       billing: typeof billingNs;
+      pos: typeof posNs;
     };
   }
 }

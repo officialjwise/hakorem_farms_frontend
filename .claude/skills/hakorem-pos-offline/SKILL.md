@@ -7,11 +7,13 @@ description: Use when building or changing any POS screen, driver screen, shift,
 
 Read `docs/SHARED_BRIEF.md` (hard constraint 9, "Integrity and reliability", the offline scenario in "System acceptance scenarios") and `docs/BUILD_PROMPT.md` (F9 and F13). The conflict rules are the backend's, in `../backend/docs/OFFLINE_SYNC.md`. Read that file; do not restate or guess it.
 
-## What exists today, and what does not
+## What exists today
 
-- **Built in F1:** the POS shell (`apps/console/src/shells/PosShell.tsx`), the barcode focus trap (`pos/useBarcodeTrap.ts`, ADR 0014, proved with a real Dialog in `e2e/specs/console/pos-barcode-dialog.spec.ts`), and the offline indicator. The service worker is a minimal no-cache stub (ADR 0013).
-- **Not built yet:** the IndexedDB queue, the local cart total, the sale screens (**F9**), and the service worker strategy and the fifty-transaction test (**F13**). Do not describe or import them before then.
-- Available now in `packages/ui`: the touch-sized `lg` Button, `Dialog` for confirmations, `useToast`, `ErrorState`, `StatusBadge`, and the compact density the POS runs in.
+- **Built in F1:** the POS shell (`apps/console/src/shells/PosShell.tsx`), the barcode focus trap (`pos/useBarcodeTrap.ts`, ADR 0014, proved with a real Dialog in `e2e/specs/console/pos-barcode-dialog.spec.ts`), and the offline indicator.
+- **Built in F9 (ADR 0043, ADR 0044):** `apps/console/src/pos/offline/`: the IndexedDB store (`store.ts`, database `hakorem-till`) with a memory twin for tests; the cart arithmetic ported from the backend's ADR-0001 (`cart.ts`, exact-pesewa tests); the RFC 8785 payload hash (`payloadHash.ts`); the sale builder with counter and provisional reference (`sale.ts`); the sync pass (`sync.ts`); and the one till store screens read with `useTill()` (`till.ts`). Every sale goes through the queue and `syncOfflineSales`, online or not. The till's screens are in `pos/screens/` and `pos/sale/`; the gate is `e2e/specs/console/pos-offline.spec.ts` (network off, one sync, a lost answer, fifty sales).
+- **The e2e network switch:** `api.setNetwork(context, false)`. Playwright's `context.setOffline` alone still lets a request reach a route handler, so the fake would answer it.
+- **Not built yet:** the service worker's precache and a till started with no network (**F13**); the offline PIN unlock, supervisor approval offline and the cash drop witness (CR-032, A-F9-04); raw ESC/POS printing (the till prints an 80 mm page through the browser).
+- Available in `packages/ui`: the touch-sized `lg` Button, `Dialog`, `Select` (opens above a Dialog since F9), `useToast`, `ErrorState`, `StatusBadge`, and the compact density the POS runs in.
 
 ## Rules (they hold from the first POS line)
 
@@ -32,10 +34,16 @@ Disconnect, run fifty POS transactions, reconnect. Exactly fifty land, no duplic
 ## Correct
 
 ```ts
-// Rules, not code that exists today: the id is made once, at the moment of intent.
-const sale = { id: uuidv7(), lines, tender, createdAt: now() };
-await queue.enqueue(sale); // persisted in IndexedDB before anything else
-await sync.flush(); // retried safely: the server dedupes on sale.id
+// The till's own path (pos/offline/till.ts): the id, counter, hash and receipt are made once, written in
+// one IndexedDB transaction, then the queue is sent; a resend carries the same id and the server dedupes.
+const entry = await getTill().completeSale({
+  lines,
+  cashMethod,
+  others,
+  cashHandedPesewas,
+  customerPhone: null,
+});
+// entry.payload.id is a UUIDv7; entry.payload.deviceCounter is the shift's next; entry.receipt is printed.
 ```
 
 ## Incorrect

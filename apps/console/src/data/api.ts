@@ -30,6 +30,12 @@ const lazyApi: ApiClient = {
       }),
 };
 
+/**
+ * The client for the one caller that is not a screen: the till's queue (ADR 0043), which sends records with
+ * no screen open. Refusals in the console's words, as for the hooks.
+ */
+export const consoleApi: ApiClient = lazyApi;
+
 /** The hooks every screen uses. Screens never import `@tanstack/react-query` or call `fetch`. */
 export const { useApiQuery, useApiAllPages, useApiMutation } = createApiHooks(lazyApi);
 

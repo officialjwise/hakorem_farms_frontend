@@ -97,6 +97,36 @@ export interface FakeUser {
 }
 
 /**
+ * What the till needs beyond the real seed's Cashier (F9, A-F9-01; CR-023 asks for the role matrix): its own
+ * shifts (`listShifts` says "a cashier sees only their own shifts"), the cash drops and pay-outs it records,
+ * its X report, the till's reason codes, and returns at the counter (the owner, 2026-11-16: "refunds at the
+ * counter are till returns, not credit notes").
+ */
+const CASHIER_TILL_PERMISSIONS = [
+  'pos.shift.read',
+  'pos.cash.move',
+  'pos.shift.report',
+  'mdm.reason_code.read',
+  'ord.return.create',
+  'ord.return.read',
+  // A mobile money tender at the counter: the request to the customer's phone and the check that it cleared.
+  'pay.payment.initiate',
+  'pay.payment.read',
+];
+
+/**
+ * What a Manager holds at the till (F9, A-F9-01): setting a till up (the registers and enrolling the device,
+ * "a manager" in OFFLINE_SYNC section 3), signing a shift's close off, and force-closing one.
+ */
+const MANAGER_TILL_PERMISSIONS = [
+  'pos.register.read',
+  'pos.device.read',
+  'pos.device.enrol',
+  'pos.shift.close.approve',
+  'pos.shift.force_close',
+];
+
+/**
  * The real seed's Cashier (backend main at e47ae8f, read by signing in on localhost in F5). It holds its own
  * sessions: `iam.session.read` and `iam.session.revoke` answer only for the caller's own devices.
  */
@@ -113,6 +143,7 @@ const CASHIER_PERMISSIONS = [
   // 1.39.0 and 1.40.0: the Cashier reads the branch's billing documents and reprints them.
   'bil.document.read',
   'bil.document.reprint',
+  ...CASHIER_TILL_PERMISSIONS,
 ];
 
 /** What the owner holds for the F3 screens: users, roles, grants, sessions and the audit log. */
@@ -318,11 +349,15 @@ const MANAGER_PERMISSIONS = [
   'prc.order.create',
   'prc.order.reverse',
   // 1.39.0 and 1.40.0: the Manager reads and reprints billing documents, approves credit notes and opens
-  // the archive. Who raises a credit note is not said (A-F8-03), so the Manager does not.
+  // the archive. The owner (2026-11-16): the Accountant, a Manager or the Owner raises a credit note, never
+  // a cashier, and an Owner or Manager who did not raise it approves it. The backend is putting it in the
+  // role matrix (CR-023).
   'bil.document.read',
   'bil.document.reprint',
+  'bil.credit_note.create',
   'bil.credit_note.approve',
   'doc.document.read',
+  ...MANAGER_TILL_PERMISSIONS,
 ];
 
 /** The Accountant: the four the contract's `listRoles` example gives the role. It must use TOTP. */
@@ -334,8 +369,10 @@ const ACCOUNTANT_PERMISSIONS = [
   'pur.supplier_payment.create',
   'aud.audit.read',
   // 1.39.0 and 1.40.0: the Accountant reads billing documents, raises debit notes and opens the archive.
+  // The owner (2026-11-16): the Accountant raises credit notes too, and never approves them.
   'bil.document.read',
   'bil.debit_note.create',
+  'bil.credit_note.create',
   'doc.document.read',
 ];
 
@@ -358,6 +395,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
       ...OWNER_F6_PERMISSIONS,
       ...OWNER_F6B_PERMISSIONS,
       ...OWNER_F8_PERMISSIONS,
+      ...MANAGER_TILL_PERMISSIONS,
     ],
     moreBranches: SELLING_POINTS,
   },

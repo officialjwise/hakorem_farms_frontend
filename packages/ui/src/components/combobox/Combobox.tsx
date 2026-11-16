@@ -265,7 +265,7 @@ export function Combobox<L extends string>({
             // Escape and outside clicks are handled by the input, which owns focus.
             onEscapeKeyDown={(event) => event.preventDefault()}
             onInteractOutside={(event) => event.preventDefault()}
-            className="z-dropdown max-h-64 w-(--radix-popover-trigger-width) overflow-auto rounded-md border border-border-strong bg-surface p-1 text-fg shadow-md"
+            className="z-popover max-h-64 w-(--radix-popover-trigger-width) overflow-auto rounded-md border border-border-strong bg-surface p-1 text-fg shadow-md"
           >
             {listRendered ? (
               <div
