@@ -424,6 +424,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 
 **Until this lands:** the inbox shows these requests with their summary and amount, and links only the subjects it has a screen for. The purchase order and the supplier payment have no screen yet.
 
+**Status:** answered by 1.40.0. `submitPurchaseOrder` and `submitSupplierPayment` name `PURCHASE_ORDER` and `SUPPLIER_PAYMENT`; `resolveStockException` says its write-off's subject is the stock adjustment it posts, which the inbox already links; `listApprovalPolicies` shows the seeded purchase order threshold and the supplier payment policy. Nothing to build until the purchase order and supplier payment screens exist (`documentHref` links a kind once its screen does).
+
 ## CR-027. A processing reversal's approval names its order (additive)
 
 - **Raised by:** frontend F7, the approvals inbox, which links each request to its record by `subject`.
@@ -447,6 +449,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 **Request:** `getShopProfile` (`GET /shop/profile`, anonymous, cacheable): the trading name, a phone and a WhatsApp number in E.164, the farm's address and directions, and opening hours. The footer and every "call us" line read it.
 
 **Until this lands:** no phone number on the storefront.
+
+**Status:** the owner says (2026-11-16) the backend is adding a public read of the business's phone and WhatsApp numbers. When it lands, live animal pages show them, with a WhatsApp link. Not in 1.41.0 (F8 read it); still open.
 
 ## CR-029. A cart at checkout says which checkout it is in (additive)
 

@@ -56,3 +56,36 @@ The till loads its shell and sale screen with the document. Every other till scr
 ## 3. Files in the build that need not be served
 
 `dist/.vite/manifest.json` is the chunk graph that `pnpm budget:console` reads. It names only files the documents already link to, so serving it does no harm, but the console image may leave it out.
+
+## 4. The shop and the API share one origin: no CORS (owner, 2026-11-16)
+
+**The decision.** The storefront and the API are served from the same domain, with the API under a path, through the VPS's reverse proxy. The shop on the apex (`https://hakoremfarms.com`), the API under a path of it (for example `https://hakoremfarms.com/api/v1`). There is no CORS for the shop: the browser's calls are same-origin. This replaces, for the shop, the shared brief's "the API on another subdomain" (Deployment, "Data and secrets") and closes A-F7-02.
+
+**Why it fits the storefront as built (F7):**
+
+- The basket, the checkout and "Add to basket" call the API from the browser with credentials, because only the browser holds the guest cart's `__Host-hk_guest` cookie (contract 1.32.0). That cookie is host-only, `Secure`, `SameSite=Strict` and `Path=/`. On one origin it is set and sent on the shop's own host, and no preflight is needed.
+- The public pages read the catalogue on the storefront's server.
+
+**What F13 does:**
+
+1. **One variable still decides the API (ADR 0019).** Build the storefront with `HK_API_BASE_URL` set to the absolute same-origin URL, `https://hakoremfarms.com/api/v1` (staging the same on its own host), not the bare path `/api/v1`. Next replaces the one value on the server and in the browser, and the server cannot fetch a relative path. The browser's calls are then same-origin and carry the cookie.
+2. **Keep the server's reads on the box.** The storefront container resolves the shop's host name to the reverse proxy (Compose `extra_hosts`, or a network alias on the proxy), so a server-rendered page's API read goes container to proxy to API and never leaves the VPS. No second variable.
+3. **The proxy routes the path** to the API container and everything else to the storefront. For example, in the shop's Caddy block, before the storefront's `reverse_proxy`:
+
+   ```caddyfile
+   	handle_path /api/* {
+   		reverse_proxy api:3000
+   	}
+   ```
+
+   `handle_path` strips `/api`, so the API keeps serving `/v1/...`. The port and the prefix are the backend's to confirm in its `docs/DEPLOYMENT.md`; the owner relays this, as with section 1.
+
+4. **The API allows the shop's own origin.** Same-origin requests still send `Origin` on a write, and `createCart` "requires an allowed `Origin`". The API's allowed origins list holds `https://hakoremfarms.com` (and staging's), and no CORS headers are needed for it.
+
+**Not decided here: the console.** The decision names the shop. The console is on its own subdomain (shared brief) with its own cookie and CSRF (ADR 0024). The same arrangement on the console's host (its own `/api` path to the same API) would remove CORS there too. F13 asks the owner before wiring it.
+
+**How to check it** (F13 smoke suite, against staging and after every deploy):
+
+- `GET https://<shop>/api/v1/health` answers from the API, and `GET https://<shop>/` from the storefront.
+- On a product page, "Add to basket" succeeds with no CORS preflight (`OPTIONS`) in the network log, and the response sets `__Host-hk_guest` on the shop's host.
+- A category page renders its products with the network log showing no browser call to the API (the read happened on the server).
