@@ -29,6 +29,6 @@ Option 2, and never option 3.
 ## Consequences
 
 - The till sells on any phone, with or without a printer, and behaves the same online and offline.
-- To build, after B9b (see the F9 report's opening message): sending the digital receipt on sync and showing its link or QR code at the counter (needs CR-033); detecting a Bluetooth printer and printing 58 mm ESC/POS with the sale reference marked as such; removing the F9 80 mm print-to-page receipt.
+- To build next, against the mock until CR-033 lands (see the F9 report's opening message): sending the digital receipt on sync and showing its link or QR code at the counter (needs CR-033); detecting a Bluetooth printer and printing 58 mm ESC/POS with the sale reference marked as such; removing the F9 80 mm print-to-page receipt.
 - F9's receipt already labels the reference "Sale reference" and the official number "Receipt no. … Follows when sent" (changed with this ADR).
 - Revisit if the shop standardises on Android devices with a known printer, or if Q-TAX-01 requires a printed document at the point of sale.
