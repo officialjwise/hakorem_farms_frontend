@@ -37,6 +37,22 @@ export const Closed: Story = {
   render: () => <ReweighButton />,
 };
 
+/**
+ * Presses Tab from the top of the story, whatever an earlier story on the same page left focused or left in
+ * the page: a focus point at the start of the canvas takes focus, Tab moves to the story's first tabbable
+ * element, and the point is removed. Pressing Tab from wherever focus happened to be landed on the page body
+ * on CI (PR 17), or on a leftover element.
+ */
+async function tabFromTheStory(canvasElement: HTMLElement) {
+  const start = document.createElement('span');
+  start.tabIndex = -1;
+  canvasElement.prepend(start);
+  start.focus();
+  await expect(start).toHaveFocus();
+  await userEvent.tab();
+  start.remove();
+}
+
 /** Open on keyboard focus. Axe runs on the open state. */
 export const Open: Story = {
   render: () => (
@@ -45,7 +61,7 @@ export const Open: Story = {
     </div>
   ),
   play: async ({ canvasElement }) => {
-    await userEvent.tab();
+    await tabFromTheStory(canvasElement);
     await expect(within(canvasElement).getByRole('button', { name: 'Re-weigh' })).toHaveFocus();
     const tip = await within(document.body).findByRole('tooltip');
     await expect(tip).toHaveTextContent('Weigh again: F2');
@@ -61,7 +77,8 @@ export const OpenDarkCompact: Story = {
     </div>
   ),
   play: async ({ canvasElement }) => {
-    await userEvent.tab();
+    await tabFromTheStory(canvasElement);
+    await expect(within(canvasElement).getByRole('button', { name: 'Re-weigh' })).toHaveFocus();
     await within(document.body).findByRole('tooltip');
     const content = document.querySelector('[data-slot="tooltip"]');
     await expect(content?.closest('[data-slot="ui-portal"]')).toHaveAttribute('data-theme', 'dark');
@@ -88,8 +105,9 @@ export const KeyboardPath: Story = {
       <ReweighButton />
     </div>
   ),
-  play: async () => {
-    await userEvent.tab();
+  play: async ({ canvasElement }) => {
+    await tabFromTheStory(canvasElement);
+    await expect(within(canvasElement).getByRole('button', { name: 'Re-weigh' })).toHaveFocus();
     await within(document.body).findByRole('tooltip');
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(within(document.body).queryByRole('tooltip')).toBeNull());
