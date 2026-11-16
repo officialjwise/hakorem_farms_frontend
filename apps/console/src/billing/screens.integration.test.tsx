@@ -104,7 +104,8 @@ describe('one document', () => {
     expect(
       screen.getByText('4f2ac1d27b94f03a6c58e2b17d40f9a3c6e1b2d5f8a7c4e9b0d3f6a1c2e5b8d7'),
     ).toBeInTheDocument();
-    expect(screen.getByText('Reprinted once')).toBeInTheDocument();
+    // The contract's example since 1.43.0 (CR-030): five reprints, matching the history it lists.
+    expect(screen.getByText('Reprinted 5 times')).toBeInTheDocument();
     expect(await screen.findByText('Reprint 5')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Reprint as PDF' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Raise a credit note' })).toHaveAttribute(
