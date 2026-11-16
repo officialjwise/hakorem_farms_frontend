@@ -117,7 +117,14 @@
     "processingOrder": "Processing order",
     "yieldStandards": "Yield standards",
     "reportDeath": "Report a death",
-    "approvals": "Approvals"
+    "approvals": "Approvals",
+    "billingDocuments": "Invoices and receipts",
+    "billingDocument": "Document",
+    "creditNote": "Credit note",
+    "debitNote": "Debit note",
+    "statements": "Customer statements",
+    "statement": "Statement",
+    "statementNew": "New statement"
   },
   "placeholder": {
     "title": "This area is built in a later session",
@@ -157,6 +164,7 @@
   "navGroups": {
     "overview": "Overview",
     "selling": "Selling",
+    "billing": "Billing",
     "stock": "Stock",
     "livestock": "Livestock",
     "processing": "Processing",

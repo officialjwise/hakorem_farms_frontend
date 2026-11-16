@@ -8,6 +8,8 @@ import {
   Syringe,
   Wheat,
   BadgeCent,
+  BookText,
+  Receipt,
   ChartColumn,
   Boxes,
   Building2,
@@ -47,6 +49,7 @@ export interface NavItem {
 export type NavGroupKey =
   | 'overview'
   | 'selling'
+  | 'billing'
   | 'stock'
   | 'livestock'
   | 'processing'
@@ -87,6 +90,19 @@ export const BACK_OFFICE_GROUPS: readonly NavGroup[] = [
       POS_NAV,
       { key: 'orders', path: '/orders', permission: 'ord.order.read', icon: ShoppingBasket },
       { key: 'registers', path: '/registers', permission: 'pos.register.read', icon: Store },
+    ],
+  },
+  {
+    // F8: what the customer was charged, and what they owe.
+    key: 'billing',
+    items: [
+      {
+        key: 'billingDocuments',
+        path: '/billing-documents',
+        permission: 'bil.document.read',
+        icon: Receipt,
+      },
+      { key: 'statements', path: '/statements', permission: 'whl.statement.read', icon: BookText },
     ],
   },
   {

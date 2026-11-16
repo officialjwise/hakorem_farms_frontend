@@ -110,6 +110,9 @@ const CASHIER_PERMISSIONS = [
   'inv.stock.read',
   'pay.payment.create',
   'ord.order.read',
+  // 1.39.0 and 1.40.0: the Cashier reads the branch's billing documents and reprints them.
+  'bil.document.read',
+  'bil.document.reprint',
 ];
 
 /** What the owner holds for the F3 screens: users, roles, grants, sessions and the audit log. */
@@ -205,6 +208,22 @@ const OWNER_F6B_PERMISSIONS = [
   'pur.purchase_order.approve',
 ];
 
+/**
+ * What the owner holds for the F8 screens (1.39.0 to 1.41.0): billing documents and their reprints, credit
+ * notes (raising and approving), debit notes, the archive, statements, and the reads their forms need.
+ */
+const OWNER_F8_PERMISSIONS = [
+  'bil.document.read',
+  'bil.document.reprint',
+  'bil.credit_note.create',
+  'bil.credit_note.approve',
+  'bil.debit_note.create',
+  'doc.document.read',
+  'whl.statement.read',
+  'whl.statement.create',
+  'mdm.customer.read',
+];
+
 /** What the owner holds for the F6 screens: every livestock and processing permission in the contract. */
 const OWNER_F6_PERMISSIONS = [
   'liv.animal.read',
@@ -298,6 +317,9 @@ const MANAGER_PERMISSIONS = [
   'prc.order.read',
   'prc.order.create',
   'prc.order.reverse',
+  // 1.39.0 and 1.40.0: the Manager approves credit notes and opens the archive.
+  'bil.credit_note.approve',
+  'doc.document.read',
 ];
 
 /** The Accountant: the four the contract's `listRoles` example gives the role. It must use TOTP. */
@@ -308,6 +330,10 @@ const ACCOUNTANT_PERMISSIONS = [
   'fin.period.lock',
   'pur.supplier_payment.create',
   'aud.audit.read',
+  // 1.39.0 and 1.40.0: the Accountant reads billing documents, raises debit notes and opens the archive.
+  'bil.document.read',
+  'bil.debit_note.create',
+  'doc.document.read',
 ];
 
 /** Keyed by lower-case email. Permission codes are the contract's `x-permission` values. */
@@ -328,6 +354,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
       ...OWNER_F5C_PERMISSIONS,
       ...OWNER_F6_PERMISSIONS,
       ...OWNER_F6B_PERMISSIONS,
+      ...OWNER_F8_PERMISSIONS,
     ],
     moreBranches: SELLING_POINTS,
   },
