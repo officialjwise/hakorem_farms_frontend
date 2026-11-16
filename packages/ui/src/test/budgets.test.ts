@@ -13,6 +13,7 @@ const repo = resolve(__dirname, '../../../..');
 /** Components a person operates with a keyboard. Each needs a `KeyboardPath` story that proves it. */
 const INTERACTIVE = [
   'table-toolbar',
+  'photo-input',
   'button',
   'input',
   'textarea',

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { components } from '@hakorem/api-client';
 import {
   Alert,
+  Barcode,
   Button,
   Field,
   MutationFailure,
@@ -22,6 +23,7 @@ import {
   TableRowHeader,
   WeightDisplay,
   WeightInput,
+  isCode128B,
   type BadgeTone,
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
@@ -43,12 +45,13 @@ const PACK_STATUS: Record<Pack['status'], { tone: BadgeTone }> = {
   PICKED: { tone: 'info' },
   SOLD: { tone: 'slate' },
   WRITTEN_OFF: { tone: 'critical' },
+  REVERSED: { tone: 'slate' },
 };
 
 /**
  * The packs cut from a completed order's saleable outputs, each with its weight and barcode, and labels
- * printed for them. `listPacks`, `createPacks` and `printPackLabels` are answered by the mock only (backend
- * changelog 1.22.0): the real API does not serve them yet.
+ * printed for them. `listPacks`, `createPacks` and `printPackLabels` answer from the real API (backend
+ * changelog 1.26.0).
  */
 export function PacksSection({ order }: { order: Order }) {
   const { t } = useTranslation(['processing', 'common']);
@@ -280,62 +283,103 @@ function CreatePacks({ order }: { order: Order }) {
 }
 
 /**
- * Labels for the packs on this page. `printPackLabels` answers a signed, expiring link to the file; the
- * contract lists no Idempotency-Key for it (printing again is harmless), so none is sent.
+ * Labels for the packs on this page. `printPackLabels` answers the label data (contract 1.26.0,
+ * `PackLabelSheet`), and the sheet is drawn here with a Code 128 barcode per pack and printed by the
+ * browser. Each request is one intent with its own Idempotency-Key, so "Try again" cannot record a second
+ * first print. A label printed before comes back marked as a reprint, and says so on the paper.
  */
 function PrintLabels({ order, packs }: { order: Order; packs: readonly Pack[] }) {
   const { t } = useTranslation(['processing', 'common']);
   const [format, setFormat] = useState<LabelFormat>('PDF_LABEL_50x30');
   const print = useApiMutation('printPackLabels');
+  const keyFor = useIntentKey();
   const failure = useStateLabels({
     loading: t('labels.pending'),
     emptyTitle: t('labels.failed'),
     errorTitle: t('labels.failed'),
     deniedTitle: t('labels.failed'),
   });
+  const body = { packIds: packs.map((pack) => pack.id), format };
+  const sheet = print.data?.labels ?? [];
   return (
     <div className="grid gap-3 rounded-md border border-border p-3">
-      <h3 className="font-semibold">{t('labels.title')}</h3>
+      <h3 className="font-semibold print:hidden">{t('labels.title')}</h3>
       <MutationFailure error={print.error} labels={failure} />
-      <Field label={t('labels.format')}>
-        <Select
-          value={format}
-          onValueChange={(value) =>
-            setFormat(FORMATS.find((f) => f === value) ?? 'PDF_LABEL_50x30')
-          }
-          options={FORMATS.map((value) => ({ value, label: t(`labels.formats.${value}`) }))}
-        />
-      </Field>
-      <div>
-        <Button
-          variant="secondary"
-          loading={print.isPending}
-          loadingLabel={t('labels.pending')}
-          onClick={() =>
-            print.mutate({
-              path: { id: order.id },
-              body: { packIds: packs.map((pack) => pack.id), format },
-            })
-          }
-        >
-          <Printer aria-hidden="true" />
-          {t('labels.action', { count: packs.length })}
-        </Button>
-      </div>
-      {print.data === undefined ? null : (
-        <p role="status">
-          <a
-            href={print.data.url}
-            className="text-accent-text underline"
-            target="_blank"
-            rel="noreferrer"
+      <div className="grid gap-3 print:hidden">
+        <Field label={t('labels.format')}>
+          <Select
+            value={format}
+            onValueChange={(value) =>
+              setFormat(FORMATS.find((f) => f === value) ?? 'PDF_LABEL_50x30')
+            }
+            options={FORMATS.map((value) => ({ value, label: t(`labels.formats.${value}`) }))}
+          />
+        </Field>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            loading={print.isPending}
+            loadingLabel={t('labels.pending')}
+            onClick={() =>
+              print.mutate({ path: { id: order.id }, body }, { idempotencyKey: keyFor(body) })
+            }
           >
-            {t('labels.open')}
-          </a>{' '}
-          <span className="text-fg-muted">
-            {t('labels.expires')} <When instant={print.data.expiresAt} />
-          </span>
-        </p>
+            <Printer aria-hidden="true" />
+            {t('labels.action', { count: packs.length })}
+          </Button>
+          {sheet.length === 0 ? null : (
+            <Button onClick={() => window.print()}>{t('labels.print')}</Button>
+          )}
+        </div>
+      </div>
+      {sheet.length === 0 ? null : (
+        // Labels are always drawn light, dark bars on a light ground, so they scan on screen and on paper.
+        <ul
+          data-theme="light"
+          aria-label={t('labels.sheet')}
+          className="grid grid-cols-1 gap-2 rounded-md bg-surface-sunken p-2 sm:grid-cols-2 print:grid-cols-3 print:bg-surface print:p-0"
+        >
+          {sheet.map((label) => (
+            <li
+              key={label.pack.id}
+              className="grid break-inside-avoid justify-items-center gap-1 rounded-md border border-border-strong bg-surface p-3 text-center text-fg"
+            >
+              <span className="font-semibold break-words">{label.product.name}</span>
+              {label.reprint ? (
+                <span className="text-xs font-semibold uppercase">{t('labels.reprint')}</span>
+              ) : null}
+              {isCode128B(label.barcode.payload) ? (
+                <Barcode value={label.barcode.payload} label={t('labels.barcode')} />
+              ) : (
+                <Alert
+                  severity="warning"
+                  title={t('labels.cannot', { code: label.barcode.payload })}
+                />
+              )}
+              <span className="font-mono text-xs">{label.line}</span>
+              <dl className="grid w-full grid-cols-[auto_1fr] gap-x-2 text-start text-xs">
+                <dt className="text-fg-muted">{t('labels.lines.weight')}</dt>
+                <dd>
+                  <WeightDisplay kilograms={label.weightKg} />
+                </dd>
+                <dt className="text-fg-muted">{t('labels.lines.produced')}</dt>
+                <dd>{label.producedOn}</dd>
+                {label.expiresOn === null ? null : (
+                  <>
+                    <dt className="text-fg-muted">{t('labels.lines.expires')}</dt>
+                    <dd>{label.expiresOn}</dd>
+                  </>
+                )}
+                {label.storageTempClass === null ? null : (
+                  <>
+                    <dt className="text-fg-muted">{t('labels.lines.storage')}</dt>
+                    <dd>{t(`labels.storage.${label.storageTempClass}`)}</dd>
+                  </>
+                )}
+              </dl>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

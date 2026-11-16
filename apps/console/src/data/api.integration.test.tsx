@@ -100,6 +100,20 @@ describe('a write carries the idempotency key and the CSRF token the contract as
     expect(product.sku).toBe('LIV-GOAT');
   });
 
+  it('a photograph goes up as multipart, which the mock validates against FileUpload (ADR 0037)', async () => {
+    const photo = new File([new Uint8Array([0xff, 0xd8, 0xff, 0xd9])], 'G-0171.jpg', {
+      type: 'image/jpeg',
+    });
+    const stored = await clientWith({}, signedIn).call(
+      'uploadFile',
+      { body: { file: photo, purpose: 'EVIDENCE' } },
+      { idempotencyKey: newIdempotencyKey() },
+    );
+    // The contract's example: a stored file waiting for its malware scan.
+    expect(stored.scanStatus).toBe('PENDING');
+    expect(stored.id).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
   it('is refused by the mock when the CSRF token is missing, so the header is not optional', async () => {
     const error = await failure(
       clientWith().call(

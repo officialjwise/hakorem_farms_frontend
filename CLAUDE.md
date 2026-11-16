@@ -84,4 +84,5 @@ Arrive later, named in `docs/BUILD_PROMPT.md`: `test:e2e:staging` and `lighthous
 - **Check at 360 px**, in both themes and both densities.
 - **Git: run `git add`, `git commit` and `git push` as three separate commands.** The permission classifier refuses them chained with `&&`, `;` or a pipe. Likewise run each check on its own: a pipe in a shell chain hides a failing exit code.
 - Before pushing, run `git remote -v` and confirm it shows `hakorem_farms_frontend`. Conventional Commits, one concern per commit, tests in the same commit as the code.
+- **Every phase opens its own pull request and merges it once CI is green** (owner, 2026-11-16). Do not ask first.
 - **A red CI run is re-run only after its cause is named in the PR.** Read the failing job's log, find which test failed and why, and write that in a PR comment before any re-run. Fix the cause; never re-run to get green.

@@ -26,7 +26,10 @@ describe('the animal register', () => {
   it('loading, then every animal with its pen, last weight and cost, each opening its page', async () => {
     const release = holdResponses();
     await renderApp('/animals', await signedIn('owner'));
-    expect((await screen.findAllByText('Loading animals')).length).toBeGreaterThan(0);
+    // The first screen of a file is cold (its lazy chunk and words load first): F5b's 5 s allowance.
+    expect(
+      (await screen.findAllByText('Loading animals', {}, { timeout: 5000 })).length,
+    ).toBeGreaterThan(0);
     release();
     const goat = await screen.findByRole('link', { name: 'Open G-0142, Goat' });
     expect(goat).toHaveAttribute('href', `/animals/019a7a8f-5f3a-70a1-a5d9-12ebaa838bc9`);
@@ -75,7 +78,8 @@ describe('one animal: the F6 gate', () => {
     expect(screen.getByText('6 events, newest first')).toBeInTheDocument();
     // Newest first: the last weighing, then back to the day it was bought.
     expect(events[0]).toHaveTextContent('Weighed');
-    expect(events[0]).toHaveTextContent('average daily gain 0.161 kg');
+    // 1.25.0 recomputed the example's daily gain from its own weighings: 0.159, not 0.161.
+    expect(events[0]).toHaveTextContent('average daily gain 0.159 kg');
     expect(events[5]).toHaveTextContent('Received');
     expect(events[5]).toHaveTextContent('Bought from Kpone Livestock Traders');
     expect(events[5]).toHaveTextContent('520.00');
@@ -186,8 +190,9 @@ describe('the records behind an animal', () => {
 
   it('breeding: matings, due dates and births, and one record with its young', async () => {
     await renderApp('/breeding', await signedIn('owner'));
-    expect((await screen.findAllByRole('link', { name: 'Dam G-0118' })).length).toBe(2);
-    expect(screen.getByRole('table')).toHaveTextContent('Mated');
+    // 1.25.0: each record names its own dam, and G-0122's mating that did not take is listed.
+    expect(await screen.findByRole('link', { name: 'Dam G-0118' })).toBeInTheDocument();
+    expect(screen.getByRole('table')).toHaveTextContent('Did not take');
     queryClient.clear();
     await renderApp(`/breeding/${ANY_ID}`, await signedIn('owner'));
     expect(
@@ -224,7 +229,8 @@ describe('the records behind an animal', () => {
       mock.prefer = null;
       mock.noRows = true;
       await renderApp(path, await signedIn('owner'));
-      expect(await screen.findByText(empty)).toBeInTheDocument();
+      // Each screen is cold on its first visit here (its lazy chunk loads first): F5b's 5 s allowance.
+      expect(await screen.findByText(empty, {}, { timeout: 5000 })).toBeInTheDocument();
       queryClient.clear();
       mock.noRows = false;
       mock.prefer = 'code=500';
@@ -240,20 +246,27 @@ describe('the Farm hand (A-158)', () => {
     await renderApp('/weights', await signedIn('farmHand'));
     expect(await screen.findByRole('heading', { level: 1, name: 'Weights' })).toBeInTheDocument();
     const work = screen.getByRole('region', { name: 'Other pen work' });
-    for (const action of ['Record a treatment', 'Record feed given', 'Report a death or cull']) {
+    for (const action of ['Record a treatment', 'Record feed given']) {
       expect(within(work).getByRole('button', { name: action })).toBeEnabled();
     }
+    // A death is reported and sent from its own page, which the Farm hand can open (F6b).
+    expect(within(work).getByRole('link', { name: 'Report a death or cull' })).toHaveAttribute(
+      'href',
+      '/report-death',
+    );
     // The register is not offered, and opening it says why in words.
     expect(screen.queryByRole('link', { name: 'Animals' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Weigh a pen' })).toBeNull();
   });
 
-  it('cannot look an animal up, and is told so instead of meeting an empty list', async () => {
+  it('looks an animal up by tag in the care register, which carries no cost (contract 1.26.0)', async () => {
     const user = userEvent.setup();
     await renderApp('/weights', await signedIn('farmHand'));
     await user.click(await screen.findByRole('button', { name: 'Weigh one animal' }));
     const dialog = await screen.findByRole('dialog', { name: 'Which animal?' });
-    expect(dialog).toHaveTextContent('Your role cannot look animals up by tag yet');
+    await user.type(within(dialog).getByRole('combobox', { name: /Animal/ }), 'G-01');
+    expect(await screen.findByRole('option', { name: 'G-0142, Goat' })).toBeInTheDocument();
+    expect(dialog).not.toHaveTextContent('GH₵');
   });
 
   it('meets the register as permission denied, in words', async () => {

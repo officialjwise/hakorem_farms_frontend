@@ -46,6 +46,8 @@ export type NavKey =
   | 'breeding'
   | 'breedingRecord'
   | 'mortality'
+  | 'reportDeath'
+  | 'approvals'
   | 'mortalityRecord'
   | 'feed'
   | 'processingOrders'

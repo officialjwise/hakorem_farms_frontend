@@ -23,6 +23,13 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-017 | 2026-11-15 | Open                     |
 | CR-018 | 2026-11-15 | Open                     |
 | CR-019 | 2026-11-15 | Open                     |
+| CR-020 | 2026-11-15 | Open                     |
+| CR-021 | 2026-11-15 | Answered (1.26.0)        |
+| CR-022 | 2026-11-15 | Closed                   |
+| CR-023 | 2026-11-15 | Open                     |
+| CR-024 | 2026-11-15 | Closed                   |
+| CR-025 | 2026-11-15 | Answered (B06r, to come) |
+| CR-026 | 2026-11-15 | Open                     |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -128,9 +135,7 @@ For each list operation's 200 response, replace the single `example` with an `ex
 1. Say which it is. (a) `TOTP_ENROLMENT_REQUIRED` issues a restricted session and cookies, so the two calls work as written; or (b) both calls accept the `challengeToken` (for example in the body), with no CSRF token because there is no session yet. This is the same question as CR-004 point 1 for the forced password change, and one answer can cover both.
 2. **Return the QR code as a data URI in the enrolment response** (added 2026-11-14, owner decision: the frontend takes no QR code dependency). `TotpEnrolment` gains a field beside `otpauthUri` and `secretBase32`, for example `qrCodeDataUri`, holding an image of `otpauthUri` (`data:image/svg+xml;base64,…` or `data:image/png;base64,…`), with an example. The screen shows it in an `<img>` with a text alternative, and keeps `secretBase32` on screen for a phone that cannot scan. Additive. The owner has asked B3 for it.
 
-**Status:** with the backend (B3 is answering it).
-
-**Until this lands:** enrolment is not built. A user whose sign-in answers `TOTP_ENROLMENT_REQUIRED` sees "this sign-in step is not available yet" (F1).
+**Status:** answered by the contract (option b: `startTotpEnrolment` and `confirmTotpEnrolment` take the `challengeToken` in the body during sign-in, and `TotpEnrolment.qrCodeDataUri` carries the QR image). **Built in F6b:** `/login/enrol`, in both documents, on demand.
 
 ## CR-007. Mark step-up operations in a machine-readable way (additive)
 
@@ -321,3 +326,95 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 **Request:** `GET /animals/by-tag/{tagNo}` (or a `lookupStockUnit` by identifier), allowed with any of `liv.weight.record`, `liv.health.record` or `liv.mortality.report`. It would answer the live animal's `id`, `tagNo`, `species` and `currentLocation` only: no cost, no price. Unknown or not alive answers 404.
 
 **Until this lands:** the picker's words stay, and the Farm hand records by pen.
+
+**Status:** answered by 1.26.0. `listCareAnimals` (`liv.care.read`, `q`) is the Farm hand's cost-free register. **Built in F6b:** the animal picker searches it for a role without `liv.animal.read`.
+
+## CR-022. A death's photograph: its purpose, its scan, and who may open it (clarification)
+
+- **Raised by:** frontend F6b, `/report-death` and the approvals inbox (ADR 0037, ADR 0039)
+- **Contract read first:**
+  - `MortalityRecordCreate.photoFileId` says "Required above the value threshold".
+  - `uploadFile` lists the purposes and their allow-lists. Images are allowed for photographs, signatures, proof of delivery and evidence. No purpose names a death.
+  - `attachProductImage` says its file must be `CLEAN` (`FILE_NOT_CLEAN`). `reportMortality` says nothing about the scan.
+  - `createFileSignedUrl` and `getFile` need `platform.file.read.any` for "a file someone else uploaded".
+- **What the frontend does today:**
+  - It uploads the photograph with purpose `EVIDENCE`, straight after it is taken, and reports with its id while the scan may still be `PENDING`.
+  - The approver opens it through `getFile`, then `createFileSignedUrl` once it is `CLEAN`.
+
+**Request:** say, in `reportMortality`'s and `reportCareMortality`'s descriptions:
+
+1. Which purpose a death's photograph takes. `EVIDENCE` is assumed; if it should be a new `MORTALITY_PHOTO`, add it.
+2. Whether a `PENDING` file is accepted at report time, and whether a submit with an `INFECTED` or `FAILED` photograph is refused, and with which code.
+3. That the roles which report deaths (the Farm hand, the Manager) hold `platform.file.upload`.
+4. That the roles which approve `MORTALITY_WRITE_OFF` (holding `liv.mortality.approve`) can open the reporter's upload: `platform.file.read.any`, or a rule that the approver of a request may read its `evidenceFileId`.
+
+**Until this lands:** the assumptions above (A-F6b-02). An approver refused the photograph is told in words that it cannot be shown, and the rest of the evidence is still on screen.
+
+**Status:** closed 2026-11-16. The owner says the backend confirmed `EVIDENCE` is the intended purpose for a death's photograph. The owner also approved a photograph on every death report, and the backend is being asked to enforce it for Farm hand reports (A-F6b-03). Points 2 to 4 stay open questions for the backend to answer in the contract's descriptions.
+
+## CR-023. Publish the seeded role matrix, and confirm the Farm hand's (clarification)
+
+- **Raised by:** frontend F6b, aligning the test fake's roles with the real seed. The owner has told the backend.
+- **Contract read first:**
+  - The `listRoles` example shows four permissions each for the Cashier, Manager, Accountant, Storekeeper, Driver and Investor, and no Farm hand.
+  - The livestock writes say "the Farm hand, who holds the write but not the read, uses `<care twin>`" (1.26.0): `liv.health.record`, `liv.feed.record`, `liv.mortality.report` (which covers the submit, `submitCareMortalityRecord`), `liv.animal.update`, `liv.animal.move`, `liv.batch.create` and `liv.batch.update`.
+  - 1.24.0 says the role reads weights; 1.25.0 says it "holds the edits, moves, batches, growth and breeding"; 1.26.0 adds `liv.care.read`.
+  - Nothing says whether it holds `mdm.reason_code.read`, `mdm.location.read`, `mdm.product.read` or `platform.file.upload`, which a death report, a pen treatment and a feed issue need.
+- **What the frontend does today:** the fake is built from those sentences (`fakeAuthServer.ts`). The four reads and the upload are assumptions (A-F6-02, A-F6b-02). Without the reason codes, the Farm hand cannot report a death, and the page says so in words.
+
+**Request:**
+
+1. **The role matrix in the contract.** Either a `listRoles` example listing every seeded role with its full permissions, or an `x-seeded-roles` extension on `components`. The fake and the route gates can then be checked against it in CI.
+2. **Confirm the Farm hand's role** holds `liv.mortality.report`, `mdm.reason_code.read` (or a care read of the mortality reasons), `mdm.location.read`, `mdm.product.read` and `platform.file.upload`. Any it should not hold is a gap in the death report, and the report needs another door.
+
+**Until this lands:** the fake keeps its assumptions, each named in its comment.
+
+## CR-024. A reporter's own deaths and culls, without the value (additive)
+
+- **Raised by:** frontend F6b, `/report-death` (ADR 0039)
+- **Contract read first:**
+  - The Farm hand reports and submits through `reportCareMortality` and `submitCareMortalityRecord`.
+  - There is no `listCareMortalityRecords` and no `getCareMortalityRecord`. `listMortalityRecords` and `getMortalityRecord` need `liv.mortality.read`, which the role does not hold.
+- **What happens today:**
+  - A report whose submit does not get through, on a weak signal, is remembered in the device's storage and offered again with "Send it again".
+  - On another phone, or after storage is cleared, the record stays `REPORTED` with no page from which to send it.
+
+**Request:** `listCareMortalityRecords` and `getCareMortalityRecord` under `liv.care.read`, in the `CareMortalityRecord` shape (no value), limited to the records the caller reported. A `status` filter lets the page ask for `REPORTED`.
+
+**Until this lands:** the device keeps the reminder, and a lost phone's unsent report needs a manager to find it in the deaths list.
+
+**Status:** closed 2026-11-16, accepted by the owner as a known gap. If a phone is lost with an unsent report, the missing animal shows up at the next stock take. The device's reminder (ADR 0039) stays.
+
+## CR-025. Should reversing a completed processing order need a second person? (question)
+
+- **Raised by:** frontend F6b, the approvals inbox. The owner listed "processing reversals" among what an approver sees.
+- **Contract read first:**
+  - `cancelProcessingOrder` on a `COMPLETED` order reverses it at once for a caller with `prc.order.reverse` (the Owner and the Manager). It has no 202 and names no approval kind.
+  - `ApprovalKind` has `STOCK_REVERSAL`, which `reverseStockMovement` uses.
+  - The brief's separation of duties lists stock write-offs, refunds, price list activation, manual journals, supplier payments and investor distributions.
+- **What the frontend does today:**
+  - The order's page reverses a completed order after a confirmation naming its cost and outputs.
+  - The inbox shows `STOCK_REVERSAL` and every other kind, but no processing reversal reaches it, because none waits.
+
+**Request:** decide, and say it in `cancelProcessingOrder`'s description. Either a reversal answers 202 with `STOCK_REVERSAL`, or a new `PROCESSING_REVERSAL` with a `PROCESSING_ORDER` subject, for a different person to approve. Or it stays a single-person action, and the description says why. The screen handles a 202 either way.
+
+**Until this lands:** a reversal is immediate, as the contract says.
+
+**Status:** answered by the owner 2026-11-16. A reversal at or above the threshold will need a second approver, and the backend is adding it in B06r. When the contract carries it, the order page handles the 202 and the inbox shows the kind, its subject linked to the order.
+
+## CR-026. The approval examples name the wrong subject (example fix)
+
+- **Raised by:** frontend F6b, the approvals inbox, which links each request to its record by `subject.docType`
+- **Contract read first:**
+  - The 202 examples name these subjects:
+    - `submitPurchaseOrder` and `submitSupplierPayment`: `docType: STOCK_ADJUSTMENT`;
+    - `resolveStockException` (a held transfer shortfall written off): `STOCK_ADJUSTMENT` as well.
+  - The `listApprovalPolicies` example gives `PURCHASE_ORDER` a threshold of 500,000 pesewas. `submitPurchaseOrder` says the seed is 200,000.
+  - The example has no `SUPPLIER_PAYMENT` policy, so no approving permission is named for it.
+
+**Request:**
+
+1. **Each 202 example names its own subject:** `PURCHASE_ORDER`, `SUPPLIER_PAYMENT`, and for the transfer write-off either `STOCK_EXCEPTION` or a sentence saying the write-off's subject is the adjustment it posts.
+2. **The policy example agrees** with the seeded threshold, and lists the `SUPPLIER_PAYMENT` policy with its `approverPermission`.
+
+**Until this lands:** the inbox shows these requests with their summary and amount, and links only the subjects it has a screen for. The purchase order and the supplier payment have no screen yet.

@@ -16,6 +16,12 @@ export const posAuthRoutes: RouteObject[] = [
     element: lazyScreen(() => import('../auth/screens/TotpScreen').then((m) => m.TotpScreen)),
   },
   {
+    path: 'login/enrol',
+    element: lazyScreen(() =>
+      import('../auth/screens/TotpEnrolScreen').then((m) => m.TotpEnrolScreen),
+    ),
+  },
+  {
     path: 'change-password',
     element: lazyScreen(() =>
       import('../auth/screens/ChangePasswordScreen').then((m) => m.ChangePasswordScreen),

@@ -79,6 +79,24 @@ interface RawClient {
 const CSRF_HEADER = 'X-CSRF-Token';
 
 /**
+ * A multipart body (ADR 0037): each field of the object as a form field, a `Blob` as a file part with its
+ * name when it has one (a `File`), anything else as text. The browser writes the boundary and the
+ * Content-Type, and openapi-fetch passes `FormData` through untouched.
+ */
+function toFormData(body: unknown): FormData {
+  const form = new FormData();
+  for (const [name, value] of Object.entries((body ?? {}) as Record<string, unknown>)) {
+    if (value === undefined || value === null) continue;
+    if (value instanceof Blob) {
+      form.append(name, value, value instanceof File ? value.name : name);
+    } else {
+      form.append(name, String(value));
+    }
+  }
+  return form;
+}
+
+/**
  * Rejects when `signal` aborts. Node's Request holds only a weak reference to the controller it makes
  * from `signal`, so an abort can fail to reach the request; racing against the signal itself makes a
  * timeout or a cancellation reliable on the server and in tests as well as in the browser.
@@ -172,7 +190,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       const result = await Promise.race([
         raw.request(row.method, row.path, {
           params: { path: input.path, query: input.query },
-          body: input.body,
+          body: row.body === 'multipart' ? toFormData(input.body) : input.body,
           headers,
           signal: controller.signal,
           fetch: transport(row.public),

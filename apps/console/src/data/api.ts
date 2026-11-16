@@ -1,5 +1,6 @@
-import { apiBaseUrl, createApiClient, type ApiClient } from '@hakorem/api-client';
+import { ApiError, apiBaseUrl, createApiClient, type ApiClient } from '@hakorem/api-client';
 import { createApiHooks, createQueryClient } from '@hakorem/data';
+import { inWords } from './refusals';
 import { sessionHooks } from './session';
 
 /** The one QueryClient (ADR 0022), mounted by `DataProvider`. */
@@ -20,7 +21,13 @@ const lazyApi: ApiClient = {
   get baseUrl() {
     return getApi().baseUrl;
   },
-  call: (...args) => getApi().call(...args),
+  // Every refusal leaves here in the console's words, where it has them (ADR 0038).
+  call: (...args) =>
+    getApi()
+      .call(...args)
+      .catch((error: unknown) => {
+        throw error instanceof ApiError ? inWords(error) : error;
+      }),
 };
 
 /** The hooks every screen uses. Screens never import `@tanstack/react-query` or call `fetch`. */

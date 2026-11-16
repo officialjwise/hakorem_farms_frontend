@@ -4,7 +4,7 @@
  */
 import type { ApiClient } from './client';
 import type { components } from './generated/schema';
-import type { MutationOperationId, OperationData, QueryOperationId } from './types';
+import type { MutationOperationId, OperationData, OperationInput, QueryOperationId } from './types';
 
 declare const client: ApiClient;
 const key = '019a7b1d-1c55-7fe4-b51c-071c42887ffa';
@@ -67,3 +67,14 @@ export const write: MutationOperationId = 'archiveProduct';
 export const notRead: QueryOperationId = 'archiveProduct';
 
 export type ProductPage = OperationData<'listProducts'>;
+
+// A multipart operation takes its file as a Blob (ADR 0037), never as a string.
+export async function uploads(client: ApiClient, key: string, photo: Blob) {
+  const opts = { idempotencyKey: key };
+  await client.call('uploadFile', { body: { file: photo, purpose: 'EVIDENCE' } }, opts);
+  // @ts-expect-error a file is a Blob, not the string the bytes travel as
+  const asText: OperationInput<'uploadFile'> = { body: { file: 'abc', purpose: 'EVIDENCE' } };
+  // @ts-expect-error the purpose is one of the contract's FilePurpose values
+  const unknownPurpose: OperationInput<'uploadFile'> = { body: { file: photo, purpose: 'DEATH' } };
+  return [asText, unknownPurpose];
+}

@@ -5,6 +5,7 @@
  * in the e2e spec, where the fake API can give an order each status.
  */
 import { screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { queryClient } from '../data/api';
 import { renderApp, signedIn } from '../test/harness';
@@ -25,7 +26,10 @@ describe('processing orders', () => {
   it('loading, then each order with its state and its animals', async () => {
     const release = holdResponses();
     await renderApp('/processing-orders', await signedIn('owner'));
-    expect((await screen.findAllByText('Loading processing orders')).length).toBeGreaterThan(0);
+    // The first screen of a file is cold (its lazy chunk and words load first): F5b's 5 s allowance.
+    expect(
+      (await screen.findAllByText('Loading processing orders', {}, { timeout: 5000 })).length,
+    ).toBeGreaterThan(0);
     release();
     await waitFor(() => expect(screen.getByRole('table')).toHaveTextContent('G-0098'));
     const table = screen.getByRole('table');
@@ -75,6 +79,35 @@ describe('processing orders', () => {
     // A completed order offers no lifecycle write.
     expect(screen.queryByRole('button', { name: 'Complete the order' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Cancel the order' })).toBeNull();
+  });
+
+  it('pack labels are drawn from the API’s label data, each with its barcode, a reprint marked', async () => {
+    const user = userEvent.setup();
+    await renderApp(`/processing-orders/${ANY_ID}`, await signedIn('owner'));
+    await user.click(await screen.findByRole('button', { name: /^Print \d+ labels?$/ }));
+    // printPackLabels answers PackLabelSheet (contract 1.26.0): the client draws it.
+    const sheet = await screen.findByRole('list', { name: 'Pack labels' });
+    const labels = within(sheet).getAllByRole('listitem');
+    expect(labels).toHaveLength(2);
+    expect(labels[0]).toHaveTextContent('PRC-261114-3f2a91c4-01 · 15.000 kg');
+    expect(labels[0]).toHaveTextContent('Reprint');
+    expect(labels[1]).not.toHaveTextContent('Reprint');
+    expect(
+      within(labels[1] as HTMLElement).getByRole('img', { name: /Pack barcode/ }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Print the sheet' })).toBeInTheDocument();
+  });
+
+  it('reversing a completed order names its cost and outputs first, then says it is reversed', async () => {
+    const user = userEvent.setup();
+    await renderApp(`/processing-orders/${ANY_ID}`, await signedIn('owner'));
+    await user.click(await screen.findByRole('button', { name: 'Reverse the order' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Reverse this completed order?' });
+    expect(dialog).toHaveTextContent('GH₵721.00');
+    expect(dialog).toHaveTextContent('14.200');
+    await user.type(within(dialog).getByRole('textbox'), 'Weighed on the wrong scale');
+    await user.click(within(dialog).getByRole('button', { name: 'Reverse the order' }));
+    expect(await screen.findByText(/The order was reversed/)).toBeInTheDocument();
   });
 
   it('a lot links back to the order it came from, which opens on its animal', async () => {

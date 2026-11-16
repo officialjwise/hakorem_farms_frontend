@@ -1,7 +1,7 @@
 import { HeartCrack, Send } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate, useParams } from 'react-router';
+import { Link, useParams } from 'react-router';
 import type { components } from '@hakorem/api-client';
 import {
   Alert,
@@ -31,7 +31,6 @@ import { TableCard } from '../lib/TableCard';
 import { useCursorPages } from '../lib/useCursorPages';
 import { ANY, FilterSelect, countSet, param } from '../stock/filters';
 import { useLocations } from '../stock/locations';
-import { MortalityDialog } from './forms';
 import { MortalityStatusBadge } from './presentation';
 import { rangeQuery } from './range';
 
@@ -59,7 +58,6 @@ function Who({ record }: { record: MortalityRecord }) {
 export function MortalityScreen() {
   const { t } = useTranslation(['livestock', 'common']);
   const auth = useAuth();
-  const navigate = useNavigate();
   const pages = useCursorPages();
   const locations = useLocations();
   const rangeWords = useDateRangeWords();
@@ -67,7 +65,6 @@ export function MortalityScreen() {
   const [status, setStatus] = useState(ANY);
   const [kind, setKind] = useState(ANY);
   const [locationId, setLocationId] = useState(ANY);
-  const [reporting, setReporting] = useState(false);
   const records = useApiQuery('listMortalityRecords', {
     query: {
       ...rangeQuery(range, 'instant'),
@@ -152,9 +149,11 @@ export function MortalityScreen() {
         description={t('mortalityList.description')}
         actions={
           auth.can('liv.mortality.report') ? (
-            <Button onClick={() => setReporting(true)}>
-              <HeartCrack aria-hidden="true" />
-              {t('mortalityList.report')}
+            <Button asChild>
+              <Link to="/report-death">
+                <HeartCrack aria-hidden="true" />
+                {t('mortalityList.report')}
+              </Link>
             </Button>
           ) : undefined
         }
@@ -230,13 +229,6 @@ export function MortalityScreen() {
           </>
         }
       />
-      {reporting ? (
-        <MortalityDialog
-          animal={null}
-          onClose={() => setReporting(false)}
-          onDone={(record) => navigate(`/mortality/${record.id}`)}
-        />
-      ) : null}
     </section>
   );
 }

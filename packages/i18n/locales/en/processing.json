@@ -30,7 +30,8 @@
     "IN_STOCK": "In stock",
     "PICKED": "Picked",
     "SOLD": "Sold",
-    "WRITTEN_OFF": "Written off"
+    "WRITTEN_OFF": "Written off",
+    "REVERSED": "Reversed"
   },
   "yield": {
     "title": "Weights and yield",
@@ -114,7 +115,8 @@
     "completed": "Completed. The animals are consumed and the outputs are in their lots.",
     "cancelled": "Cancelled. Nothing had moved, so no stock or cost changed.",
     "costAdded": "Cost added. It reaches the ledger when the order is completed.",
-    "outputsSaved": "Outputs saved."
+    "outputsSaved": "Outputs saved.",
+    "reversed": "The order was reversed. Its movements are undone and its packs are marked reversed."
   },
   "facts": {
     "title": "Order",
@@ -288,8 +290,22 @@
     "action_other": "Print {{count}} labels",
     "pending": "Preparing labels",
     "failed": "The labels were not prepared",
-    "open": "Open the labels",
-    "expires": "The link works until"
+    "print": "Print the sheet",
+    "sheet": "Pack labels",
+    "reprint": "Reprint",
+    "barcode": "Pack barcode: lot and weight",
+    "cannot": "This label's code, {{code}}, cannot be drawn as a barcode",
+    "lines": {
+      "weight": "Weight",
+      "produced": "Produced",
+      "expires": "Use by",
+      "storage": "Keep"
+    },
+    "storage": {
+      "AMBIENT": "At room temperature",
+      "CHILLED": "Chilled",
+      "FROZEN": "Frozen"
+    }
   },
   "pickers": {
     "products": "Matching products",
@@ -342,5 +358,17 @@
     "notSaved": "The yield standard was not saved",
     "editTitle": "Change {{input}} to {{output}}",
     "editBody": "Orders already completed keep the yield they were judged with."
+  },
+  "reverse": {
+    "heading": "Reverse this order",
+    "hint": "A completed order is never edited. Reversing it undoes every movement it posted: the animal stands in its pen again at its prior cost, and the output lots are emptied.",
+    "action": "Reverse the order",
+    "title": "Reverse this completed order?",
+    "body": "Every output goes back, then every input, each at the value it carried. This cannot be done if any output has been sold, reserved or changed. The reason is kept with the order.",
+    "totalCost": "Total cost of the order",
+    "pending": "Reversing",
+    "failed": "The order was not reversed",
+    "done": "Reversed by {{name}}",
+    "reason": "Reason: {{reason}}"
   }
 }

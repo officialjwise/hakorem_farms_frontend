@@ -118,6 +118,17 @@ export function OrderDetail({ order }: { order: Order }) {
         </p>
       </div>
       {notice === null ? null : <Alert severity="good" title={t(`notice.${notice}`)} />}
+      {order.reversal === null ? null : (
+        <Alert
+          severity="warning"
+          title={t('reverse.done', { name: order.reversal.reversedBy.displayName })}
+        >
+          <p>
+            <When instant={order.reversal.reversedAt} />
+          </p>
+          <p>{t('reverse.reason', { reason: order.reversal.reason })}</p>
+        </Alert>
+      )}
       <OrderActions order={order} onNotice={setNotice} />
 
       <Card>

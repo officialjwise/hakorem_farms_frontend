@@ -371,7 +371,15 @@ export function RecordFeedDialog({
     { query: { limit: 100 } },
     { staleClass: 'reference', enabled: auth.can('liv.feed.read') },
   );
-  const record = useApiMutation('recordFeedConsumption');
+  const careRations = useApiAllPages(
+    'listCareRations',
+    { query: { limit: 100 } },
+    { staleClass: 'reference', enabled: !auth.can('liv.feed.read') && auth.can('liv.care.read') },
+  );
+  // The Farm hand records feed but cannot read it, so it goes through the care twin (contract 1.26.0).
+  const full = useApiMutation('recordFeedConsumption');
+  const care = useApiMutation('recordCareFeedConsumption');
+  const record = auth.can('liv.feed.read') ? full : care;
   const keyFor = useIntentKey();
   const quantity = toQuantity(qty);
   const pen = locations.items.find((row) => row.id === locationId);
@@ -415,7 +423,7 @@ export function RecordFeedDialog({
             .mutateAsync({ body }, { idempotencyKey: keyFor(body) })
             .then((saved) =>
               onDone(
-                saved.valuePesewas === null
+                !('valuePesewas' in saved) || saved.valuePesewas === null
                   ? t('feedRecord.done', { pen: saved.location.name })
                   : t('feedRecord.doneValued', { pen: saved.location.name }),
               ),
@@ -494,7 +502,10 @@ export function RecordFeedDialog({
               onValueChange={setRationId}
               options={[
                 { value: ANY, label: t('feedRecord.noRation') },
-                ...uniqueById(rations.data?.items ?? []).map((ration) => ({
+                ...uniqueById([
+                  ...(rations.data?.items ?? []),
+                  ...(careRations.data?.items ?? []),
+                ]).map((ration) => ({
                   value: ration.id,
                   label: ration.name,
                 })),

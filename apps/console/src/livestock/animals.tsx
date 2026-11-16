@@ -7,6 +7,8 @@ import { useApiAllPages, useApiQuery } from '../data/api';
 import { uniqueById } from '../lib/queries';
 
 export type Animal = components['schemas']['Animal'];
+/** The animal as the Farm hand reads it (`listCareAnimals`, ADR-0052): no cost and no price band. */
+export type CareAnimal = components['schemas']['CareAnimal'];
 /** What a form keeps of the animal it is about: enough to send its id and to say which one it is. */
 export type PickedAnimal = Pick<Animal, 'id' | 'tagNo'> & { species: { name: string } };
 
@@ -16,9 +18,9 @@ export function animalName(animal: PickedAnimal): string {
 }
 
 /**
- * Choose a live animal by its tag, searched on the server (`listAnimals`, `q`). Recording roles that cannot
- * read the register (the Farm hand, A-158) are told so in words instead of an empty list; CR-021 asks for a
- * lookup by tag they may use.
+ * Choose a live animal by its tag, searched on the server with `q`. A role that reads the register uses
+ * `listAnimals`; the Farm hand, who reads only the cost-free care register (`liv.care.read`, contract
+ * 1.26.0), uses `listCareAnimals`, which answers CR-021. A role with neither is told so in words.
  */
 export function AnimalPicker({
   value,
@@ -34,25 +36,30 @@ export function AnimalPicker({
   error?: string;
   required?: boolean;
   /** Narrows the choice, for example to females for a dam. */
-  filter?: (animal: Animal) => boolean;
+  filter?: (animal: Animal | CareAnimal) => boolean;
 }) {
   const { t } = useTranslation(['livestock', 'common']);
   const auth = useAuth();
   const [text, setText] = useState(value === null ? '' : value.tagNo);
   const search = text.trim();
-  const canLook = auth.can('liv.animal.read');
+  const fullRegister = auth.can('liv.animal.read');
+  const careRegister = !fullRegister && auth.can('liv.care.read');
+  const canLook = fullRegister || careRegister;
   const requiredProps = required
     ? { required: true as const, requiredLabel: t('common:field.required') }
     : { required: false as const };
   // A list people search: `working`.
-  const found = useApiQuery(
-    'listAnimals',
-    { query: { q: search, status: 'ALIVE', limit: 10 } },
-    {
-      staleClass: 'working',
-      enabled: canLook && search.length >= 1 && search !== value?.tagNo,
-    },
-  );
+  const searching = search.length >= 1 && search !== value?.tagNo;
+  const query = { query: { q: search, status: 'ALIVE' as const, limit: 10 } };
+  const full = useApiQuery('listAnimals', query, {
+    staleClass: 'working',
+    enabled: fullRegister && searching,
+  });
+  const care = useApiQuery('listCareAnimals', query, {
+    staleClass: 'working',
+    enabled: careRegister && searching,
+  });
+  const found = careRegister ? care : full;
   if (!canLook) {
     return (
       <Field label={label} {...requiredProps}>
@@ -62,7 +69,8 @@ export function AnimalPicker({
       </Field>
     );
   }
-  const matches = (found.data?.data ?? []).filter((animal) => filter?.(animal) ?? true);
+  const rows: readonly (Animal | CareAnimal)[] = found.data?.data ?? [];
+  const matches = rows.filter((animal) => filter?.(animal) ?? true);
   const options = uniqueById([...(value === null ? [] : [value]), ...matches]).map((animal) => ({
     value: animal.id,
     label: animalName(animal),

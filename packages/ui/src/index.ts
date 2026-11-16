@@ -233,3 +233,9 @@ export {
   type ReportTileProps,
   type ReportTileTone,
 } from './components/stat-tile/ReportTile';
+export {
+  PhotoInput,
+  type PhotoInputProps,
+  type PhotoValue,
+} from './components/photo-input/PhotoInput';
+export { resizePhoto, fitWithin, type ResizeOptions } from './components/photo-input/resize';

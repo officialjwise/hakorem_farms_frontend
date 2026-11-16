@@ -1,5 +1,12 @@
 import { expect, test } from '../../support/test';
-import { signIn, submitLogin, TOTP_CODE, USERS } from '../../support/helpers';
+import {
+  expectNoAxeViolations,
+  expectNoHorizontalScroll,
+  signIn,
+  submitLogin,
+  TOTP_CODE,
+  USERS,
+} from '../../support/helpers';
 
 test.describe('sign in', () => {
   test('a cashier signs in and lands on the dashboard inside the back office shell', async ({
@@ -60,6 +67,34 @@ test.describe('TOTP challenge', () => {
     // The manager's role reaches the users list.
     await page.goto('/users');
     await expect(page.getByRole('heading', { name: 'Users', level: 1 })).toBeVisible();
+  });
+
+  test('a first sign-in sets up the authenticator, keeps the recovery codes on screen, then signs in', async ({
+    page,
+    api,
+  }) => {
+    await page.goto('/login');
+    await submitLogin(page, USERS.accountant);
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Set up two-step sign-in' }),
+    ).toBeVisible();
+    await expect(page.getByRole('img', { name: /QR code that adds HaKorem Farms/ })).toBeVisible();
+    await expect(page.getByText('JBSW Y3DP EHPK 3PXP')).toBeVisible();
+    await expectNoAxeViolations(page);
+    await expectNoHorizontalScroll(page);
+    await page.getByLabel(/^code/i).fill(TOTP_CODE);
+    await page.getByRole('button', { name: 'Turn on two-step sign-in' }).click();
+    await expect(
+      page.getByRole('list', { name: 'Recovery codes' }).getByRole('listitem'),
+    ).toHaveCount(8);
+    await expect(page.getByRole('button', { name: 'Continue to HaKorem Farms' })).toBeDisabled();
+    await expectNoAxeViolations(page);
+    await page.getByRole('checkbox', { name: 'I have kept these codes somewhere safe' }).check();
+    await page.getByRole('button', { name: 'Continue to HaKorem Farms' }).click();
+    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+    const sent = api.log.map((e) => `${e.method} ${e.path}`);
+    expect(sent).toContain('POST /auth/totp/enrol');
+    expect(sent).toContain('POST /auth/totp/confirm');
   });
 
   test('a reload in the middle loses the challenge on purpose and starts again', async ({

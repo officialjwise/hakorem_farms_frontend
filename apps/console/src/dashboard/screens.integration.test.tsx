@@ -28,7 +28,10 @@ describe('the dashboard against the Prism mock', () => {
   it('loading: says what is coming, then today’s figures', async () => {
     const release = holdResponses();
     await renderApp('/', await signedIn('owner'));
-    expect((await screen.findAllByText("Loading today's figures")).length).toBeGreaterThan(0);
+    // The first screen of a file is cold (its lazy chunk and words load first): F5b's 5 s allowance.
+    expect(
+      (await screen.findAllByText("Loading today's figures", {}, { timeout: 5000 })).length,
+    ).toBeGreaterThan(0);
     release();
     expect(await screen.findByText('Selling best today')).toBeInTheDocument();
   });

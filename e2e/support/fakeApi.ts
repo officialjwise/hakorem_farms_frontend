@@ -73,6 +73,7 @@ export class FakeApi {
 
   private readonly rewrites = new Map<string, (body: unknown, path: string) => unknown>();
   private readonly prefers = new Map<string, string>();
+  private readonly refusals = new Map<string, { status: number; code: string; message: string }>();
 
   /**
    * Rewrites Prism's answer to one operation for this test only, for a state the contract's single
@@ -85,6 +86,17 @@ export class FakeApi {
   /** Asks Prism for one of the operation's own documented answers, for example `code=202`. */
   prefer(operationId: string, value: string): void {
     this.prefers.set(operationId, value);
+  }
+
+  /**
+   * Answers one operation with the contract's error envelope for a code it lists in `x-error-codes`, when
+   * none of its examples carries that code: for example `approveRequest` refusing the maker
+   * (MAKER_CANNOT_CHECK). The test names the code; the screen's words are its own (ADR 0038).
+   */
+  refuse(operationId: string, status: number, code: string, message: string): void {
+    const manifest = operationManifest[operationId as keyof typeof operationManifest];
+    if (manifest === undefined) throw new Error(`${operationId} is not in the contract.`);
+    this.refusals.set(operationId, { status, code, message });
   }
 
   async install(context: BrowserContext): Promise<void> {
@@ -109,7 +121,9 @@ export class FakeApi {
     if (!url.pathname.startsWith(`${API_PATH}/`)) return route.continue();
     const path = url.pathname.slice(API_PATH.length);
     const method = request.method();
-    const text = request.postData() ?? '';
+    // A file upload (multipart/form-data) is not the fake's business and is not JSON: only JSON is parsed.
+    const isJson = (request.headers()['content-type'] ?? '').startsWith('application/json');
+    const text = isJson ? (request.postData() ?? '') : '';
 
     const answer = this.server.handle(
       {
@@ -153,6 +167,22 @@ export class FakeApi {
         status: refusal.status,
         headers: refusal.headers ?? {},
         body: JSON.stringify(refusal.body),
+      });
+    }
+    const refused = this.refusals.get(operation.id);
+    if (refused !== undefined) {
+      record('prism');
+      return route.fulfill({
+        status: refused.status,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: {
+            code: refused.code,
+            message: refused.message,
+            correlationId: '019a7b1d-5a33-73ab-98e3-438b35eabc69',
+            details: [],
+          },
+        }),
       });
     }
     record('prism');

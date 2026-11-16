@@ -14,6 +14,7 @@ import {
   type AuthClient,
   type LoginResult,
   type SessionInfo,
+  type TotpEnrolment,
 } from './types';
 
 /**
@@ -29,7 +30,10 @@ export type AuthStatus = 'loading' | 'anonymous' | 'authenticated' | 'expired' |
 
 /** The step a sign-in is waiting on, after a first answer that was not AUTHENTICATED. */
 export type PendingStep =
-  { kind: 'totp'; challengeToken: string } | { kind: 'password-change' } | null;
+  | { kind: 'totp'; challengeToken: string }
+  | { kind: 'totp-enrolment'; challengeToken: string }
+  | { kind: 'password-change' }
+  | null;
 
 export interface AuthApi {
   status: AuthStatus;
@@ -41,6 +45,16 @@ export interface AuthApi {
   can: (permission: string) => boolean;
   login: (identifier: string, password: string) => Promise<LoginResult['status']>;
   verifyTotp: (code: string) => Promise<void>;
+  /** Show the secret for a sign-in that answered TOTP_ENROLMENT_REQUIRED (`startTotpEnrolment`). */
+  startTotpEnrolment: () => Promise<TotpEnrolment>;
+  /**
+   * Confirm the enrolment with a first code (`confirmTotpEnrolment`). Resolves with the recovery codes. The
+   * server has set the session cookies, but the session is not adopted yet, so the screen can show the codes
+   * once before anything navigates; `finishTotpEnrolment` adopts it.
+   */
+  confirmTotpEnrolment: (code: string) => Promise<string[]>;
+  /** Read the session the confirmed enrolment started (`getCurrentSession`) and sign in with it. */
+  finishTotpEnrolment: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   requestPasswordReset: (identifier: string) => Promise<void>;
   resetPassword: (token: string, newPassword: string) => Promise<void>;
@@ -212,14 +226,16 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
         adopt(result.session);
       } else if (result.status === 'TOTP_REQUIRED' && result.challengeToken) {
         setPending({ kind: 'totp', challengeToken: result.challengeToken });
+      } else if (result.status === 'TOTP_ENROLMENT_REQUIRED' && result.challengeToken) {
+        setPending({ kind: 'totp-enrolment', challengeToken: result.challengeToken });
       } else if (result.status === 'PASSWORD_CHANGE_REQUIRED') {
         setPending({ kind: 'password-change' });
       } else {
-        // TOTP_ENROLMENT_REQUIRED and VERIFICATION_REQUIRED are built with the users screens (F3).
+        // VERIFICATION_REQUIRED is a customer step; the console signs in staff only.
         throw new ApiError({
           status: 422,
           code: 'UNSUPPORTED_LOGIN_STEP',
-          message: 'This sign-in step is not available yet.',
+          message: 'This sign-in step is not available in the console.',
           correlationId: '00000000-0000-0000-0000-000000000000',
         });
       }
@@ -236,6 +252,28 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
     },
     [client, pending, adopt],
   );
+
+  const startTotpEnrolment = useCallback<AuthApi['startTotpEnrolment']>(async () => {
+    if (pending?.kind !== 'totp-enrolment') throw new Error('No TOTP enrolment is pending.');
+    return client.startTotpEnrolment({ challengeToken: pending.challengeToken });
+  }, [client, pending]);
+
+  const confirmTotpEnrolment = useCallback<AuthApi['confirmTotpEnrolment']>(
+    async (code) => {
+      if (pending?.kind !== 'totp-enrolment') throw new Error('No TOTP enrolment is pending.');
+      const result = await client.confirmTotpEnrolment({
+        challengeToken: pending.challengeToken,
+        code,
+      });
+      return result.recoveryCodes;
+    },
+    [client, pending],
+  );
+
+  const finishTotpEnrolment = useCallback<AuthApi['finishTotpEnrolment']>(async () => {
+    adopt(await client.getCurrentSession());
+    setPending(null);
+  }, [client, adopt]);
 
   const changePassword = useCallback<AuthApi['changePassword']>(
     async (currentPassword, newPassword) => {
@@ -283,6 +321,9 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
       can: (permission) => session?.permissions.includes(permission) ?? false,
       login,
       verifyTotp,
+      startTotpEnrolment,
+      confirmTotpEnrolment,
+      finishTotpEnrolment,
       changePassword,
       requestPasswordReset: (identifier) => client.requestPasswordReset({ identifier }),
       resetPassword: (token, newPassword) => client.resetPassword({ token, newPassword }),
@@ -303,6 +344,9 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
       signedOut,
       login,
       verifyTotp,
+      startTotpEnrolment,
+      confirmTotpEnrolment,
+      finishTotpEnrolment,
       changePassword,
       logout,
       refreshSession,

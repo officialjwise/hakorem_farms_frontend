@@ -72,6 +72,7 @@ Never retried: any other 4xx (400, 401, 403, 404, 409, 422: a person must act) a
 - `useApiMutation` creates the key when `mutate` is called and every automatic retry reuses it.
 - **A key belongs to a user intent, not an attempt.** For a "Try again" button that should repeat the same intent, create the key when the confirmation opens (`newIdempotencyKey()` in a `useRef`), pass it as `mutate(input, { idempotencyKey })` each time, and make a new one only when the user changes what they are asking for. The same key with a different body is the server's 409.
 - A write to money or stock opens a confirmation showing the exact amounts first, and a failure leaves an alert on screen (`MutationFailure`), not only a toast.
+- **A file goes through `call()` too** (ADR 0037). `uploadFile` is `multipart/form-data`: pass its fields as an object with the file as a `Blob`, `{ body: { file, purpose } }`, and the client builds the `FormData`. A photograph is shrunk first by `PhotoInput` (`resizePhoto`); the record that uses it takes the returned id.
 
 ## Invalidation
 

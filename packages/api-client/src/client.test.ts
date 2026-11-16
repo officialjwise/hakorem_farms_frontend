@@ -337,3 +337,50 @@ describe('the 401 single flight', () => {
     expect(hooks.refresh).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('a file upload (multipart/form-data, ADR 0037)', () => {
+  it('sends the fields as form data with the file named, its key and the CSRF token, and no JSON type', async () => {
+    const stored = {
+      id: '019a7a94-915f-79d6-9f0f-a63d1b3e1f1b',
+      originalName: 'G-0171.jpg',
+      contentType: 'image/jpeg',
+      sizeBytes: 4,
+      purpose: 'EVIDENCE',
+      classification: 'INTERNAL',
+      scanStatus: 'PENDING',
+      createdAt: '2026-11-13T09:41:00Z',
+    };
+    const { client, seen } = harness(() => json(stored, 201), { session: session() });
+    const photo = new File([new Uint8Array([0xff, 0xd8, 0xff, 0xd9])], 'G-0171.jpg', {
+      type: 'image/jpeg',
+    });
+    const answer = await client.call(
+      'uploadFile',
+      { body: { file: photo, purpose: 'EVIDENCE' } },
+      { idempotencyKey: KEY },
+    );
+    expect(answer.id).toBe(stored.id);
+    const request = nth(seen, 0);
+    expect(request.method).toBe('POST');
+    expect(new URL(request.url).pathname).toBe('/v1/files');
+    expect(request.headers.get('Idempotency-Key')).toBe(KEY);
+    expect(request.headers.get('X-CSRF-Token')).toBe('csrf-1');
+    expect(request.headers.get('Content-Type')).toMatch(/^multipart\/form-data; boundary=/);
+    const form = await request.formData();
+    expect(form.get('purpose')).toBe('EVIDENCE');
+    const file = form.get('file');
+    expect(file).toBeInstanceOf(File);
+    expect((file as File).name).toBe('G-0171.jpg');
+    expect((file as File).size).toBe(4);
+  });
+
+  it('a JSON operation still sends JSON', async () => {
+    const { client, seen } = harness(() => json({}, 200));
+    await client.call(
+      'archiveProduct',
+      { path: { id: 'p1' }, body: { version: 1, reason: 'x' } },
+      { idempotencyKey: KEY },
+    );
+    expect(nth(seen, 0).headers.get('Content-Type')).toBe('application/json');
+  });
+});
