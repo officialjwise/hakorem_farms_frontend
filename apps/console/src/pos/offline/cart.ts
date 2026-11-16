@@ -151,6 +151,8 @@ export function checkAgreedPrice(
 export interface OtherTender {
   paymentMethodId: string;
   amountPesewas: number;
+  /** A provider payment already cleared online (mobile money, card): the tender references it. */
+  paymentId?: string;
 }
 
 export interface TenderSplit {

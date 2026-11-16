@@ -72,6 +72,7 @@ export async function buildSale(
     ...others.map((tender) => ({
       paymentMethodId: tender.paymentMethodId,
       amountPesewas: tender.amountPesewas,
+      ...(tender.paymentId !== undefined ? { paymentId: tender.paymentId } : {}),
     })),
     ...(split.cashAppliedPesewas > 0 || others.length === 0
       ? [

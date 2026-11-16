@@ -32,5 +32,5 @@ export const ENTRY_DOCUMENT: Record<ConsoleEntry, string> = {
  */
 export const ENTRY_NAMESPACES: Record<ConsoleEntry, Namespace[]> = {
   'back-office': ['common', 'shell', 'auth', 'iam', 'audit'],
-  pos: ['common', 'shell', 'auth'],
+  pos: ['common', 'shell', 'auth', 'pos'],
 };

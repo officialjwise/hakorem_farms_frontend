@@ -109,6 +109,9 @@ const CASHIER_TILL_PERMISSIONS = [
   'mdm.reason_code.read',
   'ord.return.create',
   'ord.return.read',
+  // A mobile money tender at the counter: the request to the customer's phone and the check that it cleared.
+  'pay.payment.initiate',
+  'pay.payment.read',
 ];
 
 /**

@@ -82,6 +82,25 @@ export class FakeApi {
     [];
 
   private readonly rewrites = new Map<string, (body: unknown, path: string) => unknown>();
+  private readonly responders = new Map<string, (request: unknown, path: string) => unknown>();
+  private readonly losing = new Set<string>();
+  private networkOff = false;
+
+  /**
+   * Turns this browser's network off or on (F9). Playwright's offline mode still lets a request reach a
+   * route handler, so the fake would answer it; with the network off every API request fails here as it
+   * would on a dead connection, before anything is answered. `context.setOffline` is set too, so the
+   * browser says it is offline and files fail to load.
+   */
+  async setNetwork(context: BrowserContext, on: boolean): Promise<void> {
+    this.networkOff = !on;
+    await context.setOffline(!on);
+  }
+
+  /** The next answer to this operation is lost after the server acted on it: the connection resets. */
+  loseNextAnswer(operationId: string): void {
+    this.losing.add(operationId);
+  }
   private readonly prefers = new Map<string, string>();
   private readonly refusals = new Map<string, { status: number; code: string; message: string }>();
 
@@ -91,6 +110,17 @@ export class FakeApi {
    */
   rewrite(operationId: string, change: (body: unknown, path: string) => unknown): void {
     this.rewrites.set(operationId, change);
+  }
+
+  /**
+   * Answers one operation from the request it received, after the same session and permission checks, for
+   * an answer that depends on what was sent: `syncOfflineSales` answering for the sale ids the till sent,
+   * as the server does (the contract's example names other sales). The answer must be the contract's shape.
+   */
+  respond(operationId: string, answer: (request: unknown, path: string) => unknown): void {
+    if (!(operationId in operationManifest))
+      throw new Error(`${operationId} is not in the contract.`);
+    this.responders.set(operationId, answer);
   }
 
   /** Asks Prism for one of the operation's own documented answers, for example `code=202`. */
@@ -129,6 +159,7 @@ export class FakeApi {
     const request = route.request();
     const url = new URL(request.url());
     if (!url.pathname.startsWith(`${API_PATH}/`)) return route.continue();
+    if (this.networkOff) return route.abort('internetdisconnected');
     const path = url.pathname.slice(API_PATH.length);
     const method = request.method();
     // A file upload (multipart/form-data) is not the fake's business and is not JSON: only JSON is parsed.
@@ -201,6 +232,15 @@ export class FakeApi {
           },
         }),
       });
+    }
+    const responder = this.responders.get(operation.id);
+    if (responder !== undefined) {
+      record('prism');
+      const body = JSON.stringify(
+        responder(text === '' ? null : (JSON.parse(text) as unknown), path),
+      );
+      if (this.losing.delete(operation.id)) return route.abort('connectionreset');
+      return route.fulfill({ status: 200, contentType: 'application/json', body });
     }
     record('prism');
     const preferred = operation === undefined ? undefined : this.prefers.get(operation.id);

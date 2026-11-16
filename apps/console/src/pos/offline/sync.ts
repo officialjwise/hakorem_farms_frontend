@@ -109,10 +109,12 @@ export async function flushQueue(deps: SyncDeps): Promise<FlushOutcome> {
       ]);
       const current = (await store.read()).shift;
       if (current !== null && current.id === shift.id) {
+        // Receipts already printed keep the provisional sequence; before the first, take the server's.
         await store.saveShift({
           ...current,
           shiftSeq: shift.shiftSeq,
           shiftNo: shift.shiftNo,
+          referenceSeq: current.lastCounter === 0 ? shift.shiftSeq : current.referenceSeq,
           confirmed: true,
         });
       }

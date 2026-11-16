@@ -179,7 +179,7 @@ describe('a sale on the queue', () => {
     expect(batch.shiftId).toBe(open.id);
     expect(batch.sales).toHaveLength(1);
     const sent = batch.sales[0] as OfflineSale;
-    expect(sent).toMatchObject({ id: entry.id, deviceCounter: 1, provisionalRef: 'P-T1-1-0001' });
+    expect(sent).toMatchObject({ id: entry.id, deviceCounter: 1, provisionalRef: 'P-T1-311-0001' });
     expect(sent.tenders).toEqual([
       { paymentMethodId: CASH.id, amountPesewas: 49600, tenderedPesewas: 50000 },
     ]);
@@ -392,7 +392,7 @@ describe('the device counter', () => {
       customerPhone: null,
     });
     expect(third.payload.deviceCounter).toBe(3);
-    expect(third.payload.provisionalRef).toBe('P-T1-1-0003');
+    expect(third.payload.provisionalRef).toBe('P-T1-311-0003');
   });
 
   it('is not consumed by a sale the tenders do not cover', async () => {
