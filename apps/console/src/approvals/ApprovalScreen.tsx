@@ -125,7 +125,9 @@ function RequestDetail({ request, back }: { request: ApprovalRequest; back: Reac
                   `${request.subject.docType} ${doc}`
                 ) : (
                   <Link to={link} className="text-accent-text underline">
-                    {t('detail.openSubject', { doc })}
+                    {request.subject.number === null
+                      ? t('detail.openRecord')
+                      : t('detail.openSubject', { doc: request.subject.number })}
                   </Link>
                 )}
               </Fact>
