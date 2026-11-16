@@ -21,7 +21,7 @@
  * The cookie jar is the fake's, one per browser context, so nothing depends on how Chromium treats a
  * Set-Cookie on a fulfilled response. A reload keeps it; a new context starts empty, like a new browser.
  */
-import { operationManifest } from '@hakorem/api-client';
+import { operationManifest, type RequestedOperation } from '@hakorem/api-client';
 import type { BrowserContext, Page, Route } from '@playwright/test';
 import {
   createFakeAuthServer,
@@ -71,7 +71,15 @@ const ALTERNATIVE_PERMISSIONS: Record<string, readonly string[]> = {
 /** A permission code as `x-permission` writes one (`iam.user.read`), not a sentence about one. */
 const PERMISSION_CODE = /^[a-z]+(\.[a-z_]+)+$/;
 
-export type Outcome = 'fake' | 'prism' | 'prism-401' | 'prism-403' | 'step-up-403';
+export type Outcome =
+  | 'fake'
+  | 'prism'
+  | 'prism-401'
+  | 'prism-403'
+  | 'step-up-403'
+  | 'requested'
+  | 'requested-401'
+  | 'requested-403';
 
 export class FakeApi {
   readonly server: FakeAuthServer = createFakeAuthServer();
@@ -101,6 +109,11 @@ export class FakeApi {
   loseNextAnswer(operationId: string): void {
     this.losing.add(operationId);
   }
+  private readonly requested: {
+    operation: RequestedOperation;
+    pattern: RegExp;
+    answer: (request: unknown, path: string) => unknown;
+  }[] = [];
   private readonly prefers = new Map<string, string>();
   private readonly refusals = new Map<string, { status: number; code: string; message: string }>();
 
@@ -121,6 +134,22 @@ export class FakeApi {
     if (!(operationId in operationManifest))
       throw new Error(`${operationId} is not in the contract.`);
     this.responders.set(operationId, answer);
+  }
+
+  /**
+   * Answers an operation a contract request asks for and the contract does not list yet (ADR 0046), in the
+   * requested shape, after the same session and permission checks as every other operation. Prism does
+   * not know it, so with no answer installed the request is Prism's 404, as a real API without it would be.
+   */
+  respondRequested(
+    operation: RequestedOperation,
+    answer: (request: unknown, path: string) => unknown,
+  ): void {
+    if (operation.operationId in operationManifest) {
+      throw new Error(`${operation.operationId} is in the contract now: use respond().`);
+    }
+    const pattern = new RegExp(`^${operation.path.replace(/\{[^}]+\}/g, '[^/]+')}$`);
+    this.requested.push({ operation, pattern, answer });
   }
 
   /** Asks Prism for one of the operation's own documented answers, for example `code=202`. */
@@ -183,6 +212,11 @@ export class FakeApi {
         body: answer.body === undefined ? '' : JSON.stringify(answer.body),
       });
     }
+
+    const requested = this.requested.find(
+      (r) => r.operation.method.toUpperCase() === method && r.pattern.test(path),
+    );
+    if (requested !== undefined) return this.answerRequested(route, requested, path, text);
 
     const operation = findOperation(method, path);
     const record = (outcome: Outcome) =>
@@ -260,5 +294,47 @@ export class FakeApi {
       body = { ...body, page: { ...body.page, nextCursor: null, hasMore: false } };
     }
     return route.fulfill({ response, json: change === undefined ? body : change(body, path) });
+  }
+
+  private async answerRequested(
+    route: Route,
+    requested: FakeApi['requested'][number],
+    path: string,
+    text: string,
+  ): Promise<void> {
+    const { operation } = requested;
+    const method = operation.method.toUpperCase();
+    const refuse = (status: number, code: string, outcome: Outcome) => {
+      this.log.push({ method, path, operationId: operation.operationId, outcome });
+      return route.fulfill({
+        status,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: {
+            code,
+            message: 'Refused.',
+            correlationId: '019a7b1d-5a33-73ab-98e3-438b35eabc69',
+            details: [],
+          },
+        }),
+      });
+    };
+    if (!operation.public) {
+      const session = this.server.sessionFor(this.jar);
+      if (session === null) return refuse(401, 'UNAUTHENTICATED', 'requested-401');
+      if (operation.permission !== null && !session.permissions.includes(operation.permission)) {
+        return refuse(403, 'FORBIDDEN', 'requested-403');
+      }
+      if (operation.device && route.request().headers()['x-device-credential'] === undefined) {
+        return refuse(401, 'DEVICE_CREDENTIAL_INVALID', 'requested-401');
+      }
+    }
+    this.log.push({ method, path, operationId: operation.operationId, outcome: 'requested' });
+    const body = requested.answer(text === '' ? null : (JSON.parse(text) as unknown), path);
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(body),
+    });
   }
 }

@@ -73,7 +73,7 @@ test('the F9 gate: a full sale with the network off, synced exactly once on reco
   await expect(status).toContainText('On this till, not sent yet');
   await expect(status).toContainText('Kept on this till as P-T1-312-0001');
   const receipt = page.getByRole('article', { name: 'Receipt P-T1-312-0001' });
-  await expect(receipt).toContainText('Follows when sent');
+  await expect(receipt).toContainText('Follows when the sale is recorded');
   await expect(receipt).toContainText(formatMoney(TOTAL));
   await expect(page.locator('[data-slot="queue-count"]')).toContainText('1 to send');
   await expectNoAxeViolations(page);
