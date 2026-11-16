@@ -34,6 +34,7 @@ const MORTALITY: Record<S['MortalityRecord']['status'], Look> = {
   PENDING_APPROVAL: { tone: 'warning' },
   POSTED: { tone: 'good' },
   REJECTED: { tone: 'critical' },
+  RETURNED: { tone: 'warning' },
 };
 const BREEDING: Record<S['BreedingRecord']['status'], Look> = {
   MATED: { tone: 'info' },

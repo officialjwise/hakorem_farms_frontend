@@ -13,13 +13,14 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 
 /** @typedef {'text' | 'surface' | 'line' | 'glyph'} Role */
-/** @typedef {{ roles: Role[], scope: 'app' | 'marketing' }} TokenInfo */
+/** @typedef {{ roles: Role[], scope: 'app' | 'marketing' | 'storefront' }} TokenInfo */
 /** @typedef {{ utilityRoles: Record<string, Role>, tokens: Record<string, TokenInfo> }} Manifest */
 /** @typedef {{ message: string }} Violation */
 /**
  * @typedef {object} Context
  * @property {string} filename Absolute or repo-relative path of the file being linted.
  * @property {RegExp} [marketingPaths] Files allowed to use marketing-scoped tokens.
+ * @property {RegExp} [storefrontPaths] Files allowed to use storefront-scoped tokens.
  * @property {RegExp} [rawColorPaths] Files allowed to contain raw colour literals.
  */
 
@@ -60,6 +61,8 @@ const TOKEN_VAR = /var\(\s*--([a-z0-9-]+)|\(--([a-z0-9-]+)\)/gi;
 
 const DEFAULT_MARKETING_PATHS =
   /(^|\/)(apps\/storefront\/src\/marketing|packages\/ui\/src\/marketing)\//;
+/** The public shop, where its own page surfaces may be used (ADR 0040). */
+const DEFAULT_STOREFRONT_PATHS = /(^|\/)apps\/storefront\//;
 /** The palette source of truth, and the generator that turns it into CSS. */
 const DEFAULT_RAW_COLOR_PATHS = /(^|\/)packages\/ui\/src\/tokens\/(palette|render)\.ts$/;
 
@@ -114,6 +117,17 @@ function checkTokenRole(name, role, where, ctx) {
  */
 function checkScope(name, where, ctx) {
   const token = TOKENS[name];
+  if (token?.scope === 'storefront') {
+    const shop = ctx.storefrontPaths ?? DEFAULT_STOREFRONT_PATHS;
+    if (shop.test(normalise(ctx.filename))) return [];
+    return [
+      {
+        message:
+          `${where}: "--${name}" is a storefront token, the public shop's own page surfaces (ADR 0040). ` +
+          `Only apps/storefront may use it; the console and the design system use the app surfaces.`,
+      },
+    ];
+  }
   if (!token || token.scope !== 'marketing') return [];
   const allowed = ctx.marketingPaths ?? DEFAULT_MARKETING_PATHS;
   if (allowed.test(normalise(ctx.filename))) return [];

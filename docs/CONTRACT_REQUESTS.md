@@ -28,8 +28,11 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-022 | 2026-11-15 | Closed                   |
 | CR-023 | 2026-11-15 | Open                     |
 | CR-024 | 2026-11-15 | Closed                   |
-| CR-025 | 2026-11-15 | Answered (B06r, to come) |
+| CR-025 | 2026-11-15 | Answered (1.31.0), built |
 | CR-026 | 2026-11-15 | Open                     |
+| CR-027 | 2026-11-16 | Open                     |
+| CR-028 | 2026-11-16 | Open                     |
+| CR-029 | 2026-11-16 | Open                     |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -402,6 +405,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 
 **Status:** answered by the owner 2026-11-16. A reversal at or above the threshold will need a second approver, and the backend is adding it in B06r. When the contract carries it, the order page handles the 202 and the inbox shows the kind, its subject linked to the order.
 
+**Answered by 1.31.0 and built in F7:** `cancelProcessingOrder` answers 202 `PROCESSING_REVERSAL` at or above the threshold. The order page says the reversal waits, shows `pendingReversal` (who asked, why, its value against the threshold, a link to the request) and stops offering the reversal while it waits; a posted reversal names `approvedBy`. The inbox names the kind. Its subject is the reversal, not the order, so it is not linked yet (CR-027).
+
 ## CR-026. The approval examples name the wrong subject (example fix)
 
 - **Raised by:** frontend F6b, the approvals inbox, which links each request to its record by `subject.docType`
@@ -418,3 +423,37 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 2. **The policy example agrees** with the seeded threshold, and lists the `SUPPLIER_PAYMENT` policy with its `approverPermission`.
 
 **Until this lands:** the inbox shows these requests with their summary and amount, and links only the subjects it has a screen for. The purchase order and the supplier payment have no screen yet.
+
+## CR-027. A processing reversal's approval names its order (additive)
+
+- **Raised by:** frontend F7, the approvals inbox, which links each request to its record by `subject`.
+- **Contract read first:** the 202 example of `cancelProcessingOrder` names `subject: { docType: PROCESSING_REVERSAL, id: <the reversal's id> }`. `ProcessingOrder.pendingReversal.id` is that id, but no read finds an order by its reversal: `listProcessingOrders` filters by status, dates and yield variance only, and there is no `getProcessingReversal`.
+- **What the frontend does today:** the inbox shows the request's kind, summary (which names the animal's tag) and amount, with no link. The order page links to the request, so the path works one way only.
+
+**Request:** one of these, whichever is cheapest:
+
+1. the request's `subject` is the order (`docType: PROCESSING_ORDER`, the order's id), as a stock adjustment's is the adjustment; or
+2. `ApprovalRequest` gains an optional `relatedDocument` (`DocumentRef`) naming the order; or
+3. `listProcessingOrders` takes `reversalId`.
+
+**Until this lands:** no link from the inbox to the order for this kind.
+
+## CR-028. The shop's contact details, readable by anyone (additive)
+
+- **Raised by:** frontend F7, the product page of a live animal and the footer.
+- **Contract read first:** a live animal is `REQUEST_TO_BUY`, and `addCartLine` refuses it with `REQUEST_TO_BUY_ONLY` ("open a quote request instead"). There is no anonymous request-for-quote operation yet (F10), and no anonymous read of the business's name, phone, WhatsApp number, address or opening hours: the business profile is staff-only.
+- **What the frontend does today:** the product page says live animals are sold by request and that asking online opens soon, "until then, visit the farm or call the shop", with no number, because none can be read and none is invented.
+
+**Request:** `getShopProfile` (`GET /shop/profile`, anonymous, cacheable): the trading name, a phone and a WhatsApp number in E.164, the farm's address and directions, and opening hours. The footer and every "call us" line read it.
+
+**Until this lands:** no phone number on the storefront.
+
+## CR-029. A cart at checkout says which checkout it is in (additive)
+
+- **Raised by:** frontend F7, the checkout page.
+- **Contract read first:** `startCheckout` moves the cart to `CHECKOUT` and answers the `Checkout`. `Cart` has no field naming that checkout, and no operation finds the open checkout of a cart. A cart at checkout refuses changes (409 `CART_NOT_ACTIVE`).
+- **What the frontend does today:** the checkout id is remembered on the device that started it. Another tab after a cleared storage, or a second device with the same cookie, sees a cart it cannot change and a checkout it cannot open, until the 15-minute hold lapses.
+
+**Request:** `Cart.checkoutId` (uuid or null): the open checkout while `status` is `CHECKOUT`, null otherwise.
+
+**Until this lands:** the device that started a checkout is the only one that can finish it; elsewhere the hold lapses within 15 minutes and the cart is active again.

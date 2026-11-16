@@ -1,93 +1,424 @@
 {
   "meta": {
-    "title": "HaKorem Farms",
+    "title": "HaKorem Farms: fresh meat, eggs and live animals",
     "titleTemplate": "{{page}} | HaKorem Farms",
-    "description": "Fresh meat, live animals, eggs and produce from HaKorem Farms in Dodowa, Ghana.",
-    "categoryDescription": "Browse {{category}} from HaKorem Farms.",
+    "description": "Fresh meat weighed to order, eggs by the crate, live animals and produce from HaKorem Farms in Ghana. Delivered to your door or collected from the farm.",
+    "categoryDescription": "{{category}} from HaKorem Farms, from the farm to your table.",
+    "searchTitle": "Search",
     "checkoutTitle": "Checkout",
-    "productTitle": "Product",
     "siteName": "HaKorem Farms"
   },
   "header": {
     "home": "HaKorem Farms, home",
-    "menu": "Menu",
-    "closeMenu": "Close menu",
-    "cart": "Cart",
-    "cartCount": "Cart, {{count}} items",
-    "skip": "Skip to main content",
+    "brand": "HaKorem Farms",
+    "tagline": "From the farm to your table",
     "nav": "Shop by category",
-    "primary": "Main",
-    "brand": "HaKorem Farms"
-  },
-  "nav": {
     "all": "All products",
-    "live": "Live animals",
-    "meat": "Meat",
-    "eggs": "Eggs",
-    "produce": "Produce",
-    "inputs": "Farm inputs"
-  },
-  "categories": {
-    "live": "Live animals",
-    "meat": "Meat",
-    "eggs": "Eggs",
-    "produce": "Produce",
-    "inputs": "Farm inputs"
+    "search": {
+      "label": "Search the shop",
+      "button": "Search",
+      "example": "Goat meat, eggs, broilers…"
+    }
   },
   "home": {
-    "title": "Fresh from our farm in Dodowa",
-    "body": "Meat weighed to order, live animals, eggs and produce. Browse a category to begin.",
+    "eyebrow": "From our farm to your table",
+    "title": "Fresh meat, eggs and live animals, straight from the farm",
+    "body": "Meat cut and packed on the farm and weighed to order, eggs by the crate, live animals chosen with you, and fresh produce. Delivered to your door or collected from the farm.",
+    "shopAll": "Shop everything",
     "browse": "Shop by category",
-    "categoryCards": "Categories"
-  },
-  "category": {
-    "title": "{{category}}",
-    "empty": {
-      "title": "Products arrive soon",
-      "body": "The catalogue for this category is not connected yet."
+    "productCount_one": "{{count}} product",
+    "productCount_other": "{{count}} products",
+    "fresh": "In the shop now",
+    "seeAll": "See everything in the shop",
+    "how": {
+      "title": "How buying by weight works",
+      "oneTitle": "You order by the pack",
+      "oneBody": "Meat is priced per kg. Each pack shows its usual weight, so you see an estimate before you pay.",
+      "twoTitle": "We weigh it before it leaves",
+      "twoBody": "Every pack is weighed on the farm's scale on the day it is sent.",
+      "threeTitle": "You pay for what it weighs",
+      "threeBody": "The checkout shows the most you can be charged. If a pack weighs less, you get the difference back."
     },
-    "back": "All categories",
-    "loading": "Loading products"
+    "categoriesError": "The categories could not be loaded"
+  },
+  "listing": {
+    "allTitle": "Everything in the shop",
+    "count_one": "{{count}} product",
+    "count_other": "{{count}} products",
+    "countMore": "Showing {{count}}, more below",
+    "subcategories": "In this category",
+    "filters": "Filter and sort",
+    "availability": "Availability",
+    "anyAvailability": "Anything",
+    "productLine": "Kind",
+    "anyLine": "Every kind",
+    "sort": "Sort by",
+    "apply": "Show products",
+    "clear": "Clear filters",
+    "sorts": {
+      "RELEVANCE": "Our pick",
+      "PRICE_ASC": "Price, low to high",
+      "PRICE_DESC": "Price, high to low",
+      "NAME": "Name, A to Z"
+    },
+    "lines": {
+      "LIVE": "Live animals",
+      "MEAT": "Meat",
+      "PRODUCE": "Produce",
+      "BY_PRODUCT": "By-products",
+      "FEED": "Feed",
+      "SUPPLY": "Supplies",
+      "SERVICE": "Services"
+    },
+    "more": "Show more products",
+    "firstPage": "Back to the first products",
+    "loading": "Loading products",
+    "empty": {
+      "title": "Nothing here just now",
+      "body": "Nothing in the shop matches. Try fewer filters, or another category.",
+      "action": "Clear filters"
+    },
+    "error": {
+      "title": "The products could not be loaded",
+      "body": "The shop did not answer. Check your connection and try again.",
+      "retry": "Try again",
+      "reference": "If it keeps happening, quote this reference:"
+    },
+    "paging": "More products"
+  },
+  "search": {
+    "title": "Search",
+    "resultsFor": "Results for “{{q}}”",
+    "prompt": "What are you looking for?",
+    "promptBody": "Search for goat meat, eggs, broilers or anything else the farm sells.",
+    "empty": {
+      "title": "Nothing matches “{{q}}”",
+      "body": "Try a shorter word, such as “goat” or “eggs”, or browse a category."
+    }
+  },
+  "availability": {
+    "IN_STOCK": "In stock",
+    "LOW_STOCK": "Only a few left",
+    "OUT_OF_STOCK": "Out of stock",
+    "ON_REQUEST": "By request"
+  },
+  "price": {
+    "to": "to",
+    "none": "Price on request",
+    "basis": {
+      "PER_KG": "per kg",
+      "PER_HEAD": "a head"
+    },
+    "uom": {
+      "PACK": "a pack",
+      "CRATE": "a crate",
+      "HEAD": "a head",
+      "KG": "a kg",
+      "BUNCH": "a bunch",
+      "TUBER": "a tuber",
+      "UNIT": "each",
+      "BAG": "a bag",
+      "TRAY": "a tray"
+    },
+    "uomPlural": {
+      "PACK": "packs",
+      "CRATE": "crates",
+      "HEAD": "head",
+      "KG": "kg",
+      "BUNCH": "bunches",
+      "TUBER": "tubers",
+      "UNIT": "items",
+      "BAG": "bags",
+      "TRAY": "trays"
+    },
+    "unitAbout": "{{unit}}, about {{weight}}",
+    "unitTitle": {
+      "PACK": "A pack",
+      "CRATE": "A crate",
+      "HEAD": "One animal",
+      "BAG": "A bag",
+      "TRAY": "A tray"
+    }
+  },
+  "note": {
+    "weighed": "Priced by weight: you pay for what it weighs",
+    "request": "Chosen with you before you pay"
   },
   "product": {
-    "empty": {
-      "title": "This product is not available",
-      "body": "We could not find it. It may have been removed, or the catalogue is not connected yet."
+    "breadcrumb": "You are here",
+    "shop": "Shop",
+    "loading": "Loading the product",
+    "about": "About this product",
+    "noDescription": "Ask us about this product when you order.",
+    "weighed": {
+      "title": "Priced by weight",
+      "pricePerKg": "Price per kg",
+      "unitWeighs": "{{unit}} weighs about",
+      "upTo": "It can weigh up to",
+      "upToValue": "{{percent}}% more",
+      "rule": "Each pack is weighed before it is sent and you pay for the weighed amount. The checkout shows the estimate and the most you can be charged."
     },
-    "back": "Back to the shop",
-    "loading": "Loading the product"
+    "request": {
+      "title": "Live animals are sold by request",
+      "body": "We choose the animal with you and agree its price before anything is paid. Asking online opens soon; until then, visit the farm or call the shop."
+    },
+    "unavailable": "Out of stock just now. Check back soon.",
+    "delivery": {
+      "title": "Delivery or collection",
+      "body": "Choose delivery to your address or collection from the farm at checkout. The checkout shows the delivery fee and the days we can come."
+    },
+    "error": {
+      "title": "This product could not be loaded"
+    }
+  },
+  "addToBasket": {
+    "quantity": "How many?",
+    "fewer": "One fewer",
+    "more": "One more",
+    "add": "Add to basket",
+    "adding": "Adding to your basket",
+    "added": "Added to your basket.",
+    "view": "View basket",
+    "failed": "It was not added to your basket"
   },
   "cart": {
-    "title": "Your cart",
-    "open": "Open cart",
-    "close": "Close cart",
-    "emptyTitle": "Your cart is empty",
-    "emptyBody": "Add something from the shop and it will appear here.",
+    "title": "Your basket",
+    "open": "Basket",
+    "close": "Close basket",
+    "loading": "Loading your basket",
+    "emptyTitle": "Your basket is empty",
+    "emptyBody": "Add meat, eggs or produce from the shop and they will appear here.",
     "checkout": "Go to checkout",
-    "continue": "Keep shopping"
+    "continue": "Keep shopping",
+    "subtotal": "Estimated subtotal",
+    "subtotalNote": "Weighed items are estimates until they are weighed. Delivery is added at checkout.",
+    "quantityOf": "Quantity of {{name}}",
+    "fewer": "One fewer {{name}}",
+    "more": "One more {{name}}",
+    "remove": "Remove {{name}}",
+    "estimatedWeight": "Estimated weight",
+    "lineEstimate": "Estimated",
+    "lineTotal": "Line total",
+    "each": "{{price}} {{basis}}",
+    "weighed": "Weighed before it is sent",
+    "unavailable": "There is not enough in stock for this line. Lower the quantity or remove it.",
+    "changeFailed": "Your basket was not changed",
+    "errorTitle": "Your basket could not be loaded",
+    "errorBody": "Check your connection and try again.",
+    "retry": "Try again",
+    "reference": "If it keeps happening, quote this reference:",
+    "gone": "Your basket has ended. Start a new one from the shop.",
+    "items_one": "item",
+    "items_other": "items"
   },
   "checkout": {
     "title": "Checkout",
-    "body": "Checkout is built in a later session. Your cart is not charged.",
+    "loading": "Loading the checkout",
+    "back": "Back to the shop",
     "empty": {
       "title": "Nothing to check out",
-      "body": "Your cart is empty."
+      "body": "Your basket is empty. Add something from the shop first."
     },
-    "back": "Back to the shop",
-    "loading": "Loading checkout"
+    "basket": {
+      "title": "1. Your basket",
+      "edit": "Change the basket",
+      "coupon": "Coupon code",
+      "applyCoupon": "Apply",
+      "removeCoupon": "Remove coupon {{code}}",
+      "couponApplied": "Coupon {{code}} is applied. Its discount shows in the total.",
+      "couponFailed": "The coupon was not applied"
+    },
+    "details": {
+      "title": "2. Your details",
+      "name": "Your name",
+      "phone": "Phone number",
+      "phoneHint": "A Ghana mobile number, such as 024 451 2876. We call or text it about the order.",
+      "phoneInvalid": "Enter a phone number such as 024 451 2876.",
+      "required": "Required",
+      "fulfilment": "Delivery or collection",
+      "delivery": "Deliver to my address",
+      "deliveryHint": "The fee depends on where you are.",
+      "collection": "I will collect from the farm",
+      "collectionHint": "No delivery fee.",
+      "invalid": "Some details need correcting. They are marked below."
+    },
+    "address": {
+      "title": "Delivery address",
+      "recipient": "Name of the person receiving it",
+      "recipientPhone": "Their phone number",
+      "line1": "House number and street, or a landmark",
+      "area": "Area or suburb",
+      "areaHint": "For example Madina, East Legon or Tema Community 25.",
+      "city": "Town or city",
+      "region": "Region",
+      "digitalAddress": "GhanaPost GPS address (optional)",
+      "digitalAddressHint": "For example GA-123-4567.",
+      "directions": "Directions for the driver (optional)",
+      "check": "Check delivery to this address",
+      "checking": "Checking delivery",
+      "deliverable": "We deliver to {{zone}}.",
+      "fee": "Delivery fee",
+      "freeOver": "Free delivery on orders over",
+      "cutoff": "Order before {{time}} for the earliest slot.",
+      "notDeliverable": "We do not deliver to this address yet. You can collect from the farm instead.",
+      "useCollection": "Collect from the farm instead",
+      "checkFailed": "Delivery could not be checked",
+      "regions": [
+        "Greater Accra",
+        "Ashanti",
+        "Central",
+        "Eastern",
+        "Volta",
+        "Western",
+        "Western North",
+        "Ahafo",
+        "Bono",
+        "Bono East",
+        "Oti",
+        "Northern",
+        "Savannah",
+        "North East",
+        "Upper East",
+        "Upper West"
+      ],
+      "regionHint": "The region the address is in."
+    },
+    "slots": {
+      "title": "When should we come?",
+      "loading": "Loading delivery times",
+      "none": "There are no delivery times open for this area just now. You can collect from the farm instead.",
+      "slot": "{{date}}, {{from}} to {{to}}",
+      "left_one": "{{count}} place left",
+      "left_other": "{{count}} places left",
+      "full": "Full",
+      "errorTitle": "Delivery times could not be loaded",
+      "required": "Choose a delivery time.",
+      "weekdays": {
+        "0": "Sunday",
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday"
+      },
+      "months": {
+        "1": "January",
+        "2": "February",
+        "3": "March",
+        "4": "April",
+        "5": "May",
+        "6": "June",
+        "7": "July",
+        "8": "August",
+        "9": "September",
+        "10": "October",
+        "11": "November",
+        "12": "December"
+      },
+      "day": "{{weekday}} {{day}} {{month}}"
+    },
+    "payment": {
+      "title": "How will you pay?",
+      "mobileMoney": "Mobile money",
+      "mobileMoneyHint": "Approve the payment on your phone.",
+      "card": "Card",
+      "cardHint": "You go to our payment provider's page to pay.",
+      "cod": "Cash on delivery",
+      "codHint": "Pay the driver when the order arrives.",
+      "codNeedsDelivery": "Cash on delivery is only for orders we deliver.",
+      "difference": "If a weighed item comes to less than the estimate",
+      "refund": "Refund the difference to me",
+      "storeCredit": "Keep it as credit for my next order"
+    },
+    "hold": "Hold my items and show the total",
+    "holding": "Holding your items",
+    "holdFailed": "Your items could not be held",
+    "review": {
+      "title": "3. Check and pay",
+      "estimated": "Estimated total",
+      "maximum": "The most you can be charged",
+      "weighedTitle": "Your total is an estimate",
+      "fixedTitle": "Your total",
+      "tax": "Tax included in the total",
+      "delivery": "Delivery",
+      "collection": "Collection from the farm",
+      "free": "Free",
+      "discount": "{{name}}",
+      "heldUntil": "Your items are held for you until {{time}}. After that they go back on sale.",
+      "priceChanged": "A price changed since you added it. The prices below are today's.",
+      "lines": "What you are buying",
+      "lineEstimate": "Estimated {{price}}",
+      "lineMaximum": "at most {{price}}",
+      "deliverTo": "Deliver to",
+      "when": "When",
+      "contact": "Contact",
+      "change": "Change these details",
+      "payerPhone": "Mobile money number",
+      "network": "Network",
+      "networks": {
+        "MTN": "MTN MoMo",
+        "TELECEL": "Telecel Cash",
+        "AIRTELTIGO": "AT Money"
+      },
+      "pay": "Pay {{amount}}",
+      "payCard": "Pay {{amount}} by card",
+      "placeCod": "Order, pay {{amount}} on delivery",
+      "placing": "Placing your order",
+      "placeFailed": "Your order was not placed",
+      "expired": "The time we held your items for has ended, so they went back on sale. Hold them again to see today's total.",
+      "holdAgain": "Hold my items again",
+      "payTitle": {
+        "MOBILE_MONEY": "Pay by mobile money",
+        "CARD": "Pay by card",
+        "COD": "Pay on delivery"
+      },
+      "payerPhoneHint": "The mobile money number that will approve the payment."
+    },
+    "done": {
+      "title": "Thank you. Your order {{orderNo}} is placed",
+      "awaitingPayment": "We are waiting for your payment",
+      "instructions": "What to do now",
+      "confirmed": "Your order is confirmed. We will be in touch before it is sent.",
+      "check": "Check my payment",
+      "checking": "Checking your payment",
+      "paid": "Payment received. Your order is confirmed.",
+      "keep": "Keep this reference for any question about your order: {{orderNo}}.",
+      "continue": "Back to the shop",
+      "card": "Continue to the payment page"
+    }
+  },
+  "refusals": {
+    "REQUEST_TO_BUY_ONLY": "Live animals are sold by request, so they cannot go in the basket.",
+    "PRODUCT_UNAVAILABLE": "This item cannot be bought online just now.",
+    "QUANTITY_INVALID": "That quantity cannot be ordered. Whole packs, crates or animals only, and up to 50 lines in a basket.",
+    "CART_EMPTY": "Your basket is empty.",
+    "CART_NOT_ACTIVE": "Your basket is already at the checkout. Finish or end that checkout first.",
+    "STOCK_UNAVAILABLE": "There is not enough in stock for some items. Lower the quantity or remove them from the basket.",
+    "DELIVERY_UNAVAILABLE": "We do not deliver to that address yet. You can collect from the farm instead.",
+    "SLOT_UNAVAILABLE": "That delivery time cannot be booked any more. Choose another.",
+    "CHECKOUT_INVALID": "Some details need correcting.",
+    "CHECKOUT_NOT_OPEN": "The time we held your items for has ended. Hold them again.",
+    "COUPON_UNAVAILABLE": "That coupon cannot be used on this basket.",
+    "COUPON_ALREADY_APPLIED": "A coupon is already applied. Remove it to use another.",
+    "REFERENCE_NOT_FOUND": "That code was not found.",
+    "NOT_FOUND": "We could not find your basket. Start a new one from the shop.",
+    "RATE_LIMITED": "Too many tries in a short time. Wait a minute and try again.",
+    "SERVICE_UNAVAILABLE": "The checkout is busy. Wait a minute and try again.",
+    "NETWORK_ERROR": "The shop could not be reached. Check your connection and try again.",
+    "TIMEOUT": "The shop took too long to answer. Check your connection and try again.",
+    "fallback": "Something went wrong. Try again."
   },
   "footer": {
     "label": "Site",
-    "about": "HaKorem Farms, Dodowa, Ghana",
-    "rights": "All rights reserved.",
+    "about": "HaKorem Farms. Livestock, meat and fresh produce from our farm in Ghana. HaKorem means the vinedresser, the farmer.",
     "shop": "Shop",
-    "legal": "Legal",
-    "privacy": "Privacy",
-    "terms": "Terms"
+    "buyingByWeight": "Weighed items are priced per kg and charged on their weighed weight, never more than the most shown at checkout.",
+    "rights": "© HaKorem Farms. All rights reserved."
   },
   "notFound": {
     "title": "Page not found",
-    "body": "The address may be wrong, or the page may have moved.",
+    "body": "The address may be wrong, or the product may no longer be in the shop.",
     "home": "Back to the shop"
   },
   "error": {

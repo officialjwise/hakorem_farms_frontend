@@ -358,6 +358,18 @@
       ],
       "scope": "app"
     },
+    "shop-bg": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "storefront"
+    },
+    "shop-band": {
+      "roles": [
+        "surface"
+      ],
+      "scope": "storefront"
+    },
     "brand-marketing": {
       "roles": [
         "surface",

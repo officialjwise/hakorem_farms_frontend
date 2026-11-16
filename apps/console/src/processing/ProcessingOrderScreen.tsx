@@ -86,6 +86,43 @@ function BackLink() {
   );
 }
 
+/**
+ * A reversal at or above the threshold waiting for a second person (1.31.0): nothing has moved yet. It says
+ * who asked, why, and the value against the threshold, and opens the request for anyone who reads the inbox.
+ */
+function PendingReversal({ order }: { order: Order }) {
+  const { t } = useTranslation('processing');
+  const auth = useAuth();
+  const pending = order.pendingReversal;
+  if (pending === null) return null;
+  return (
+    <Alert
+      severity="warning"
+      title={t('reverse.waitingTitle', { name: pending.requestedBy.displayName })}
+    >
+      <p>{t('reverse.waitingBody')}</p>
+      <p>
+        <When instant={pending.requestedAt} />
+      </p>
+      <p>{t('reverse.reason', { reason: pending.reason })}</p>
+      <p>
+        {t('reverse.waitingValue')} <MoneyDisplay pesewas={pending.valuePesewas} />.{' '}
+        {t('reverse.waitingThreshold')} <MoneyDisplay pesewas={pending.thresholdPesewas} />.
+      </p>
+      {auth.can('iam.approval.read') ? (
+        <p>
+          <Link
+            to={`/approvals/${pending.approvalRequestId}`}
+            className="text-accent-text underline"
+          >
+            {t('reverse.openRequest')}
+          </Link>
+        </p>
+      ) : null}
+    </Alert>
+  );
+}
+
 /** One fact in the order's summary: its name, and the value or words for none. */
 function Fact({ term, children }: { term: string; children: ReactNode }) {
   return (
@@ -127,8 +164,12 @@ export function OrderDetail({ order }: { order: Order }) {
             <When instant={order.reversal.reversedAt} />
           </p>
           <p>{t('reverse.reason', { reason: order.reversal.reason })}</p>
+          {order.reversal.approvedBy === null ? null : (
+            <p>{t('reverse.approvedBy', { name: order.reversal.approvedBy.displayName })}</p>
+          )}
         </Alert>
       )}
+      {order.pendingReversal === null ? null : <PendingReversal order={order} />}
       <OrderActions order={order} onNotice={setNotice} />
 
       <Card>

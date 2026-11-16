@@ -186,11 +186,16 @@ describe('the mark / text / fill split', () => {
   });
 });
 
-describe('marketing tokens', () => {
-  it('are scoped to marketing, and only they are', () => {
+describe('scoped tokens', () => {
+  it('brand-marketing tokens are marketing, shop tokens storefront, and every other is app', () => {
     for (const n of names) {
       const scope = (colors[n] as { scope?: string }).scope ?? 'app';
-      expect(scope).toBe(n.startsWith('brand-marketing') ? 'marketing' : 'app');
+      const expected = n.startsWith('brand-marketing')
+        ? 'marketing'
+        : n.startsWith('shop-')
+          ? 'storefront'
+          : 'app';
+      expect(scope).toBe(expected);
     }
   });
 });

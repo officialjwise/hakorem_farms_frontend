@@ -1,12 +1,7 @@
-import { Skeleton } from '@hakorem/ui';
+import { ListingLoading } from '../../../components/ListingLoading';
 import { getT } from '../../../i18n/server';
 
 export default async function Loading() {
   const t = await getT('storefront');
-  return (
-    <div className="grid gap-3">
-      <Skeleton label={t('category.loading')} className="h-8 w-48" />
-      <Skeleton shape="block" />
-    </div>
-  );
+  return <ListingLoading label={t('listing.loading')} />;
 }

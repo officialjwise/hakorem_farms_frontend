@@ -55,7 +55,11 @@
     "CREDIT_NOTE": "Credit note",
     "PAYMENT_REVERSAL": "Payment reversal",
     "PERIOD_REOPEN": "Reopen a closed period",
-    "MORTALITY_WRITE_OFF": "Death or cull write-off"
+    "MORTALITY_WRITE_OFF": "Death or cull write-off",
+    "SUPPLIER_CREDIT_NOTE": "Supplier credit note",
+    "SUPPLIER_INVOICE_VARIANCE": "Supplier invoice difference",
+    "MORTALITY_CONFIRMATION": "Death or cull to confirm",
+    "PROCESSING_REVERSAL": "Reverse a completed processing order"
   },
   "status": {
     "PENDING": "Waiting",

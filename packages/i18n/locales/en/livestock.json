@@ -45,7 +45,8 @@
     "REPORTED": "Reported, not submitted",
     "PENDING_APPROVAL": "Waiting for approval",
     "POSTED": "Written off",
-    "REJECTED": "Rejected"
+    "REJECTED": "Rejected",
+    "RETURNED": "Sent back: report it again"
   },
   "breedingStatus": {
     "MATED": "Mated",
@@ -391,7 +392,13 @@
     "pendingTitle": "Sent for approval. Nothing has been written off yet.",
     "pendingBody": "{{summary}} The animal stays on hand until a different person approves.",
     "posted": "Written off.",
-    "awaiting": "Waiting for a second person to approve. The animal stays on hand until then."
+    "awaiting": "Waiting for a second person to approve. The animal stays on hand until then.",
+    "returnedTitle": "Sent back. Nothing was written off",
+    "returnedReason": {
+      "EVIDENCE_INFECTED": "The photograph failed the safety scan, so the request was withdrawn. Report the animal again with a new photograph.",
+      "EVIDENCE_UNSCANNABLE": "The photograph could not be checked, so the request was withdrawn. Report the animal again with a new photograph.",
+      "UNKNOWN": "The request was withdrawn. Report the animal again with a new photograph."
+    }
   },
   "move": {
     "title": "Move {{animal}}",

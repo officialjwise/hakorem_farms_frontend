@@ -41,6 +41,11 @@ tester.run('token-usage', rule, {
     { filename: APP, code: `<div style={{ fill: 'var(--warning)' }} />` },
     // Non-colour arbitrary values are fine.
     { filename: APP, code: `<div className="w-[37%] grid-cols-[1fr_auto]" />` },
+    // Storefront tokens anywhere in the storefront (ADR 0040).
+    {
+      filename: '/repo/apps/storefront/src/app/layout.tsx',
+      code: `<body className="bg-shop-bg" />`,
+    },
     // Marketing tokens inside marketing code.
     { filename: PROMO, code: `<section className="bg-brand-marketing text-brand-marketing-fg" />` },
     // The palette source of truth may hold hex values.
@@ -75,6 +80,19 @@ tester.run('token-usage', rule, {
     { filename: APP, code: `<span className="bg-[#ff0000]" />`, errors: [err] },
     { filename: APP, code: `<span style={{ color: 'rgb(0 0 0)' }} />`, errors: [err] },
     { filename: APP, code: `<span className="text-green-700 bg-white" />`, errors: [err, err] },
+    // Storefront tokens outside the storefront: the console and the design system.
+    {
+      filename: '/repo/apps/console/src/app/RootLayout.tsx',
+      code: `<div className="bg-shop-bg" />`,
+      errors: [err],
+    },
+    { filename: APP, code: `<section className="bg-shop-band" />`, errors: [err] },
+    // A storefront token is a surface, never text.
+    {
+      filename: '/repo/apps/storefront/src/app/page.tsx',
+      code: `<p className="text-shop-bg" />`,
+      errors: [err],
+    },
     // Marketing tokens outside marketing code.
     { filename: APP, code: `<section className="bg-brand-marketing" />`, errors: [err] },
     {

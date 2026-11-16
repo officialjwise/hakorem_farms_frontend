@@ -25,8 +25,11 @@
  */
 export type Role = 'text' | 'surface' | 'line' | 'glyph';
 
-/** `marketing` tokens are only usable in storefront hero and promotional code. */
-export type Scope = 'app' | 'marketing';
+/**
+ * `marketing` tokens are only usable in storefront hero and promotional code. `storefront` tokens are the
+ * public shop's own page surfaces, usable anywhere in `apps/storefront` and nowhere else (ADR 0040).
+ */
+export type Scope = 'app' | 'marketing' | 'storefront';
 
 export interface ColorToken {
   readonly light: string;
@@ -309,6 +312,23 @@ export const colors = {
     use: 'Sold, written off, unpaid not due, voided: tint',
   },
 
+  // Storefront: the public shop's warm sand page and its deeper sand bands (ADR 0040). The console keeps
+  // the light grey page (ADR 0001, amended in F5c); the shop reads as a farm shop, not a back office.
+  'shop-bg': {
+    light: '#F6F0E3',
+    dark: '#15130E',
+    roles: ['surface'],
+    scope: 'storefront',
+    use: 'Storefront page background: warm sand, so white product cards stand out',
+  },
+  'shop-band': {
+    light: '#EBDFC6',
+    dark: '#231D13',
+    roles: ['surface'],
+    scope: 'storefront',
+    use: 'Storefront hero and section bands: deeper sand',
+  },
+
   // Marketing: storefront hero and promotional surfaces only. Provisional values,
   // to be replaced with the print and social brand colours (docs/ASSUMPTIONS.md A-F0-01).
   'brand-marketing': {
@@ -379,6 +399,8 @@ const PAGE_SURFACES = [
   'surface-hover',
 ] as const satisfies readonly ColorName[];
 const STATUSES = ['good', 'warning', 'critical', 'info'] as const;
+/** The storefront's page surfaces (ADR 0040): what sits directly on them, in both themes. */
+const SHOP_SURFACES = ['shop-bg', 'shop-band'] as const satisfies readonly ColorName[];
 const CATEGORIES = ['violet', 'plum', 'clay', 'slate'] as const;
 
 /** Every foreground/background pairing the components use. The contrast test checks each in both themes. */
@@ -391,6 +413,19 @@ export const contrastPairs: readonly ContrastPair[] = [
     { fg: 'focus', bg, min: AA_NON_TEXT, kind: 'non-text', use: 'Focus ring' },
     { fg: 'accent', bg, min: AA_NON_TEXT, kind: 'non-text', use: 'Primary button against page' },
     { fg: 'fg-disabled', bg, min: 0, kind: 'exempt', use: 'Disabled text (WCAG 1.4.3 exception)' },
+  ]),
+  ...SHOP_SURFACES.flatMap((bg): ContrastPair[] => [
+    { fg: 'fg', bg, min: DAYLIGHT_BODY, kind: 'text', use: 'Shop body text' },
+    { fg: 'fg-muted', bg, min: AA_TEXT, kind: 'text', use: 'Shop secondary text' },
+    { fg: 'accent-text', bg, min: AA_TEXT, kind: 'text', use: 'Shop link text' },
+    { fg: 'border-strong', bg, min: AA_NON_TEXT, kind: 'non-text', use: 'Shop control boundary' },
+    { fg: 'focus', bg, min: AA_NON_TEXT, kind: 'non-text', use: 'Shop focus ring' },
+    { fg: 'accent', bg, min: AA_NON_TEXT, kind: 'non-text', use: 'Shop primary button' },
+    { fg: 'fg-disabled', bg, min: 0, kind: 'exempt', use: 'Disabled text (WCAG 1.4.3 exception)' },
+    ...STATUSES.flatMap((s): ContrastPair[] => [
+      { fg: `${s}-fg`, bg, min: AA_TEXT, kind: 'text', use: `${s}: inline text on the shop page` },
+      { fg: s, bg, min: AA_NON_TEXT, kind: 'non-text', use: `${s}: icon on the shop page` },
+    ]),
   ]),
   { fg: 'accent-fg', bg: 'accent', min: AA_TEXT, kind: 'text', use: 'Primary button label' },
   {

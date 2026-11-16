@@ -14,6 +14,7 @@ const repo = resolve(__dirname, '../../../..');
 const INTERACTIVE = [
   'table-toolbar',
   'photo-input',
+  'quantity-stepper',
   'button',
   'input',
   'textarea',
@@ -59,6 +60,8 @@ const DISPLAY_ONLY = [
   'lot-badge',
   'money-display',
   'price-band-display',
+  'product-card',
+  'catch-weight-notice',
   'quantity-display',
   'skeleton',
   'spinner',

@@ -219,6 +219,8 @@ const OWNER_F6_PERMISSIONS = [
   'liv.mortality.read',
   'liv.mortality.report',
   'liv.mortality.approve',
+  'liv.mortality.post',
+  'liv.mortality.confirm',
   'liv.feed.read',
   'liv.feed.record',
   'liv.feed.manage',
@@ -244,8 +246,11 @@ const OWNER_F6_PERMISSIONS = [
  * - breeding and growth (1.25.0: "The Vet or Farm hand now holds the edits, moves, batches, growth and
  *   breeding");
  * - the reason codes, so a death can say why: confirmed by the owner (2026-11-16, A-F6b-02);
- * - location and product reads, so a pen and a feed or medicine can be named, and the file upload a death's
- *   photograph needs: assumed (A-F6-02, CR-023).
+ * - the evidence upload a death's photograph needs, and no other purpose (1.31.0:
+ *   `platform.file.upload.evidence`, "the Farm hand");
+ * - location and product reads, so a pen and a feed or medicine can be named: assumed (A-F6-02, CR-023).
+ * It holds neither `liv.mortality.post` nor `liv.mortality.confirm` (1.31.0), so every death it submits
+ * waits for a second person.
  */
 const FARM_HAND_PERMISSIONS = [
   'liv.weight.read',
@@ -264,13 +269,15 @@ const FARM_HAND_PERMISSIONS = [
   'mdm.location.read',
   'mdm.product.read',
   'mdm.reason_code.read',
-  'platform.file.upload',
+  'platform.file.upload.evidence',
 ];
 
 /**
  * The Manager: the four approving permissions the contract's `listRoles` example gives the role, the
  * approval inbox they are decided in (`iam.approval.read`), the reads a decision's evidence opens (a death
  * and its photograph), and reversing a completed processing order (1.26.0: "the Owner and the Manager").
+ * It writes a death off below the threshold and confirms a Farm hand's (1.31.0: `liv.mortality.post`,
+ * `liv.mortality.confirm`).
  */
 const MANAGER_PERMISSIONS = [
   ...CASHIER_PERMISSIONS,
@@ -284,6 +291,8 @@ const MANAGER_PERMISSIONS = [
   'liv.animal.read',
   'liv.mortality.read',
   'liv.mortality.report',
+  'liv.mortality.post',
+  'liv.mortality.confirm',
   'platform.file.read',
   'platform.file.upload',
   'prc.order.read',

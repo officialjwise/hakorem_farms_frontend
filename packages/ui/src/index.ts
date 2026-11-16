@@ -239,3 +239,28 @@ export {
   type PhotoValue,
 } from './components/photo-input/PhotoInput';
 export { resizePhoto, fitWithin, type ResizeOptions } from './components/photo-input/resize';
+export {
+  ProductCard,
+  ProductCardSkeleton,
+  type ProductCardProps,
+} from './components/product-card/ProductCard';
+export {
+  ProductPhoto,
+  type PhotoTone,
+  type ProductPhotoProps,
+} from './components/product-card/ProductPhoto';
+export {
+  PhotoImage,
+  type PhotoImageProps,
+  type PhotoSet,
+  type PhotoVariant,
+} from './components/product-card/PhotoImage';
+export {
+  CatchWeightNotice,
+  type CatchWeightFact,
+  type CatchWeightNoticeProps,
+} from './components/catch-weight-notice/CatchWeightNotice';
+export {
+  QuantityStepper,
+  type QuantityStepperProps,
+} from './components/quantity-stepper/QuantityStepper';

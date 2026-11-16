@@ -65,6 +65,6 @@ describe('app namespaces (F1)', () => {
     const i18n = await createI18n({ namespaces: ['shell', 'auth', 'storefront'] });
     expect(i18n.t('toast.close', { ns: 'shell' })).toBe('Dismiss notification');
     expect(i18n.t('login.submit', { ns: 'auth' })).toBe('Sign in');
-    expect(i18n.t('cart.title', { ns: 'storefront' })).toBe('Your cart');
+    expect(i18n.t('cart.title', { ns: 'storefront' })).toBe('Your basket');
   });
 });

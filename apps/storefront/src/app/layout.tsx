@@ -43,7 +43,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       data-density="comfortable"
       {...(theme === 'system' ? {} : { 'data-theme': theme })}
     >
-      <body className="font-sans">
+      <body className="bg-shop-bg font-sans text-fg">
         <Providers
           theme={theme}
           toastLabels={{
@@ -60,11 +60,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               {t('app.skipToContent')}
             </a>
             <SiteHeader />
-            <main
-              id="main"
-              tabIndex={-1}
-              className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 outline-none"
-            >
+            <main id="main" tabIndex={-1} className="w-full flex-1 outline-none">
               {children}
             </main>
             <SiteFooter />

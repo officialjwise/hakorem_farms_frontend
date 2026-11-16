@@ -58,6 +58,16 @@ export function findOperation(method: string, path: string): Operation | undefin
   )[0];
 }
 
+/**
+ * Operations whose description grants a second permission besides `x-permission`. `uploadFile` takes
+ * `platform.file.upload.evidence` for an `EVIDENCE` file (1.31.0, the Farm hand). The fake does not read
+ * the multipart body, so it lets that holder through for any purpose; the console only asks it for
+ * evidence.
+ */
+const ALTERNATIVE_PERMISSIONS: Record<string, readonly string[]> = {
+  uploadFile: ['platform.file.upload.evidence'],
+};
+
 /** A permission code as `x-permission` writes one (`iam.user.read`), not a sentence about one. */
 const PERMISSION_CODE = /^[a-z]+(\.[a-z_]+)+$/;
 
@@ -156,7 +166,14 @@ export class FakeApi {
       return route.continue({ headers: { ...request.headers(), prefer: 'code=401' } });
     }
     const needed = operation.permission;
-    if (needed !== null && PERMISSION_CODE.test(needed) && !session.permissions.includes(needed)) {
+    const alternatives = ALTERNATIVE_PERMISSIONS[operation.id] ?? [];
+    const holds = (code: string) => session.permissions.includes(code);
+    if (
+      needed !== null &&
+      PERMISSION_CODE.test(needed) &&
+      !holds(needed) &&
+      !alternatives.some(holds)
+    ) {
       record('prism-403');
       return route.continue({ headers: { ...request.headers(), prefer: 'code=403' } });
     }
