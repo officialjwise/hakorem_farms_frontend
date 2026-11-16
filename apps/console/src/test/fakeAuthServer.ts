@@ -317,7 +317,10 @@ const MANAGER_PERMISSIONS = [
   'prc.order.read',
   'prc.order.create',
   'prc.order.reverse',
-  // 1.39.0 and 1.40.0: the Manager approves credit notes and opens the archive.
+  // 1.39.0 and 1.40.0: the Manager reads and reprints billing documents, approves credit notes and opens
+  // the archive. Who raises a credit note is not said (A-F8-03), so the Manager does not.
+  'bil.document.read',
+  'bil.document.reprint',
   'bil.credit_note.approve',
   'doc.document.read',
 ];
