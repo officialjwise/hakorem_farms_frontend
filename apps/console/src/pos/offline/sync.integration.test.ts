@@ -139,6 +139,58 @@ describe('the till speaks the contract (Prism validates every body)', () => {
     expect(Array.isArray(result.results)).toBe(true);
   });
 
+  it('sends a sale with the phone for its receipt and an unverified mobile money tender on a supervisor’s PIN (F10)', async () => {
+    const { entry } = await buildSale({
+      device: DEVICE,
+      shift: shift(),
+      lines: [GOAT],
+      cashMethod: CASH,
+      others: [
+        {
+          method: {
+            id: '019a7a92-c15e-7582-aabb-60fcf9dfd9da',
+            code: 'MOMO',
+            name: 'Mobile money',
+            kind: 'MOBILE_MONEY',
+          },
+          paymentMethodId: '019a7a92-c15e-7582-aabb-60fcf9dfd9da',
+          amountPesewas: 20000,
+          unverifiedMobileMoney: {
+            payerPhone: '+233245550142',
+            network: 'MTN',
+            providerReference: 'MP261113.1149.C41872',
+            approvedById: '019a7a86-4f35-7afd-b035-b8ab03a83188',
+          },
+        },
+      ],
+      cashHandedPesewas: 70000,
+      customerPhone: '+233244550199',
+      now: new Date(),
+    });
+    const result = await api.call('syncOfflineSales', {
+      body: { deviceId: DEVICE.deviceId, shiftId: entry.shiftId, sales: [entry.payload] },
+    });
+    expect(Array.isArray(result.results)).toBe(true);
+  });
+
+  it('records a cash drop with its witness in the contract shape (F10)', async () => {
+    const id = newRecordId();
+    await api.call(
+      'recordCashMovement',
+      {
+        path: { id: newRecordId() },
+        body: {
+          id,
+          kind: 'CASH_DROP',
+          amountPesewas: 50000,
+          witnessId: '019a7a86-4f35-7afd-b035-b8ab03a83188',
+          occurredAt: new Date().toISOString(),
+        },
+      },
+      { idempotencyKey: id },
+    );
+  });
+
   it('is refused by the mock for a body that breaks the contract, so the passes above mean something', async () => {
     const { entry } = await buildSale({
       device: DEVICE,
