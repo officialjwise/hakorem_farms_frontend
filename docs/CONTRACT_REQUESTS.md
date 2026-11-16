@@ -461,3 +461,26 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 **Request:** `Cart.checkoutId` (uuid or null): the open checkout while `status` is `CHECKOUT`, null otherwise.
 
 **Until this lands:** the device that started a checkout is the only one that can finish it; elsewhere the hold lapses within 15 minutes and the cart is active again.
+
+## CR-030. The billing examples contradict their operations (example fix)
+
+- **Raised by:** frontend F8, the document viewer, the credit and debit notes, against Prism.
+- **Contract read first (1.41.0):**
+  1. `reprintBillingDocument` has one example, `channel: THERMAL` with `pdfBase64: null`. A request for `PDF` gets the same answer from the mock, so the screen correctly says no PDF came back. There is no `PDF` example.
+  2. `issueCreditNote`'s 202 example names `subject: { docType: STOCK_ADJUSTMENT }`. A credit note waiting for approval is a billing document (`listBillingDocuments` lists it as a `DRAFT`), so the inbox cannot link it.
+  3. `issueDebitNote`'s 201 example answers a `RECEIPT` (`RCP-2026-DDW-T1-018834`), not a `DEBIT_NOTE` naming the original as `originalDocument`.
+  4. `getArchivedDocument`'s `sha256` (`4f2ae8c1…`) is not `getBillingDocument`'s `contentHash` (`4f2ac1d2…`), while the description says they are equal; its `businessDocument.id` is not the billing document's id either.
+  5. `getBillingDocument` says `reprintCount: 1` while `listBillingDocumentReprints` lists five copies, and `reprintBillingDocument` answers copy 2, which the list already has.
+  6. `listReasonCodes` has no `BILLING_ADJUSTMENT` reason (`UNDERCHARGED`, `CHARGE_OMITTED`) and one `REFUND`, no `RETURN`: the debit note's reason list is empty on the mock.
+- **What the frontend does today:** builds to the descriptions. The e2e spec rewrites the reprint (a PDF) and the reason list; the inbox shows a credit note request without a link.
+
+**Request:**
+
+1. A named `PDF` example for `reprintBillingDocument` (`pdfBase64` set, `escPosBase64` null), so Prism answers it with `Prefer: example=pdf`.
+2. The 202 example's `subject` names the draft credit note: `docType: CREDIT_NOTE` with its id. The console links `CREDIT_NOTE`, `INVOICE`, `RECEIPT`, `PROFORMA` and `DEBIT_NOTE` to the document viewer.
+3. A `DEBIT_NOTE` 201 example with `originalDocument` set.
+4. The archive example's `sha256` and `businessDocument` agree with the billing document's.
+5. The reprint examples agree: the count, the history and the next copy number.
+6. The reason example lists the seeded `REFUND`, `RETURN` and `BILLING_ADJUSTMENT` codes.
+
+**Until this lands:** nothing is blocked. The mock shows the debit note form with no reason to choose.
