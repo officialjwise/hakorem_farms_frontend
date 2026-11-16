@@ -71,9 +71,10 @@ export function quantityText(quantity: string, uom: string): string {
 }
 
 /**
- * The customer's receipt, laid out for an 80 mm roll and printed through the browser's print, the till's
- * receipt printer being the device's printer (ADR 0043). On screen it is the receipt as handed over. A copy
- * printed again says so at the top, and it is never a new receipt.
+ * The customer's receipt as the till shows it on screen (ADR 0045). The sale reference is labelled as a
+ * sale reference, never as a receipt number; the official number follows when the sale is recorded. The
+ * printed form is the 58 mm ESC/POS one (`printer/escpos.ts`). A copy says so at the top, and it is never a
+ * new receipt.
  */
 export function Receipt({
   receipt,
@@ -90,7 +91,7 @@ export function Receipt({
     <article
       aria-label={t('receipt.label', { ref: receipt.provisionalRef })}
       data-slot="receipt"
-      className="mx-auto grid w-full max-w-[80mm] gap-2 rounded-md border border-border bg-surface p-3 font-mono text-sm text-fg print:max-w-none print:border-0 print:p-0"
+      className="mx-auto grid w-full max-w-sm gap-2 rounded-md border border-border bg-surface p-3 font-mono text-sm text-fg"
     >
       {copy ? (
         <p
@@ -171,6 +172,14 @@ function TenderRows({ tender }: { tender: ReceiptContent['tenders'][number] }) {
       <dd className="text-end">
         <MoneyDisplay pesewas={tender.amountPesewas} />
       </dd>
+      {tender.unverified === true ? (
+        <dd className="col-span-2 text-xs" data-slot="receipt-unverified">
+          {t('receipt.unverified')}
+          {tender.reference !== undefined && tender.reference !== null
+            ? ` · ${t('receipt.reference')} ${tender.reference}`
+            : ''}
+        </dd>
+      ) : null}
       {tender.tenderedPesewas !== null ? (
         <>
           <dt>{t('receipt.handed', { name: tender.name })}</dt>
