@@ -116,7 +116,8 @@
     "cancelled": "Cancelled. Nothing had moved, so no stock or cost changed.",
     "costAdded": "Cost added. It reaches the ledger when the order is completed.",
     "outputsSaved": "Outputs saved.",
-    "reversed": "The order was reversed. Its movements are undone and its packs are marked reversed."
+    "reversed": "The order was reversed. Its movements are undone and its packs are marked reversed.",
+    "reversalPending": "The reversal is waiting for a second person to approve it. Nothing has moved yet."
   },
   "facts": {
     "title": "Order",
@@ -369,6 +370,12 @@
     "pending": "Reversing",
     "failed": "The order was not reversed",
     "done": "Reversed by {{name}}",
-    "reason": "Reason: {{reason}}"
+    "reason": "Reason: {{reason}}",
+    "approvedBy": "Approved by {{name}}",
+    "waitingTitle": "A reversal asked for by {{name}} is waiting for approval",
+    "waitingBody": "Nothing has moved: the lots are still in stock and the animals still processed. A different manager or the owner approves it.",
+    "waitingValue": "It takes back",
+    "waitingThreshold": "A second person approves any reversal from",
+    "openRequest": "Open the approval request"
   }
 }

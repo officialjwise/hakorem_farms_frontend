@@ -13,6 +13,8 @@ import { holdResponses, mock } from '../test/integration-setup';
 
 const PRISM_500_REFERENCE = '019a7b1e-32bc-78e3-8e1c-970f89c10fed';
 const ANY_ID = '019a7a86-3046-711a-a652-1a7389f79351';
+/** The completed order in `getProcessingOrder`'s example: the screen reverses it by its own id. */
+const EXAMPLE_ORDER_ID = '019a7aac-7e39-7fc5-b4fd-05253a247e03';
 
 afterEach(() => {
   queryClient.clear();
@@ -108,6 +110,21 @@ describe('processing orders', () => {
     await user.type(within(dialog).getByRole('textbox'), 'Weighed on the wrong scale');
     await user.click(within(dialog).getByRole('button', { name: 'Reverse the order' }));
     expect(await screen.findByText(/The order was reversed/)).toBeInTheDocument();
+  });
+
+  it('a reversal at or above the threshold says it waits for a second person, and nothing moved', async () => {
+    const user = userEvent.setup();
+    await renderApp(`/processing-orders/${ANY_ID}`, await signedIn('owner'));
+    await user.click(await screen.findByRole('button', { name: 'Reverse the order' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Reverse this completed order?' });
+    await user.type(within(dialog).getByRole('textbox'), 'Wrong goat slaughtered');
+    mock.prefer = 'code=202';
+    mock.preferPath = `/processing-orders/${EXAMPLE_ORDER_ID}/cancel`;
+    await user.click(within(dialog).getByRole('button', { name: 'Reverse the order' }));
+    expect(
+      await screen.findByText(/The reversal is waiting for a second person to approve it/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/The order was reversed/)).not.toBeInTheDocument();
   });
 
   it('a lot links back to the order it came from, which opens on its animal', async () => {

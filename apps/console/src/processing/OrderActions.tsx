@@ -14,6 +14,7 @@ import {
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiMutation } from '../data/api';
+import { isApprovalPending } from '../lib/approval';
 import { ConfirmDialog } from '../lib/ConfirmDialog';
 import { useIntentKey } from '../lib/queries';
 import { ReasonDialog } from '../lib/ReasonDialog';
@@ -22,7 +23,13 @@ import { COST_KINDS, SetAtCompletion, type CostKind, type Order } from './presen
 
 /** What a lifecycle action tells the page once the API has answered. */
 export type Notice =
-  'started' | 'completed' | 'cancelled' | 'reversed' | 'costAdded' | 'outputsSaved';
+  | 'started'
+  | 'completed'
+  | 'cancelled'
+  | 'reversed'
+  | 'reversalPending'
+  | 'costAdded'
+  | 'outputsSaved';
 
 /** `ProcessingCostCreate.description`: the contract sets no limit, so the form keeps to a line. */
 const DESCRIPTION_MAX = 200;
@@ -31,8 +38,8 @@ const DESCRIPTION_MAX = 200;
  * The order's lifecycle by status and permission (completeProcessingOrder's description): a PLANNED order
  * is started (`prc.order.process`), an IN_PROGRESS one completed, and either cancelled with a reason
  * (`prc.order.create`). A COMPLETED order is reversed by the same cancel, which then also needs
- * `prc.order.reverse` (contract 1.26.0). None of these operations can answer 202, so there is no approval
- * to wait for (CR-022 asks whether a reversal should have one).
+ * `prc.order.reverse` (contract 1.26.0). At or above the adjustment threshold the reversal answers 202 and
+ * waits for a second person (1.31.0, CR-025); while it waits (`pendingReversal`) it is not offered again.
  */
 export function OrderActions({
   order,
@@ -47,14 +54,14 @@ export function OrderActions({
   const canCancel = auth.can('prc.order.create');
   const open = order.status === 'PLANNED' || order.status === 'IN_PROGRESS';
   if (order.status === 'COMPLETED' && order.reversal === null && canCancel) {
-    if (!auth.can('prc.order.reverse')) return null;
+    if (!auth.can('prc.order.reverse') || order.pendingReversal !== null) return null;
     return (
       <Card>
         <CardBody className="grid gap-3">
           <h2 className="text-lg font-semibold">{t('reverse.heading')}</h2>
           <p className="text-fg-muted">{t('reverse.hint')}</p>
           <div>
-            <ReverseOrder order={order} onDone={() => onNotice('reversed')} />
+            <ReverseOrder order={order} onDone={onNotice} />
           </div>
         </CardBody>
       </Card>
@@ -308,7 +315,13 @@ function CancelOrder({ order, onDone }: { order: Order; onDone: () => void }) {
  * names the order's total cost and every output's weight before it is sent. A refusal (an output sold,
  * reserved or changed) stays on screen in the dialog, in words.
  */
-function ReverseOrder({ order, onDone }: { order: Order; onDone: () => void }) {
+function ReverseOrder({
+  order,
+  onDone,
+}: {
+  order: Order;
+  onDone: (notice: 'reversed' | 'reversalPending') => void;
+}) {
   const { t } = useTranslation(['processing', 'common']);
   const [open, setOpen] = useState(false);
   const reverse = useApiMutation('cancelProcessingOrder');
@@ -362,12 +375,12 @@ function ReverseOrder({ order, onDone }: { order: Order; onDone: () => void }) {
         }
         onConfirm={async (reason) => {
           const body = { reason };
-          await reverse.mutateAsync(
+          const answer = await reverse.mutateAsync(
             { path: { id: order.id }, body },
             { idempotencyKey: keyFor({ reverse: order.id, ...body }) },
           );
           setOpen(false);
-          onDone();
+          onDone(isApprovalPending(answer) ? 'reversalPending' : 'reversed');
         }}
       />
     </>
