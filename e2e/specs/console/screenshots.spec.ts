@@ -4,6 +4,19 @@ import type { FakeApi } from '../../support/fakeApi';
 import { signInWithTotp, USERS } from '../../support/helpers';
 import { installTillServer, openTillShift, find } from '../../support/till';
 import { PEOPLE, installTillPins } from '../../support/requested';
+import {
+  APPROVAL_ID,
+  CLAIM_ID,
+  eggClaim,
+  eggPayment,
+  INVOICE_ID,
+  MANAGER,
+  PAYMENT_ID,
+  paymentApproval,
+  rightInvoice,
+  seedPayables,
+  wrongInvoice,
+} from '../../support/payables';
 import type { components } from '@hakorem/api-client';
 import {
   eggEntries,
@@ -12,6 +25,7 @@ import {
   eggsByTheEgg,
   ORDER_ID,
   seedEggs,
+  SUPPLIER,
 } from '../../support/eggs';
 
 /**
@@ -949,6 +963,147 @@ for (const shot of EGG_TILL_SHOTS) {
       await shot.act(page);
       await page.screenshot({
         path: `../docs/screenshots/F10f/${shot.name}-${width}.png`,
+        fullPage: true,
+        scale: 'css',
+      });
+    });
+  }
+}
+
+/**
+ * Supplier invoices and payment (F10g): the egg supplier's invoice and its three-way match, the payment and
+ * its approval, the claim's settlement and the supplier's account with its balance (CR-042, requested).
+ */
+type SS = components['schemas'];
+const firstRow = <T>(body: unknown): T => {
+  const row = (body as { data: T[] }).data[0];
+  if (row === undefined) throw new Error('The example page has no row.');
+  return row;
+};
+const onePage = <T>(body: unknown, rows: T[]) => ({ ...(body as object), data: rows });
+const PAYABLE_SHOTS: Shot[] = [
+  {
+    name: 'supplier-invoice-entry',
+    path: '/supplier-invoices/new',
+    ready: 'Save the invoice',
+    prepare: (api) => {
+      seedEggs(api);
+      seedPayables(api);
+    },
+    act: async (page) => {
+      await page.getByRole('combobox', { name: /^Supplier/ }).click();
+      await page.getByRole('option', { name: /^Awutu Poultry Farm/ }).click();
+      await page.getByRole('combobox', { name: /^Purchase order/ }).click();
+      await page.getByRole('option', { name: 'PO-2026-DDW-000052' }).click();
+      await page.getByRole('combobox', { name: /^Goods receipt/ }).click();
+      await page.getByRole('option', { name: 'GRN-2026-DDW-000081' }).click();
+      await page.getByLabel(/^Supplier's invoice number/).fill('AWT-0471');
+      await page.getByLabel(/^Invoiced, in Crate, line 1/).fill('21');
+      await page.getByLabel(/^Price per Crate, GHS, line 1/).fill('48.00');
+    },
+  },
+  {
+    name: 'supplier-invoice-mismatch',
+    path: `/supplier-invoices/${INVOICE_ID}`,
+    ready: '1 line disagrees with the order or what was received',
+    prepare: (api) =>
+      api.rewrite('getSupplierInvoice', (body) =>
+        wrongInvoice(body as SS['SupplierInvoice'], 'checked'),
+      ),
+  },
+  {
+    name: 'supplier-invoice-matched',
+    path: `/supplier-invoices/${INVOICE_ID}`,
+    ready: 'Every line matches the order and what was received',
+    prepare: (api) =>
+      api.rewrite('getSupplierInvoice', (body) =>
+        rightInvoice(body as SS['SupplierInvoice'], 'MATCHED'),
+      ),
+  },
+  {
+    name: 'supplier-invoices',
+    path: '/supplier-invoices',
+    ready: 'Invoice AWT-0471',
+    prepare: (api) =>
+      api.rewrite('listSupplierInvoices', (body) =>
+        onePage(body, [
+          wrongInvoice(firstRow<SS['SupplierInvoice']>(body), 'checked'),
+          rightInvoice(
+            {
+              ...firstRow<SS['SupplierInvoice']>(body),
+              id: '019a7f21-9e0f-7a1b-8c2d-3e4f5a6b7c88',
+            },
+            'APPROVED',
+          ),
+        ]),
+      ),
+  },
+  {
+    name: 'supplier-payment-new',
+    path: `/supplier-payments/new?supplier=${SUPPLIER.id}&invoice=${INVOICE_ID}`,
+    ready: 'Pay invoice AWT-0471',
+    prepare: (api) =>
+      api.rewrite('listSupplierInvoices', (body) =>
+        onePage(body, [rightInvoice(firstRow<SS['SupplierInvoice']>(body), 'APPROVED')]),
+      ),
+  },
+  {
+    name: 'supplier-payment-waiting',
+    path: `/supplier-payments/${PAYMENT_ID}`,
+    ready: 'This payment waits for approval',
+    prepare: (api) =>
+      api.rewrite('getSupplierPayment', (body) =>
+        eggPayment(body as SS['SupplierPayment'], 'PENDING_APPROVAL'),
+      ),
+  },
+  {
+    name: 'supplier-payment-approval',
+    path: `/approvals/${APPROVAL_ID}`,
+    ready: 'Payment of 85500 pesewas to Awutu Poultry Farm',
+    prepare: (api) =>
+      api.rewrite('getApproval', (body) =>
+        paymentApproval(body as Record<string, unknown>, MANAGER),
+      ),
+  },
+  {
+    name: 'supplier-claim',
+    path: `/supplier-claims/${CLAIM_ID}`,
+    ready: 'Settle the claim',
+    prepare: (api) =>
+      api.rewrite('getSupplierClaim', (body) => eggClaim(body as SS['SupplierClaim'])),
+  },
+  {
+    name: 'supplier-account',
+    path: `/suppliers/${SUPPLIER.id}`,
+    ready: 'Owed on approved invoices',
+    prepare: (api) => {
+      seedPayables(api);
+      api.rewrite('getSupplier', (body) => ({ ...(body as object), ...SUPPLIER }));
+      api.rewrite('listSupplierInvoices', (body) =>
+        onePage(body, [rightInvoice(firstRow<SS['SupplierInvoice']>(body), 'APPROVED')]),
+      );
+      api.rewrite('listSupplierClaims', (body) =>
+        onePage(body, [eggClaim(firstRow<SS['SupplierClaim']>(body))]),
+      );
+      api.rewrite('listSupplierPayments', (body) =>
+        onePage(body, [eggPayment(firstRow<SS['SupplierPayment']>(body), 'PENDING_APPROVAL')]),
+      );
+    },
+  },
+];
+
+for (const shot of PAYABLE_SHOTS) {
+  for (const width of WIDTHS) {
+    test(`@screenshots F10g ${shot.name} at ${width}`, async ({ page, api }) => {
+      shot.prepare?.(api);
+      await page.emulateMedia({ colorScheme: 'light' });
+      await page.setViewportSize({ width, height: width === 360 ? 800 : 900 });
+      await signInWithTotp(page, USERS.owner, shot.path);
+      await expect(page.getByText(shot.ready).first()).toBeVisible();
+      await expect(page.getByText(/^Loading/)).toHaveCount(0);
+      await shot.act?.(page);
+      await page.screenshot({
+        path: `../docs/screenshots/F10g/${shot.name}-${width}.png`,
         fullPage: true,
         scale: 'css',
       });
