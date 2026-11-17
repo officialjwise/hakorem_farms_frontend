@@ -1,6 +1,6 @@
 # 0045. Every sale gets a digital receipt; a printer is optional, and the till never waits on the network
 
-- Status: accepted (owner, 2026-11-16, answering the F9 report). Amends ADR 0043's receipt bullet.
+- Status: accepted (owner, 2026-11-16, answering the F9 report). Amends ADR 0043's receipt bullet. Amended by the owner 2026-11-17: no QR code anywhere but the TOTP enrolment image, so the link is shown and printed as text, never as a QR code.
 - Date: 2026-11-16
 - Session: F9 (after merge)
 

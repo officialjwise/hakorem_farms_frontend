@@ -551,7 +551,7 @@ The PIN unlocks the till and records approvals only. The till enforces the attem
 **Request:**
 
 1. **A public receipt read** (no session) by an unguessable token: the official receipt number, the sale reference (`provisionalRef`), the lines, the tenders, the change and the business's details, and, until the sale has synced, a state saying the receipt is being recorded.
-2. **The link can be made on the till offline**, so it can be shown as a QR code at the counter before the sale reaches the server. The simplest shape: the link names the sale's client id (a UUIDv7, 74 random bits), and the public read answers "being recorded" until that sale arrives. If the backend prefers a server-signed token, say how the till gets one offline.
+2. **The link can be made on the till offline**, so it can be shown at the counter and printed before the sale reaches the server (as text: the owner allows no QR code but the TOTP enrolment image, 2026-11-17). The simplest shape: the link names the sale's client id (a UUIDv7, 74 random bits), and the public read answers "being recorded" until that sale arrives. If the backend prefers a server-signed token, say how the till gets one offline.
 3. **The SMS is sent once on sync** for a sale that carried `customerPhone`, with the link, the official number and the sale reference; and the sync result (or the order) says whether it was sent.
 
 **Until this lands:** the till shows the sale reference and its own receipt on screen; nothing reaches the customer's phone.

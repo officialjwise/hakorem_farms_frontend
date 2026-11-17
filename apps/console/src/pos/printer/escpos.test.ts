@@ -1,15 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ReceiptContent } from '../offline/types';
-import {
-  COLUMNS,
-  ascii,
-  encodeReceipt,
-  pair,
-  qrCommand,
-  receiptLines,
-  wrap,
-  type PrintWords,
-} from './escpos';
+import { COLUMNS, ascii, encodeReceipt, pair, receiptLines, wrap, type PrintWords } from './escpos';
 
 const WORDS: PrintWords = {
   business: 'HaKorem Farms',
@@ -24,7 +15,7 @@ const WORDS: PrintWords = {
   handed: (name) => `${name} handed`,
   unverified: 'Mobile money, not yet verified',
   reference: 'Ref.',
-  scan: 'Scan for your receipt',
+  link: 'Your receipt online:',
   saleId: 'Sale id',
   thanks: 'Thank you',
 };
@@ -96,13 +87,8 @@ describe('the 58 mm receipt (ADR 0045)', () => {
       'Change                 GHS 92.50',
       '--------------------------------',
     ]);
-    expect(footer).toEqual([
-      'Scan for your receipt',
-      'Sale id',
-      '019a7b40-0000-7000-8000-00000000',
-      '0001',
-      'Thank you',
-    ]);
+    // No link from this server: no link lines.
+    expect(footer).toEqual(['Sale id', '019a7b40-0000-7000-8000-00000000', '0001', 'Thank you']);
     for (const line of [...header, ...body, ...footer])
       expect(line.length).toBeLessThanOrEqual(COLUMNS);
   });
@@ -147,33 +133,21 @@ describe('the 58 mm receipt (ADR 0045)', () => {
     expect(body).toContain('  Ref. MP261113.1149.C41872');
   });
 
-  it('begins with the printer reset and ends with a feed, the QR carrying the link or else the sale id', () => {
-    const withLink = encodeReceipt({
-      receipt: RECEIPT,
-      officialNo: null,
-      copy: false,
-      link: 'https://hakoremfarms.com/r/x',
-      words: WORDS,
-    });
-    expect([...withLink.slice(0, 2)]).toEqual([0x1b, 0x40]);
-    expect([...withLink.slice(-3)]).toEqual([0x1b, 0x64, 4]);
-    const qr = qrCommand('https://hakoremfarms.com/r/x');
-    const store = [0x1d, 0x28, 0x6b, 31, 0, 0x31, 0x50, 0x30];
-    expect(qr.slice(25, 33)).toEqual(store);
-    expect(String.fromCharCode(...qr.slice(33, 61))).toBe('https://hakoremfarms.com/r/x');
-    expect(qr.slice(-8)).toEqual([0x1d, 0x28, 0x6b, 3, 0, 0x31, 0x51, 0x30]);
-    const joined = String.fromCharCode(...withLink);
-    expect(joined).toContain('https://hakoremfarms.com/r/x');
-    const withoutLink = String.fromCharCode(
-      ...encodeReceipt({
-        receipt: RECEIPT,
-        officialNo: null,
-        copy: false,
-        link: null,
-        words: WORDS,
-      }),
-    );
-    expect(withoutLink).toContain(`\x31\x50\x30${RECEIPT.saleId}`);
+  it('begins with the printer reset, ends with a feed, and prints the link in full: no QR code', () => {
+    const link = 'https://hakoremfarms.com/r/019a7b40-0000-7000-8000-000000000001';
+    const input = { receipt: RECEIPT, officialNo: null, copy: false, link, words: WORDS };
+    const bytes = encodeReceipt(input);
+    expect([...bytes.slice(0, 2)]).toEqual([0x1b, 0x40]);
+    expect([...bytes.slice(-3)]).toEqual([0x1b, 0x64, 4]);
+    expect(receiptLines(input).footer.slice(0, 3)).toEqual([
+      'Your receipt online:',
+      'https://hakoremfarms.com/r/019a7',
+      'b40-0000-7000-8000-000000000001',
+    ]);
+    // The owner keeps the TOTP enrolment image as the only QR code (2026-11-17): no GS ( k at all.
+    const printed = String.fromCharCode(...bytes);
+    expect(printed).not.toContain('\x1d(k');
+    expect(printed).not.toContain(String.fromCharCode(0x1d));
   });
 
   it('sends nothing outside printable ASCII but the commands', () => {

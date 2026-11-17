@@ -232,8 +232,8 @@
     "copyMarker": "COPY: reprint of a receipt already given, not a new sale",
     "unverified": "Mobile money, not yet verified",
     "reference": "Ref.",
-    "scan": "Scan for your receipt",
-    "printCopy": "COPY: reprint, not a new sale"
+    "printCopy": "COPY: reprint, not a new sale",
+    "link": "Your receipt online:"
   },
   "held": {
     "hold": "Hold this sale",

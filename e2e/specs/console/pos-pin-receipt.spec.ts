@@ -320,6 +320,8 @@ test('a Bluetooth printer where there is one: connected on a tap, the 58 mm rece
   expect(printed).toContain('Sale reference     P-T1-312-0001');
   expect(printed).toContain('Total                 GHS 650.00');
   expect(printed).toContain('Change                 GHS 50.00');
-  expect(printed).toMatch(/1P0https:\/\/hakoremfarms\.com\/r\/[0-9a-f-]{36}/);
+  // The link printed in full; no QR code (owner, 2026-11-17: the TOTP image is the only one).
+  expect(printed).toContain('Your receipt online:\nhttps://hakoremfarms.com/r/');
+  expect(printed).not.toContain(String.fromCharCode(0x1d));
   await expectNoAxeViolations(page);
 });
