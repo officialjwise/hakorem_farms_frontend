@@ -103,7 +103,13 @@
     "recordLocation": "Where",
     "recordValue": "Value written off",
     "recordUnavailable": "Your role cannot open the record itself; the summary above is what the server says about it.",
-    "openRecord": "Open the record"
+    "openRecord": "Open the record",
+    "openReversalOrder": "Open processing order {{doc}}",
+    "reversalOf": "Processing reversal {{doc}}",
+    "reversalOrderLoading": "Finding the processing order",
+    "reversalOrderMissing": "Processing reversal {{doc}}. Its processing order was not found.",
+    "reversalOrderError": "Processing reversal {{doc}}. Its processing order could not be loaded.",
+    "openReversalOrderUnnumbered": "Open its processing order"
   },
   "decide": {
     "title": "Your decision",

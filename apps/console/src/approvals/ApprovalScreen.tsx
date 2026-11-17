@@ -121,7 +121,9 @@ function RequestDetail({ request, back }: { request: ApprovalRequest; back: Reac
                 )}
               </Fact>
               <Fact term={t('detail.subject')}>
-                {link === null ? (
+                {request.subject.docType === 'PROCESSING_REVERSAL' ? (
+                  <ReversalOrderLink reversalId={request.subject.id} fallback={doc} />
+                ) : link === null ? (
                   `${request.subject.docType} ${doc}`
                 ) : (
                   <Link to={link} className="text-accent-text underline">
@@ -215,6 +217,36 @@ function EvidencePhoto({ fileId }: { fileId: string }) {
         {t('detail.photoLinkExpires')}
       </figcaption>
     </figure>
+  );
+}
+
+/**
+ * A processing reversal's approval names the reversal, not its order; `listProcessingOrders` finds the
+ * order by `reversalId` in one read (CR-027, 1.53.0), so the inbox links to it. A role that cannot read
+ * processing orders, or a reversal whose order is not found, sees the record in words.
+ */
+function ReversalOrderLink({ reversalId, fallback }: { reversalId: string; fallback: string }) {
+  const { t } = useTranslation('approvals');
+  const auth = useAuth();
+  const canRead = auth.can('prc.order.read');
+  const orders = useApiQuery(
+    'listProcessingOrders',
+    { query: { reversalId, limit: 1 } },
+    { enabled: canRead },
+  );
+  const order = orders.data?.data[0];
+  if (!canRead) return <>{t('detail.reversalOf', { doc: fallback })}</>;
+  if (orders.isError) return <>{t('detail.reversalOrderError', { doc: fallback })}</>;
+  if (orders.data === undefined) {
+    return <Skeleton label={t('detail.reversalOrderLoading')} className="h-5 w-48" />;
+  }
+  if (order === undefined) return <>{t('detail.reversalOrderMissing', { doc: fallback })}</>;
+  return (
+    <Link to={`/processing-orders/${order.id}`} className="text-accent-text underline">
+      {order.orderNo === null
+        ? t('detail.openReversalOrderUnnumbered')
+        : t('detail.openReversalOrder', { doc: order.orderNo })}
+    </Link>
   );
 }
 

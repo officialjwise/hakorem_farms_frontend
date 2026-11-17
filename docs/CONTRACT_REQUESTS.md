@@ -447,6 +447,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 
 **Until this lands:** no link from the inbox to the order for this kind.
 
+**Answered (1.53.0):** option 3, `listProcessingOrders` takes `reversalId`. Since F10c a `PROCESSING_REVERSAL` request's detail links to its order (`ReversalOrderLink`), and says so in words when the order is not found or the role cannot read orders.
+
 ## CR-028. The shop's contact details, readable by anyone (additive)
 
 - **Raised by:** frontend F7, the product page of a live animal and the footer.

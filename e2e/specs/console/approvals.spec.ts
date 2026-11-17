@@ -150,3 +150,49 @@ test.describe('the approvals inbox', () => {
     await expect(page.getByRole('alert')).toContainText('iam.approval.read');
   });
 });
+
+test.describe('a processing reversal (CR-027)', () => {
+  const REVERSAL = '019a7ab2-5b51-7c7a-9f4e-0a3c3c2b6d11';
+  const ORDER = '019a7ab0-8a14-7d2e-b0c4-5d0f1e9a2b37';
+  const reversal = (body: unknown): Approval => ({
+    ...(body as Approval),
+    id: ANY,
+    kind: 'PROCESSING_REVERSAL',
+    status: 'PENDING',
+    subject: { id: REVERSAL, docType: 'PROCESSING_REVERSAL', number: null },
+    summary: 'Reverse the processing of G-0109, valued 67800 pesewas (Wrong goat slaughtered)',
+    amountPesewas: 67800,
+    evidenceFileId: null,
+    canDecide: true,
+  });
+
+  test('links to its processing order, found by the reversal in one read', async ({
+    page,
+    api,
+  }) => {
+    api.rewrite('getApproval', (body) => reversal(body));
+    api.rewrite('listProcessingOrders', (body) => {
+      const page = body as { data: Approval[] };
+      return { ...page, data: [{ ...page.data[0], id: ORDER, orderNo: 'PRC-2026-DDW-000012' }] };
+    });
+    const asked = page.waitForRequest(
+      (r) => r.url().includes('/processing-orders?') && r.url().includes(`reversalId=${REVERSAL}`),
+    );
+    await signInWithTotp(page, USERS.manager, `/approvals/${ANY}`);
+    await asked;
+    const evidence = page.getByRole('region', { name: 'Evidence' });
+    const link = evidence.getByRole('link', { name: 'Open processing order PRC-2026-DDW-000012' });
+    await expect(link).toHaveAttribute('href', `/processing-orders/${ORDER}`);
+    await expectNoAxeViolations(page);
+    await expectNoHorizontalScroll(page);
+  });
+
+  test('says so in words when its order is not found', async ({ page, api }) => {
+    api.rewrite('getApproval', (body) => reversal(body));
+    api.rewrite('listProcessingOrders', (body) => ({ ...(body as Approval), data: [] }));
+    await signInWithTotp(page, USERS.manager, `/approvals/${ANY}`);
+    await expect(page.getByRole('region', { name: 'Evidence' })).toContainText(
+      'Its processing order was not found.',
+    );
+  });
+});
