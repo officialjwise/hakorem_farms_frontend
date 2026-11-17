@@ -48,6 +48,7 @@ import {
   ReceiptStatusBadge,
   TransferStatusBadge,
 } from './presentation';
+import { ReceiptClaims } from './ReceiptClaims';
 import { ReceiveTransfer } from './ReceiveTransfer';
 import {
   ANY,
@@ -1049,6 +1050,7 @@ export function ReceiptScreen() {
                 {t('receipts.rejectedBody')}
               </Alert>
             ) : null}
+            {rejected.length > 0 ? <ReceiptClaims receipt={r} reasonName={reasonName} /> : null}
             {r.status === 'DRAFT' && auth.can('inv.goods_receipt.post') ? (
               <DraftAction
                 label={t('receipts.post')}

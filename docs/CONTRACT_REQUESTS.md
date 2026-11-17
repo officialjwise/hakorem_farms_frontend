@@ -39,8 +39,8 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-033 | 2026-11-16 | Open, amended F10e        |
 | CR-034 | 2026-11-17 | Answered (2.0.0), built   |
 | CR-035 | 2026-11-17 | Answered (2.3.0), built   |
-| CR-036 | 2026-11-17 | Open (backend B09e)       |
-| CR-037 | 2026-11-17 | Open                      |
+| CR-036 | 2026-11-17 | Answered (2.4.0), built   |
+| CR-037 | 2026-11-17 | Answered (2.4.0)          |
 | CR-038 | 2026-11-17 | Open, built behind switch |
 | CR-039 | 2026-11-17 | Open                      |
 | CR-040 | 2026-11-17 | Open                      |
@@ -605,7 +605,7 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 
 **Until this lands:** no claim screen. The egg session's part a builds the receipt's rejection with its reason (CR-035) first.
 
-**Still open after 2.3.0 (egg session):** 2.3.0 says the claim "follows in B09e continued 3, A-271". The backend's `b09e3-eggs-claims` branch carried no claim shape when the egg session read it. The owner (2026-11-17): wait for the contract. A receipt with rejected lines says that raising a claim from it is not available yet.
+**Answered in 2.4.0 (B09e continued 3, ADR-0076), built in the egg session:** `raiseSupplierClaim` from a posted purchase receipt against an order, its value the server's from the order's price (the body takes only a note), and `listGoodsReceiptClaims`, so the receipt shows its claim, open or settled. The owner had said to wait for the contract (2026-11-17); it landed during the session. The claim's credit note and its settlement by an invoice (`draftSupplierClaimCreditNote`, `settleSupplierClaim`) belong to the supplier invoice screens, which are not built yet.
 
 ## CR-037. The examples name a void's approval `ord.order.void.approve`; the operations and the seed say `ord.void.approve` (example fix)
 
@@ -615,6 +615,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 **Request:** change the examples to `ord.void.approve`, or say which name is right.
 
 **Until this lands:** the fake follows the seed (`ord.void.approve`).
+
+**Answered in 2.4.0:** the examples name `ord.void.approve`.
 
 ## CR-038. The till sells a product in more than one unit, each with its own price (additive)
 

@@ -189,6 +189,7 @@
       "STOCK_UNIT_RESERVED": "That stock is reserved for someone else.",
       "SUBLEDGER_REQUIRED": "The ledger needs to know which customer, supplier or account this is for.",
       "SUPPLIER_DOCUMENT_INVALID": "This supplier document cannot be saved that way.",
+      "SUPPLIER_CLAIM_INVALID": "This claim cannot be raised or settled: the receipt may not be posted, may have nothing rejected, or may have a claim already.",
       "SUPPLIER_INVOICE_INVALID": "This supplier invoice cannot do that.",
       "SUPPLIER_PAYMENT_INVALID": "This supplier payment cannot do that.",
       "SUPPLIER_PROFILE_INVALID": "This supplier profile cannot be saved that way.",

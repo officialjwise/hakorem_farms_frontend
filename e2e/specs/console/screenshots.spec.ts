@@ -833,6 +833,17 @@ const EGG_SHOTS: Shot[] = [
       ),
   },
   {
+    name: 'goods-receipt-claim',
+    path: `/goods-receipts/${ID}`,
+    ready: 'account until their invoice',
+    prepare: (api) =>
+      api.rewrite('getGoodsReceipt', (body) => ({
+        ...eggReceipt(body as components['schemas']['GoodsReceipt']),
+        status: 'POSTED',
+        receiptNo: 'GRN-2026-DDW-000081',
+      })),
+  },
+  {
     name: 'price-list-egg-prices',
     path: `/price-list-versions/${EGG_DRAFT}`,
     ready: 'from 10 Crate',

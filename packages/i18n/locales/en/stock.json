@@ -358,7 +358,7 @@
     "rejectedLine": "Rejected, {{reason}}:",
     "rejectedTitle_one": "{{count}} line was turned away at the door",
     "rejectedTitle_other": "{{count}} lines were turned away at the door",
-    "rejectedBody": "What was rejected never enters stock, and the total at cost is for what was accepted. Raising a claim with the supplier from this receipt is not available yet."
+    "rejectedBody": "What was rejected never enters stock, and the total at cost is for what was accepted."
   },
   "receive": {
     "title": "Receive what arrived",
@@ -403,5 +403,33 @@
     "anyReason": "Any reason",
     "supplier": "Supplier",
     "anySupplier": "Any supplier"
+  },
+  "claims": {
+    "title": "Claim with the supplier",
+    "loading": "Loading the claim",
+    "none": "No claim yet",
+    "error": "The claim could not be loaded",
+    "denied": "You cannot see supplier claims",
+    "afterPosting": "Once this receipt is posted, a claim for the rejected goods can be raised with the supplier.",
+    "notClaimable": "A claim is raised only from a purchase received against a purchase order.",
+    "whoRaises": "The owner or the accountant raises a claim with the supplier for the rejected goods.",
+    "noneYet": "No claim has been raised for this receipt yet. The owner or the accountant raises it.",
+    "intro": "Ask the supplier to credit or replace what was turned away. The server works out the value from the order's price; nothing is typed.",
+    "raise": "Raise a claim",
+    "raising": "Raising the claim",
+    "raiseTitle": "Raise a claim with {{supplier}}?",
+    "raiseBody": "One claim for this receipt's rejected lines. It moves no stock and stays open until the supplier's invoice or credit note settles it.",
+    "notRaised": "The claim was not raised",
+    "raised": "A claim is raised with {{supplier}}.",
+    "claimed": "Claimed:",
+    "note": "Note for the supplier",
+    "noteHint": "Optional. For example, which crates and who signed the delivery note.",
+    "noteShown": "Note: {{note}}",
+    "openBody": "Open: on {{supplier}}'s account until their invoice or credit note settles it.",
+    "settledBody": "Settled by {{by}}.",
+    "status": {
+      "OPEN": "Open",
+      "SETTLED": "Settled"
+    }
   }
 }

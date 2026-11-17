@@ -226,6 +226,9 @@ const OWNER_EGG_PERMISSIONS = [
   'mdm.price_list.assign',
   'mdm.price_list.create',
   'mdm.customer.read',
+  // 2.4.0: a claim for goods rejected at the door is raised and read with the supplier invoice permissions.
+  'pur.supplier_invoice.read',
+  'pur.supplier_invoice.create',
 ];
 
 /** What the owner holds for the F5b screens: the dashboard, branches and locations, and the new lists. */
@@ -397,6 +400,9 @@ const ACCOUNTANT_PERMISSIONS = [
   'bil.debit_note.create',
   'bil.credit_note.create',
   'doc.document.read',
+  // 2.4.0: the Accountant raises and reads a claim with a supplier, as the seed gives it.
+  'pur.supplier_invoice.read',
+  'pur.supplier_invoice.create',
 ];
 
 /** Keyed by lower-case email. Permission codes are the contract's `x-permission` values. */

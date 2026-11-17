@@ -3,6 +3,7 @@ import {
   expectNoAxeViolations,
   expectNoHorizontalScroll,
   signIn,
+  signInWithTotp,
   USERS,
 } from '../../support/helpers';
 import {
@@ -155,6 +156,48 @@ test.describe('buying eggs by the crate', () => {
     const confirm = page.getByRole('dialog', { name: 'Post this receipt?' });
     await expect(confirm).toContainText('Rejected, Cracked on arrival:');
     await expect(confirm).toContainText('855.00');
+  });
+
+  test('a claim for the cracked crates is raised from the posted receipt; the server values it', async ({
+    page,
+    api,
+  }) => {
+    seedEggs(api);
+    const raised = () => api.log.some((e) => e.operationId === 'raiseSupplierClaim');
+    api.rewrite('getGoodsReceipt', (body) => ({
+      ...eggReceipt(body as S['GoodsReceipt']),
+      status: 'POSTED',
+      receiptNo: 'GRN-2026-DDW-000081',
+    }));
+    // No claim until one is raised; then the receipt answers it (2.4.0, `listGoodsReceiptClaims`).
+    api.rewrite('listGoodsReceiptClaims', (body) =>
+      raised() ? body : { ...(body as object), data: [] },
+    );
+
+    await signInWithTotp(page, USERS.owner, `/goods-receipts/${ORDER_ID}`);
+    await expect(page.getByRole('heading', { name: 'Claim with the supplier' })).toBeVisible();
+    await expectNoHorizontalScroll(page);
+    await expectNoAxeViolations(page);
+    await page.getByRole('button', { name: 'Raise a claim' }).click();
+    const confirm = page.getByRole('dialog', { name: `Raise a claim with ${SUPPLIER.name}?` });
+    await expect(confirm).toContainText('Cracked on arrival');
+    await confirm
+      .getByLabel(/^Note for the supplier/)
+      .fill('Two crates cracked, signed by the driver');
+    await expectNoAxeViolations(page);
+    const sent = page.waitForRequest((r) => r.method() === 'POST' && r.url().endsWith('/claims'));
+    await confirm.getByRole('button', { name: 'Raise a claim' }).click();
+    // Only a note goes: the value is the server's, from the order's price (an amount is refused).
+    expect((await sent).postDataJSON()).toEqual({
+      note: 'Two crates cracked, signed by the driver',
+    });
+    const done = page
+      .getByRole('status')
+      .filter({ hasText: `A claim is raised with ${SUPPLIER.name}.` });
+    await expect(done).toContainText('GH₵11.09');
+    // The receipt then reads its claim back: open on the supplier's account, line by line.
+    await expect(page.getByText("Open: on Awutu Poultry Farm's account")).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Raise a claim' })).toHaveCount(0);
   });
 
   test('the storekeeper reads the purchase orders', async ({ page }) => {
