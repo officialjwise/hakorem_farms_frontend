@@ -95,7 +95,7 @@ export function StatementsScreen() {
       id: 'customer',
       head: t('statements.columns.customer'),
       sortValue: (s) => s.customer.name,
-      cell: (s) => `${s.customer.name} (${s.customer.customerNo})`,
+      cell: (s) => `${s.customer.name} (${s.customer.publicId})`,
     },
     {
       id: 'period',
@@ -209,7 +209,7 @@ export function StatementView({ statement }: { statement: Statement }) {
           <StatementStatus statement={statement} />
         </div>
         <p className="text-fg-muted">
-          {statement.customer.name} ({statement.customer.customerNo}) ·{' '}
+          {statement.customer.name} ({statement.customer.publicId}) ·{' '}
           {t('statements.period', { start: statement.periodStart, end: statement.periodEnd })}
         </p>
         {statement.status === 'DRAFT' ? (
@@ -306,7 +306,7 @@ function CustomerPicker({
   const rows = found.data?.data ?? [];
   const options = [...(value === null ? [] : [value]), ...rows]
     .filter((c, i, all) => all.findIndex((o) => o.id === c.id) === i)
-    .map((c) => ({ value: c.id, label: `${c.name} (${c.customerNo})` }));
+    .map((c) => ({ value: c.id, label: `${c.name} (${c.publicId})` }));
   return (
     <Field
       label={t('statements.create.customer')}
@@ -327,7 +327,7 @@ function CustomerPicker({
               ? value?.id === id
                 ? value
                 : null
-              : { id: row.id, customerNo: row.customerNo, name: row.name };
+              : { id: row.id, publicId: row.publicId, name: row.name };
           onChange(picked);
           if (picked !== null) setText(picked.name);
         }}

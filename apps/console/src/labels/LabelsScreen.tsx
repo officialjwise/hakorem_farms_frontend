@@ -278,8 +278,7 @@ function ProductPicker({ onAdd }: { onAdd: (item: Omit<LabelItem, 'copies'>) => 
     key: `product-${product.id}`,
     kind: 'product',
     title: product.name,
-    // The product's own barcode when it has one, otherwise its SKU: both are the API's fields.
-    code: product.barcode ?? product.sku,
+    code: product.sku,
     lines: [
       { label: t('fields.sku'), value: product.sku },
       { label: t('fields.soldBy'), value: product.saleUom },
@@ -300,7 +299,7 @@ function ProductPicker({ onAdd }: { onAdd: (item: Omit<LabelItem, 'copies'>) => 
               <ResultRow
                 key={product.id}
                 title={product.name}
-                code={product.barcode ?? product.sku}
+                code={product.sku}
                 addLabel={t('add', { name: product.name })}
                 addText={t('addShort')}
                 onAdd={() => onAdd(item(product))}

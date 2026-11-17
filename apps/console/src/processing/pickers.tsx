@@ -8,7 +8,7 @@ type S = components['schemas'];
 export type ProductChoice = S['ProductRef'];
 export type AnimalChoice = Pick<S['StockUnit'], 'id' | 'identifier' | 'product' | 'lastWeightKg'>;
 
-/** A product found by name, SKU or barcode as the person types (at least two characters). */
+/** A product found by name or SKU as the person types (at least two characters). */
 export function ProductPicker({
   label,
   value,

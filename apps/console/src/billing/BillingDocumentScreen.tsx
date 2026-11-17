@@ -154,7 +154,7 @@ export function DocumentView({ document }: { document: BillingDocument }) {
               <Fact term={t('doc.facts.customer')}>
                 {document.customer === null
                   ? customerWords(document)
-                  : `${customerWords(document)} (${document.customer.customerNo})`}
+                  : `${customerWords(document)} (${document.customer.publicId})`}
               </Fact>
               {document.customerTin === null ? null : (
                 <Fact term={t('doc.facts.tin')}>{document.customerTin}</Fact>

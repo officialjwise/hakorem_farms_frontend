@@ -518,7 +518,7 @@ export function SuppliersScreen() {
               icon={Truck}
               tone="info"
               name={supplier.name}
-              code={<code>{supplier.supplierNo}</code>}
+              code={<code>{supplier.publicId}</code>}
             />
           ),
         },
