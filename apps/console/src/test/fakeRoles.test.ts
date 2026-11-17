@@ -9,16 +9,8 @@ import { FAKE_USERS } from './fakeAuthServer';
  */
 const NOT_SEEDED: Readonly<Record<string, string>> = {
   // The till (B9b). The owner set who holds them (F9, A-F9-01).
-  'pos.sale.create': 'B9b',
-  'pos.shift.open': 'B9b',
-  'pos.shift.close': 'B9b',
-  'pos.shift.read': 'B9b',
-  'pos.shift.report': 'B9b',
-  'pos.cash.move': 'B9b',
-  'pos.register.read': 'B9b',
   'pos.device.read': 'B9b',
   'pos.device.enrol': 'B9b',
-  'pos.shift.close.approve': 'B9b',
   'pos.shift.force_close': 'B9b',
   // The audit log: `listAuditEvents` says "readable by Owner and Accountant only"; no role is seeded with it.
   'aud.audit.read': 'the audit log',
