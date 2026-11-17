@@ -14,6 +14,13 @@ beforeEach(() => {
   mock.preferPath = null;
 });
 
+// jsdom has no ResizeObserver, which Radix Checkbox reads for its size (as the console's setup says).
+globalThis.ResizeObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (input, init) => {
   const request = new Request(input, init);
