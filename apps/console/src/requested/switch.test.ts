@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { parseRequestedContract, requestedOn } from './switch';
+import { operationManifest } from '@hakorem/api-client';
+import { LIST_TILL_PIN_VERIFIERS } from './tillPin';
+import {
+  assertSwitchesAllowed,
+  CONTRACT_REQUESTS,
+  parseRequestedContract,
+  requestedOn,
+} from './switch';
+import { LANDED_CHECKS } from './landed';
 
 describe('the requested-contract switch (ADR 0046)', () => {
   const before = process.env.HK_REQUESTED_CONTRACT;
@@ -24,5 +32,31 @@ describe('the requested-contract switch (ADR 0046)', () => {
 
   it('refuses a request the console has no module for, naming it', () => {
     expect(() => parseRequestedContract('CR-032,CR-099')).toThrow(/CR-099/);
+  });
+});
+
+describe("the owner's conditions on ADR 0046", () => {
+  it('fails a build for a real API with any switch on, naming the switches', () => {
+    expect(() => assertSwitchesAllowed('CR-032,CR-034', '/api/v1')).toThrow(
+      /CR-032, CR-034.*\/api\/v1/,
+    );
+    expect(() => assertSwitchesAllowed('CR-033', 'https://api.hakoremfarms.com/v1')).toThrow(
+      /only in a build against \/mock/,
+    );
+    expect(() => assertSwitchesAllowed('CR-033', undefined)).toThrow(/no API/);
+  });
+
+  it('lets a build for a real API through with every switch off, and the mock build with them on', () => {
+    expect(() => assertSwitchesAllowed(undefined, '/api/v1')).not.toThrow();
+    expect(() => assertSwitchesAllowed('', 'https://api.hakoremfarms.com/v1')).not.toThrow();
+    expect(() => assertSwitchesAllowed('CR-032,CR-033,CR-034', '/mock')).not.toThrow();
+  });
+
+  it('checks every switch against the contract, so a landed request fails the type check', () => {
+    expect(Object.keys(LANDED_CHECKS).sort()).toEqual([...CONTRACT_REQUESTS].sort());
+  });
+
+  it('describes no requested operation the generated manifest already lists', () => {
+    expect(LIST_TILL_PIN_VERIFIERS.operationId in operationManifest).toBe(false);
   });
 });

@@ -5,6 +5,7 @@ import { loadEnv } from 'vite';
 import type { Connect, Plugin, ProxyOptions } from 'vite';
 import { defineConfig } from 'vitest/config';
 import { ENTRY_DOCUMENT, entryFor } from './src/app/entries.ts';
+import { assertSwitchesAllowed } from './src/requested/switch.ts';
 
 /**
  * The Prism mock in a browser (ADR 0025). Prism answers a credentialed cross-origin request properly, but
@@ -58,6 +59,9 @@ export default defineConfig(({ mode }) => {
   // HK_API_BASE_URL is the one variable that decides mock or real API (ADR 0019). The literal
   // `process.env.HK_API_BASE_URL` in @hakorem/api-client is replaced here, at build time.
   const env = loadEnv(mode, process.cwd(), '');
+  // A switch may be on only in a build against the mock (ADR 0046, the owner's condition): fail here, before
+  // anything is built, rather than ship a console that calls what the API lacks.
+  if (mode !== 'test') assertSwitchesAllowed(env['HK_REQUESTED_CONTRACT'], env['HK_API_BASE_URL']);
   return {
     plugins: [react(), tailwindcss(), entryDocuments],
     // HK_REQUESTED_CONTRACT names the contract requests this build is built against (ADR 0046): the

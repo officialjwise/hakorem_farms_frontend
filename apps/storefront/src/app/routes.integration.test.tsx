@@ -1,5 +1,8 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { AskTheShop } from '../components/AskTheShop';
+import { getT } from '../i18n/server';
+import { getShopProfile } from '../lib/api';
 import { mock } from '../test-integration-setup';
 import { Root } from '../test-wrapper';
 import CategoryLayout from './c/[slug]/layout';
@@ -133,5 +136,33 @@ describe('the sitemap', () => {
     expect(urls).toContain('https://hakoremfarms.com/c/meat');
     expect(urls).toContain('https://hakoremfarms.com/p/goat');
     expect(urls.some((url) => url.includes('/checkout'))).toBe(false);
+  });
+});
+
+describe('asking the shop for a live animal (CR-028), against the real Prism', () => {
+  it('gives the shop’s phone and WhatsApp from getShopProfile, as links a phone opens', async () => {
+    const [t, profile] = await Promise.all([getT('storefront'), getShopProfile()]);
+    render(<AskTheShop profile={profile} t={t} />, { wrapper: Root });
+    const notice = screen.getByRole('status');
+    expect(notice).toHaveTextContent('Live animals are sold by request');
+    expect(notice).toHaveTextContent(/call or WhatsApp the shop/);
+    const contact = screen.getByRole('list', { name: 'Ask the shop' });
+    expect(within(contact).getByRole('link', { name: 'Call 020 000 0120' })).toHaveAttribute(
+      'href',
+      'tel:+233200000120',
+    );
+    expect(
+      within(contact).getByRole('link', { name: 'WhatsApp 020 000 0121, opens WhatsApp' }),
+    ).toHaveAttribute('href', 'https://wa.me/233200000121');
+  });
+
+  it('with no business profile set (404), says to call or visit, and invents no number', async () => {
+    mock.prefer = 'code=404';
+    mock.preferPath = '/shop/profile';
+    const [t, profile] = await Promise.all([getT('storefront'), getShopProfile()]);
+    expect(profile.ok).toBe(false);
+    render(<AskTheShop profile={profile} t={t} />, { wrapper: Root });
+    expect(screen.getByText(/visit the farm or call the shop/)).toBeInTheDocument();
+    expect(screen.queryByRole('link')).toBeNull();
   });
 });

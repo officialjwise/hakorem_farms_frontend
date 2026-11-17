@@ -82,7 +82,7 @@ export function useKindName() {
  * Where the console shows the record an approval is about, by its document type, and what opening it
  * needs. A type with no screen yet (a purchase order, a supplier payment: B7 is live, the screens are not)
  * has no link; its summary and amount still come from the request. A `PROCESSING_REVERSAL` subject is the
- * reversal itself, whose id no read resolves to its order, so it has no link either (CR-027).
+ * reversal itself: the detail screen finds its order with `listProcessingOrders` by `reversalId` (CR-027).
  */
 const SUBJECT_PAGES: Record<string, { path: string; permission: string }> = {
   MORTALITY_RECORD: { path: '/mortality', permission: 'liv.mortality.read' },

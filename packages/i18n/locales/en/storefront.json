@@ -160,7 +160,12 @@
     },
     "request": {
       "title": "Live animals are sold by request",
-      "body": "We choose the animal with you and agree its price before anything is paid. Asking online opens soon; until then, visit the farm or call the shop."
+      "body": "We choose the animal with you and agree its price before anything is paid. Asking online opens soon; until then, visit the farm or call the shop.",
+      "bodyWithContact": "We choose the animal with you and agree its price before anything is paid. Asking online opens soon; until then, call or WhatsApp the shop, or visit the farm.",
+      "contactLabel": "Ask the shop",
+      "call": "Call {{phone}}",
+      "whatsapp": "WhatsApp {{phone}}",
+      "whatsappLabel": "WhatsApp {{phone}}, opens WhatsApp"
     },
     "unavailable": "Out of stock just now. Check back soon.",
     "delivery": {

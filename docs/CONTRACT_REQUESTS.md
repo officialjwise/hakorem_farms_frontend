@@ -8,7 +8,7 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-002 | 2026-11-13 | Closed                   |
 | CR-003 | 2026-11-14 | Answered (1.7.0, 1.16.0) |
 | CR-004 | 2026-11-14 | Answered (1.2.0, 1.11.0) |
-| CR-005 | 2026-11-14 | Open                     |
+| CR-005 | 2026-11-14 | Answered (1.53.0)        |
 | CR-006 | 2026-11-14 | Answered (1.2.0, 1.4.0)  |
 | CR-007 | 2026-11-14 | Answered (1.3.0)         |
 | CR-008 | 2026-11-14 | Answered (1.3.0)         |
@@ -26,13 +26,20 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-020 | 2026-11-15 | Open                     |
 | CR-021 | 2026-11-15 | Answered (1.26.0)        |
 | CR-022 | 2026-11-15 | Closed                   |
-| CR-023 | 2026-11-15 | Open                     |
+| CR-023 | 2026-11-15 | Answered (1.53.0)        |
 | CR-024 | 2026-11-15 | Closed                   |
 | CR-025 | 2026-11-15 | Answered (1.31.0), built |
-| CR-026 | 2026-11-15 | Open                     |
-| CR-027 | 2026-11-16 | Open                     |
-| CR-028 | 2026-11-16 | Open                     |
-| CR-029 | 2026-11-16 | Open                     |
+| CR-026 | 2026-11-15 | Answered (1.40.0)        |
+| CR-027 | 2026-11-16 | Answered (1.53.0)        |
+| CR-028 | 2026-11-16 | Answered (1.54.0)        |
+| CR-029 | 2026-11-16 | Answered (1.46.0)        |
+| CR-030 | 2026-11-16 | Answered (1.43.0)        |
+| CR-031 | 2026-11-16 | Planned shape (1.45.0)   |
+| CR-032 | 2026-11-16 | Open (pack part planned) |
+| CR-033 | 2026-11-16 | Open                     |
+| CR-034 | 2026-11-17 | Open (B09q)              |
+| CR-035 | 2026-11-17 | Open                     |
+| CR-036 | 2026-11-17 | Open                     |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -440,6 +447,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 
 **Until this lands:** no link from the inbox to the order for this kind.
 
+**Answered (1.53.0):** option 3, `listProcessingOrders` takes `reversalId`. Since F10c a `PROCESSING_REVERSAL` request's detail links to its order (`ReversalOrderLink`), and says so in words when the order is not found or the role cannot read orders.
+
 ## CR-028. The shop's contact details, readable by anyone (additive)
 
 - **Raised by:** frontend F7, the product page of a live animal and the footer.
@@ -451,6 +460,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 **Until this lands:** no phone number on the storefront.
 
 **Status:** the owner says (2026-11-16) the backend is adding a public read of the business's phone and WhatsApp numbers. When it lands, live animal pages show them, with a WhatsApp link. Not in 1.41.0 (F8 read it); still open.
+
+**Answered (1.54.0):** `getShopProfile`. Since F10c a live animal's page shows the shop's phone as a `tel:` link and its WhatsApp number as a `wa.me` link (`AskTheShop`); with no profile set (404) it says to call or visit and shows no number. The footer does not read it yet.
 
 ## CR-029. A cart at checkout says which checkout it is in (additive)
 
@@ -575,3 +586,34 @@ The PIN unlocks the till and records approvals only. The till enforces the attem
 3. The SKU remains what `listProducts` and the till's search find a product by.
 
 **Until this lands:** the create form has no SKU field and says the SKU is given by the server. In a build switched on for CR-034 (the e2e and CI builds, ADR 0046) it sends the body without `sku`; in a build for the real API the "Create product" button is disabled with words, and existing products can be changed as before.
+
+## CR-035. A breakage reason for stock found broken, and a reason for goods rejected at the door (additive)
+
+- **Raised by:** frontend, the owner (2026-11-17): "check against the real API whether a damage or breakage reason exists. If it doesn't, raise a contract request." Needed by the egg screens: cracked or broken crates rejected on a goods receipt with a reason (the egg session, part a), and eggs broken at a shop written off by a stock adjustment.
+- **Checked:** the real API could not be reached from the frontend's session (no staging host is reachable, and the VPS deploy is B13), so this was checked against the contract, 1.54.0:
+  - `listReasonCodes` ("a fixed list changed only by migration") lists, in its example, one `STOCK_ADJUSTMENT` reason, `COUNT_ERROR`, and no breakage or damage reason in that domain. `DAMAGED_IN_DELIVERY` exists, but in the `REFUND` domain (a customer's refund), which a stock adjustment refuses.
+  - Yet `listStockAdjustments`' example posts an adjustment with `reasonCode: BREAKAGE`, and others with `RODENT_DAMAGE`, neither of which `listReasonCodes` lists. Either the seed has them and the reason list's example is short, or the adjustment examples name codes that do not exist.
+  - **A rejection on a goods receipt has no reason at all.** `GoodsReceiptLineInput.qtyRejected` and `GoodsReceiptLine.qtyRejected` carry the quantity only; no field names why, and no reason code domain covers a receipt (the `domain` enum has no receiving domain).
+
+**Request:**
+
+1. **Seeded `STOCK_ADJUSTMENT` reasons for breakage and damage**, with a loss account group, at least `BREAKAGE` ("Broken or cracked in store", `requiresNote: false`) and `RODENT_DAMAGE` if it is real, so a shop writes off broken eggs without a free-text reason. Make `listReasonCodes`' example match the seed, or say in its description that the example is a part of it.
+2. **A reason code domain for goods rejected at the door**, `GOODS_RECEIPT_REJECTION`, seeded with at least `BROKEN_ON_ARRIVAL` ("Broken or cracked on arrival"), `SHORT_DELIVERED`, `WRONG_ITEM` and `QUALITY_REJECTED`, each with `requiresNote`.
+3. **`rejectionReasonCode` and `rejectionNote` on `GoodsReceiptLineInput`** (string, a `GOODS_RECEIPT_REJECTION` code; required when `qtyRejected` is above zero, refused when it is zero, 422 `GOODS_RECEIPT_INVALID` with details `REJECTION_REASON_REQUIRED`, `REASON_NOT_ALLOWED`, `NOTE_REQUIRED`), and both answered on `GoodsReceiptLine` (null when nothing was rejected). The receipt's `valuePesewas` stays the cost of the accepted quantity, as today.
+4. Supplier scoring's rejection rate (FR-PUR, "quality and rejection rate") reads the same field, so a crate rejected for breakage counts against the supplier.
+
+**Until this lands:** nothing is built on it this session. The egg session's receipt screen (part a) is built against this shape behind `HK_REQUESTED_CONTRACT` (ADR 0046) if it has not landed by then.
+
+## CR-036. A claim raised from a goods receipt's rejected lines (additive)
+
+- **Raised by:** frontend, the owner (2026-11-17): cracked or broken crates "rejected on arrival with a reason, with a claim raised from the receipt". Needed by the egg session, part a, before supplier payment.
+- **Checked (1.54.0):** a supplier credit note exists (`createSupplierInvoice` with kind `CREDIT_NOTE`, then `submitSupplierCreditNote`), but it is raised against a supplier invoice, its lines return goods that are on hand (`returnFromLocationId`, a `SUPPLIER_RETURN` movement), and nothing links it to a receipt or to quantities that never entered stock. No operation raises anything from a `GoodsReceipt`, and the contract has no claim.
+
+**Request:** the backend's choice of shape, with these properties:
+
+1. **From a posted receipt with rejected lines**, staff raise a claim against its supplier in one step: one line per rejected receipt line, carrying the quantity, the reason (CR-035) and the value the supplier is asked to credit or replace. Its value is the server's (from the purchase order line's price), never the client's.
+2. **The claim is linked both ways**: the receipt answers its claims, and the claim names the receipt, its purchase order and, once the supplier invoices, the invoice or credit note that settles it.
+3. **It does not move stock** (the goods were never received), and it shows on the supplier's account until settled by a credit note, a replacement delivery, or being written off with approval.
+4. If the backend's answer is that a supplier credit note raised from the receipt is the claim, say how a credit note names a receipt and a quantity that never entered stock.
+
+**Until this lands:** no claim screen. The egg session's part a builds the receipt's rejection with its reason (CR-035) first.
