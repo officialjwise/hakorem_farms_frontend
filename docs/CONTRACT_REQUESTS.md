@@ -527,72 +527,18 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 
 **Until this lands:** no offline unlock (a till whose session has expired offline cannot sell until it reconnects), no supervisor approval offline (so no unverified mobile money), and no cash drop witness (A-F9-04).
 
-**The exact shape (F10, 2026-11-16).** Read against 1.44.0 first: `TenderInput.unverifiedMobileMoney` already carries `payerPhone`, `network`, `providerReference` and `approvedById`, and `CashMovementCreate.witnessId` carries a drop's witness, so items 4 and 5 need only the verifier version. F10 builds the till against exactly this, behind `HK_REQUESTED_CONTRACT` (ADR 0046, ADR 0047):
+**Amended (owner, 2026-11-17, F10e): no sale UUID in the link.** The owner's answer to the F10d report's first question, and the backend is changing CR-033 to match. It replaces item 2's "simplest shape" and the F10 shape below it:
 
-1. `listTillPinVerifiers`: `GET /registers/{id}/pin-verifiers`, staff session plus `X-Device-Credential` (security `deviceCredential`), permission `pos.shift.open`. 200 `TillPinVerifiers`; 401 `DEVICE_CREDENTIAL_INVALID` or `DEVICE_REVOKED` as for a sync.
-   ```yaml
-   TillPinVerifiers:
-     registerId: uuid
-     issuedAt: date-time
-     policy: # every till applies the same rule offline
-       minDigits: integer # 4
-       maxDigits: integer # 6
-       maxAttempts: integer # wrong PINs in a row before that person is locked out on the till; at most 5 (F10d)
-       idleLockSeconds: integer # the till locks itself after this long untouched
-     verifiers: # the signed-in operator's, and each supervisor's at the register's branch
-       - principalId: uuid
-         displayName: string
-         version: integer # rises each time the PIN is set or reset
-         algorithm: PBKDF2-SHA256 # enum; Web Crypto has no Argon2 (ADR 0047)
-         iterations: integer # at least 600,000 (F10d)
-         salt: string # base64, at least 16 random bytes per person
-         hash: string # base64, 32 bytes: PBKDF2(PIN as UTF-8, salt, iterations)
-         approves: [OFFLINE_MOBILE_MONEY | CASH_DROP_WITNESS | SUPERVISOR_SIGN_OUT] # from the person's permissions at the branch
-         lockedOut: boolean # F10d: the server holds this person locked out on the register
-   ```
-   Never the PIN. How a PIN is set, with its permission and audit, is the backend's to define.
-2. `UnverifiedMobileMoneyInput.approvedByVerifierVersion` (integer, required when the field lands) and `CashMovementCreate.witnessVerifierVersion` (integer, with `witnessId`): the verifier the PIN was checked against. The server records an approval by a revoked operator, a superseded verifier or someone without the approving permission as an exception, never silently. Until then the till keeps the version on its own record and shows it on the queue screen.
-3. The pack's `reasonCodes` include the `CASH_MOVEMENT` domain (unchanged from item 6).
+- **The till makes the link's token itself, offline:** at least 128 bits from the device's cryptographically secure generator (`crypto.getRandomValues`), encoded base64url with no padding, about 22 characters (16 bytes are 22). Never derived from the sale's id, the device, the shift or the time.
+- **It travels with the sale when it syncs**, and **the server stores only its hash.** The link works from then.
+- **Before sync**, the till's receipt, on screen and on paper, says the link starts working once the sale reaches the server. The server answers nothing for a token it has not been sent.
 
-The PIN unlocks the till and records approvals only. The till enforces the attempt limit and the lockout per person, on the device.
+**The exact shape, as amended (replaces the F10 shape of 2026-11-16).** The frontend builds it once the contract carries it (owner); the till's present switch (ADR 0046) is for the F10 shape and is rebuilt to this one then.
 
-**The owner's conditions (F10d, 2026-11-17), changing the shape above.** ADR 0047 is accepted on these; the till enforces each on the device whatever the server sends, and the backend is asked to issue the same:
-
-1. **The hash floor.** Every verifier is `PBKDF2-SHA256` with `iterations` at least **600,000**, a random `salt` of at least **16 bytes** per person, and a 32-byte `hash`. The till refuses anything weaker: it does not store or check it, says so, and that person can only sign in online until a strong one is issued.
-2. **Tries.** `policy.maxAttempts` is at most **5** (the till applies five if sent more; a lower value wins). **`policy.lockoutSeconds` is removed:** offline a lockout never ends on a timer, since the device clock can be changed.
-3. **The server decides when a lockout ends.** Each `PinVerifier` gains `lockedOut: boolean`: whether the server holds that person locked out of PIN checks on this register. The till ends a lockout only when the server's answer says `false`, or when a supervisor signs the cashier out.
-4. **`reportTillPinEvents`**: `POST /registers/{id}/pin-events`, staff session plus `X-Device-Credential`, CSRF, `Idempotency-Key`, permission `pos.shift.open`. Body `{ events: TillPinEvent[] }`, answered 200 with `TillPinVerifiers` as they now stand. Sent whenever the till reaches the server with events waiting (before `listTillPinVerifiers`, after a lockout, before a supervisor's sign-out ends the session).
-   ```yaml
-   TillPinEvent:
-     id: uuid # made on the till; the same id twice is one event
-     kind: LOCKED_OUT | SUPERVISOR_SIGN_OUT
-     principalId: uuid # the person locked out, or the cashier signed out
-     verifierVersion: integer | null # their verifier on the till, null if it held none
-     supervisorId: uuid | null # SUPERVISOR_SIGN_OUT: whose PIN signed the cashier out
-     supervisorVerifierVersion: integer | null
-     occurredAt: date-time # the till's clock, for the record; the server keeps its own arrival time
-   ```
-   The server holds a person locked out from a `LOCKED_OUT` until it ends it (a manager, or its own rule, for example a password sign-in), and ends the cashier's on a `SUPERVISOR_SIGN_OUT` from a supervisor with the approval. Both are audited with the actor and both times, and flagged as exceptions like the approvals in item 4 of the request.
-5. **`approves` gains `SUPERVISOR_SIGN_OUT`**: signing a locked cashier out on this till and nothing else, from the person's permissions at the branch. It never opens the till or sells as the cashier.
-
-## CR-033. A digital receipt the customer can open from a link (additive)
-
-- **Raised by:** frontend, ADR 0045 (owner, 2026-11-16): every sale produces a digital receipt, by SMS or a link; a printer is optional.
-- **Contract read first (1.42.0):** a sale carries `customerPhone` "for an SMS or WhatsApp receipt", and `sendBillingDocument` is planned (202). `BillingDocument.provisionalRef` carries the sale reference beside the official number. There is no page or public read a customer can open from a link without an account, and nothing says when the SMS is sent for a sale made offline.
-
-**Request:**
-
-1. **A public receipt read** (no session) by an unguessable token: the official receipt number, the sale reference (`provisionalRef`), the lines, the tenders, the change and the business's details, and, until the sale has synced, a state saying the receipt is being recorded.
-2. **The link can be made on the till offline**, so it can be shown at the counter and printed before the sale reaches the server (as text: the owner allows no QR code but the TOTP enrolment image, 2026-11-17). The simplest shape: the link names the sale's client id (a UUIDv7, 74 random bits), and the public read answers "being recorded" until that sale arrives. If the backend prefers a server-signed token, say how the till gets one offline.
-3. **The SMS is sent once on sync** for a sale that carried `customerPhone`, with the link, the official number and the sale reference; and the sync result (or the order) says whether it was sent.
-
-**Until this lands:** the till shows the sale reference and its own receipt on screen; nothing reaches the customer's phone.
-
-**The exact shape (F10, 2026-11-16).** F10 builds the till's side against exactly this, behind `HK_REQUESTED_CONTRACT` (ADR 0046); the customer's page on the storefront waits for item 3:
-
-1. `OfflinePack.receiptLinkTemplate` (string, an absolute `https` URL containing `{saleId}`, for example `https://hakoremfarms.com/r/{saleId}`): the till makes the link offline from the sale's client id, so it can show and print it before the sale reaches the server.
-2. `SyncResultItem.receiptMessage` (object or null): `{ channel: SMS, status: QUEUED | SENT | FAILED | NO_PHONE }`. The server sends the SMS once, on the sale's first sync, to the sale's `customerPhone`, with the link, the official number and the sale reference; a resend (`DUPLICATE`) answers the first result's status and sends nothing.
-3. `getPublicReceipt`: `GET /shop/receipts/{saleId}`, public, cacheable for a recorded sale. 200 `PublicReceipt`: `{ saleId, state: RECORDING | RECORDED, saleReference, receiptNo (null while RECORDING), occurredAt, business: { name, phone }, lines: [{ name, quantity, saleUom, weightKg, stockUnitIdentifier, unitPricePesewas, amountPesewas }], totalPesewas, tenders: [{ name, amountPesewas, tenderedPesewas, unverified }], changePesewas, currency }`. An id the server has never seen answers 200 `RECORDING` with only `saleId` and `state`, never 404, so a link shown at the counter works before the sale syncs and says nothing about whether an id exists. `quantity` and `weightKg` are the contract's three-place strings.
+1. `OfflinePack.receiptLinkTemplate` (string): an absolute `https` URL containing `{token}`, for example `https://hakoremfarms.com/r/{token}`. The till fills it with the sale's own token, so it can show and print the link before the sale reaches the server.
+2. `OfflineSale.receiptToken` (string, `^[A-Za-z0-9_-]{22,86}$`, optional so a till without the template still syncs): the token the till made for this sale, made once and kept with the sale on the device, so a resend carries the same token. It is part of the canonical sale that `payloadHash` covers. The server keeps only its hash, never the token; a resend (`DUPLICATE`) changes nothing. Please say what the server does with a token it already holds for another sale (at 128 random bits it should never happen); the frontend asks that the sale is still recorded.
+3. `SyncResultItem.receiptMessage` (object or null): `{ channel: SMS, status: QUEUED | SENT | FAILED | NO_PHONE }`, as before. The server sends the SMS once, on the sale's first sync, to the sale's `customerPhone`, with the link (which works from that moment), the official number and the sale reference; a resend answers the first result's status and sends nothing.
+4. `getPublicReceipt`: `GET /shop/receipts/{token}`, public, found by the token's hash. 200 `PublicReceipt`: `{ state: RECORDED, saleReference, receiptNo, occurredAt, business: { name, phone }, lines: [{ name, quantity, saleUom, weightKg, stockUnitIdentifier, unitPricePesewas, amountPesewas }], totalPesewas, tenders: [{ name, amountPesewas, tenderedPesewas, unverified }], changePesewas, currency }`, with no `saleId` and no other id. A token the server has not been sent, mistyped, guessed or altered answers 404 `NOT_FOUND`, one answer for all of them. The `RECORDING` state of the F10 shape is gone: until the sale syncs, the link is not live, and the receipt says so. `quantity` and `weightKg` are the contract's three-place strings.
 
 ## CR-034. The server generates each product's SKU (changed request body)
 
