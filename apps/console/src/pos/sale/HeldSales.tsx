@@ -17,7 +17,7 @@ import { newRecordId } from '../../lib/clientId';
 import type { CartLine } from '../offline/cart';
 import { getTill } from '../offline/till';
 import type { HeldLocal, OfflinePack, TillSnapshot } from '../offline/types';
-import { productById } from './catalogue';
+import { bandFor, productById } from './catalogue';
 
 type HeldSale = components['schemas']['HeldSale'];
 
@@ -33,7 +33,9 @@ function linesOf(payload: Record<string, unknown>): CartLine[] {
  */
 export function repriced(lines: CartLine[], pack: OfflinePack): CartLine[] {
   return lines.flatMap((line) => {
-    const band = productById(pack, line.productId)?.priceBand ?? null;
+    const product = productById(pack, line.productId);
+    // A crate is re-priced as a crate and a single egg as an egg (CR-038).
+    const band = product === null ? null : bandFor(product, line.soldInUom);
     if (band === null) return [];
     return [
       {

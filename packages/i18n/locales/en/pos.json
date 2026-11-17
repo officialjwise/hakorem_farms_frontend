@@ -142,11 +142,16 @@
       "OVER_LINE_LIMIT": "That discount is more than you may give on one item",
       "OVER_SHIFT_LIMIT": "That discount takes your shift past what you may give"
     },
-    "refusalBody": "You may give up to {{line}} off an item and {{shift}} on a shift. A manager can agree more in the back office."
+    "refusalBody": "You may give up to {{line}} off an item and {{shift}} on a shift. A manager can agree more in the back office.",
+    "byUnit": "{{name}}, by the {{unit}}"
   },
   "choose": {
     "unitTitle": "Which {{name}}?",
-    "unitBody": "Each is sold by its tag. Choose the one the customer is taking."
+    "unitBody": "Each is sold by its tag. Choose the one the customer is taking.",
+    "sellingUnitTitle": "Sell {{name}} by which unit?",
+    "sellingUnitBody": "Each has its own price.",
+    "sellingUnit": "By the {{unit}}",
+    "sellingUnitNoPrice": "Not priced at this till"
   },
   "pay": {
     "title": "Take payment",

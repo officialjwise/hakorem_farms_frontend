@@ -5,6 +5,7 @@
  */
 import type { components } from '@hakorem/api-client';
 import { newRecordId } from '../../lib/clientId';
+import { sellingUnits, type SellingUnit } from '../../requested/sellingUnits';
 import type { CartLine } from '../offline/cart';
 import { pendingCount } from '../offline/sync';
 import type { OfflinePack, TillSnapshot } from '../offline/types';
@@ -74,15 +75,43 @@ export function tiles(
   return [...groups.entries()].map(([category, products]) => ({ category, products }));
 }
 
-/** A new line at the list price. A unit's last recorded weight is carried as an estimate. */
-export function newLine(product: OfflineProduct, unit: OfflineStockUnit | null): CartLine | null {
-  const band = product.priceBand;
+/**
+ * The units a cashier chooses between for this product (CR-038, requested): a crate and a single egg, each
+ * with the pack's own band. Empty when the product is sold in one unit.
+ */
+export function unitChoices(product: OfflineProduct): SellingUnit[] {
+  return sellingUnits(product);
+}
+
+/**
+ * The band a line is priced from: the chosen selling unit's own, or the product's. Null when the pack no
+ * longer prices that unit. A single egg's price is never worked out from a crate's.
+ */
+export function bandFor(
+  product: OfflineProduct,
+  soldInUom: string | null | undefined,
+): OfflineProduct['priceBand'] {
+  if (soldInUom === null || soldInUom === undefined) return product.priceBand;
+  return sellingUnits(product).find((unit) => unit.uom === soldInUom)?.priceBand ?? null;
+}
+
+/**
+ * A new line at the list price, in the selling unit chosen or the product's own. A unit's last recorded
+ * weight is carried as an estimate.
+ */
+export function newLine(
+  product: OfflineProduct,
+  unit: OfflineStockUnit | null,
+  selling: SellingUnit | null = null,
+): CartLine | null {
+  const band = bandFor(product, selling?.uom);
   if (band === null) return null;
   return {
     key: newRecordId(),
     productId: product.product.id,
     productName: product.product.name,
-    saleUom: product.saleUom,
+    saleUom: selling?.uom ?? product.saleUom,
+    soldInUom: selling?.uom ?? null,
     priceBasis: product.priceBasis,
     taxCategoryId: product.taxCategoryId,
     stockUnitId: unit?.id ?? null,

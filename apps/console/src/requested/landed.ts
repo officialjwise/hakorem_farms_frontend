@@ -6,7 +6,7 @@
  * (`package.json`, `.github/workflows/ci.yml`), and call the generated client.
  *
  * A request is checked by its first item to land: an operation (CR-032, CR-033's public read) or a field on a
- * response (CR-033). CR-034 landed in 2.0.0 and its switch was deleted.
+ * response (CR-033) or a request (CR-038's sale line). CR-034 landed in 2.0.0 and its switch was deleted.
  */
 import type { components, operationManifest } from '@hakorem/api-client';
 import type { ContractRequest } from './switch';
@@ -27,9 +27,12 @@ const cr032Events: Lacks<Manifest, 'reportTillPinEvents', 'CR-032'> = true;
 const cr033Pack: Lacks<Schemas['OfflinePack'], 'receiptLinkTemplate', 'CR-033'> = true;
 const cr033Result: Lacks<Schemas['SyncResultItem'], 'receiptMessage', 'CR-033'> = true;
 const cr033Read: Lacks<Manifest, 'getPublicReceipt', 'CR-033'> = true;
+const cr038Pack: Lacks<Schemas['OfflineProduct'], 'sellingUnits', 'CR-038'> = true;
+const cr038Line: Lacks<Schemas['CounterSaleLine'], 'uom', 'CR-038'> = true;
 
 /** One entry per switch, so a new switch without a check fails `switch.test.ts`. */
 export const LANDED_CHECKS: Record<ContractRequest, readonly boolean[]> = {
   'CR-032': [cr032, cr032Events],
   'CR-033': [cr033Pack, cr033Result, cr033Read],
+  'CR-038': [cr038Pack, cr038Line],
 };
