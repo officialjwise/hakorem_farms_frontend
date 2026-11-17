@@ -696,3 +696,12 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 **Request:** `approveSupplierInvoice` refuses the invoice's `createdBy` with 422 `INVOICE_MAKER_CANNOT_APPROVE` (the code and its meaning exist already), in the domain and the database, as a credit note's approval does; add the code to the operation's `x-error-codes`. Or say that invoice approval is deliberately one person's, and the payment's approval is the check.
 
 **Until this lands:** invoice approval works as the contract says. The invoice screen shows any refusal of `approveSupplierInvoice` in words in its confirmation and on the page, so the refusal appears without a screen change once the server sends it. No switch: no shape changes.
+
+## CR-044. What unit a line's quantity variance is in, and what its price variance is of (description fix)
+
+- **Raised by:** frontend, the supplier invoice session: "when [the match] fails, show which lines disagree and by how much, from the API" (owner, 2026-11-17).
+- **Contract read first (2.4.0):** `SupplierInvoiceLine.qtyVariance` is a `SignedQuantity` with no description, and `priceVariancePesewas` with `priceVarianceDirection` has none either. The match compares "its quantity in the base unit" with what was received, while the line's `qty` is in its `uom` (the order line's unit, a crate). The `listSupplierInvoices` example has 500 head at 1,290 against an order at 1,250 with `priceVariancePesewas` 20,000, which is the whole line's difference (500 × 40), not the unit price's.
+
+**Request:** say in the descriptions (1) which unit `qtyVariance` is in: the line's `uom` or the product's base unit; (2) its sign: positive when the invoice charges more than is available to invoice; (3) that `priceVariancePesewas` is the line's whole difference from the order price, and `priceVarianceDirection` whether it is over or under.
+
+**Until this lands:** the invoice screen reads `qtyVariance` in the line's `uom`, positive as "more than was received" and negative as "less", and `priceVariancePesewas` as the line's whole difference ("GH₵10.50 over the order's price on this line"), as A-F10-06 records.
