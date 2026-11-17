@@ -255,3 +255,50 @@ describe('useApiAllPages', () => {
     expect(result.current.error?.status).toBe(403);
   });
 });
+
+describe('useRequestedQuery (ADR 0052)', () => {
+  const balance = {
+    request: 'CR-042',
+    operationId: 'getSupplierBalance',
+    method: 'get',
+    path: '/suppliers/{id}/balance',
+    permission: 'pur.supplier_invoice.read',
+    idempotent: false,
+    csrf: 'none',
+    public: false,
+    body: 'none',
+    device: false,
+  } as const;
+
+  it('reads the requested operation under its own key, apart from every generated one', async () => {
+    const answer = { owedPesewas: 94_050 };
+    const { hooks, wrapper, queryClient, requests } = testData(() => json(answer));
+    const input = { path: { id: 's/1' } };
+    const { result } = renderHook(() => hooks.useRequestedQuery(balance, input), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(requests[0]?.url).toBe('http://api.test/v1/suppliers/s%2F1/balance');
+    expect(result.current.data).toEqual(answer);
+    expect(queryClient.getQueryData(['requested', 'getSupplierBalance', input])).toEqual(answer);
+  });
+
+  it('sends nothing while its switch holds it back', async () => {
+    const { hooks, wrapper, requests } = testData(() => json({}));
+    const { result } = renderHook(
+      () => hooks.useRequestedQuery(balance, { path: { id: 's1' } }, { enabled: false }),
+      { wrapper },
+    );
+    await Promise.resolve();
+    expect(result.current.fetchStatus).toBe('idle');
+    expect(requests).toHaveLength(0);
+  });
+
+  it('fails with the normalised ApiError and does not retry a 403', async () => {
+    const { hooks, wrapper, requests } = testData(() => json(envelope('FORBIDDEN'), 403));
+    const { result } = renderHook(() => hooks.useRequestedQuery(balance, { path: { id: 's1' } }), {
+      wrapper,
+    });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error?.status).toBe(403);
+    expect(requests).toHaveLength(1);
+  });
+});

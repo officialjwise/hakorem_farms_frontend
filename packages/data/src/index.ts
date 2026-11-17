@@ -4,6 +4,8 @@ export {
   MAX_ALL_PAGES,
   PAGE_CAP_EXCEEDED,
   PageCapExceededError,
+  requestedQueryKey,
+  type RequestedInput,
   type AllPages,
   type ApiHooks,
   type PageItem,
