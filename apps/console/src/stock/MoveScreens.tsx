@@ -59,6 +59,7 @@ import {
 } from './filters';
 import { useLocations } from './locations';
 import { useUnits } from './units';
+import { ReadableId } from '../lib/ReadableId';
 
 type S = components['schemas'];
 interface Column<T> {
@@ -628,6 +629,7 @@ function LinesTable<L extends { id: string }>({
 const productName = (line: { product: S['ProductRef']; stockUnit: S['StockUnitRef'] | null }) => (
   <span className="grid">
     <span>{line.product.name}</span>
+    <code className="text-control-sm text-fg-muted">{line.product.sku}</code>
     {line.stockUnit === null ? null : (
       <code className="text-control-sm">{line.stockUnit.identifier}</code>
     )}
@@ -954,7 +956,16 @@ export function ReceiptScreen() {
               items={[
                 [t('receipts.kind'), t(`receiptKind.${r.kind}`)],
                 [t('receipts.location'), r.location.name],
-                [t('receipts.columns.from'), r.supplier?.name ?? NOT_APPLICABLE],
+                [
+                  t('receipts.columns.from'),
+                  r.supplier === null ? (
+                    NOT_APPLICABLE
+                  ) : (
+                    <span key="from">
+                      {r.supplier.name} <ReadableId value={r.supplier.publicId} />
+                    </span>
+                  ),
+                ],
                 [t('receipts.deliveryNote'), r.deliveryNoteRef ?? NOT_APPLICABLE],
                 [t('receipts.columns.received'), <When key="r" instant={r.receivedAt} />],
                 [

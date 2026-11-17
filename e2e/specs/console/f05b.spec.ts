@@ -98,15 +98,19 @@ test('a branch close the server refuses stays in the confirmation, with each bro
   expect(api.log.filter((e) => e.operationId === 'updateBranch')).toHaveLength(1);
 });
 
-test('labels: a product and a lot, with barcodes, ready to print', async ({ page }) => {
+test('labels: a product and a lot, as text with no barcode, ready to print', async ({ page }) => {
   await signInWithTotp(page, USERS.owner, '/labels');
   await page.getByRole('button', { name: 'Add a label for Goat' }).click();
   await page.getByRole('button', { name: 'One more label for Goat' }).click();
   await page.getByRole('tab', { name: 'Lots and animals' }).click();
   await page.getByRole('button', { name: /^Add a label for Goat G-0142/ }).click();
   const sheet = page.getByRole('list', { name: 'Label sheet' });
-  await expect(sheet.getByRole('img', { name: 'Product barcode: LIV-GOAT' })).toHaveCount(2);
-  await expect(sheet.getByRole('img', { name: 'Lot barcode: G-0142' })).toHaveCount(1);
+  // Contract 2.0.0: a label prints its text only (owner, 2026-11-17).
+  const codes = sheet.locator('[data-slot="label-code"]');
+  await expect(codes.filter({ hasText: /^LIV-0004$/ })).toHaveCount(2);
+  await expect(codes.filter({ hasText: /^G-0142$/ })).toHaveCount(1);
+  await expect(sheet.getByRole('img')).toHaveCount(0);
+  await expect(sheet.locator('svg')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Print 3 labels' })).toBeEnabled();
   await expectNoAxeViolations(page);
   await expectNoHorizontalScroll(page);

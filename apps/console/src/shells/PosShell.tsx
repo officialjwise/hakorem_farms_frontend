@@ -2,7 +2,7 @@ import { CloudUpload, LockKeyhole, LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router';
-import { Button, Dialog, DialogActions, StatusBadge } from '@hakorem/ui';
+import { Alert, Button, Dialog, DialogActions, StatusBadge } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { pendingCount } from '../pos/offline/sync';
 import { getTill, hasTill, useTill } from '../pos/offline/till';
@@ -16,12 +16,15 @@ import { OfflineBanner, OfflineIndicator } from './OfflineIndicator';
  * ADR 0014).
  */
 export function PosShell() {
-  const { t } = useTranslation('shell');
+  const { t } = useTranslation(['shell', 'pos']);
   const auth = useAuth();
   const navigate = useNavigate();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const till = useTill();
-  const locked = till.snapshot?.meta.locked === true && hasTill() && getTill().canLock();
+  // Locked until the cashier's PIN opens it or a supervisor signs them out, whatever the verifiers now
+  // say (owner, 2026-11-17).
+  const locked = till.snapshot?.meta.locked === true && hasTill();
+  const refused = till.snapshot?.localAuth?.refused ?? [];
   const waiting = till.snapshot === null ? 0 : pendingCount(till.snapshot);
   const device = till.snapshot?.device ?? null;
   const shift = till.snapshot?.shift ?? null;
@@ -97,33 +100,44 @@ export function PosShell() {
               <Link to="/">{t('pos.backOffice')}</Link>
             </Button>
           )}
-          <Dialog
-            open={confirmOpen}
-            onOpenChange={setConfirmOpen}
-            title={t('pos.signOutTitle')}
-            description={
-              waiting > 0 ? t('pos.signOutWaiting', { count: waiting }) : t('pos.signOutBody')
-            }
-            closeLabel={t('pos.close')}
-            icon={LogOut}
-            iconTone="critical"
-            trigger={
-              <Button variant="secondary" size="lg">
-                <LogOut aria-hidden="true" />
-                {t('pos.signOut')}
-              </Button>
-            }
-            footer={
-              <DialogActions cancelLabel={t('pos.cancel')} onCancel={() => setConfirmOpen(false)}>
-                <Button variant="danger" onClick={() => void signOut()}>
+          {/* On a locked till only a supervisor's PIN signs the cashier out (the lock screen). */}
+          {locked ? null : (
+            <Dialog
+              open={confirmOpen}
+              onOpenChange={setConfirmOpen}
+              title={t('pos.signOutTitle')}
+              description={
+                waiting > 0 ? t('pos.signOutWaiting', { count: waiting }) : t('pos.signOutBody')
+              }
+              closeLabel={t('pos.close')}
+              icon={LogOut}
+              iconTone="critical"
+              trigger={
+                <Button variant="secondary" size="lg">
                   <LogOut aria-hidden="true" />
-                  {t('pos.signOutConfirm')}
+                  {t('pos.signOut')}
                 </Button>
-              </DialogActions>
-            }
-          />
+              }
+              footer={
+                <DialogActions cancelLabel={t('pos.cancel')} onCancel={() => setConfirmOpen(false)}>
+                  <Button variant="danger" onClick={() => void signOut()}>
+                    <LogOut aria-hidden="true" />
+                    {t('pos.signOutConfirm')}
+                  </Button>
+                </DialogActions>
+              }
+            />
+          )}
         </div>
       </header>
+      {refused.length === 0 ? null : (
+        <div className="px-4 pt-3" data-slot="pin-refused">
+          <Alert
+            severity="warning"
+            title={t('pos:pin.refused', { names: refused.map((r) => r.displayName).join(', ') })}
+          />
+        </div>
+      )}
       {locked ? (
         <div className="p-4">
           <LazyTillLocked />

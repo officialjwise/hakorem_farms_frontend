@@ -28,7 +28,6 @@ export interface PrintWords {
   reference: string;
   /** The line above the receipt link. */
   link: string;
-  saleId: string;
   thanks: string;
 }
 
@@ -140,8 +139,6 @@ export function receiptLines(input: PrintInput): {
   body.push(...pair(words.change, money(receipt.changePesewas)), RULE);
   const footer = [
     ...(input.link !== null ? [...wrap(words.link), ...wrap(input.link)] : []),
-    ...wrap(words.saleId),
-    ...wrap(receipt.saleId),
     ...wrap(words.thanks),
   ];
   return { header, body, footer };

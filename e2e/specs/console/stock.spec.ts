@@ -41,12 +41,12 @@ test.describe('the F5 gate: a stock take completed on a phone in the cold room',
     // differences are served here: contract 1.17.0's own example values, by SKU. CR-020 asks for a named
     // in-review example, which would replace this table.
     const REVIEW: Record<string, [string, string, number, 'GAIN' | 'LOSS' | 'NONE']> = {
-      'PRD-YAM': ['40.000', '-6.000', 12000, 'LOSS'],
-      'PRD-CABBAGE': ['26.000', '4.000', 3200, 'GAIN'],
-      'EGG-BIG': ['48.000', '-2.000', 8000, 'LOSS'],
-      'MEAT-GOAT': ['29.750', '0.000', 0, 'NONE'],
-      'MEAT-CHK-FULL': ['97.800', '0.000', 0, 'NONE'],
-      'PRD-TOMATO': ['12.000', '-1.000', 51500, 'LOSS'],
+      'PRD-0005': ['40.000', '-6.000', 12000, 'LOSS'],
+      'PRD-0002': ['26.000', '4.000', 3200, 'GAIN'],
+      'EGG-0003': ['48.000', '-2.000', 8000, 'LOSS'],
+      'MEAT-0005': ['29.750', '0.000', 0, 'NONE'],
+      'MEAT-0001': ['97.800', '0.000', 0, 'NONE'],
+      'PRD-0001': ['12.000', '-1.000', 51500, 'LOSS'],
     };
     api.rewrite('listStockTakeLines', (body) => {
       const page = body as { data: { product: { sku: string } }[] };
@@ -172,7 +172,7 @@ test.describe('stock documents', () => {
     await expect(product).toBeFocused();
     await product.fill('Goat');
     await page
-      .getByRole('option', { name: /^Goat \(LIV-GOAT\)/ })
+      .getByRole('option', { name: /^Goat \(LIV-0004\)/ })
       .first()
       .click();
     await page.getByLabel(/^quantity/i).fill('3');

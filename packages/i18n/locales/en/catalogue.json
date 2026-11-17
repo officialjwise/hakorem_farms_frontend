@@ -85,7 +85,7 @@
     "title": "Products",
     "new": "New product",
     "search": "Find products",
-    "searchLabel": "Search products by name, SKU or barcode",
+    "searchLabel": "Search products by name or SKU",
     "filterStatus": "Status",
     "allStatuses": "All statuses",
     "table": "Products",
@@ -132,7 +132,6 @@
     "withdrawal": "Withdrawal period",
     "days_one": "{{count}} day",
     "days_other": "{{count}} days",
-    "barcode": "Barcode",
     "online": "Online shop",
     "trading": "Trading",
     "sellable": "Can be sold",
@@ -145,7 +144,6 @@
     "fields": {
       "name": "Name",
       "description": "Description",
-      "barcode": "Barcode",
       "status": "Status",
       "onlineMode": "Online shop",
       "isSellable": "Can be sold",
@@ -194,9 +192,7 @@
     "submit": "Create product",
     "creating": "Creating the product",
     "failed": "The product was not created",
-    "skuGiven": "Given by the server when the product is saved. It is never typed.",
-    "skuWaits": "Adding a product waits for the server to give SKUs",
-    "skuWaitsBody": "The server does not give each product its SKU yet, and a SKU is never typed here. Products already in the catalogue can be changed as before."
+    "skuGiven": "Given by the server when the product is saved. It is never typed."
   },
   "categories": {
     "title": "Categories",

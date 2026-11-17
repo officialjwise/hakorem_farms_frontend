@@ -158,6 +158,7 @@
     "cashOnly": "Cash only at this till.",
     "offlineCashOnly": "The till is offline: cash only until it reconnects.",
     "cleared": "{{name}}, cleared ({{reference}})",
+    "clearedNoReference": "{{name}}, cleared",
     "handed": "Cash handed over",
     "handedHint": "What the customer gives you, before change.",
     "cash": "Cash",
@@ -224,7 +225,6 @@
     "total": "Total",
     "change": "Change",
     "handed": "{{name}} handed over",
-    "saleId": "Sale id",
     "thanks": "Thank you",
     "copyMarker": "COPY: reprint of a receipt already given, not a new sale",
     "unverified": "Mobile money, not yet verified",
@@ -302,7 +302,8 @@
     "approvedBy": "{{what}}: {{name}}'s PIN (version {{version}})",
     "approval": {
       "OFFLINE_MOBILE_MONEY": "Mobile money approved",
-      "CASH_DROP_WITNESS": "Witnessed"
+      "CASH_DROP_WITNESS": "Witnessed",
+      "SUPERVISOR_SIGN_OUT": "Signed out by a supervisor"
     }
   },
   "setup": {
@@ -545,20 +546,38 @@
     "who": "Whose PIN",
     "wrong_one": "Wrong PIN. {{count}} more wrong try locks {{name}} out on this till.",
     "wrong_other": "Wrong PIN. {{count}} more wrong tries lock {{name}} out on this till.",
-    "lockedOut": "{{name}} is locked out on this till until {{time}}.",
+    "lockedOut": "{{name}} is locked out of PIN checks on this till after too many wrong tries. It does not end with time: only when the till reaches the server and the server allows it, or when a supervisor signs {{name}} out.",
     "notAPin": "A PIN is {{min}} to {{max}} digits.",
     "noVerifier": "This till holds no PIN for {{name}}. They must sign in on this till while it is online first.",
+    "weakVerifier": "The server sent a PIN check for {{name}} that is weaker than this till accepts, so the till will not store or check it. {{name}} can only sign in online, with a password, until the server sends a stronger one.",
     "approve": "Approve with this PIN",
     "checking": "Checking the PIN",
     "approvedBy": "Approved by {{name}}'s PIN",
-    "noneHere": "No one who can approve this has a PIN on this till. A supervisor must sign in on it while it is online first."
+    "noneHere": "No one who can approve this has a PIN on this till. A supervisor must sign in on it while it is online first.",
+    "refused": "The server sent PIN checks this till refuses as weaker than it accepts: {{names}}. They cannot use a PIN on this till, and can only sign in online with a password, until the server sends stronger ones."
   },
   "lock": {
     "title": "This till is locked",
     "body": "{{name}}'s shift. Enter your PIN to open it. It opens with or without the network.",
     "open": "Open the till",
     "opening": "Checking the PIN",
-    "signOut": "Locked out, or not your shift? Sign out. Nothing on this till is lost: the sales wait to be sent."
+    "noPin": "This till holds no PIN check it accepts for {{name}}, so a PIN cannot open it. A supervisor can sign {{name}} out.",
+    "server": {
+      "title": "Locked out of PIN checks",
+      "check": "Check with the server",
+      "checking": "Checking with the server",
+      "offline": "The till cannot reach the server now. The lockout stays until it can, or until a supervisor signs the cashier out.",
+      "unreached": "The server could not be reached. The lockout stays.",
+      "still": "The server still holds the lockout. A manager can end it there, or a supervisor can sign the cashier out here."
+    },
+    "supervisor": {
+      "title": "Sign out the cashier",
+      "body": "A supervisor's PIN signs {{name}} out of this till and does nothing else: it does not open the till or sell. It is recorded with the supervisor's name and the time. The sales on this till are kept and wait to be sent.",
+      "who": "Supervisor",
+      "submit": "Sign {{name}} out",
+      "signingOut": "Checking the PIN",
+      "none": "No supervisor on this till can sign {{name}} out with a PIN. The till stays locked until {{name}}'s PIN opens it, or a supervisor signs in on this till online."
+    }
   },
   "unverified": {
     "title": "Mobile money without the network",

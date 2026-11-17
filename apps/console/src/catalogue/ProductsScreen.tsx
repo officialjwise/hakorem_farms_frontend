@@ -25,7 +25,7 @@ type Policy = Product['stockPolicy'];
 const STATUSES: readonly Status[] = ['ACTIVE', 'DRAFT', 'DISCONTINUED'];
 const POLICIES: readonly Policy[] = ['SERIALISED', 'CATCH_WEIGHT', 'COUNTABLE', 'NON_STOCK'];
 
-/** FR-MDM: the product catalogue, searched by name, SKU or barcode and filtered by status and stock policy. */
+/** FR-MDM: the product catalogue, searched by name or SKU and filtered by status and stock policy. */
 export function ProductsScreen() {
   const { t } = useTranslation(['catalogue', 'common']);
   const auth = useAuth();

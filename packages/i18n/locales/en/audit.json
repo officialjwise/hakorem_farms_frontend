@@ -85,8 +85,6 @@
     "address": "Network address",
     "area": "Area",
     "record": "Record",
-    "recordId": "Record id",
-    "branch": "Branch id",
     "correlation": "Request reference",
     "sealed": "Sealed in the chain",
     "sealedAt": "Yes, number {{seq}}",

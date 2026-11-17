@@ -4,7 +4,7 @@
  * API shape here is the contract's; the rest is the till's own bookkeeping.
  */
 import type { components } from '@hakorem/api-client';
-import type { PinApproval, TillPinVerifiers } from '../../requested/tillPin';
+import type { PinApproval, TillPinEvent, TillPinVerifiers } from '../../requested/tillPin';
 import type { PinAttempts } from '../pin/pin';
 import type { CartLine } from './cart';
 
@@ -176,8 +176,13 @@ export interface TillMeta {
   packFetchedAt: string | null;
   /** The last shift's sequence on this register, for the next shift's provisional references. */
   lastShiftSeq: number | null;
-  /** Wrong PINs and lockouts on this till, by person (CR-032). */
+  /**
+   * Wrong PINs and lockouts on this till, by person (CR-032). Kept through sign-out and shift close: a
+   * lockout ends only when the server says so or a supervisor signs the cashier out (owner, 2026-11-17).
+   */
   pinAttempts: Record<string, PinAttempts>;
+  /** Lockouts and supervisor sign-outs the server has not been told of yet, oldest first. Kept likewise. */
+  pinEvents: TillPinEvent[];
   /** The till is locked until its cashier's PIN opens it. Kept, so a reload stays locked. */
   locked: boolean;
 }
@@ -188,7 +193,7 @@ export interface TillSnapshot {
   shift: ShiftRecord | null;
   meta: TillMeta;
   /** The PIN verifiers the server issued for this till (`local_auth`, CR-032). Null where there are none. */
-  localAuth: TillPinVerifiers | null;
+  localAuth: LocalAuth | null;
   /** In the order they were made. */
   entries: QueueEntry[];
   held: HeldLocal[];
@@ -201,8 +206,23 @@ export const EMPTY_META: TillMeta = {
   packFetchedAt: null,
   lastShiftSeq: null,
   pinAttempts: {},
+  pinEvents: [],
   locked: false,
 };
+
+/** Someone whose verifier the server sent below the owner's floor: named, never stored or checked. */
+export interface RefusedVerifier {
+  principalId: string;
+  displayName: string;
+}
+
+/**
+ * What the till keeps of the server's verifiers: only those at or above the floor, the policy with at most
+ * five tries, and who was refused (owner, 2026-11-17).
+ */
+export interface LocalAuth extends TillPinVerifiers {
+  refused: RefusedVerifier[];
+}
 
 /** The statuses a record waits in. The rest are final, or need a person. */
 export const PENDING_STATUSES: readonly LocalStatus[] = ['QUEUED', 'SENDING'];

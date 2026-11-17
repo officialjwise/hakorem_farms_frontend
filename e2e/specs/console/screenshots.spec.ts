@@ -30,7 +30,7 @@ interface Shot {
 
 const PHASES: Record<string, Shot[]> = {
   F04: [
-    { name: 'products', path: '/products', ready: 'LIV-GOAT' },
+    { name: 'products', path: '/products', ready: 'LIV-0004' },
     {
       name: 'product',
       path: '/products/019a7a8d-137d-74bf-b9f8-54cda260cdab',
@@ -100,11 +100,11 @@ PHASES.F05b = [
   { name: 'dashboard-dark', path: '/', ready: 'Selling best today', theme: 'dark' },
   { name: 'branches', path: '/branches', ready: 'HaKorem Farms, Dodowa' },
   { name: 'branch', path: `/branches/${ID}`, ready: 'Locations in this branch' },
-  { name: 'labels', path: '/labels', ready: 'LIV-GOAT' },
+  { name: 'labels', path: '/labels', ready: 'LIV-0004' },
   {
     name: 'labels-sheet',
     path: '/labels',
-    ready: 'LIV-GOAT',
+    ready: 'LIV-0004',
     act: async (page) => {
       await page.getByRole('button', { name: 'Add a label for Goat' }).click();
       await page.getByRole('button', { name: 'Add a label for Broiler chicken' }).click();
@@ -119,7 +119,7 @@ PHASES.F05b = [
   { name: 'registers', path: '/registers', ready: 'Shift open' },
   { name: 'stock-on-hand', path: '/stock', ready: 'Stock value at cost' },
   { name: 'transfers', path: '/stock-transfers', ready: 'TRF-2026-DDW-00009' },
-  { name: 'products', path: '/products', ready: 'LIV-GOAT' },
+  { name: 'products', path: '/products', ready: 'LIV-0004' },
   { name: 'users', path: '/users', ready: 'Akua Mensah' },
   { name: 'roles', path: '/roles', ready: 'Cashier' },
   { name: 'sessions', path: '/sessions', ready: 'This device' },
@@ -187,11 +187,11 @@ PHASES.F05b = [
 PHASES.F05c = [
   { name: 'dashboard', path: '/', ready: 'Selling best today' },
   { name: 'dashboard-dark', path: '/', ready: 'Selling best today', theme: 'dark' },
-  { name: 'products', path: '/products', ready: 'LIV-GOAT' },
+  { name: 'products', path: '/products', ready: 'LIV-0004' },
   {
     name: 'products-columns-menu',
     path: '/products',
-    ready: 'LIV-GOAT',
+    ready: 'LIV-0004',
     act: async (page) => {
       await page.getByRole('button', { name: /^Columns/ }).click();
       await page.getByRole('dialog', { name: 'Columns' }).waitFor();
@@ -200,7 +200,7 @@ PHASES.F05c = [
   {
     name: 'products-page-2',
     path: '/products',
-    ready: 'LIV-GOAT',
+    ready: 'LIV-0004',
     act: async (page) => {
       await page.getByRole('button', { name: 'Next' }).click();
       await page.getByRole('combobox', { name: 'Go to page' }).waitFor();
@@ -209,7 +209,7 @@ PHASES.F05c = [
   {
     name: 'products-sort-menu',
     path: '/products',
-    ready: 'LIV-GOAT',
+    ready: 'LIV-0004',
     act: async (page) => {
       await page.getByRole('button', { name: /^Sort by/ }).click();
       await page.getByRole('dialog', { name: 'Sort by' }).waitFor();
@@ -254,7 +254,7 @@ PHASES.F05c = [
       await page.getByRole('dialog').waitFor();
     },
   },
-  { name: 'labels', path: '/labels', ready: 'LIV-GOAT' },
+  { name: 'labels', path: '/labels', ready: 'LIV-0004' },
   { name: 'reports', path: '/reports', ready: 'Stock valuation' },
   { name: 'report-sales', path: '/reports/sales', ready: 'Export' },
   { name: 'report-stock-valuation', path: '/reports/stock-valuation', ready: 'Export' },

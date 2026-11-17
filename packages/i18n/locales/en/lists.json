@@ -83,7 +83,7 @@
       "contact": "Contact",
       "status": "Status"
     },
-    "search": "Search suppliers",
+    "search": "Search suppliers by name or public ID (sup_…)",
     "statusFilter": "Status",
     "allStatuses": "All statuses"
   },

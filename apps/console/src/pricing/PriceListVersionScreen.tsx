@@ -259,6 +259,7 @@ function LineName({ entry }: { entry: PriceListEntry }) {
   return (
     <span className="grid">
       <span className="font-semibold">{entry.product.name}</span>
+      <code className="text-control-sm text-fg-muted">{entry.product.sku}</code>
       {parts.length === 0 ? null : (
         <span className="text-control-sm text-fg-muted">{parts.join(' · ')}</span>
       )}

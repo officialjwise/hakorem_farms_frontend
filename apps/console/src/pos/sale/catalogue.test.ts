@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { EMPTY_META, type OfflinePack, type TillSnapshot } from '../offline/types';
 import { findInPack, newLine, sellingBlock, tenderMethods, tiles } from './catalogue';
 
-/** A slice of the contract's `getOfflinePack` example. */
+/** A slice of the contract's `getOfflinePack` example (2.0.0: no barcode on a product). */
 const PACK = {
   register: { id: 'r', code: 'T1', name: 'Shop till 1' },
   generatedAt: '2026-11-16T06:55:00Z',
@@ -14,7 +14,6 @@ const PACK = {
     {
       product: { id: 'goat', sku: 'LIV-GOAT', name: 'Goat' },
       saleUom: 'HEAD',
-      barcode: null,
       taxCategoryId: 't',
       priceBasis: 'PER_HEAD',
       priceBand: {
@@ -30,7 +29,6 @@ const PACK = {
     {
       product: { id: 'eggs', sku: 'EGG-BIG', name: 'Eggs, big, crate of 30' },
       saleUom: 'CRATE',
-      barcode: '603470011',
       taxCategoryId: 't',
       priceBasis: 'PER_UNIT',
       priceBand: {
@@ -46,7 +44,6 @@ const PACK = {
     {
       product: { id: 'yam', sku: 'PRD-YAM', name: 'Yam, tuber' },
       saleUom: 'TUBER',
-      barcode: '603470011',
       taxCategoryId: 't',
       priceBasis: 'PER_UNIT',
       priceBand: {
@@ -62,7 +59,6 @@ const PACK = {
     {
       product: { id: 'beef', sku: 'MEAT-BEEF', name: 'Beef, 15 kg pack' },
       saleUom: 'PACK',
-      barcode: '603490011',
       taxCategoryId: 't',
       priceBasis: 'PER_KG',
       priceBand: {
@@ -151,10 +147,9 @@ describe('finding an item in the pack: tap or search, no barcode (ADR 0048)', ()
     expect(found.unsellable.map((unit) => unit.identifier)).toEqual(['G-0163']);
   });
 
-  it('searches names and SKUs by every word typed, never barcodes, and groups the tiles', () => {
+  it('searches names and SKUs by every word typed, and groups the tiles', () => {
     expect(findInPack(PACK, 'beef pack').products.map((p) => p.product.id)).toEqual(['beef']);
     expect(findInPack(PACK, 'egg-big').products.map((p) => p.product.id)).toEqual(['eggs']);
-    expect(findInPack(PACK, '603470011').products).toEqual([]);
     expect(findInPack(PACK, '  ')).toEqual({ units: [], unsellable: [], products: [] });
     expect(tiles(PACK).map((group) => group.category)).toEqual([
       'Live animals',

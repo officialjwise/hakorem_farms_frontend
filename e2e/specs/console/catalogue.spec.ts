@@ -1,5 +1,4 @@
 import { expect, test } from '../../support/test';
-import { installServerSku } from '../../support/requested';
 import {
   expectNoAxeViolations,
   expectNoHorizontalScroll,
@@ -123,7 +122,7 @@ test.describe('products', () => {
     await signInWithTotp(page, USERS.owner, '/products');
     await expect(page.getByRole('heading', { name: 'Products', level: 1 })).toBeVisible();
     const search = page.getByRole('searchbox', {
-      name: /^search products by name, sku or barcode/i,
+      name: /^search products by name or sku/i,
     });
     await search.fill('goat');
     await search.press('Enter');
@@ -145,10 +144,9 @@ test.describe('products', () => {
     page,
     api,
   }) => {
-    const server = installServerSku(api);
     await signInWithTotp(page, USERS.owner, '/products/new');
     await expect(page.getByRole('heading', { name: 'New product', level: 1 })).toBeVisible();
-    // The SKU is never typed (owner, 2026-11-17; CR-034): no field, and words saying who gives it.
+    // The SKU is never typed (owner, 2026-11-17; contract 2.0.0): no field, and words saying who gives it.
     await expect(page.getByRole('textbox', { name: /^sku/i })).toHaveCount(0);
     await expect(page.locator('[data-slot="sku-given"]')).toContainText(
       'Given by the server when the product is saved',
@@ -168,12 +166,18 @@ test.describe('products', () => {
     }
     await expectNoAxeViolations(page);
     await expectNoHorizontalScroll(page);
+    const sent = page.waitForRequest(
+      (request) =>
+        request.method() === 'POST' && /\/products$/.test(new URL(request.url()).pathname),
+    );
     await page.getByRole('button', { name: 'Create product' }).click();
+    const body = (await sent).postDataJSON() as Record<string, unknown>;
     // Prism answers with its example product, so the new screen is that one, its SKU shown read-only.
     await expect(page.getByRole('heading', { name: 'Stock-keeping facts' })).toBeVisible();
-    expect(server.sent).toHaveLength(1);
-    expect(server.sent[0]).not.toHaveProperty('sku');
-    expect(server.sent[0]).toMatchObject({ name: 'Duck' });
+    expect(body).not.toHaveProperty('sku');
+    expect(body).not.toHaveProperty('barcode');
+    expect(body).toMatchObject({ name: 'Duck' });
+    expect(api.log.filter((e) => e.operationId === 'createProduct')).toHaveLength(1);
   });
 });
 

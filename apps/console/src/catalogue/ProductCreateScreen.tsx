@@ -6,7 +6,6 @@ import { Link, useNavigate } from 'react-router';
 import { z } from 'zod';
 import type { components, OperationInput } from '@hakorem/api-client';
 import {
-  Alert,
   Card,
   CardBody,
   ErrorState,
@@ -26,7 +25,6 @@ import { LeaveGuardDialog, useLeaveGuard } from '../lib/LeaveGuard';
 import { bothQueries, uniqueById, useIntentKey } from '../lib/queries';
 import { useStateLabels } from '../lib/states';
 import { useWriteFailure, WriteFailureView, type WriteFailure } from '../lib/writeFailure';
-import { productCreateBody, serverGivesSku } from '../requested/serverSku';
 import { ONLINE_MODES } from './ProductScreen';
 
 type StockPolicy = components['schemas']['StockPolicy'];
@@ -124,7 +122,6 @@ function CreateForm({
         saleUom: z.string().min(1, required),
         onlineMode: z.enum(['HIDDEN', 'LISTED', 'REQUEST_TO_BUY']),
         nominalPackKg: z.string().nullable(),
-        barcode: z.string().trim(),
         description: z.string().trim(),
       }),
     [required],
@@ -140,7 +137,6 @@ function CreateForm({
       saleUom: '',
       onlineMode: 'HIDDEN',
       nominalPackKg: null,
-      barcode: '',
       description: '',
     },
   });
@@ -196,8 +192,8 @@ function CreateForm({
           className="grid gap-4"
           onSubmit={async (values) => {
             setFailure(null);
-            // The server gives the SKU (owner, 2026-11-17; CR-034): it is never typed.
-            const body: OperationInput<'createProduct'>['body'] = productCreateBody({
+            // The server gives the SKU (owner, 2026-11-17; contract 2.0.0): it is never typed.
+            const body: OperationInput<'createProduct'>['body'] = {
               name: values.name,
               categoryId: values.categoryId,
               stockPolicy: values.stockPolicy,
@@ -206,9 +202,8 @@ function CreateForm({
               onlineMode: values.onlineMode,
               ...(values.speciesId === NO_SPECIES ? {} : { speciesId: values.speciesId }),
               ...(values.nominalPackKg === null ? {} : { nominalPackKg: values.nominalPackKg }),
-              ...(values.barcode === '' ? {} : { barcode: values.barcode }),
               ...(values.description === '' ? {} : { description: values.description }),
-            });
+            };
             const created = await create.mutateAsync({ body }, { idempotencyKey: keyFor(body) });
             await navigate(`/products/${created.id}`);
           }}
@@ -220,11 +215,6 @@ function CreateForm({
             <dt className="text-control-sm font-semibold">{t('create.fields.sku')}</dt>
             <dd className="text-control-sm text-fg-muted">{t('create.skuGiven')}</dd>
           </dl>
-          {serverGivesSku() ? null : (
-            <Alert severity="info" title={t('create.skuWaits')}>
-              {t('create.skuWaitsBody')}
-            </Alert>
-          )}
           <FormField name="name" label={t('create.fields.name')} required requiredLabel={required}>
             {(field) => <Input {...field} autoComplete="off" />}
           </FormField>
@@ -264,14 +254,11 @@ function CreateForm({
             ONLINE_MODES.map((m) => ({ value: m, label: t(`online.${m}`) })),
             { hint: t('product.onlineHint') },
           )}
-          <FormField name="barcode" label={t('product.fields.barcode')}>
-            {(field) => <Input {...field} autoComplete="off" inputMode="numeric" />}
-          </FormField>
           <FormField name="description" label={t('product.fields.description')}>
             {(field) => <Textarea {...field} rows={3} />}
           </FormField>
           <div>
-            <FormSubmitButton loadingLabel={t('create.creating')} disabled={!serverGivesSku()}>
+            <FormSubmitButton loadingLabel={t('create.creating')}>
               {t('create.submit')}
             </FormSubmitButton>
           </div>

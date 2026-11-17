@@ -3,12 +3,9 @@ import { useState, type FormEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { components } from '@hakorem/api-client';
 import {
-  Alert,
-  Barcode,
   Button,
   Field,
   Input,
-  isCode128B,
   QueryBoundary,
   Skeleton,
   Tabs,
@@ -25,10 +22,9 @@ import { useStateLabels } from '../lib/states';
 type Product = components['schemas']['Product'];
 type StockUnit = components['schemas']['StockUnit'];
 
-/** One label to print: what it says, the code its barcode carries, and how many copies. */
+/** One label to print: what it says, the code it is known by (SKU, batch or tag), and how many copies. */
 interface LabelItem {
   key: string;
-  kind: 'product' | 'lot';
   title: string;
   code: string;
   lines: { label: string; value: ReactNode }[];
@@ -38,11 +34,10 @@ interface LabelItem {
 const MAX_COPIES = 50;
 
 /**
- * Labels for products and lots, with Code 128 barcodes the POS scanner and the cold room read (FR-PRC
- * label and barcode generation; F5b). Until CR-016 gives a server-rendered label, the labels are drawn
- * here from the API's own fields (Product.barcode or SKU, StockUnit.identifier) and printed with the
- * browser; nothing is written to the API. Pack labels from a processing order stay with F6's
- * `printPackLabels`.
+ * Labels for products and lots, printed as text (F5b). From contract 2.0.0 there is no product barcode and
+ * a label prints its text only (owner, 2026-11-17): a product's name and SKU, a lot's or animal's batch or
+ * tag, with the API's own fields, printed with the browser; nothing is written to the API. Pack labels from
+ * a processing order stay with F6's `printPackLabels`, barcode included.
  */
 export function LabelsScreen() {
   const { t } = useTranslation(['labels', 'common']);
@@ -167,7 +162,7 @@ export function LabelsScreen() {
           {sheet.length === 0 ? (
             <p className="text-sm text-fg-muted print:hidden">{t('sheet.none')}</p>
           ) : (
-            // Labels are always drawn light, dark bars on a light ground, so they scan on screen and on paper.
+            // Labels are always drawn light, dark text on a light ground, on screen as on paper.
             <ul
               data-theme="light"
               aria-label={t('sheet.title')}
@@ -179,14 +174,12 @@ export function LabelsScreen() {
                   className="grid break-inside-avoid justify-items-center gap-1 rounded-md border border-border-strong bg-surface p-3 text-center text-fg"
                 >
                   <span className="font-semibold break-words">{label.title}</span>
-                  {isCode128B(label.code) ? (
-                    <Barcode
-                      value={label.code}
-                      label={label.kind === 'lot' ? t('barcode.lot') : t('barcode.product')}
-                    />
-                  ) : (
-                    <Alert severity="warning" title={t('barcode.cannot', { code: label.code })} />
-                  )}
+                  <span
+                    data-slot="label-code"
+                    className="font-mono text-lg font-semibold break-all"
+                  >
+                    {label.code}
+                  </span>
                   <dl className="grid w-full grid-cols-[auto_1fr] gap-x-2 text-start text-xs">
                     {label.lines.map((line) => (
                       <div key={line.label} className="contents">
@@ -276,14 +269,9 @@ function ProductPicker({ onAdd }: { onAdd: (item: Omit<LabelItem, 'copies'>) => 
   });
   const item = (product: Product): Omit<LabelItem, 'copies'> => ({
     key: `product-${product.id}`,
-    kind: 'product',
     title: product.name,
-    // The product's own barcode when it has one, otherwise its SKU: both are the API's fields.
-    code: product.barcode ?? product.sku,
-    lines: [
-      { label: t('fields.sku'), value: product.sku },
-      { label: t('fields.soldBy'), value: product.saleUom },
-    ],
+    code: product.sku,
+    lines: [{ label: t('fields.soldBy'), value: product.saleUom }],
   });
   return (
     <div className="grid gap-2 pt-3">
@@ -300,7 +288,7 @@ function ProductPicker({ onAdd }: { onAdd: (item: Omit<LabelItem, 'copies'>) => 
               <ResultRow
                 key={product.id}
                 title={product.name}
-                code={product.barcode ?? product.sku}
+                code={product.sku}
                 addLabel={t('add', { name: product.name })}
                 addText={t('addShort')}
                 onAdd={() => onAdd(item(product))}
@@ -326,7 +314,6 @@ function LotPicker({ onAdd }: { onAdd: (item: Omit<LabelItem, 'copies'>) => void
   });
   const item = (lot: StockUnit): Omit<LabelItem, 'copies'> => ({
     key: `lot-${lot.id}`,
-    kind: 'lot',
     title: lot.product.name,
     code: lot.identifier,
     lines: [

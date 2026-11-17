@@ -36,7 +36,7 @@ const CASES: Case[] = [
   {
     screen: 'products',
     path: '/products',
-    ready: 'LIV-GOAT',
+    ready: 'LIV-0004',
     loading: 'Loading products',
     empty: 'No products match',
     emptyBy: 'noRows',

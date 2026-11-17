@@ -31,6 +31,7 @@ import {
   type OpenDialog,
 } from './forms';
 import { AnimalStatusBadge, EVENT_LOOK, SellableBadge } from './presentation';
+import { ReadableId } from '../lib/ReadableId';
 
 type AnimalEvent = components['schemas']['AnimalEvent'];
 
@@ -359,7 +360,12 @@ function Facts({ animal }: { animal: Animal }) {
       t('animal.acquired'),
       <span key="acquired">
         {animal.acquiredOn}
-        {animal.supplier === null ? null : ` · ${animal.supplier.name}`}
+        {animal.supplier === null ? null : (
+          <>
+            {' · '}
+            {animal.supplier.name} <ReadableId value={animal.supplier.publicId} />
+          </>
+        )}
       </span>,
     ],
     [t('animal.born'), animal.dateOfBirth ?? t('animal.unknown')],

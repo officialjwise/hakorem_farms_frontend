@@ -156,8 +156,6 @@ export function Receipt({
         </dd>
       </dl>
       <footer className="grid gap-1 text-center text-xs">
-        <p>{t('receipt.saleId')}</p>
-        <p className="break-all">{receipt.saleId}</p>
         <p>{t('receipt.thanks')}</p>
       </footer>
     </article>

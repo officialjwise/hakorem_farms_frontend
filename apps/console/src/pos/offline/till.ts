@@ -12,8 +12,22 @@ import { useSyncExternalStore } from 'react';
 import type { ApiClient, components } from '@hakorem/api-client';
 import { newRecordId } from '../../lib/clientId';
 import { requestedOn } from '../../requested/switch';
-import { listTillPinVerifiers, type PinApproval, type PinVerifier } from '../../requested/tillPin';
-import { NO_ATTEMPTS, afterFailure, lockoutRemainingMs, pinMatches, pinShapeOk } from '../pin/pin';
+import {
+  listTillPinVerifiers,
+  reportTillPinEvents,
+  type PinApproval,
+  type PinVerifier,
+  type TillPinEvent,
+  type TillPinVerifiers,
+} from '../../requested/tillPin';
+import {
+  NO_ATTEMPTS,
+  afterFailure,
+  effectivePolicy,
+  pinMatches,
+  pinShapeOk,
+  verifierStrength,
+} from '../pin/pin';
 import type { CartLine, OtherTender } from './cart';
 import { buildSale } from './sale';
 import { indexedDbStore, memoryStore, type TillStore } from './store';
@@ -24,6 +38,7 @@ import type {
   DeviceRecord,
   EntryFailure,
   HeldLocal,
+  LocalAuth,
   PinApprovalRecord,
   SaleEntry,
   ShiftOpenEntry,
@@ -54,12 +69,17 @@ export interface TillState {
 
 const PROBE_MS = 30_000;
 
-/** How a PIN fared (CR-032). A wrong one says how many tries are left; a lockout says until when. */
+/**
+ * How a PIN fared (CR-032). A wrong one says how many tries are left. A lockout has no end time: it ends
+ * when the server says so or a supervisor signs the cashier out. A weak verifier was refused, so that
+ * person's PIN is not checked on this till (owner, 2026-11-17).
+ */
 export type PinOutcome =
   | { kind: 'ok'; verifier: PinVerifier; record: PinApprovalRecord | null }
   | { kind: 'wrong'; attemptsLeft: number }
-  | { kind: 'locked-out'; until: string }
+  | { kind: 'locked-out' }
   | { kind: 'not-a-pin' }
+  | { kind: 'weak-verifier' }
   | { kind: 'no-verifier' };
 
 export interface TillDeps {
@@ -299,15 +319,77 @@ export class Till {
    * (CR-032, `local_auth`). A refusal keeps what the till already holds; the lock screen says when there
    * is no verifier to check a PIN against.
    */
-  private async refreshPins(registerId: string): Promise<void> {
-    if (!requestedOn('CR-032') || this.callRequested === null) return;
+  private async refreshPins(registerId: string): Promise<boolean> {
+    if (!requestedOn('CR-032') || this.callRequested === null) return false;
     const callRequested = this.callRequested;
+    const { meta } = this.snapshotOrThrow();
+    const sending = meta.pinEvents;
     try {
-      const issued = await listTillPinVerifiers({ callRequested }, registerId);
-      await this.store.saveLocalAuth(issued);
+      // What the server has not been told goes first, and its answer is the verifiers as they now stand.
+      const issued =
+        sending.length > 0
+          ? await reportTillPinEvents(
+              { callRequested },
+              registerId,
+              { events: sending },
+              newRecordId(),
+            )
+          : await listTillPinVerifiers({ callRequested }, registerId);
+      await this.adoptVerifiers(issued, new Set(sending.map((event) => event.id)));
+      return true;
     } catch {
-      // Kept as it was: an earlier verifier still checks a PIN, and none means no PIN on this till.
+      // Kept as it was: an earlier verifier still checks a PIN, none means no PIN on this till, and the
+      // events wait for the next time the till reaches the server.
+      return false;
     }
+  }
+
+  /**
+   * Keeps what the server sent, on the owner's terms (2026-11-17): a verifier below the floor is refused
+   * and named, never stored; at most five tries; and a person's lockout follows the server's word once the
+   * server has been told of it, so it ends only there (or by a supervisor's sign-out), never with time.
+   */
+  private async adoptVerifiers(issued: TillPinVerifiers, reported: ReadonlySet<string>) {
+    const strong = issued.verifiers.filter((v) => verifierStrength(v) === 'strong');
+    const local: LocalAuth = {
+      ...issued,
+      policy: effectivePolicy(issued.policy),
+      verifiers: strong,
+      refused: issued.verifiers
+        .filter((v) => verifierStrength(v) === 'weak')
+        .map(({ principalId, displayName }) => ({ principalId, displayName })),
+    };
+    await this.store.saveLocalAuth(local);
+    // Read again: a PIN checked while the server answered may have added an event since.
+    await this.reload();
+    const { meta } = this.snapshotOrThrow();
+    const pinEvents = meta.pinEvents.filter((event) => !reported.has(event.id));
+    const pinAttempts = { ...meta.pinAttempts };
+    for (const verifier of issued.verifiers) {
+      const waiting = pinEvents.some((event) => event.principalId === verifier.principalId);
+      if (waiting) continue;
+      const current = pinAttempts[verifier.principalId] ?? NO_ATTEMPTS;
+      if (verifier.lockedOut) pinAttempts[verifier.principalId] = { ...current, lockedOut: true };
+      else if (current.lockedOut) pinAttempts[verifier.principalId] = NO_ATTEMPTS;
+    }
+    await this.store.saveMeta({ ...meta, pinEvents, pinAttempts });
+  }
+
+  /**
+   * Tells the server what it has not heard about the till's PINs and takes its answer, when it can be
+   * reached (a staff session and the network). False when it could not be reached.
+   */
+  async reachServer(): Promise<boolean> {
+    const { device } = this.snapshotOrThrow();
+    if (device === null) return false;
+    const reached = await this.refreshPins(device.registerId);
+    await this.reload();
+    return reached;
+  }
+
+  /** A lockout or a supervisor's sign-out, made on the till with its own id and time, for the server. */
+  private pinEvent(event: Omit<TillPinEvent, 'id' | 'occurredAt'>): TillPinEvent {
+    return { ...event, id: newRecordId(), occurredAt: this.now().toISOString() };
   }
 
   /** The verifier of the person, if the till holds one. */
@@ -317,35 +399,60 @@ export class Till {
     );
   }
 
+  /** Whether the server sent this person's verifier below the floor, so the till refused it. */
+  refusedVerifier(principalId: string): boolean {
+    return (
+      this.state.snapshot?.localAuth?.refused.some((r) => r.principalId === principalId) ?? false
+    );
+  }
+
   /**
    * Checks one person's PIN on this till, counting a wrong one against them and locking them out at the
    * policy's limit. With `approval`, the person must hold it, and the record of what approved it is made.
    */
   async checkPin(principalId: string, pin: string, approval?: PinApproval): Promise<PinOutcome> {
     const { meta, localAuth } = this.snapshotOrThrow();
+    if (this.refusedVerifier(principalId)) return { kind: 'weak-verifier' };
     const verifier = this.verifierFor(principalId);
     if (localAuth === null || verifier === null) return { kind: 'no-verifier' };
+    // The floor again, on what is stored: a verifier kept by an earlier build is checked the same way.
+    if (verifierStrength(verifier) === 'weak') return { kind: 'weak-verifier' };
     if (approval !== undefined && !verifier.approves.includes(approval)) {
       return { kind: 'no-verifier' };
     }
     const now = this.now();
+    const policy = effectivePolicy(localAuth.policy);
     const attempts = meta.pinAttempts[principalId] ?? NO_ATTEMPTS;
-    if (lockoutRemainingMs(attempts, now) > 0 && attempts.lockedUntil !== null) {
-      return { kind: 'locked-out', until: attempts.lockedUntil };
-    }
-    if (!pinShapeOk(pin, localAuth.policy)) return { kind: 'not-a-pin' };
+    if (attempts.lockedOut) return { kind: 'locked-out' };
+    if (!pinShapeOk(pin, policy)) return { kind: 'not-a-pin' };
     const matches = await pinMatches(pin, verifier);
     const { meta: current } = this.snapshotOrThrow();
     if (!matches) {
-      const next = afterFailure(attempts, localAuth.policy, now);
+      const next = afterFailure(attempts, policy);
+      const lockedNow = next.lockedOut && !attempts.lockedOut;
       await this.store.saveMeta({
         ...current,
         pinAttempts: { ...current.pinAttempts, [principalId]: next },
+        pinEvents: lockedNow
+          ? [
+              ...current.pinEvents,
+              this.pinEvent({
+                kind: 'LOCKED_OUT',
+                principalId,
+                verifierVersion: verifier.version,
+                supervisorId: null,
+                supervisorVerifierVersion: null,
+              }),
+            ]
+          : current.pinEvents,
       });
       await this.reload();
-      return next.lockedUntil !== null
-        ? { kind: 'locked-out', until: next.lockedUntil }
-        : { kind: 'wrong', attemptsLeft: localAuth.policy.maxAttempts - next.failures };
+      if (next.lockedOut) {
+        // Told at once where the server can be reached; otherwise it waits on the device.
+        void this.reachServer().catch(() => undefined);
+        return { kind: 'locked-out' };
+      }
+      return { kind: 'wrong', attemptsLeft: policy.maxAttempts - next.failures };
     }
     await this.store.saveMeta({
       ...current,
@@ -396,12 +503,63 @@ export class Till {
     return outcome;
   }
 
-  /** Forgets the PIN verifiers and the lock: at shift close and at sign-out (OFFLINE_SYNC section 3). */
+  /**
+   * The supervisors who may sign this locked till's cashier out with their PIN: never the cashier.
+   */
+  signOutSupervisors(): PinVerifier[] {
+    const { shift, localAuth } = this.state.snapshot ?? { shift: null, localAuth: null };
+    if (shift === null || localAuth === null) return [];
+    return localAuth.verifiers.filter(
+      (v) => v.approves.includes('SUPERVISOR_SIGN_OUT') && v.principalId !== shift.cashierId,
+    );
+  }
+
+  /**
+   * Signs the locked till's cashier out on a supervisor's PIN, checked the same way as any PIN, and does
+   * nothing else: it never opens the till or sells as them (owner, 2026-11-17). It ends the cashier's
+   * lockout and is recorded with who did it and when, then sent to the server where it can be reached.
+   * The caller then signs the session out. With no right PIN the cashier stays locked.
+   */
+  async supervisorSignOut(supervisorId: string, pin: string): Promise<PinOutcome> {
+    const { shift, meta } = this.snapshotOrThrow();
+    if (shift === null || !meta.locked) return { kind: 'no-verifier' };
+    if (!this.signOutSupervisors().some((v) => v.principalId === supervisorId)) {
+      return this.refusedVerifier(supervisorId)
+        ? { kind: 'weak-verifier' }
+        : { kind: 'no-verifier' };
+    }
+    const outcome = await this.checkPin(supervisorId, pin, 'SUPERVISOR_SIGN_OUT');
+    if (outcome.kind !== 'ok') return outcome;
+    const { meta: current } = this.snapshotOrThrow();
+    await this.store.saveMeta({
+      ...current,
+      pinAttempts: { ...current.pinAttempts, [shift.cashierId]: NO_ATTEMPTS },
+      pinEvents: [
+        ...current.pinEvents,
+        this.pinEvent({
+          kind: 'SUPERVISOR_SIGN_OUT',
+          principalId: shift.cashierId,
+          verifierVersion: this.verifierFor(shift.cashierId)?.version ?? null,
+          supervisorId,
+          supervisorVerifierVersion: outcome.verifier.version,
+        }),
+      ],
+    });
+    await this.reload();
+    // Sent while the session is still here; kept on the device if the server cannot be reached.
+    await this.reachServer().catch(() => false);
+    return outcome;
+  }
+
+  /**
+   * Forgets the PIN verifiers and the lock: at shift close and at sign-out (OFFLINE_SYNC section 3). The
+   * tries, the lockouts and the events the server has not heard stay on the till (owner, 2026-11-17).
+   */
   async forgetPins(): Promise<void> {
     const snapshot = this.state.snapshot;
     if (snapshot === null) return;
     await this.store.saveLocalAuth(null);
-    await this.store.saveMeta({ ...snapshot.meta, pinAttempts: {}, locked: false });
+    await this.store.saveMeta({ ...snapshot.meta, locked: false });
     await this.reload();
   }
 
@@ -534,7 +692,7 @@ export class Till {
       ...meta,
       counterGaps: [],
       lastShiftSeq: shift?.shiftSeq ?? meta.lastShiftSeq,
-      pinAttempts: {},
+      // The tries, lockouts and unsent PIN events stay: a lockout does not end with the shift.
       locked: false,
     });
     await this.reload();

@@ -46,7 +46,7 @@ export function lineProblems(lines: DraftLine[], kind: LineKind): Record<string,
   return problems;
 }
 
-/** A product found by name, SKU or barcode as the person types (at least two characters). */
+/** A product found by name or SKU as the person types (at least two characters). */
 export function ProductPicker({
   value,
   onChange,

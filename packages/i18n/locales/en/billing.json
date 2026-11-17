@@ -84,7 +84,9 @@
       "reprints": "Reprints",
       "reprintCount_zero": "Never reprinted",
       "reprintCount_one": "Reprinted once",
-      "reprintCount_other": "Reprinted {{count}} times"
+      "reprintCount_other": "Reprinted {{count}} times",
+      "noNumber": "No number yet",
+      "unnumbered": "unnumbered"
     },
     "lines": {
       "title": "Lines",
@@ -151,7 +153,6 @@
       "draft": "A draft is archived when it is issued.",
       "hash": "Fingerprint (SHA-256)",
       "hashHint": "The archived file's fingerprint, set once. A reprint is checked against it before it is printed.",
-      "template": "Template version",
       "revision": "Revision",
       "archivedAt": "Archived",
       "open": "Open the archived original",
@@ -348,7 +349,7 @@
       "title": "Draw up a statement",
       "intro": "Choose the customer and the period. A preview is a draft you can read first; issuing numbers and archives it.",
       "customer": "Customer",
-      "customerSearch": "Type at least two letters of the name, or a phone number",
+      "customerSearch": "Type at least two letters of the name, a phone number, or the public ID (cus_…)",
       "customerMissing": "Choose a customer.",
       "searching": "Searching…",
       "customers": "Customers",

@@ -6,7 +6,7 @@ import { installTillServer, openTillShift, type SentSale } from '../../support/t
 
 /**
  * F10, against CR-032 and CR-033 as requested (ADR 0046): the till PIN (lock and open offline, the
- * lockout, a supervisor's approval of mobile money offline, a cash drop's witness) and the receipt (by SMS
+ * lockout with no timer and the supervisor's sign-out, the floor on the hash, a supervisor's approval of mobile money offline, a cash drop's witness) and the receipt (by SMS
  * and link, and on a Bluetooth printer only where the browser has one). At 360 px, production build.
  */
 
@@ -38,7 +38,8 @@ test('the till locks and opens on the cashier’s PIN with the network off; the 
   await expectNoAxeViolations(page);
   await expectNoHorizontalScroll(page);
 
-  const pin = page.getByLabel(/^PIN/);
+  // The first PIN field opens the till; the second is the supervisor's sign-out.
+  const pin = page.getByLabel(/^PIN/).first();
   await pin.fill(PEOPLE.manager.pin);
   await page.getByRole('button', { name: 'Open the till' }).click();
   await expect(
@@ -54,15 +55,18 @@ test('the till locks and opens on the cashier’s PIN with the network off; the 
   expect(api.log.length).toBe(requestsBefore);
 });
 
-test('three wrong PINs lock the cashier out, and even the right one waits for the time', async ({
+test('three wrong PINs lock the cashier out with no timer, and only a supervisor’s PIN signs them out', async ({
   page,
   api,
 }) => {
   installTillServer(api, serverTotal);
-  installTillPins(api);
+  const server = installTillPins(api);
+  await api.installClock(page, new Date());
   await openTillShift(page);
   await lockedTill(page);
-  const pin = page.getByLabel(/^PIN/);
+  // No plain sign-out on a locked till (owner, 2026-11-17).
+  await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toHaveCount(0);
+  const pin = page.getByLabel(/^PIN$/).first();
   const open = page.getByRole('button', { name: 'Open the till' });
   const after = [
     'Wrong PIN. 2 more wrong tries lock Adwoa Darko out on this till.',
@@ -75,14 +79,62 @@ test('three wrong PINs lock the cashier out, and even the right one waits for th
   }
   await pin.fill('3333');
   await open.click();
-  await expect(page.getByText(/^Adwoa Darko is locked out on this till until /)).toBeVisible();
-  await pin.fill(PEOPLE.cashier.pin);
-  await page.getByRole('button', { name: 'Open the till' }).click();
-  await expect(page.getByText(/^Adwoa Darko is locked out on this till until /)).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'This till is locked' })).toBeVisible();
-  // A reload keeps it locked: the lock and the lockout are on the device.
+  const lockedOut = page.locator('[data-slot="locked-out"]');
+  await expect(lockedOut).toContainText('It does not end with time');
+  // The PIN can no longer be tried, and the server was told at once.
+  await expect(open).toHaveCount(0);
+  await expect.poll(() => server.reports.flat().map((e) => e.kind)).toEqual(['LOCKED_OUT']);
+  // Past the five minutes the old timed lockout lasted, the device clock ends nothing; nor does a reload.
+  await api.fastForward(page, 10 * 60 * 1000);
   await page.reload();
   await expect(page.getByRole('heading', { name: 'This till is locked' })).toBeVisible();
+  await expect(page.locator('[data-slot="locked-out"]')).toBeVisible();
+  // The server still holds it.
+  await page.getByRole('button', { name: 'Check with the server' }).click();
+  await expect(
+    page.getByText('The server still holds the lockout.', { exact: false }),
+  ).toBeVisible();
+  await expectNoAxeViolations(page);
+  await expectNoHorizontalScroll(page);
+
+  const signOut = page.getByRole('region', { name: 'Sign out the cashier' });
+  await expect(signOut.getByRole('combobox', { name: 'Supervisor' })).toHaveText(
+    PEOPLE.manager.name,
+  );
+  await signOut.getByLabel(/^PIN$/).fill('000000');
+  await signOut.getByRole('button', { name: 'Sign Adwoa Darko out' }).click();
+  await expect(
+    signOut.getByText(/^Wrong PIN\. 2 more wrong tries lock Kwabena Owusu out/),
+  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'This till is locked' })).toBeVisible();
+  await signOut.getByLabel(/^PIN$/).fill(PEOPLE.manager.pin);
+  await signOut.getByRole('button', { name: 'Sign Adwoa Darko out' }).click();
+  await expect(page).toHaveURL(/\/login/);
+  // Recorded with who did it and when, and sent while the session was still there.
+  const signedOut = server.reports.flat().find((e) => e.kind === 'SUPERVISOR_SIGN_OUT');
+  expect(signedOut).toMatchObject({
+    principalId: PEOPLE.cashier.id,
+    verifierVersion: 2,
+    supervisorId: PEOPLE.manager.id,
+    supervisorVerifierVersion: 7,
+  });
+  expect(signedOut?.occurredAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  expect(server.lockedOut.has(PEOPLE.cashier.id)).toBe(false);
+});
+
+test('a PIN check weaker than the floor is refused and said so; that cashier cannot lock the till', async ({
+  page,
+  api,
+}) => {
+  installTillServer(api, serverTotal);
+  installTillPins(api, { weakCashier: true });
+  await openTillShift(page);
+  await expect(page.locator('[data-slot="pin-refused"]')).toContainText(
+    'The server sent PIN checks this till refuses as weaker than it accepts: Adwoa Darko.',
+  );
+  await expect(page.getByRole('button', { name: 'Lock the till' })).toHaveCount(0);
+  await expectNoAxeViolations(page);
+  await expectNoHorizontalScroll(page);
 });
 
 test('the till locks itself after two minutes untouched', async ({ page, api }) => {

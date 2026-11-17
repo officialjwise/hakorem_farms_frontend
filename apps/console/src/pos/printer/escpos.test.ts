@@ -16,7 +16,6 @@ const WORDS: PrintWords = {
   unverified: 'Mobile money, not yet verified',
   reference: 'Ref.',
   link: 'Your receipt online:',
-  saleId: 'Sale id',
   thanks: 'Thank you',
 };
 
@@ -87,8 +86,9 @@ describe('the 58 mm receipt (ADR 0045)', () => {
       'Change                 GHS 92.50',
       '--------------------------------',
     ]);
-    // No link from this server: no link lines.
-    expect(footer).toEqual(['Sale id', '019a7b40-0000-7000-8000-00000000', '0001', 'Thank you']);
+    // No link from this server: no link lines. No id is printed: the sale reference is above (owner, 2026-11-17).
+    expect(footer).toEqual(['Thank you']);
+    expect([...header, ...body, ...footer].join('\n')).not.toContain(RECEIPT.saleId);
     for (const line of [...header, ...body, ...footer])
       expect(line.length).toBeLessThanOrEqual(COLUMNS);
   });

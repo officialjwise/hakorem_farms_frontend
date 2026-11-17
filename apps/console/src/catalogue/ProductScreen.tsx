@@ -34,6 +34,7 @@ import { ReasonDialog } from '../lib/ReasonDialog';
 import { useStateLabels } from '../lib/states';
 import { useWriteFailure, WriteFailureView, type WriteFailure } from '../lib/writeFailure';
 import { ProductStatusBadge } from './presentation';
+import { ReadableId } from '../lib/ReadableId';
 
 type Product = components['schemas']['Product'];
 type OnlineMode = components['schemas']['OnlineMode'];
@@ -93,7 +94,7 @@ function ProductDetail({
   const days = (value: number | null) =>
     value === null ? NOT_APPLICABLE : t('product.days', { count: value });
   const facts: [string, React.ReactNode][] = [
-    [t('product.sku'), <code key="sku">{product.sku}</code>],
+    [t('product.sku'), <ReadableId key="sku" value={product.sku} />],
     [t('product.category'), product.category.name],
     [t('product.policy'), t(`policy.${product.stockPolicy}`)],
     [t('product.tracking'), t(`tracking.${product.tracking}`)],
@@ -116,7 +117,6 @@ function ProductDetail({
     ],
     [t('product.shelfLife'), days(product.shelfLifeDays)],
     [t('product.withdrawal'), days(product.withdrawalDays)],
-    [t('product.barcode'), product.barcode ?? NOT_APPLICABLE],
     [t('product.online'), t(`online.${product.onlineMode}`)],
     [
       t('product.trading'),
@@ -174,7 +174,6 @@ function ProductForm({ product, onReload }: { product: Product; onReload: () => 
       z.object({
         name: z.string().trim().min(1, t('common:field.required')),
         description: z.string().trim(),
-        barcode: z.string().trim(),
         status: z.enum(STATUSES),
         onlineMode: z.enum(['HIDDEN', 'LISTED', 'REQUEST_TO_BUY']),
         isSellable: z.boolean(),
@@ -185,7 +184,6 @@ function ProductForm({ product, onReload }: { product: Product; onReload: () => 
   const defaults = {
     name: product.name,
     description: product.description ?? '',
-    barcode: product.barcode ?? '',
     status: product.status,
     onlineMode: product.onlineMode,
     isSellable: product.isSellable,
@@ -226,8 +224,6 @@ function ProductForm({ product, onReload }: { product: Product; onReload: () => 
             if (values.name !== defaults.name) body.name = values.name;
             if (values.description !== defaults.description && values.description !== '')
               body.description = values.description;
-            if (values.barcode !== defaults.barcode && values.barcode !== '')
-              body.barcode = values.barcode;
             if (values.status !== defaults.status) body.status = values.status;
             if (values.onlineMode !== defaults.onlineMode) body.onlineMode = values.onlineMode;
             if (values.isSellable !== defaults.isSellable) body.isSellable = values.isSellable;
@@ -254,9 +250,6 @@ function ProductForm({ product, onReload }: { product: Product; onReload: () => 
           </FormField>
           <FormField name="description" label={t('product.fields.description')}>
             {(field) => <Textarea {...field} rows={3} />}
-          </FormField>
-          <FormField name="barcode" label={t('product.fields.barcode')}>
-            {(field) => <Input {...field} autoComplete="off" inputMode="numeric" />}
           </FormField>
           <FormField name="status" label={t('product.fields.status')}>
             {(field) => (

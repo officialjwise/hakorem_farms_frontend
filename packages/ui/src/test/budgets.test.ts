@@ -43,6 +43,7 @@ const INTERACTIVE = [
   'alert-row',
   'confirm-changes',
   'page-header',
+  'copy-id',
 ] as const;
 
 /** Everything else is display only and needs no key handling. */

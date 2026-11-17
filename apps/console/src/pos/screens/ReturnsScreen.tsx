@@ -226,6 +226,9 @@ function ReturnForm({ order, receiptNo }: { order: SalesOrder; receiptNo: string
                 {line.stockUnit !== null ? ` ${line.stockUnit.identifier}` : ''}
               </p>
               <p className="text-sm text-fg-muted">
+                <code>{line.product.sku}</code>
+              </p>
+              <p className="text-sm text-fg-muted">
                 {t('returns.sold', { quantity: quantityText(sold(line), line.uom) })}
                 {line.fulfilledWeightKg !== null ? (
                   <>

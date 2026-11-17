@@ -295,7 +295,12 @@ function Inputs({ order }: { order: Order }) {
                     {input.stockUnit.identifier}
                   </Link>
                 </TableRowHeader>
-                <TableCell label={t('inputs.columns.product')}>{input.product.name}</TableCell>
+                <TableCell label={t('inputs.columns.product')}>
+                  <span className="grid">
+                    <span>{input.product.name}</span>
+                    <code className="text-control-sm text-fg-muted">{input.product.sku}</code>
+                  </span>
+                </TableCell>
                 <TableCell numeric label={t('inputs.columns.weight')}>
                   <WeightDisplay kilograms={input.weightKg} />
                 </TableCell>
@@ -352,6 +357,9 @@ function Outputs({ order }: { order: Order }) {
                   <TableRowHeader>
                     <span className="grid">
                       <span>{output.product.name}</span>
+                      <code className="text-control-sm font-normal text-fg-muted">
+                        {output.product.sku}
+                      </code>
                       <span className="text-control-sm font-normal text-fg-muted">
                         {t('outputs.lineNo', { number: output.lineNo })}
                       </span>

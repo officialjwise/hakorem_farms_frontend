@@ -176,6 +176,7 @@ export function ReceiveTransfer({ transfer }: { transfer: Transfer }) {
                 <li key={line.id} className="grid gap-2 rounded-md border border-border p-3">
                   <p className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold">{line.product.name}</span>
+                    <code className="text-control-sm text-fg-muted">{line.product.sku}</code>
                     <span>
                       {t('receive.sent')} {amount(sent, line)}
                     </span>

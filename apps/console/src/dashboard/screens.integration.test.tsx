@@ -228,7 +228,7 @@ const LISTS: ListCase[] = [
   {
     screen: 'labels',
     path: '/labels',
-    ready: 'LIV-GOAT',
+    ready: 'LIV-0004',
     loading: 'Loading products',
     empty: 'No products match',
     error: 'Products could not be loaded',

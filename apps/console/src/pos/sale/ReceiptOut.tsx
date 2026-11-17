@@ -94,7 +94,6 @@ function usePrintWords(entry: SaleEntry): PrintWords {
     unverified: t('receipt.unverified'),
     reference: t('receipt.reference'),
     link: t('receipt.link'),
-    saleId: t('receipt.saleId'),
     thanks: t('receipt.thanks'),
   };
 }
