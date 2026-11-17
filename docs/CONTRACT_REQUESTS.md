@@ -26,20 +26,21 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-020 | 2026-11-15 | Open                     |
 | CR-021 | 2026-11-15 | Answered (1.26.0)        |
 | CR-022 | 2026-11-15 | Closed                   |
-| CR-023 | 2026-11-15 | Answered (1.53.0)        |
+| CR-023 | 2026-11-15 | Answered (1.53.0), built |
 | CR-024 | 2026-11-15 | Closed                   |
 | CR-025 | 2026-11-15 | Answered (1.31.0), built |
 | CR-026 | 2026-11-15 | Answered (1.40.0)        |
 | CR-027 | 2026-11-16 | Answered (1.53.0)        |
 | CR-028 | 2026-11-16 | Answered (1.54.0)        |
-| CR-029 | 2026-11-16 | Answered (1.46.0)        |
+| CR-029 | 2026-11-16 | Answered (1.46.0), built |
 | CR-030 | 2026-11-16 | Answered (1.43.0)        |
 | CR-031 | 2026-11-16 | Planned shape (1.45.0)   |
 | CR-032 | 2026-11-16 | Open, amended F10d       |
-| CR-033 | 2026-11-16 | Open                     |
+| CR-033 | 2026-11-16 | Open, amended F10e       |
 | CR-034 | 2026-11-17 | Answered (2.0.0), built  |
 | CR-035 | 2026-11-17 | Open (backend B09e)      |
 | CR-036 | 2026-11-17 | Open (backend B09e)      |
+| CR-037 | 2026-11-17 | Open                     |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -381,6 +382,13 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 
 **Until this lands:** the fake keeps its assumptions, each named in its comment.
 
+**Built (F10e, contract 2.2.0).** `packages/api-client` generates `seededRoles` from `components.x-seeded-roles`, and `apps/console/src/test/fakeRoles.test.ts` fails CI when the test fake gives a role a permission the seed does not, unless the permission is one the contract names on an operation and no seeded role holds yet (the till's `pos.*`, reports, wholesale statements, the audit log), each listed with its reason; that list fails too once the seed grants one. What the check found, and what changed in the fake:
+
+- The Farm hand: the seed holds every read the death report needs (`mdm.reason_code.read`, `mdm.location.read`, `mdm.product.read`) and `platform.file.upload.evidence` for its photograph. The fake already matched.
+- The Cashier does not hold `inv.stock.read`: removed from the fake. The Manager keeps it.
+- Posting a stock take (`inv.stock_take.post`) is the Owner's and the Manager's, not the Storekeeper's: removed from the fake Storekeeper.
+- The fake Manager held `ord.order.void.approve`, the name in the `listRoles` example; the operations and the seed say `ord.void.approve` (CR-037).
+
 ## CR-024. A reporter's own deaths and culls, without the value (additive)
 
 - **Raised by:** frontend F6b, `/report-death` (ADR 0039)
@@ -590,3 +598,12 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 4. If the backend's answer is that a supplier credit note raised from the receipt is the claim, say how a credit note names a receipt and a quantity that never entered stock.
 
 **Until this lands:** no claim screen. The egg session's part a builds the receipt's rejection with its reason (CR-035) first.
+
+## CR-037. The examples name a void's approval `ord.order.void.approve`; the operations and the seed say `ord.void.approve` (example fix)
+
+- **Raised by:** frontend F10e, checking the test fake against `components.x-seeded-roles` (CR-023).
+- **Contract read first (2.2.0):** `voidSale`'s description and the seeded Owner and Manager say `ord.void.approve`. The `listRoles` and role examples (the Manager's permissions) and an approval policy's `approverPermission` example say `ord.order.void.approve`, which no operation names and no role is seeded with.
+
+**Request:** change the examples to `ord.void.approve`, or say which name is right.
+
+**Until this lands:** the fake follows the seed (`ord.void.approve`).
