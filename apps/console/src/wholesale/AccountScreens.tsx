@@ -696,7 +696,7 @@ function Overrides({ customerId }: { customerId: string }) {
         loadingFallback={<Skeleton label={labels.loading} shape="block" className="h-24" />}
       >
         {(page) => (
-          <TableContainer aria-label={t('overrides.title')}>
+          <TableContainer aria-label={t('overrides.table')}>
             <Table>
               <TableHeader>
                 <TableRow>

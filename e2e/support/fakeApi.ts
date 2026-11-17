@@ -113,6 +113,7 @@ export class FakeApi {
     operation: RequestedOperation;
     pattern: RegExp;
     answer: (request: unknown, path: string) => unknown;
+    status: number;
   }[] = [];
   private readonly prefers = new Map<string, string>();
   private readonly refusals = new Map<string, { status: number; code: string; message: string }>();
@@ -144,12 +145,14 @@ export class FakeApi {
   respondRequested(
     operation: RequestedOperation,
     answer: (request: unknown, path: string) => unknown,
+    /** The answer's status: 200, or 202 for a write that waits for a second person (CR-046's override). */
+    status = 200,
   ): void {
     if (operation.operationId in operationManifest) {
       throw new Error(`${operation.operationId} is in the contract now: use respond().`);
     }
     const pattern = new RegExp(`^${operation.path.replace(/\{[^}]+\}/g, '[^/]+')}$`);
-    this.requested.push({ operation, pattern, answer });
+    this.requested.push({ operation, pattern, answer, status });
   }
 
   /** Asks Prism for one of the operation's own documented answers, for example `code=202`. */
@@ -332,7 +335,7 @@ export class FakeApi {
     this.log.push({ method, path, operationId: operation.operationId, outcome: 'requested' });
     const body = requested.answer(text === '' ? null : (JSON.parse(text) as unknown), path);
     return route.fulfill({
-      status: 200,
+      status: requested.status,
       contentType: 'application/json',
       body: JSON.stringify(body),
     });

@@ -411,7 +411,8 @@
     "error": "The credit overrides could not be loaded",
     "denied": "You cannot see credit overrides (whl.account.read).",
     "approvedBy": "{{who}}, {{when}}",
-    "askedBy": "Asked for by {{who}}"
+    "askedBy": "Asked for by {{who}}",
+    "table": "Each credit override, with who approved it"
   },
   "accounts": {
     "title": "Wholesale accounts",

@@ -271,7 +271,7 @@ function QuoteLineCard({
           onChange={(product) =>
             onChange({
               product,
-              uom: '',
+              uom: quoteLineUnitOn() && product !== null ? product.baseUom : '',
               price: null,
               unitPricePesewas: null,
               priceBasis: '',
