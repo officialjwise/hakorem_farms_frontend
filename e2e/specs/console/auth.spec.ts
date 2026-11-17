@@ -25,7 +25,8 @@ test.describe('sign in', () => {
   }) => {
     await page.goto('/stock');
     await expect(page).toHaveURL(/\/login\?next=%2Fstock$/);
-    await submitLogin(page, USERS.cashier);
+    // The Storekeeper: the seeded Cashier cannot open stock on hand (CR-023).
+    await submitLogin(page, USERS.storekeeper);
     await expect(page.getByRole('heading', { name: 'Stock' })).toBeVisible();
     await expect(page).toHaveURL('/stock');
   });

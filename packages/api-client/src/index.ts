@@ -21,6 +21,7 @@ export {
 } from './errors';
 export { newIdempotencyKey } from './idempotency';
 export { operationManifest, CONTRACT_VERSION } from './generated/operations';
+export { seededRoles } from './generated/seededRoles';
 export type { components, operations, paths } from './generated/schema';
 export { createSessionRefresher, type RefreshOutcome, type SessionHooks } from './singleFlight';
 export type {
