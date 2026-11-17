@@ -29,6 +29,7 @@ import {
   WeightDisplay,
   type IconChipTone,
 } from '@hakorem/ui';
+import { useAuth } from '../auth/AuthProvider';
 import { BranchScopeNote } from '../branch/BranchScopeNote';
 import { useBranchScope } from '../branch/branchScope';
 import { useApiQuery } from '../data/api';
@@ -446,6 +447,8 @@ export function MovementsScreen() {
 /** Suppliers (FR-PUR register, read only until the procurement session). */
 export function SuppliersScreen() {
   const { t } = useTranslation(['lists', 'common']);
+  // F10g: a supplier's account (what is owed, claimed and paid) for those who read its invoices.
+  const canSeeAccounts = useAuth().can('pur.supplier_invoice.read');
   const pages = useCursorPages();
   const search = useSearch(pages.reset);
   const [status, setStatus] = useState<(typeof SUPPLIER_STATUSES)[number] | 'ALL'>('ALL');
@@ -546,6 +549,19 @@ export function SuppliersScreen() {
               />
             ),
         },
+        ...(canSeeAccounts
+          ? [
+              {
+                id: 'account',
+                head: t('suppliers.columns.account'),
+                cell: (supplier: S['Supplier']) => (
+                  <Link to={`/suppliers/${supplier.id}`} className="text-accent-text underline">
+                    {t('suppliers.openAccount', { supplier: supplier.name })}
+                  </Link>
+                ),
+              },
+            ]
+          : []),
       ]}
       tableLabel={t('suppliers.table')}
       pagesLabel={t('suppliers.pages')}

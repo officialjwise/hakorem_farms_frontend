@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import type { components } from '@hakorem/api-client';
 import {
   Alert,
@@ -135,6 +136,10 @@ function ClaimView({ claim, reasonName }: { claim: Claim; reasonName: (code: str
         ))}
       </ul>
       {claim.note === null ? null : <p>{t('claims.noteShown', { note: claim.note })}</p>}
+      {/* F10g: the claim's own page, where it is settled by an invoice or turned into a credit note. */}
+      <Link to={`/supplier-claims/${claim.id}`} className="text-accent-text underline">
+        {t('claims.open')}
+      </Link>
     </div>
   );
 }

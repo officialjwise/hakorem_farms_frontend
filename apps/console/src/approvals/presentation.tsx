@@ -80,8 +80,9 @@ export function useKindName() {
 
 /**
  * Where the console shows the record an approval is about, by its document type, and what opening it
- * needs. A type with no screen yet (a purchase order, a supplier payment: B7 is live, the screens are not)
- * has no link; its summary and amount still come from the request. A `PROCESSING_REVERSAL` subject is the
+ * needs. A type with no screen yet (a purchase order's approval)
+ * has no link; its summary and amount still come from the request. A supplier invoice (a credit note or a
+ * variance) and a supplier payment open on their own screens (F10g). A `PROCESSING_REVERSAL` subject is the
  * reversal itself: the detail screen finds its order with `listProcessingOrders` by `reversalId` (CR-027).
  */
 const SUBJECT_PAGES: Record<string, { path: string; permission: string }> = {
@@ -90,6 +91,8 @@ const SUBJECT_PAGES: Record<string, { path: string; permission: string }> = {
   STOCK_TAKE: { path: '/stock-takes', permission: 'inv.stock_take.read' },
   STOCK_TRANSFER: { path: '/stock-transfers', permission: 'inv.transfer.read' },
   PROCESSING_ORDER: { path: '/processing-orders', permission: 'prc.order.read' },
+  SUPPLIER_INVOICE: { path: '/supplier-invoices', permission: 'pur.supplier_invoice.read' },
+  SUPPLIER_PAYMENT: { path: '/supplier-payments', permission: 'pur.supplier_payment.read' },
 };
 
 export function subjectPage(

@@ -163,6 +163,68 @@ export const protectedRoutes: RouteObject[] = [
           },
         ],
       },
+      // F10g: supplier invoices, payments, claims and accounts, loaded on demand (ADR 0032).
+      {
+        path: 'supplier-invoices',
+        handle: back('pur.supplier_invoice.read', 'supplierInvoices'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../payables/InvoiceScreens').then((m) => m.SupplierInvoicesScreen),
+            ),
+            handle: back('pur.supplier_invoice.read', 'supplierInvoices'),
+          },
+          {
+            path: 'new',
+            element: lazyScreen(() =>
+              import('../payables/InvoiceScreens').then((m) => m.SupplierInvoiceNewScreen),
+            ),
+            handle: back('pur.supplier_invoice.create', 'supplierInvoiceNew'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../payables/InvoiceScreens').then((m) => m.SupplierInvoiceScreen),
+            ),
+            handle: back('pur.supplier_invoice.read', 'supplierInvoice'),
+          },
+        ],
+      },
+      {
+        path: 'supplier-payments',
+        handle: back('pur.supplier_payment.read', 'supplierPayments'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../payables/PaymentScreens').then((m) => m.SupplierPaymentsScreen),
+            ),
+            handle: back('pur.supplier_payment.read', 'supplierPayments'),
+          },
+          {
+            path: 'new',
+            element: lazyScreen(() =>
+              import('../payables/PaymentScreens').then((m) => m.SupplierPaymentNewScreen),
+            ),
+            handle: back('pur.supplier_payment.create', 'supplierPaymentNew'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../payables/PaymentScreens').then((m) => m.SupplierPaymentScreen),
+            ),
+            handle: back('pur.supplier_payment.read', 'supplierPayment'),
+          },
+        ],
+      },
+      {
+        path: 'supplier-claims/:id',
+        element: lazyScreen(() =>
+          import('../payables/ClaimScreen').then((m) => m.SupplierClaimScreen),
+        ),
+        handle: back('pur.supplier_invoice.read', 'supplierClaim'),
+      },
       // F5b, loaded on demand (ADR 0032).
       {
         path: 'branches',
@@ -201,8 +263,24 @@ export const protectedRoutes: RouteObject[] = [
       },
       {
         path: 'suppliers',
-        element: lazyScreen(() => import('../lists/ListScreens').then((m) => m.SuppliersScreen)),
         handle: back('mdm.supplier.read', 'suppliers'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../lists/ListScreens').then((m) => m.SuppliersScreen),
+            ),
+            handle: back('mdm.supplier.read', 'suppliers'),
+          },
+          {
+            // F10g: what is owed to the supplier, claimed from it and paid to it.
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../payables/SupplierAccountScreen').then((m) => m.SupplierAccountScreen),
+            ),
+            handle: back('pur.supplier_invoice.read', 'supplierAccount'),
+          },
+        ],
       },
       {
         path: 'registers',

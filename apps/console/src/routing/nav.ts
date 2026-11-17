@@ -1,5 +1,6 @@
 import {
   ArrowLeftRight,
+  Banknote,
   Beef,
   HeartCrack,
   HeartPulse,
@@ -16,6 +17,7 @@ import {
   CalendarClock,
   ClipboardCheck,
   ClipboardList,
+  FileText,
   FolderTree,
   History,
   LayoutDashboard,
@@ -204,6 +206,18 @@ export const BACK_OFFICE_GROUPS: readonly NavGroup[] = [
         path: '/purchase-orders',
         permission: 'pur.purchase_order.read',
         icon: ClipboardList,
+      },
+      {
+        key: 'supplierInvoices',
+        path: '/supplier-invoices',
+        permission: 'pur.supplier_invoice.read',
+        icon: FileText,
+      },
+      {
+        key: 'supplierPayments',
+        path: '/supplier-payments',
+        permission: 'pur.supplier_payment.read',
+        icon: Banknote,
       },
     ],
   },
