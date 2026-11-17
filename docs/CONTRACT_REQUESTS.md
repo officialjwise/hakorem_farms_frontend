@@ -35,11 +35,11 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-029 | 2026-11-16 | Answered (1.46.0)        |
 | CR-030 | 2026-11-16 | Answered (1.43.0)        |
 | CR-031 | 2026-11-16 | Planned shape (1.45.0)   |
-| CR-032 | 2026-11-16 | Open (pack part planned) |
+| CR-032 | 2026-11-16 | Open, amended F10d       |
 | CR-033 | 2026-11-16 | Open                     |
-| CR-034 | 2026-11-17 | Open (B09q)              |
-| CR-035 | 2026-11-17 | Open                     |
-| CR-036 | 2026-11-17 | Open                     |
+| CR-034 | 2026-11-17 | Answered (2.0.0), built  |
+| CR-035 | 2026-11-17 | Open (backend B09e)      |
+| CR-036 | 2026-11-17 | Open (backend B09e)      |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -608,7 +608,11 @@ The PIN unlocks the till and records approvals only. The till enforces the attem
 
 **Until this lands:** the create form has no SKU field and says the SKU is given by the server. In a build switched on for CR-034 (the e2e and CI builds, ADR 0046) it sends the body without `sku`; in a build for the real API the "Create product" button is disabled with words, and existing products can be changed as before.
 
+**Answered (contract 2.0.0, B09q; F10d, 2026-11-17):** `ProductCreate` has no `sku`, and sending one is 422 `FIELD_SERVER_ASSIGNED`. The console sends `createProduct` without it in every build; the switch and `requested/serverSku.ts` are deleted.
+
 ## CR-035. A breakage reason for stock found broken, and a reason for goods rejected at the door (additive)
+
+- **Goes to:** the backend's egg phase, B09e, which is next (owner, 2026-11-17). It arrives through the contract; the frontend builds nothing against it before then.
 
 - **Raised by:** frontend, the owner (2026-11-17): "check against the real API whether a damage or breakage reason exists. If it doesn't, raise a contract request." Needed by the egg screens: cracked or broken crates rejected on a goods receipt with a reason (the egg session, part a), and eggs broken at a shop written off by a stock adjustment.
 - **Checked:** the real API could not be reached from the frontend's session (no staging host is reachable, and the VPS deploy is B13), so this was checked against the contract, 1.54.0:
@@ -626,6 +630,8 @@ The PIN unlocks the till and records approvals only. The till enforces the attem
 **Until this lands:** nothing is built on it this session. The egg session's receipt screen (part a) is built against this shape behind `HK_REQUESTED_CONTRACT` (ADR 0046) if it has not landed by then.
 
 ## CR-036. A claim raised from a goods receipt's rejected lines (additive)
+
+- **Goes to:** the backend's egg phase, B09e, which is next (owner, 2026-11-17). It arrives through the contract; the frontend builds nothing against it before then.
 
 - **Raised by:** frontend, the owner (2026-11-17): cracked or broken crates "rejected on arrival with a reason, with a claim raised from the receipt". Needed by the egg session, part a, before supplier payment.
 - **Checked (1.54.0):** a supplier credit note exists (`createSupplierInvoice` with kind `CREDIT_NOTE`, then `submitSupplierCreditNote`), but it is raised against a supplier invoice, its lines return goods that are on hand (`returnFromLocationId`, a `SUPPLIER_RETURN` movement), and nothing links it to a receipt or to quantities that never entered stock. No operation raises anything from a `GoodsReceipt`, and the contract has no claim.
