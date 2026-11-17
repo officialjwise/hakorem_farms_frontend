@@ -1,12 +1,16 @@
 export { createQueryClient } from './queryClient';
 export {
   createApiHooks,
+  createRequestedMutation,
   createRequestedQuery,
   MAX_ALL_PAGES,
   PAGE_CAP_EXCEEDED,
   PageCapExceededError,
   requestedQueryKey,
   type RequestedInput,
+  type RequestedMutation,
+  type RequestedMutationOptions,
+  type RequestedWriteInput,
   type AllPages,
   type ApiHooks,
   type PageItem,
