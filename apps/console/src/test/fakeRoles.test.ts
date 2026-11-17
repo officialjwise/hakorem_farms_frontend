@@ -8,7 +8,8 @@ import { FAKE_USERS } from './fakeAuthServer';
  * them to the role named here. When the seed grants one, its line below fails: delete it and match the seed.
  */
 const NOT_SEEDED: Readonly<Record<string, string>> = {
-  // The till (B9b). The owner set who holds them (F9, A-F9-01).
+  // The till's devices and a forced close (B9b continued): 2.5.0 seeded the rest. The owner set who holds
+  // them (F9, A-F9-01).
   'pos.device.read': 'B9b',
   'pos.device.enrol': 'B9b',
   'pos.shift.force_close': 'B9b',
