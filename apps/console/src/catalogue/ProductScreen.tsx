@@ -34,6 +34,7 @@ import { ReasonDialog } from '../lib/ReasonDialog';
 import { useStateLabels } from '../lib/states';
 import { useWriteFailure, WriteFailureView, type WriteFailure } from '../lib/writeFailure';
 import { ProductStatusBadge } from './presentation';
+import { ReadableId } from '../lib/ReadableId';
 
 type Product = components['schemas']['Product'];
 type OnlineMode = components['schemas']['OnlineMode'];
@@ -93,7 +94,7 @@ function ProductDetail({
   const days = (value: number | null) =>
     value === null ? NOT_APPLICABLE : t('product.days', { count: value });
   const facts: [string, React.ReactNode][] = [
-    [t('product.sku'), <code key="sku">{product.sku}</code>],
+    [t('product.sku'), <ReadableId key="sku" value={product.sku} />],
     [t('product.category'), product.category.name],
     [t('product.policy'), t(`policy.${product.stockPolicy}`)],
     [t('product.tracking'), t(`tracking.${product.tracking}`)],

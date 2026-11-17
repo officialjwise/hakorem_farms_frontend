@@ -106,10 +106,6 @@ function EventDetail({ record, back }: { record: AuditEvent; back: ReactNode }) 
             <dd>{record.module}</dd>
             <dt className="text-fg-muted">{t('event.record')}</dt>
             <dd>{record.entityType}</dd>
-            <dt className="text-fg-muted">{t('event.recordId')}</dt>
-            <dd className="font-mono break-all">{record.entityId ?? t('event.none')}</dd>
-            <dt className="text-fg-muted">{t('event.branch')}</dt>
-            <dd className="font-mono break-all">{record.branchId ?? t('event.none')}</dd>
             <dt className="text-fg-muted">{t('event.correlation')}</dt>
             <dd className="font-mono break-all">{record.correlationId}</dd>
             <dt className="text-fg-muted">{t('event.sealed')}</dt>

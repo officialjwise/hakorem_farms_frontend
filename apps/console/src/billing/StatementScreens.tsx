@@ -37,6 +37,7 @@ import { useStateLabels } from '../lib/states';
 import { TableCard } from '../lib/TableCard';
 import { useCursorPages } from '../lib/useCursorPages';
 import type { Statement } from './presentation';
+import { ReadableId } from '../lib/ReadableId';
 
 type CustomerRef = components['schemas']['CustomerRef'];
 
@@ -209,7 +210,7 @@ export function StatementView({ statement }: { statement: Statement }) {
           <StatementStatus statement={statement} />
         </div>
         <p className="text-fg-muted">
-          {statement.customer.name} ({statement.customer.publicId}) ·{' '}
+          {statement.customer.name} <ReadableId value={statement.customer.publicId} /> ·{' '}
           {t('statements.period', { start: statement.periodStart, end: statement.periodEnd })}
         </p>
         {statement.status === 'DRAFT' ? (

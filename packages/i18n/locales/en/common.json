@@ -115,6 +115,7 @@
       "DUPLICATE_SUPPLIER_INVOICE": "This supplier invoice has already been entered.",
       "DUPLICATE_VALUE": "That value is already in use.",
       "EVIDENCE_NOT_SCANNED": "The photograph is still being checked. Try again in a minute.",
+      "FIELD_SERVER_ASSIGNED": "The server gives that value; it is never typed. Reload the page and try again.",
       "FILE_NOT_CLEAN": "The file is still being checked for viruses, or it failed the check. Wait a moment, or use another file.",
       "FILE_TYPE_NOT_ALLOWED": "This kind of file cannot be used here. For a photograph, use a JPEG, PNG or WebP picture.",
       "FIXED_ASSET_INVALID": "This asset cannot be saved that way.",
@@ -247,5 +248,10 @@
     "missing": "Take the photograph first.",
     "offline": "The photo was not sent: the connection dropped. Take it again when you have signal.",
     "failed": "The photo was not sent. Try again."
+  },
+  "copyId": {
+    "label": "Copy {{id}}",
+    "copied": "Copied",
+    "failed": "Could not copy. Select it to copy by hand."
   }
 }

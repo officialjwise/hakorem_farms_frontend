@@ -40,6 +40,7 @@ import {
   type BillingDocument,
 } from './presentation';
 import { ReprintButton, ReprintCopy, type ReprintResult } from './Reprint';
+import { ReadableId } from '../lib/ReadableId';
 
 /** What the credit and debit note screens tell this page when they bring the person back to it. */
 export interface DocumentNotice {
@@ -135,7 +136,7 @@ export function DocumentView({ document }: { document: BillingDocument }) {
         <ReprintCopy
           result={reprint}
           name={name}
-          documentNo={document.documentNo ?? document.provisionalRef ?? document.id}
+          documentNo={document.documentNo ?? document.provisionalRef ?? t('doc.facts.unnumbered')}
         />
       )}
       <Actions document={document} name={name} onReprinted={setReprint} />
@@ -152,9 +153,13 @@ export function DocumentView({ document }: { document: BillingDocument }) {
                 <Fact term={t('doc.facts.provisional')}>{document.provisionalRef}</Fact>
               )}
               <Fact term={t('doc.facts.customer')}>
-                {document.customer === null
-                  ? customerWords(document)
-                  : `${customerWords(document)} (${document.customer.publicId})`}
+                {document.customer === null ? (
+                  customerWords(document)
+                ) : (
+                  <>
+                    {customerWords(document)} <ReadableId value={document.customer.publicId} />
+                  </>
+                )}
               </Fact>
               {document.customerTin === null ? null : (
                 <Fact term={t('doc.facts.tin')}>{document.customerTin}</Fact>
@@ -170,16 +175,16 @@ export function DocumentView({ document }: { document: BillingDocument }) {
               </Fact>
               {document.order === null ? null : (
                 <Fact term={t('doc.facts.order')}>
-                  {document.order.number ?? document.order.id}
+                  {document.order.number ?? t('doc.facts.noNumber')}
                 </Fact>
               )}
               {document.originalDocument === null ? null : (
                 <Fact term={t('doc.facts.corrects')}>
                   {original === undefined ? (
-                    (document.originalDocument.number ?? document.originalDocument.id)
+                    (document.originalDocument.number ?? t('doc.facts.noNumber'))
                   ) : (
                     <Link to={original} className="text-accent-text underline">
-                      {document.originalDocument.number ?? document.originalDocument.id}
+                      {document.originalDocument.number ?? t('doc.facts.noNumber')}
                     </Link>
                   )}
                 </Fact>
@@ -553,11 +558,6 @@ function ArchivedRecord({ id }: { id: string }) {
       {(archived) => (
         <div className="grid gap-3">
           <dl className={FACTS}>
-            <Fact term={t('doc.archive.template')}>
-              <span className="font-mono text-control-sm break-all">
-                {archived.templateVersionId}
-              </span>
-            </Fact>
             <Fact term={t('doc.archive.revision')}>{archived.revision}</Fact>
             <Fact term={t('doc.archive.archivedAt')}>
               <When instant={archived.createdAt} />

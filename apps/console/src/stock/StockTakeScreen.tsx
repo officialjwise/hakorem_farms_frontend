@@ -448,6 +448,7 @@ function ReviewLines({ take }: { take: StockTake }) {
                       <TableRowHeader>
                         <span className="grid">
                           <span>{line.product.name}</span>
+                          <code className="text-control-sm text-fg-muted">{line.product.sku}</code>
                           {line.stockUnit === null ? null : (
                             <code className="text-control-sm">{line.stockUnit.identifier}</code>
                           )}

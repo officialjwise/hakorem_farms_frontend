@@ -47,7 +47,7 @@ describe('reads, typed from the contract', () => {
     // Newest first since 1.33.0, so the example's first row is the last product added.
     expect(page.data[0]).toMatchObject({
       id: expect.any(String),
-      sku: 'EGG-BIG',
+      sku: 'EGG-0003',
       name: 'Eggs, big, crate of 30',
     });
   });
@@ -102,7 +102,7 @@ describe('a write carries the idempotency key and the CSRF token the contract as
       },
       { idempotencyKey: newIdempotencyKey() },
     );
-    expect(product.sku).toBe('LIV-GOAT');
+    expect(product.sku).toBe('LIV-0004');
   });
 
   it('a photograph goes up as multipart, which the mock validates against FileUpload (ADR 0037)', async () => {

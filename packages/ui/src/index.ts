@@ -201,6 +201,7 @@ export {
   type ConfirmChangesProps,
 } from './components/confirm-changes/ConfirmChanges';
 export { PageHeader, type PageHeaderProps } from './components/page-header/PageHeader';
+export { CopyId, type CopyIdProps } from './components/copy-id/CopyId';
 export { Barcode, type BarcodeProps } from './components/barcode/Barcode';
 export { isCode128B } from './components/barcode/code128';
 export { IconChip, type IconChipProps, type IconChipTone } from './components/icon-chip/IconChip';

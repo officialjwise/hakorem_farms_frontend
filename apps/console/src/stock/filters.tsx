@@ -49,7 +49,8 @@ export function useSupplierOptions() {
   );
   return uniqueById(suppliers.data?.items ?? []).map((supplier) => ({
     value: supplier.id,
-    label: supplier.name,
+    // The public id beside the name, so two suppliers of one name are told apart (contract 2.0.0).
+    label: `${supplier.name} (${supplier.publicId})`,
   }));
 }
 

@@ -99,7 +99,7 @@ describe('a screen against the Prism mock, in its four states', () => {
   it('loading, then the rows the mock served', async () => {
     mount();
     expect(screen.getByRole('status')).toHaveTextContent('Loading products');
-    expect(await screen.findByText('LIV-GOAT')).toBeInTheDocument();
+    expect(await screen.findByText('LIV-0004')).toBeInTheDocument();
     expect(screen.queryByRole('status')).toBeNull();
   });
 

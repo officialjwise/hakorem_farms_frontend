@@ -301,10 +301,13 @@ function MobileMoney({
         paymentMethodId: method.id,
         amountPesewas: answer.amountPesewas,
         paymentId: answer.id,
-        label: t('pay.cleared', {
-          name: method.name,
-          reference: answer.paymentNo ?? answer.providerReference ?? answer.id,
-        }),
+        // A readable reference only: never the payment's id (owner, 2026-11-17).
+        label: ((reference) =>
+          reference === null
+            ? t('pay.clearedNoReference', { name: method.name })
+            : t('pay.cleared', { name: method.name, reference }))(
+          answer.paymentNo ?? answer.providerReference,
+        ),
       });
       setPayment(null);
       setAmount(null);

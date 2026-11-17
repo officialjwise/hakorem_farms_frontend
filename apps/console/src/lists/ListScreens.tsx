@@ -39,6 +39,7 @@ import { useCursorPages } from '../lib/useCursorPages';
 import { useLocations } from '../stock/locations';
 import { asPlaces, useUnits } from '../stock/units';
 import { RecordList } from './RecordList';
+import { ReadableId } from '../lib/ReadableId';
 
 type S = components['schemas'];
 
@@ -518,7 +519,7 @@ export function SuppliersScreen() {
               icon={Truck}
               tone="info"
               name={supplier.name}
-              code={<code>{supplier.publicId}</code>}
+              code={<ReadableId value={supplier.publicId} />}
             />
           ),
         },
