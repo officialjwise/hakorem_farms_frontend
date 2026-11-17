@@ -23,12 +23,13 @@ type Lacks<Shape, Key extends PropertyKey, Request extends string> = Key extends
 type Manifest = typeof operationManifest;
 
 const cr032: Lacks<Manifest, 'listTillPinVerifiers', 'CR-032'> = true;
+const cr032Events: Lacks<Manifest, 'reportTillPinEvents', 'CR-032'> = true;
 const cr033Pack: Lacks<Schemas['OfflinePack'], 'receiptLinkTemplate', 'CR-033'> = true;
 const cr033Result: Lacks<Schemas['SyncResultItem'], 'receiptMessage', 'CR-033'> = true;
 const cr033Read: Lacks<Manifest, 'getPublicReceipt', 'CR-033'> = true;
 
 /** One entry per switch, so a new switch without a check fails `switch.test.ts`. */
 export const LANDED_CHECKS: Record<ContractRequest, readonly boolean[]> = {
-  'CR-032': [cr032],
+  'CR-032': [cr032, cr032Events],
   'CR-033': [cr033Pack, cr033Result, cr033Read],
 };

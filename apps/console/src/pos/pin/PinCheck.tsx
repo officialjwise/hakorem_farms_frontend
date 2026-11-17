@@ -1,7 +1,7 @@
 import { KeyRound } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Button, Field, Input, Select, formatDateTime } from '@hakorem/ui';
+import { Alert, Button, Field, Input, Select } from '@hakorem/ui';
 import type { PinApproval, PinVerifier, TillPinPolicy } from '../../requested/tillPin';
 import { getTill, type PinOutcome } from '../offline/till';
 import type { PinApprovalRecord } from '../offline/types';
@@ -22,10 +22,12 @@ export function PinOutcomeAlert({
     outcome.kind === 'wrong'
       ? t('pin.wrong', { count: outcome.attemptsLeft, name })
       : outcome.kind === 'locked-out'
-        ? t('pin.lockedOut', { name, time: formatDateTime(outcome.until) })
+        ? t('pin.lockedOut', { name })
         : outcome.kind === 'not-a-pin'
           ? t('pin.notAPin', { min: policy.minDigits, max: policy.maxDigits })
-          : t('pin.noVerifier', { name });
+          : outcome.kind === 'weak-verifier'
+            ? t('pin.weakVerifier', { name })
+            : t('pin.noVerifier', { name });
   return <Alert severity="critical" title={words} />;
 }
 

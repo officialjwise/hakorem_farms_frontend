@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { operationManifest } from '@hakorem/api-client';
-import { LIST_TILL_PIN_VERIFIERS } from './tillPin';
+import { LIST_TILL_PIN_VERIFIERS, REPORT_TILL_PIN_EVENTS } from './tillPin';
 import {
   assertSwitchesAllowed,
   CONTRACT_REQUESTS,
@@ -62,5 +62,6 @@ describe("the owner's conditions on ADR 0046", () => {
 
   it('describes no requested operation the generated manifest already lists', () => {
     expect(LIST_TILL_PIN_VERIFIERS.operationId in operationManifest).toBe(false);
+    expect(REPORT_TILL_PIN_EVENTS.operationId in operationManifest).toBe(false);
   });
 });

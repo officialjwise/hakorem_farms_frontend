@@ -537,24 +537,43 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
      policy: # every till applies the same rule offline
        minDigits: integer # 4
        maxDigits: integer # 6
-       maxAttempts: integer # wrong PINs in a row before that person is locked out on the till
-       lockoutSeconds: integer
+       maxAttempts: integer # wrong PINs in a row before that person is locked out on the till; at most 5 (F10d)
        idleLockSeconds: integer # the till locks itself after this long untouched
      verifiers: # the signed-in operator's, and each supervisor's at the register's branch
        - principalId: uuid
          displayName: string
          version: integer # rises each time the PIN is set or reset
          algorithm: PBKDF2-SHA256 # enum; Web Crypto has no Argon2 (ADR 0047)
-         iterations: integer
-         salt: string # base64, at least 16 bytes
+         iterations: integer # at least 600,000 (F10d)
+         salt: string # base64, at least 16 random bytes per person
          hash: string # base64, 32 bytes: PBKDF2(PIN as UTF-8, salt, iterations)
-         approves: [OFFLINE_MOBILE_MONEY | CASH_DROP_WITNESS] # from the person's permissions at the branch
+         approves: [OFFLINE_MOBILE_MONEY | CASH_DROP_WITNESS | SUPERVISOR_SIGN_OUT] # from the person's permissions at the branch
+         lockedOut: boolean # F10d: the server holds this person locked out on the register
    ```
    Never the PIN. How a PIN is set, with its permission and audit, is the backend's to define.
 2. `UnverifiedMobileMoneyInput.approvedByVerifierVersion` (integer, required when the field lands) and `CashMovementCreate.witnessVerifierVersion` (integer, with `witnessId`): the verifier the PIN was checked against. The server records an approval by a revoked operator, a superseded verifier or someone without the approving permission as an exception, never silently. Until then the till keeps the version on its own record and shows it on the queue screen.
 3. The pack's `reasonCodes` include the `CASH_MOVEMENT` domain (unchanged from item 6).
 
 The PIN unlocks the till and records approvals only. The till enforces the attempt limit and the lockout per person, on the device.
+
+**The owner's conditions (F10d, 2026-11-17), changing the shape above.** ADR 0047 is accepted on these; the till enforces each on the device whatever the server sends, and the backend is asked to issue the same:
+
+1. **The hash floor.** Every verifier is `PBKDF2-SHA256` with `iterations` at least **600,000**, a random `salt` of at least **16 bytes** per person, and a 32-byte `hash`. The till refuses anything weaker: it does not store or check it, says so, and that person can only sign in online until a strong one is issued.
+2. **Tries.** `policy.maxAttempts` is at most **5** (the till applies five if sent more; a lower value wins). **`policy.lockoutSeconds` is removed:** offline a lockout never ends on a timer, since the device clock can be changed.
+3. **The server decides when a lockout ends.** Each `PinVerifier` gains `lockedOut: boolean`: whether the server holds that person locked out of PIN checks on this register. The till ends a lockout only when the server's answer says `false`, or when a supervisor signs the cashier out.
+4. **`reportTillPinEvents`**: `POST /registers/{id}/pin-events`, staff session plus `X-Device-Credential`, CSRF, `Idempotency-Key`, permission `pos.shift.open`. Body `{ events: TillPinEvent[] }`, answered 200 with `TillPinVerifiers` as they now stand. Sent whenever the till reaches the server with events waiting (before `listTillPinVerifiers`, after a lockout, before a supervisor's sign-out ends the session).
+   ```yaml
+   TillPinEvent:
+     id: uuid # made on the till; the same id twice is one event
+     kind: LOCKED_OUT | SUPERVISOR_SIGN_OUT
+     principalId: uuid # the person locked out, or the cashier signed out
+     verifierVersion: integer | null # their verifier on the till, null if it held none
+     supervisorId: uuid | null # SUPERVISOR_SIGN_OUT: whose PIN signed the cashier out
+     supervisorVerifierVersion: integer | null
+     occurredAt: date-time # the till's clock, for the record; the server keeps its own arrival time
+   ```
+   The server holds a person locked out from a `LOCKED_OUT` until it ends it (a manager, or its own rule, for example a password sign-in), and ends the cashier's on a `SUPERVISOR_SIGN_OUT` from a supervisor with the approval. Both are audited with the actor and both times, and flagged as exceptions like the approvals in item 4 of the request.
+5. **`approves` gains `SUPERVISOR_SIGN_OUT`**: signing a locked cashier out on this till and nothing else, from the person's permissions at the branch. It never opens the till or sells as the cashier.
 
 ## CR-033. A digital receipt the customer can open from a link (additive)
 

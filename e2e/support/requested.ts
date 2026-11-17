@@ -6,6 +6,8 @@
 import { pbkdf2Sync } from 'node:crypto';
 import {
   LIST_TILL_PIN_VERIFIERS,
+  REPORT_TILL_PIN_EVENTS,
+  type TillPinEvent,
   type TillPinVerifiers,
 } from '../../apps/console/src/requested/tillPin';
 import type { FakeApi } from './fakeApi';
@@ -18,51 +20,94 @@ export const PEOPLE = {
 /** The mobile money method in `getOfflinePack`'s example. */
 export const MOMO_METHOD_ID = '019a7a92-c15e-7582-aabb-60fcf9dfd9da';
 
+/** Three tries: the server's limit is lower than the owner's five, so it wins. No lockout time. */
 export const PIN_POLICY: TillPinVerifiers['policy'] = {
   minDigits: 4,
   maxDigits: 6,
   maxAttempts: 3,
-  lockoutSeconds: 300,
   idleLockSeconds: 120,
 };
 
-/** A verifier made as CR-032 asks the server to make one: PBKDF2-SHA256, a salt each, never the PIN. */
+/** The owner's floor (2026-11-17). */
+const ITERATIONS = 600_000;
+const hashes = new Map<string, string>();
+
+/**
+ * A verifier made as CR-032 asks the server to make one: PBKDF2-SHA256 at 600,000 iterations, a random-
+ * looking 16-byte-plus salt each, never the PIN. `weak` makes one below the floor, which the till refuses.
+ */
 function verifier(
   person: (typeof PEOPLE)[keyof typeof PEOPLE],
   version: number,
   approves: TillPinVerifiers['verifiers'][number]['approves'],
+  lockedOut: boolean,
+  weak = false,
 ) {
   const salt = Buffer.from(`e2e-salt-${person.id}`);
+  const iterations = weak ? 10_000 : ITERATIONS;
+  const key = `${person.id}-${String(iterations)}`;
+  const hash =
+    hashes.get(key) ?? pbkdf2Sync(person.pin, salt, iterations, 32, 'sha256').toString('base64');
+  hashes.set(key, hash);
   return {
     principalId: person.id,
     displayName: person.name,
     version,
     algorithm: 'PBKDF2-SHA256' as const,
-    iterations: 10_000,
+    iterations,
     salt: salt.toString('base64'),
-    hash: pbkdf2Sync(person.pin, salt, 10_000, 32, 'sha256').toString('base64'),
+    hash,
     approves,
+    lockedOut,
   };
 }
 
-/** CR-032: the till's verifiers, the cashier's and the manager's (who may approve both offline actions). */
-export function installTillPins(api: FakeApi): { issued: number } {
-  const counter = { issued: 0 };
-  api.respondRequested(LIST_TILL_PIN_VERIFIERS, (_request, path) => {
-    counter.issued += 1;
-    const registerId = path.split('/')[2] ?? '';
-    const answer: TillPinVerifiers = {
-      registerId,
-      issuedAt: new Date().toISOString(),
-      policy: PIN_POLICY,
-      verifiers: [
-        verifier(PEOPLE.cashier, 2, []),
-        verifier(PEOPLE.manager, 7, ['OFFLINE_MOBILE_MONEY', 'CASH_DROP_WITNESS']),
-      ],
-    };
-    return answer;
+export interface TillPinServer {
+  issued: number;
+  /** Each `reportTillPinEvents` body the till sent, in order. */
+  reports: TillPinEvent[][];
+  /** Who the server holds locked out on the till. */
+  lockedOut: Set<string>;
+}
+
+/**
+ * CR-032: the till's verifiers, the cashier's and the manager's (who may approve both offline actions and
+ * sign a locked cashier out), and the events the till reports. The server keeps a lockout once told and a
+ * supervisor's sign-out ends it. `weakCashier` sends the cashier's verifier below the owner's floor.
+ */
+export function installTillPins(
+  api: FakeApi,
+  options: { weakCashier?: boolean } = {},
+): TillPinServer {
+  const server: TillPinServer = { issued: 0, reports: [], lockedOut: new Set() };
+  const answer = (path: string): TillPinVerifiers => ({
+    registerId: path.split('/')[2] ?? '',
+    issuedAt: new Date().toISOString(),
+    policy: PIN_POLICY,
+    verifiers: [
+      verifier(PEOPLE.cashier, 2, [], server.lockedOut.has(PEOPLE.cashier.id), options.weakCashier),
+      verifier(
+        PEOPLE.manager,
+        7,
+        ['OFFLINE_MOBILE_MONEY', 'CASH_DROP_WITNESS', 'SUPERVISOR_SIGN_OUT'],
+        server.lockedOut.has(PEOPLE.manager.id),
+      ),
+    ],
   });
-  return counter;
+  api.respondRequested(LIST_TILL_PIN_VERIFIERS, (_request, path) => {
+    server.issued += 1;
+    return answer(path);
+  });
+  api.respondRequested(REPORT_TILL_PIN_EVENTS, (request, path) => {
+    const { events } = request as { events: TillPinEvent[] };
+    server.reports.push(events);
+    for (const event of events) {
+      if (event.kind === 'LOCKED_OUT') server.lockedOut.add(event.principalId);
+      else server.lockedOut.delete(event.principalId);
+    }
+    return answer(path);
+  });
+  return server;
 }
 
 /** CR-033: the receipt page the till builds the link from. */

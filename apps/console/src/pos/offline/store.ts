@@ -4,11 +4,11 @@
  * the device counter's increment and the queue record are written in the same transaction (section 4.2),
  * so a sale that fails to save does not consume a counter, and a counter is never reused.
  */
-import type { TillPinVerifiers } from '../../requested/tillPin';
 import {
   EMPTY_META,
   type DeviceRecord,
   type HeldLocal,
+  type LocalAuth,
   type OfflinePack,
   type QueueEntry,
   type SaleEntry,
@@ -24,7 +24,7 @@ export interface TillStore {
   savePack(pack: OfflinePack | null): Promise<void>;
   saveShift(shift: ShiftRecord | null): Promise<void>;
   saveMeta(meta: TillMeta): Promise<void>;
-  saveLocalAuth(localAuth: TillPinVerifiers | null): Promise<void>;
+  saveLocalAuth(localAuth: LocalAuth | null): Promise<void>;
   putEntries(entries: readonly QueueEntry[]): Promise<void>;
   removeEntries(ids: readonly string[]): Promise<void>;
   /**
@@ -169,7 +169,7 @@ export function indexedDbStore(): TillStore {
         pack: (pack as OfflinePack | undefined) ?? null,
         shift: (shift as ShiftRecord | undefined) ?? null,
         meta: { ...EMPTY_META, ...((meta as TillMeta | undefined) ?? {}) },
-        localAuth: (localAuth as TillPinVerifiers | undefined) ?? null,
+        localAuth: (localAuth as LocalAuth | undefined) ?? null,
         entries: sortEntries(entries as QueueEntry[]),
         held: held as HeldLocal[],
         syncLog: syncLog as SyncLogEntry[],
