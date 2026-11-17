@@ -3,7 +3,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
-  Alert,
   CatchWeightNotice,
   MoneyDisplay,
   ProductPhoto,
@@ -11,10 +10,11 @@ import {
   WeightDisplay,
 } from '@hakorem/ui';
 import { AddToBasket } from '../../../components/AddToBasket';
+import { AskTheShop } from '../../../components/AskTheShop';
 import { LoadFailed } from '../../../components/LoadFailed';
 import { PriceLine } from '../../../components/PriceLine';
 import { getT, getWords } from '../../../i18n/server';
-import { getShopCategories, getShopProduct } from '../../../lib/api';
+import { getShopCategories, getShopProduct, getShopProfile } from '../../../lib/api';
 import { percentText, priceWords } from '../../../lib/present';
 import { AVAILABILITY, categorySlug, tileFor, type ProductDetail } from '../../../lib/shop';
 
@@ -63,7 +63,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 /**
  * A product (FR-SHP-002): its photograph, name, price and what it buys, whether it can be bought, and for
  * a weighed item how it is charged, in a notice beside the price that cannot be missed. A live animal sold
- * by request says so instead of offering the basket. One read, shared with the metadata.
+ * by request says so instead of offering the basket, with the shop's phone and WhatsApp (CR-028). One
+ * product read, shared with the metadata.
  */
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
@@ -92,6 +93,8 @@ export default async function ProductPage({ params }: Props) {
     ? categories.data.data.find((c) => c.name === p.categoryPath.at(-1))
     : undefined;
   const photo = p.images[0] ?? null;
+  // Read only for a live animal sold by request, the one place this page gives the shop's numbers.
+  const profile = p.onlineMode === 'REQUEST_TO_BUY' ? await getShopProfile() : null;
   const buyable =
     p.onlineMode === 'LISTED' && p.availability !== 'OUT_OF_STOCK' && p.priceFromPesewas !== null;
   return (
@@ -145,10 +148,8 @@ export default async function ProductPage({ params }: Props) {
             </div>
           </div>
           {p.catchWeight ? <Weighed p={p} t={t} /> : null}
-          {p.onlineMode === 'REQUEST_TO_BUY' ? (
-            <Alert severity="info" title={t('product.request.title')}>
-              {t('product.request.body')}
-            </Alert>
+          {profile !== null ? (
+            <AskTheShop profile={profile} t={t} />
           ) : buyable ? (
             <AddToBasket
               productId={p.productId}

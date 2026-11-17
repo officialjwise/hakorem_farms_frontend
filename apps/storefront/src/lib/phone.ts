@@ -11,3 +11,22 @@ export function toE164(typed: string): string | null {
   if (/^[2-5]\d{8}$/.test(compact)) return `+233${compact}`;
   return null;
 }
+
+/**
+ * An E.164 number as a Ghanaian reads it aloud: +233244512876 is "024 451 2876". A number from another
+ * country is shown as the contract gives it.
+ */
+export function phoneForDisplay(e164: string): string {
+  const ghana = /^\+233(\d{2})(\d{3})(\d{4})$/.exec(e164);
+  return ghana === null ? e164 : `0${ghana[1]} ${ghana[2]} ${ghana[3]}`;
+}
+
+/** The `tel:` address of an E.164 number: dialled as it is, from any country. */
+export function telHref(e164: string): string {
+  return `tel:${e164}`;
+}
+
+/** A WhatsApp chat with the number: `wa.me` takes the international number as digits only. */
+export function whatsAppHref(e164: string): string {
+  return `https://wa.me/${e164.replace(/\D/g, '')}`;
+}

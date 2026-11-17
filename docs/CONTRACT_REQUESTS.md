@@ -459,6 +459,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 
 **Status:** the owner says (2026-11-16) the backend is adding a public read of the business's phone and WhatsApp numbers. When it lands, live animal pages show them, with a WhatsApp link. Not in 1.41.0 (F8 read it); still open.
 
+**Answered (1.54.0):** `getShopProfile`. Since F10c a live animal's page shows the shop's phone as a `tel:` link and its WhatsApp number as a `wa.me` link (`AskTheShop`); with no profile set (404) it says to call or visit and shows no number. The footer does not read it yet.
+
 ## CR-029. A cart at checkout says which checkout it is in (additive)
 
 - **Raised by:** frontend F7, the checkout page.

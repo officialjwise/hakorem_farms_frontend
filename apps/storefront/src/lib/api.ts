@@ -49,3 +49,9 @@ export const getShopCategories = cache(() => load('listShopCategories', { query:
 export const getShopProduct = cache((slug: string) =>
   load('getCatalogueProduct', { path: { slug } }),
 );
+
+/**
+ * The shop's phone, WhatsApp and address (CR-028), once per request. The API answers it cacheable for five
+ * minutes; a 404 means no business profile is set, and the page then shows no number.
+ */
+export const getShopProfile = cache(() => load('getShopProfile'));
