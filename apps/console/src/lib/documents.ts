@@ -15,6 +15,9 @@ const DOCUMENT_PATH: Record<string, string> = {
   SUPPLIER_INVOICE: '/supplier-invoices/',
   SUPPLIER_PAYMENT: '/supplier-payments/',
   SUPPLIER_CLAIM: '/supplier-claims/',
+  // F10h: an order made from a quote, and the quote.
+  SALES_ORDER: '/orders/',
+  QUOTE: '/quotes/',
   // F8: a billing document's kind is its docType (`ArchivedDocument.businessDocument`).
   INVOICE: '/billing-documents/',
   RECEIPT: '/billing-documents/',

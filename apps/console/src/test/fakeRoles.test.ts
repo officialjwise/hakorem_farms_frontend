@@ -22,6 +22,17 @@ const NOT_SEEDED: Readonly<Record<string, string>> = {
   // Wholesale statements.
   'whl.statement.read': 'wholesale',
   'whl.statement.create': 'wholesale',
+  // Quotes, wholesale accounts and the ageing (B10, CR-046 item 5; A-F10-07).
+  'quo.rfq.read': 'B10',
+  'quo.rfq.update': 'B10',
+  'quo.quote.read': 'B10',
+  'quo.quote.create': 'B10',
+  'quo.quote.issue': 'B10',
+  'quo.quote.convert': 'B10',
+  'whl.account.read': 'B10',
+  'whl.account.manage': 'B10',
+  'whl.account.hold': 'B10',
+  'whl.ageing.read': 'B10',
 };
 
 const seeded = new Set<string>(seededRoles.flatMap((role) => [...role.permissions]));

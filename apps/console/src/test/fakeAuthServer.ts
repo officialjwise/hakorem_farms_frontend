@@ -247,6 +247,30 @@ const OWNER_PAYABLE_PERMISSIONS = [
   'pur.supplier_payment.pay',
 ];
 
+/**
+ * F10h: quotes, requests for quote, wholesale accounts, the ageing and an order's credit check. The seed
+ * grants no quo.* or whl.* permission yet (B10, CR-046 item 5); the Owner and the Manager hold all of
+ * them here (A-F10-07). The order, price and proforma permissions are the seed's own.
+ */
+const WHOLESALE_PERMISSIONS = [
+  'quo.rfq.read',
+  'quo.rfq.update',
+  'quo.quote.read',
+  'quo.quote.create',
+  'quo.quote.issue',
+  'quo.quote.convert',
+  'whl.account.read',
+  'whl.account.manage',
+  'whl.account.hold',
+  'whl.ageing.read',
+  'mdm.customer.read',
+  'mdm.price.resolve',
+  'mdm.price_list.read',
+  'ord.order.read',
+  'ord.order.confirm',
+  'bil.proforma.create',
+];
+
 /** What the owner holds for the F5b screens: the dashboard, branches and locations, and the new lists. */
 const OWNER_F5B_PERMISSIONS = [
   'rpt.dashboard.owner',
@@ -407,6 +431,7 @@ const MANAGER_PERMISSIONS = [
   'pur.supplier_payment.read',
   'pur.supplier_payment.create',
   'pur.supplier_payment.approve',
+  ...WHOLESALE_PERMISSIONS,
   ...MANAGER_TILL_PERMISSIONS,
 ];
 
@@ -459,6 +484,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
       ...OWNER_F8_PERMISSIONS,
       ...OWNER_EGG_PERMISSIONS,
       ...OWNER_PAYABLE_PERMISSIONS,
+      ...WHOLESALE_PERMISSIONS,
       ...MANAGER_TILL_PERMISSIONS,
     ],
     moreBranches: SELLING_POINTS,

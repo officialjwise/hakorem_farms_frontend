@@ -12,6 +12,7 @@ import type approvalsNs from '../locales/en/approvals.json';
 import type billingNs from '../locales/en/billing.json';
 import type buyingNs from '../locales/en/buying.json';
 import type payablesNs from '../locales/en/payables.json';
+import type wholesaleNs from '../locales/en/wholesale.json';
 import type posNs from '../locales/en/pos.json';
 import type audit from '../locales/en/audit.json';
 import type auth from '../locales/en/auth.json';
@@ -61,6 +62,7 @@ export const NAMESPACES = [
   'pos',
   'buying',
   'payables',
+  'wholesale',
 ] as const;
 export type Namespace = (typeof NAMESPACES)[number];
 
@@ -92,6 +94,7 @@ export const catalogue: Record<
     pos: () => import('../locales/en/pos.json'),
     buying: () => import('../locales/en/buying.json'),
     payables: () => import('../locales/en/payables.json'),
+    wholesale: () => import('../locales/en/wholesale.json'),
   },
 };
 
@@ -168,6 +171,7 @@ declare module 'i18next' {
       pos: typeof posNs;
       buying: typeof buyingNs;
       payables: typeof payablesNs;
+      wholesale: typeof wholesaleNs;
     };
   }
 }
