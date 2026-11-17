@@ -1,6 +1,6 @@
 # 0047. Check the till PIN on the device with PBKDF2, lock out per person, and keep the approving verifier beside the record
 
-- Status: proposed (the owner set the PIN rules out, F9 report "The owner's answers" 3; the mechanism here is this session's, against CR-032)
+- Status: proposed (the owner set the PIN rules out, F9 report "The owner's answers" 3; the mechanism here is this session's, against CR-032). **Not accepted (2026-11-17):** the owner approved it only if it meets four conditions, and it differs on three; the differences are listed in `docs/sessions/F10c-owner-conditions-adr-0046-0047-breakage.md`, "ADR 0047".
 - Date: 2026-11-16
 - Session: F10
 
