@@ -1,32 +1,27 @@
 import { CloudUpload, LockKeyhole, LogOut } from 'lucide-react';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router';
-import { Button, Dialog, DialogActions, Field, Input, StatusBadge } from '@hakorem/ui';
+import { Button, Dialog, DialogActions, StatusBadge } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { pendingCount } from '../pos/offline/sync';
 import { getTill, hasTill, useTill } from '../pos/offline/till';
 import { LazyTillLocked } from '../pos/parts';
 import { preloadTillScreens } from '../pos/routes';
-import { emitScan } from '../pos/scans';
-import { useBarcodeTrap } from '../pos/useBarcodeTrap';
 import { OfflineBanner, OfflineIndicator } from './OfflineIndicator';
 
 /**
- * The POS frame (ADR 0014): full screen, no sidebar, large touch targets, keyboard first. The barcode field
- * lives here, in the shell, so every POS screen built later inherits the focus trap and cannot forget it.
+ * The POS frame: full screen, no sidebar, large touch targets. Items are found by tapping and searching on
+ * the sale screen; there is no barcode field and no focus trap (owner, 2026-11-17, ADR 0048, superseding
+ * ADR 0014).
  */
 export function PosShell() {
   const { t } = useTranslation('shell');
   const auth = useAuth();
   const navigate = useNavigate();
-  const barcode = useRef<HTMLInputElement>(null);
-  const [value, setValue] = useState('');
-  const [lastScan, setLastScan] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const till = useTill();
   const locked = till.snapshot?.meta.locked === true && hasTill() && getTill().canLock();
-  useBarcodeTrap(barcode, !locked);
   const waiting = till.snapshot === null ? 0 : pendingCount(till.snapshot);
   const device = till.snapshot?.device ?? null;
   const shift = till.snapshot?.shift ?? null;
@@ -58,16 +53,6 @@ export function PosShell() {
     void preloadTillScreens();
     return () => window.removeEventListener('online', online);
   }, []);
-
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    const code = value.trim();
-    if (code === '') return;
-    // The screen under the bar decides what the code is (the sale screen looks it up in the offline pack).
-    setLastScan(code);
-    emitScan(code);
-    setValue('');
-  };
 
   const signOut = async () => {
     setConfirmOpen(false);
@@ -171,29 +156,6 @@ export function PosShell() {
           ))}
       </nav>
       <OfflineBanner />
-      <form
-        hidden={locked}
-        onSubmit={submit}
-        className="border-b border-border bg-surface-sunken p-4"
-        data-slot="barcode-bar"
-      >
-        <Field label={t('pos.barcode')} hint={t('pos.barcodeHint')}>
-          <Input
-            ref={barcode}
-            size="lg"
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-            autoComplete="off"
-            autoCapitalize="none"
-            spellCheck={false}
-            inputMode="text"
-            enterKeyHint="done"
-          />
-        </Field>
-        <p className="mt-2 text-sm text-fg-muted" aria-live="polite" data-slot="last-scan">
-          {lastScan === null ? t('pos.scannedNone') : t('pos.scanned', { code: lastScan })}
-        </p>
-      </form>
       {/* Kept mounted while locked, so a sale under way is as it was when the till opens again. */}
       <main id="main" hidden={locked} className="min-w-0 flex-1 p-4">
         <Outlet />

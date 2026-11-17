@@ -33,7 +33,7 @@ test('the till locks and opens on the cashier’s PIN with the network off; the 
   const requestsBefore = api.log.length;
   await lockedTill(page);
   // Nothing to scan into and nothing to sell while locked.
-  await expect(page.locator('[data-slot="barcode-bar"]')).toBeHidden();
+  await expect(page.getByRole('searchbox', { name: /^Search by name, SKU or tag/ })).toBeHidden();
   await expect(page.getByRole('region', { name: 'This sale' })).toBeHidden();
   await expectNoAxeViolations(page);
   await expectNoHorizontalScroll(page);

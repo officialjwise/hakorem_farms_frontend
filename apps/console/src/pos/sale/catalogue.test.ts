@@ -1,13 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { EMPTY_META, type OfflinePack, type TillSnapshot } from '../offline/types';
-import {
-  matchScan,
-  newLine,
-  searchProducts,
-  sellingBlock,
-  tenderMethods,
-  tiles,
-} from './catalogue';
+import { findInPack, newLine, sellingBlock, tenderMethods, tiles } from './catalogue';
 
 /** A slice of the contract's `getOfflinePack` example. */
 const PACK = {
@@ -130,11 +123,12 @@ const snapshot = (over: Partial<TillSnapshot> = {}): TillSnapshot => ({
   ...over,
 });
 
-describe('scanning against the pack', () => {
+describe('finding an item in the pack: tap or search, no barcode (ADR 0048)', () => {
   it('finds an animal by its tag, case and spaces aside, with its last weight as an estimate', () => {
-    const match = matchScan(PACK, ' g-0142 ');
-    expect(match.kind).toBe('unit');
-    if (match.kind !== 'unit') return;
+    const found = findInPack(PACK, ' g-0142 ');
+    expect(found.units.map(({ unit }) => unit.identifier)).toEqual(['G-0142']);
+    const [match] = found.units;
+    if (match === undefined) throw new Error('not found');
     const line = newLine(match.product, match.unit);
     expect(line).toMatchObject({
       stockUnitId: 'u1',
@@ -146,24 +140,22 @@ describe('scanning against the pack', () => {
     });
   });
 
-  it('refuses an animal the pack says is not sellable', () => {
-    expect(matchScan(PACK, 'G-0163').kind).toBe('unsellable');
+  it('finds part of a tag, and leaves out an animal already on the sale', () => {
+    expect(findInPack(PACK, 'G-01').units.map(({ unit }) => unit.identifier)).toEqual(['G-0142']);
+    expect(findInPack(PACK, 'G-0142', ['u1']).units).toEqual([]);
   });
 
-  it('finds a product by barcode, and asks when two share one', () => {
-    expect(matchScan(PACK, '603490011')).toMatchObject({ kind: 'product' });
-    const several = matchScan(PACK, '603470011');
-    expect(several.kind).toBe('several');
-    expect(several.kind === 'several' ? several.products.map((p) => p.product.id) : []).toEqual([
-      'eggs',
-      'yam',
-    ]);
-    expect(matchScan(PACK, '999')).toEqual({ kind: 'none', code: '999' });
+  it('says so when the exact tag is an animal the pack says is not sellable', () => {
+    const found = findInPack(PACK, 'G-0163');
+    expect(found.units).toEqual([]);
+    expect(found.unsellable.map((unit) => unit.identifier)).toEqual(['G-0163']);
   });
 
-  it('searches by every word typed and groups the tiles by category', () => {
-    expect(searchProducts(PACK, 'beef pack').map((p) => p.product.id)).toEqual(['beef']);
-    expect(searchProducts(PACK, '  ')).toEqual([]);
+  it('searches names and SKUs by every word typed, never barcodes, and groups the tiles', () => {
+    expect(findInPack(PACK, 'beef pack').products.map((p) => p.product.id)).toEqual(['beef']);
+    expect(findInPack(PACK, 'egg-big').products.map((p) => p.product.id)).toEqual(['eggs']);
+    expect(findInPack(PACK, '603470011').products).toEqual([]);
+    expect(findInPack(PACK, '  ')).toEqual({ units: [], unsellable: [], products: [] });
     expect(tiles(PACK).map((group) => group.category)).toEqual([
       'Live animals',
       'Eggs',

@@ -62,7 +62,8 @@ test.describe('two documents: the back office and the till', () => {
     await expect(page.getByRole('heading', { name: 'Point of sale' })).toBeVisible();
     await expect(page).toHaveURL('/pos');
     await expect(page).toHaveTitle('HaKorem Farms point of sale');
-    await expect(page.getByLabel(/^barcode/i)).toBeFocused();
+    // No barcode field at the till (owner, 2026-11-17, ADR 0048).
+    await expect(page.getByLabel(/^barcode/i)).toHaveCount(0);
 
     await page.getByRole('link', { name: 'Back office' }).click();
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();

@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect, test } from '../../support/test';
 import type { FakeApi } from '../../support/fakeApi';
 import { signInWithTotp, USERS } from '../../support/helpers';
-import { installTillServer, openTillShift, scan } from '../../support/till';
+import { installTillServer, openTillShift, find } from '../../support/till';
 import { PEOPLE, installTillPins } from '../../support/requested';
 
 /**
@@ -465,7 +465,7 @@ interface TillShot {
 }
 
 async function cart(page: Page) {
-  await scan(page, 'G-0142');
+  await find(page, 'G-0142', /G-0142$/);
   await page.getByRole('button', { name: 'Beef, 15 kg pack' }).click();
   const line = page.getByRole('dialog', { name: 'Change Beef, 15 kg pack' });
   await line.getByRole('textbox', { name: /^Weight \(kg\)/ }).fill('15.250');
@@ -487,7 +487,7 @@ const TILL_SHOTS: TillShot[] = [
   {
     name: 'line-agreed-price',
     act: async (page) => {
-      await scan(page, 'G-0142');
+      await find(page, 'G-0142', /G-0142$/);
       await page.getByRole('button', { name: 'Change Goat G-0142' }).click();
       const line = page.getByRole('dialog', { name: 'Change G-0142' });
       await line.getByRole('textbox', { name: /^Agreed price a head/ }).fill('789.99');

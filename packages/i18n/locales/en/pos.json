@@ -68,23 +68,22 @@
       "noUnits": "No {{name}} is sellable at this till",
       "quoteOnly": "{{name}} is sold by quote only, not at the till",
       "unsellable": "{{name}} cannot be sold here",
-      "unsellableBody": "The till's list says it is sold, on hold or at another location. Check the animal or lot before selling it.",
-      "unknown": "Nothing on this till has the code {{code}}",
-      "unknownBody": "Scan again, or find the item by name."
+      "unsellableBody": "The till's list says it is sold, on hold or at another location. Check the animal or lot before selling it."
     },
     "find": {
       "title": "Find an item",
-      "search": "Search by name",
-      "searchHint": "Or scan its barcode or the animal's tag.",
+      "search": "Search by name, SKU or tag",
+      "searchHint": "An animal or a lot by its tag, for example G-0142.",
       "results": "Items found",
       "none": "Nothing matches “{{query}}”",
-      "other": "Other items"
+      "other": "Other items",
+      "unit": "{{name}} {{tag}}"
     },
     "cart": {
       "title": "This sale",
       "lines": "Items on this sale",
       "emptyTitle": "No items yet",
-      "emptyBody": "Scan an item or choose one to start the sale.",
+      "emptyBody": "Tap an item or search for one to start the sale.",
       "total": "Total",
       "fixLines": "An item needs its weight before payment.",
       "pay": "Take payment"
@@ -146,8 +145,6 @@
     "refusalBody": "You may give up to {{line}} off an item and {{shift}} on a shift. A manager can agree more in the back office."
   },
   "choose": {
-    "productTitle": "Which item has the code {{code}}?",
-    "productBody": "More than one item on this till carries that barcode.",
     "unitTitle": "Which {{name}}?",
     "unitBody": "Each is sold by its tag. Choose the one the customer is taking."
   },

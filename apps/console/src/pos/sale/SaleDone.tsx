@@ -1,4 +1,4 @@
-import { ScanBarcode } from 'lucide-react';
+import { ShoppingBasket } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -57,7 +57,7 @@ export function SaleDone({ entry, onNext }: { entry: SaleEntry; onNext: () => vo
         ) : null}
         <div className="flex flex-wrap gap-2">
           <Button size="lg" onClick={onNext}>
-            <ScanBarcode aria-hidden="true" />
+            <ShoppingBasket aria-hidden="true" />
             {t('done.next')}
           </Button>
           <Button asChild size="lg" variant="ghost">
