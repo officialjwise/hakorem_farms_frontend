@@ -559,6 +559,10 @@ function ReviewLines({ take }: { take: StockTake }) {
           </Button>
         </div>
       ) : null}
+      {inReview && outcome === null && !auth.can('inv.stock_take.post') ? (
+        // Posting is the Owner's and the Manager's (the seed, CR-023): say so rather than show nothing.
+        <p>{t('review.postedByOthers')}</p>
+      ) : null}
       <ConfirmDialog
         open={submitting}
         onOpenChange={setSubmitting}

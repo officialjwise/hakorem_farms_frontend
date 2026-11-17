@@ -159,6 +159,7 @@
     "saveRecounts": "Save recounts",
     "recountsSaved_one": "{{count}} recount saved",
     "recountsSaved_other": "{{count}} recounts saved",
+    "postedByOthers": "The owner or a manager posts this stock take. The counts are saved.",
     "submit": "Post the stock take",
     "submitting": "Posting",
     "submitTitle": "Post the stock take?",

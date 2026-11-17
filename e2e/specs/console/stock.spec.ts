@@ -10,7 +10,8 @@ import {
 /**
  * F5's primary flows (FR-INV). The gate is the first test: a storekeeper completes a stock take on a phone
  * (the suite runs at 360 px), standing in the cold room: a blind count by the keyboard, saved, finished,
- * reviewed against the API's differences, and posted (or sent for approval).
+ * reviewed against the API's differences. The owner then posts it (or sends it for approval): posting is
+ * the Owner's and the Manager's in the seed (CR-023).
  */
 
 const TAKE = '019a7aba-06c9-7349-b881-3d6a7794b648';
@@ -23,7 +24,7 @@ const COLD_ROOM = {
 const ANY = '019a7a86-3046-711a-a652-1a7389f79351';
 
 test.describe('the F5 gate: a stock take completed on a phone in the cold room', () => {
-  test('the storekeeper counts blind by the keyboard, saves, finishes, reads the differences and posts', async ({
+  test('the storekeeper counts blind by the keyboard, saves, finishes and reads the differences; the owner posts', async ({
     page,
     api,
   }) => {
@@ -101,6 +102,15 @@ test.describe('the F5 gate: a stock take completed on a phone in the cold room',
     await expectNoAxeViolations(page);
     await expectNoHorizontalScroll(page);
 
+    // Posting is the Owner's and the Manager's (the seed, CR-023): the Storekeeper is told so, in words.
+    await expect(page.getByRole('button', { name: 'Post the stock take' })).toHaveCount(0);
+    await expect(page.getByText('The owner or a manager posts this stock take.')).toBeVisible();
+    await page.getByRole('button', { name: /^Your account: / }).click();
+    await page.getByRole('button', { name: 'Sign out' }).click();
+    await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
+
+    await signInWithTotp(page, USERS.owner, `/stock-takes/${TAKE}`);
+    await expect(page.getByText('In review', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Post the stock take' }).click();
     const post = page.getByRole('dialog', { name: 'Post the stock take?' });
     await expect(post).toContainText('Gain at cost: GH₵40.00');
@@ -243,6 +253,8 @@ test.describe('stock documents', () => {
         lines: [
           {
             lineId: '019a7ab6-85b6-7485-a9bd-5121ae87c9ff',
+            // Counted in the unit the line was sent in (2.2.0); the server converts to the base unit.
+            uom: 'KG',
             qtyReceived: '29.750',
             varianceReasonCode: 'COUNT_ERROR',
           },
