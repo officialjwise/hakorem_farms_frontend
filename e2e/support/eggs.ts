@@ -103,3 +103,50 @@ export function eggOrder(base: S['PurchaseOrder'], status: S['PurchaseOrder']['s
     ],
   };
 }
+
+/**
+ * The big eggs' prices in a list, as the API answers them (2.1.0): a crate, a crate from 10 crates for a
+ * bulk buyer (stored as 300 eggs), and a single egg, each its own entry and its own price.
+ */
+export function eggEntries(base: S['PriceListEntry']): S['PriceListEntry'][] {
+  const egg = {
+    ...base,
+    product: EGGS_REF,
+    grade: null,
+    weightBand: null,
+    basis: 'PER_UNIT' as const,
+    quoteOnly: false,
+  };
+  return [
+    {
+      ...egg,
+      id: '019a7aa6-0e11-7c20-8a31-0b2c3d4e5f61',
+      uom: 'CRATE',
+      minQty: '0.000',
+      minQtyBase: '0.000',
+      listPricePesewas: 6000,
+      floorPricePesewas: 5500,
+      ceilingPricePesewas: 6500,
+    },
+    {
+      ...egg,
+      id: '019a7aa6-2d33-7c20-8a31-0b2c3d4e5f62',
+      uom: 'CRATE',
+      minQty: '10.000',
+      minQtyBase: '300.000',
+      listPricePesewas: 5500,
+      floorPricePesewas: 5200,
+      ceilingPricePesewas: 6000,
+    },
+    {
+      ...egg,
+      id: '019a7aa6-4c55-7c20-8a31-0b2c3d4e5f63',
+      uom: 'UNIT',
+      minQty: '0.000',
+      minQtyBase: '0.000',
+      listPricePesewas: 220,
+      floorPricePesewas: 200,
+      ceilingPricePesewas: 250,
+    },
+  ];
+}

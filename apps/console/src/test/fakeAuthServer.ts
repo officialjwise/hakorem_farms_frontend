@@ -224,6 +224,7 @@ const OWNER_EGG_PERMISSIONS = [
   'pur.purchase_order.send',
   'pur.purchase_order.close',
   'mdm.price_list.assign',
+  'mdm.price_list.create',
   'mdm.customer.read',
 ];
 

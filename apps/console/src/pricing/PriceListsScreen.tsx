@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 import type { components } from '@hakorem/api-client';
 import { Field, FilterMenu, IconChip, Select, useTableView, type TableColumn } from '@hakorem/ui';
 import { PageHeader } from '../lib/ScreenHeader';
+import { NewBuyerPriceList } from './BuyerPrices';
 import { useApiQuery } from '../data/api';
 import { When } from '../iam/presentation';
 import { useStateLabels } from '../lib/states';
@@ -105,6 +106,7 @@ export function PriceListsScreen() {
   return (
     <section aria-labelledby="price-lists-title" className="grid gap-4">
       <PageHeader title={t('priceLists.title')} titleId="price-lists-title" />
+      <NewBuyerPriceList />
       <p className="text-fg-muted">{t('priceLists.intro')}</p>
       <TableCard
         view={view}
