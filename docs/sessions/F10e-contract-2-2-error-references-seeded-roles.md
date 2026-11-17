@@ -114,7 +114,7 @@ Every other permission the fake holds beyond the seed is in a module the backend
 | `test:integration`                                                  | 0    | console 244, storefront 15                                                                           |
 | `test:a11y`                                                         | 0    | 322 stories (was 320: CopyId RequestReference, ErrorState WithPlainReference)                        |
 | `budget:console`                                                    | 0    | till 246.2 of 250 kB (was 244.9: CopyId through ErrorState); back office 278.5 of 300 kB (was 276.9) |
-| `test:e2e`, full run                                                | E2E  | E2E_COUNT                                                                                            |
+| `test:e2e`, full run                                                | 0    | 266 of 266 in 5.5 minutes                                                                            |
 
 ## For the owner
 
