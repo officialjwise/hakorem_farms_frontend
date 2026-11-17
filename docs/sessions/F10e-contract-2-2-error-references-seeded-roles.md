@@ -68,7 +68,9 @@ There is one exception: a permission the contract names on an operation and no s
 | Manager     | `ord.void.approve`                                                                               | was `ord.order.void.approve`, the `listRoles` example's name; now `ord.void.approve` (CR-037) |
 | Farm hand   | `mdm.reason_code.read`, `mdm.location.read`, `mdm.product.read`, `platform.file.upload.evidence` | already matched                                                                               |
 
-Every other permission the fake holds beyond the seed is in a module the backend has not seeded yet. Two unit tests and one e2e spec sent the Cashier to `/stock`; they now use the Storekeeper.
+Every other permission the fake holds beyond the seed is in a module the backend has not seeded yet. Two unit tests and two e2e specs sent the Cashier to `/stock`; they now use the Storekeeper.
+
+**The stock take in review now says who posts it.** A Storekeeper used to see no button and no words: now the screen says "The owner or a manager posts this stock take. The counts are saved." The F5 gate spec follows the seed: the Storekeeper counts, finishes and reads the differences, then the Owner signs in and posts.
 
 ## CR-029: the storefront opens the cart's own checkout
 
