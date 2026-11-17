@@ -664,3 +664,35 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 2. **`PriceListEntry.baseUom`** (string): the unit `minQtyBase` is in.
 
 **Until this lands:** the price list screen shows the assignment just made, from its answer; the break's base figure is shown bare.
+
+## CR-042. A supplier's balance: what is owed, claimed, in payment and paid (additive)
+
+- **Raised by:** frontend, the supplier invoice session: "show the supplier's balance: what is owed, what is claimed, what is paid" (owner, 2026-11-17).
+- **Contract read first (2.4.0):** each `SupplierInvoice` answers its own `grossPesewas`, `creditedPesewas`, `paidPesewas` and `outstandingPesewas`, each `SupplierClaim` its `claimedPesewas`, and each `SupplierPayment` its `amountPesewas`. Nothing answers them for a supplier as a whole: `getSupplier` carries no balance, `getAgeingReport` is receivables only, and no payables ageing or supplier statement exists. Adding them up in the browser would be the screen computing money (CLAUDE.md, the contract rule), and it would be wrong past one page of invoices.
+
+**Request:** `GET /suppliers/{id}/balance` (`getSupplierBalance`, `pur.supplier_invoice.read`), answering `SupplierBalance`:
+
+```yaml
+SupplierBalance:
+  supplier: SupplierRef
+  asOf: date-time # when the server worked it out
+  owedPesewas: Pesewas # outstandingPesewas of the supplier's APPROVED invoices, not cancelled
+  awaitingApprovalPesewas: Pesewas # grossPesewas of invoices entered and not yet approved (DRAFT, MATCHED, MISMATCH)
+  claimedPesewas: Pesewas # claimedPesewas of the supplier's OPEN claims
+  inPaymentPesewas: Pesewas # amountPesewas of payments PENDING_APPROVAL or APPROVED, not yet paid
+  paidPesewas: Pesewas # amountPesewas of the supplier's PAID payments
+  currency: Currency
+```
+
+Within the branches the caller holds the permission at, as `listSupplierInvoices` is. Every figure is integer pesewas, never negative; direction is in the field's name.
+
+**Until this lands:** the supplier's account screen is built against this shape behind `HK_REQUESTED_CONTRACT=CR-042` (ADR 0046, ADR 0052): `apps/console/src/requested/supplierBalance.ts`, answered in the e2e suite by `e2e/support/requested.ts`. With the switch off, the screen says the balance waits for the server and lists each outstanding invoice, open claim and payment with the API's own figures, unsummed.
+
+## CR-043. Approving a supplier invoice for payment refuses the person who entered it (behaviour, additive error code)
+
+- **Raised by:** frontend, the supplier invoice session: "approve the invoice for payment and record the payment, each with its own approver, as the maker-checker rules say" (owner, 2026-11-17).
+- **Contract read first (2.4.0):** `approveSupplierInvoice` takes `pur.supplier_invoice.approve` and refuses only on the match (`THREE_WAY_MATCH_FAILED`), the state and the period. Its `x-error-codes` have neither `MAKER_CANNOT_CHECK` nor `INVOICE_MAKER_CANNOT_APPROVE`, so the Accountant or the Owner may enter an invoice, match it and approve it for payment alone. The payment does need a second person (`submitSupplierPayment`, then `approveRequest`, `MAKER_CANNOT_CHECK`), and so do a credit note and a variance (`INVOICE_MAKER_CANNOT_APPROVE`). SHARED_BRIEF's separation of duties names supplier payments, not invoice approval.
+
+**Request:** `approveSupplierInvoice` refuses the invoice's `createdBy` with 422 `INVOICE_MAKER_CANNOT_APPROVE` (the code and its meaning exist already), in the domain and the database, as a credit note's approval does; add the code to the operation's `x-error-codes`. Or say that invoice approval is deliberately one person's, and the payment's approval is the check.
+
+**Until this lands:** invoice approval works as the contract says. The invoice screen shows any refusal of `approveSupplierInvoice` in words in its confirmation and on the page, so the refusal appears without a screen change once the server sends it. No switch: no shape changes.
