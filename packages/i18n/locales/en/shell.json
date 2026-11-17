@@ -129,7 +129,10 @@
     "debitNote": "Debit note",
     "statements": "Customer statements",
     "statement": "Statement",
-    "statementNew": "New statement"
+    "statementNew": "New statement",
+    "purchaseOrders": "Purchase orders",
+    "purchaseOrderNew": "New purchase order",
+    "purchaseOrder": "Purchase order"
   },
   "placeholder": {
     "title": "This area is built in a later session",

@@ -1,0 +1,111 @@
+{
+  "back": "Back to purchase orders",
+  "unnumbered": "Order to {{supplier}}, not yet numbered",
+  "list": {
+    "title": "Purchase orders",
+    "new": "New purchase order",
+    "pages": "Purchase order pages",
+    "loading": "Loading purchase orders",
+    "empty": "No purchase orders yet",
+    "emptyBody": "A purchase order asks a supplier for stock, such as crates of eggs.",
+    "error": "Purchase orders could not be loaded",
+    "denied": "You do not have access to purchase orders"
+  },
+  "filters": {
+    "status": "State",
+    "anyStatus": "Any state",
+    "supplier": "Supplier",
+    "anySupplier": "Any supplier"
+  },
+  "columns": {
+    "order": "Order",
+    "status": "State",
+    "supplier": "Supplier",
+    "ordered": "Ordered on",
+    "expected": "Expected",
+    "total": "Total",
+    "product": "Product",
+    "qtyOrdered": "Ordered",
+    "unitPrice": "Unit price",
+    "lineNet": "Line total before tax",
+    "received": "Received",
+    "outstanding": "Still to come"
+  },
+  "status": {
+    "DRAFT": "Draft",
+    "PENDING_APPROVAL": "Waiting for approval",
+    "APPROVED": "Approved",
+    "SENT": "Sent to the supplier",
+    "PARTIALLY_RECEIVED": "Part received",
+    "RECEIVED": "Received",
+    "CLOSED": "Closed",
+    "CANCELLED": "Cancelled"
+  },
+  "fields": {
+    "supplier": "Supplier",
+    "chooseSupplier": "Choose the supplier",
+    "deliverTo": "Deliver to",
+    "orderDate": "Order date",
+    "expectedOn": "Expected on",
+    "expectedOnHint": "Optional. The day the supplier says it will arrive.",
+    "expectedBefore": "The expected day cannot be before the order date."
+  },
+  "new": {
+    "title": "New purchase order",
+    "hint": "Saving makes a draft. The prices, tax and totals are worked out by the server and shown before you submit it.",
+    "save": "Save the draft",
+    "saving": "Saving the draft",
+    "notSaved": "The purchase order was not saved",
+    "denied": "You cannot draft purchase orders"
+  },
+  "detail": {
+    "loading": "Loading the purchase order",
+    "notFound": "There is no purchase order at this address",
+    "error": "This purchase order could not be loaded",
+    "lines": "Ordered lines",
+    "sentAt": "Sent to the supplier",
+    "notSent": "Not yet",
+    "createdBy": "Drafted by",
+    "per": "per {{unit}}",
+    "net": "Before tax",
+    "tax": "Tax",
+    "gross": "Total",
+    "pendingTitle": "Waiting for approval",
+    "pendingBody": "This order is above the amount you can approve. Another person approves it in Approvals before it can be sent."
+  },
+  "summary": {
+    "supplier": "To {{supplier}}"
+  },
+  "actions": {
+    "submit": "Submit the order",
+    "submitTitle": "Submit this purchase order?",
+    "submitBody": "Within your limit it is approved at once; above it, it waits for another person to approve.",
+    "notSubmitted": "The order was not submitted",
+    "send": "Send to the supplier",
+    "sendTitle": "Send this order to {{supplier}}?",
+    "sendBody": "{{supplier}} is sent the order with these lines and this total.",
+    "channel": "Send by",
+    "notSent": "The order was not sent",
+    "receive": "Receive a delivery",
+    "cancel": "Cancel the order",
+    "cancelTitle": "Cancel this purchase order?",
+    "cancelBody": "Nothing has been received against it. The reason goes in the audit log.",
+    "close": "Close the order",
+    "closeTitle": "Close this purchase order?",
+    "closeBody": "What is still to come stays recorded as never delivered. The reason goes in the audit log.",
+    "sending": "Sending",
+    "failed": "That did not go through",
+    "denied": "You cannot do this to purchase orders"
+  },
+  "channel": {
+    "WHATSAPP": "WhatsApp",
+    "EMAIL": "Email"
+  },
+  "outcome": {
+    "submitted": "Approved. It can be sent to the supplier.",
+    "awaiting": "Sent for approval. It can be sent to the supplier once approved.",
+    "sent": "Sent to the supplier.",
+    "cancelled": "The order is cancelled.",
+    "closed": "The order is closed."
+  }
+}

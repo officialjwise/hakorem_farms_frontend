@@ -1,6 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
+import type { components } from '@hakorem/api-client';
 import {
   Button,
   Card,
@@ -15,13 +16,24 @@ import {
   type FailureLike,
 } from '@hakorem/ui';
 import { PageHeader } from '../lib/ScreenHeader';
-import { useApiAllPages, useApiMutation } from '../data/api';
+import { useApiAllPages, useApiMutation, useApiQuery } from '../data/api';
 import { LeaveGuardDialog, useLeaveGuard } from '../lib/LeaveGuard';
 import { useIntentKey } from '../lib/queries';
 import { useStateLabels } from '../lib/states';
-import { emptyLine, lineProblems, LinesEditor, type DraftLine, type LineKind } from './LinesEditor';
+import {
+  emptyLine,
+  lineProblems,
+  LinesEditor,
+  receiptLineInput,
+  type DraftLine,
+  type LineKind,
+} from './LinesEditor';
 import { useLocations } from './locations';
 import { toQuantity } from './units';
+import { useSupplierOptions } from './filters';
+
+type S = components['schemas'];
+type ReasonCode = S['ReasonCode'];
 
 /**
  * The three ways stock is entered by hand (FR-INV): an adjustment with a reason, a transfer between
@@ -39,7 +51,13 @@ function MoveForm({
   error,
   pending,
   onSave,
+  rejectionReasons = [],
+  intro,
 }: {
+  /** Receipts: the reasons a rejected quantity names. */
+  rejectionReasons?: readonly ReasonCode[];
+  /** Words under the title, before the form: what a receipt against an order fills in. */
+  intro?: ReactNode;
   kind: LineKind;
   titleKey: 'adjustments' | 'transfers' | 'receipts';
   backTo: string;
@@ -73,7 +91,7 @@ function MoveForm({
   });
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    const found = lineProblems(lines, kind);
+    const found = lineProblems(lines, kind, rejectionReasons);
     setProblems(found);
     if (!headerOk() || Object.keys(found).length > 0) return;
     onSave()
@@ -91,6 +109,7 @@ function MoveForm({
         </Link>
         <PageHeader title={t(`${titleKey}.newTitle`)} titleId="move-title" />
         <p className="text-fg-muted">{t('move.draftHint')}</p>
+        {intro}
       </div>
       <QueryBoundary
         query={locations.query}
@@ -104,7 +123,13 @@ function MoveForm({
               <form className="grid gap-4" onSubmit={submit} noValidate>
                 <MutationFailure error={error} labels={failure} />
                 {header}
-                <LinesEditor kind={kind} lines={lines} onChange={setLines} problems={problems} />
+                <LinesEditor
+                  kind={kind}
+                  lines={lines}
+                  onChange={setLines}
+                  problems={problems}
+                  rejectionReasons={rejectionReasons}
+                />
                 <div>
                   <Button type="submit" loading={pending} loadingLabel={t('move.saving')}>
                     {t('move.save')}
@@ -153,7 +178,12 @@ function LocationField({
 }
 
 const quantities = (lines: DraftLine[]) =>
-  lines.map((line) => ({ productId: line.product?.id ?? '', qty: toQuantity(line.qty) ?? '' }));
+  lines.map((line) => ({
+    productId: line.product?.id ?? '',
+    // A transfer counted in crates names the crate (2.2.0); the server converts to eggs.
+    ...(line.uom === null ? {} : { uom: line.uom }),
+    qty: toQuantity(line.qty) ?? '',
+  }));
 
 export function AdjustmentNewScreen() {
   const { t } = useTranslation(['stock', 'common']);
@@ -317,15 +347,82 @@ export function TransferNewScreen() {
 
 type ReceiptKind = 'PURCHASE' | 'HARVEST' | 'OPENING';
 
+/** Orders a delivery can still come in against: approved or sent, and not yet fully received. */
+const RECEIVABLE: readonly S['PurchaseOrder']['status'][] = [
+  'APPROVED',
+  'SENT',
+  'PARTIALLY_RECEIVED',
+];
+
+/** One draft line per order line, its product and unit fixed by the order; the person counts what came. */
+function linesFromOrder(order: S['PurchaseOrder']): DraftLine[] {
+  return order.lines.map((line) =>
+    emptyLine({
+      product: { ...line.product, baseUom: line.baseUom },
+      uom: line.uom === line.baseUom ? null : line.uom,
+      purchaseOrderLineId: line.id,
+    }),
+  );
+}
+
 export function ReceiptNewScreen() {
   const { t } = useTranslation(['stock', 'common']);
+  const [search] = useSearchParams();
+  const fromOrder = search.get('purchaseOrder');
   const [lines, setLines] = useState<DraftLine[]>([emptyLine()]);
-  const [kind, setKind] = useState<ReceiptKind>('HARVEST');
+  const [kind, setKind] = useState<ReceiptKind>(fromOrder === null ? 'HARVEST' : 'PURCHASE');
   const [locationId, setLocationId] = useState('');
+  const [supplierId, setSupplierId] = useState('');
+  const [orderId, setOrderId] = useState('');
   const [deliveryNote, setDeliveryNote] = useState('');
   const [checked, setChecked] = useState(false);
+  const suppliers = useSupplierOptions();
+  // The order this delivery comes in against, when opened from it: its supplier, place and lines.
+  const linked = useApiQuery(
+    'getPurchaseOrder',
+    { path: { id: fromOrder ?? '' } },
+    { enabled: fromOrder !== null },
+  );
+  const [filledFrom, setFilledFrom] = useState<string | null>(null);
+  if (linked.data !== undefined && filledFrom !== linked.data.id) {
+    setFilledFrom(linked.data.id);
+    setKind('PURCHASE');
+    setSupplierId(linked.data.supplier.id);
+    setOrderId(linked.data.id);
+    setLocationId(linked.data.deliverToLocation.id);
+    setLines(linesFromOrder(linked.data));
+  }
+  // A supplier's open orders: a working list (ADR 0028).
+  const orders = useApiAllPages(
+    'listPurchaseOrders',
+    { query: { supplierId, limit: 100 } },
+    { staleClass: 'working', enabled: kind === 'PURCHASE' && supplierId !== '' },
+  );
+  const open = (orders.data?.items ?? []).filter(
+    (o) => o.supplier.id === supplierId && RECEIVABLE.includes(o.status),
+  );
+  // The fixed reasons for goods turned away at the door (2.3.0): `reference`.
+  const reasons = useApiAllPages(
+    'listReasonCodes',
+    { query: { domain: 'GOODS_RECEIPT_REJECTION', limit: 100 } },
+    { staleClass: 'reference' },
+  );
+  const rejectionReasons = (reasons.data?.items ?? []).filter(
+    (r) => r.domain === 'GOODS_RECEIPT_REJECTION',
+  );
   const create = useApiMutation('createGoodsReceipt');
   const keyFor = useIntentKey();
+  const required = t('common:field.required');
+  const chooseOrder = (id: string) => {
+    setOrderId(id);
+    const order = open.find((o) => o.id === id);
+    if (order === undefined) {
+      setLines([emptyLine()]);
+      return;
+    }
+    setLocationId(order.deliverToLocation.id);
+    setLines(linesFromOrder(order));
+  };
   return (
     <MoveForm
       kind="receipt"
@@ -333,24 +430,24 @@ export function ReceiptNewScreen() {
       backTo="/goods-receipts"
       lines={lines}
       setLines={setLines}
+      rejectionReasons={rejectionReasons}
       error={create.error}
       pending={create.isPending}
+      intro={reasons.isError ? <p role="alert">{t('receipts.reasonsError')}</p> : null}
       headerOk={() => {
         setChecked(true);
-        return locationId !== '';
+        return locationId !== '' && (kind !== 'PURCHASE' || supplierId !== '');
       }}
       onSave={async () => {
         const body = {
           kind,
           locationId,
+          ...(kind === 'PURCHASE' ? { supplierId } : {}),
+          ...(kind === 'PURCHASE' && orderId !== '' ? { purchaseOrderId: orderId } : {}),
           // The moment it is saved: when the stock arrived is the person's to correct on paper (A-F5-04).
           receivedAt: new Date().toISOString(),
           ...(deliveryNote.trim() === '' ? {} : { deliveryNoteRef: deliveryNote.trim() }),
-          lines: lines.map((line) => ({
-            productId: line.product?.id ?? '',
-            qtyReceived: toQuantity(line.qty) ?? '',
-            valuePesewas: line.valuePesewas ?? 0,
-          })),
+          lines: lines.map(receiptLineInput),
         };
         const made = await create.mutateAsync({ body }, { idempotencyKey: keyFor(body) });
         return `/goods-receipts/${made.id}`;
@@ -360,17 +457,62 @@ export function ReceiptNewScreen() {
           <Field label={t('receipts.kind')} hint={t('receipts.kindHint')}>
             <Select
               value={kind}
-              onValueChange={(value) =>
-                setKind(
-                  value === 'PURCHASE' ? 'PURCHASE' : value === 'OPENING' ? 'OPENING' : 'HARVEST',
-                )
-              }
+              onValueChange={(value) => {
+                const next: ReceiptKind =
+                  value === 'PURCHASE' ? 'PURCHASE' : value === 'OPENING' ? 'OPENING' : 'HARVEST';
+                setKind(next);
+                if (next !== 'PURCHASE' && orderId !== '') {
+                  setOrderId('');
+                  setLines([emptyLine()]);
+                }
+              }}
               options={(['HARVEST', 'PURCHASE', 'OPENING'] as const).map((k) => ({
                 value: k,
                 label: t(`receiptKind.${k}`),
               }))}
             />
           </Field>
+          {kind === 'PURCHASE' ? (
+            <>
+              <Field
+                label={t('receipts.supplier')}
+                required
+                requiredLabel={required}
+                error={checked && supplierId === '' ? required : undefined}
+              >
+                <Select
+                  value={supplierId}
+                  onValueChange={(value) => {
+                    setSupplierId(value);
+                    if (orderId !== '') {
+                      setOrderId('');
+                      setLines([emptyLine()]);
+                    }
+                  }}
+                  placeholder={t('receipts.chooseSupplier')}
+                  options={suppliers}
+                />
+              </Field>
+              {supplierId === '' ? null : (
+                <Field label={t('receipts.order')} hint={t('receipts.orderHint')}>
+                  <Select
+                    value={orderId === '' ? NO_ORDER : orderId}
+                    onValueChange={(value) => chooseOrder(value === NO_ORDER ? '' : value)}
+                    options={[
+                      { value: NO_ORDER, label: t('receipts.noOrder') },
+                      ...open.map((o) => ({
+                        value: o.id,
+                        label: t('receipts.orderOption', {
+                          order: o.orderNo ?? t('receipts.orderUnnumbered'),
+                          date: o.orderDate,
+                        }),
+                      })),
+                    ]}
+                  />
+                </Field>
+              )}
+            </>
+          ) : null}
           <LocationField
             label={t('receipts.location')}
             value={locationId}
@@ -389,3 +531,5 @@ export function ReceiptNewScreen() {
     />
   );
 }
+
+const NO_ORDER = 'NONE';

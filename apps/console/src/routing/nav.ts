@@ -15,6 +15,7 @@ import {
   Building2,
   CalendarClock,
   ClipboardCheck,
+  ClipboardList,
   FolderTree,
   History,
   LayoutDashboard,
@@ -198,6 +199,12 @@ export const BACK_OFFICE_GROUPS: readonly NavGroup[] = [
     items: [
       { key: 'branches', path: '/branches', permission: 'mdm.branch.read', icon: Building2 },
       { key: 'suppliers', path: '/suppliers', permission: 'mdm.supplier.read', icon: Truck },
+      {
+        key: 'purchaseOrders',
+        path: '/purchase-orders',
+        permission: 'pur.purchase_order.read',
+        icon: ClipboardList,
+      },
     ],
   },
   {

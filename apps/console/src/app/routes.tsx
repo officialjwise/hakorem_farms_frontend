@@ -135,6 +135,34 @@ export const protectedRoutes: RouteObject[] = [
           },
         ],
       },
+      // The egg session: buying from suppliers, loaded on demand (ADR 0032).
+      {
+        path: 'purchase-orders',
+        handle: back('pur.purchase_order.read', 'purchaseOrders'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../buying/PurchaseOrderScreens').then((m) => m.PurchaseOrdersScreen),
+            ),
+            handle: back('pur.purchase_order.read', 'purchaseOrders'),
+          },
+          {
+            path: 'new',
+            element: lazyScreen(() =>
+              import('../buying/PurchaseOrderScreens').then((m) => m.PurchaseOrderNewScreen),
+            ),
+            handle: back('pur.purchase_order.create', 'purchaseOrderNew'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../buying/PurchaseOrderScreens').then((m) => m.PurchaseOrderScreen),
+            ),
+            handle: back('pur.purchase_order.read', 'purchaseOrder'),
+          },
+        ],
+      },
       // F5b, loaded on demand (ADR 0032).
       {
         path: 'branches',
