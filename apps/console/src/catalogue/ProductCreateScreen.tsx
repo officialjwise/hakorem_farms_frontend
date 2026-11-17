@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router';
 import { z } from 'zod';
 import type { components, OperationInput } from '@hakorem/api-client';
 import {
+  Alert,
   Card,
   CardBody,
   ErrorState,
@@ -25,6 +26,7 @@ import { LeaveGuardDialog, useLeaveGuard } from '../lib/LeaveGuard';
 import { bothQueries, uniqueById, useIntentKey } from '../lib/queries';
 import { useStateLabels } from '../lib/states';
 import { useWriteFailure, WriteFailureView, type WriteFailure } from '../lib/writeFailure';
+import { productCreateBody, serverGivesSku } from '../requested/serverSku';
 import { ONLINE_MODES } from './ProductScreen';
 
 type StockPolicy = components['schemas']['StockPolicy'];
@@ -114,7 +116,6 @@ function CreateForm({
   const schema = useMemo(
     () =>
       z.object({
-        sku: z.string().trim().min(1, required),
         name: z.string().trim().min(1, required),
         categoryId: z.string().min(1, required),
         stockPolicy: z.enum(['SERIALISED', 'CATCH_WEIGHT', 'COUNTABLE', 'NON_STOCK']),
@@ -131,7 +132,6 @@ function CreateForm({
   const form = useForm<z.input<typeof schema>, unknown, z.output<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
-      sku: '',
       name: '',
       categoryId: '',
       stockPolicy: 'COUNTABLE',
@@ -196,8 +196,8 @@ function CreateForm({
           className="grid gap-4"
           onSubmit={async (values) => {
             setFailure(null);
-            const body: OperationInput<'createProduct'>['body'] = {
-              sku: values.sku,
+            // The server gives the SKU (owner, 2026-11-17; CR-034): it is never typed.
+            const body: OperationInput<'createProduct'>['body'] = productCreateBody({
               name: values.name,
               categoryId: values.categoryId,
               stockPolicy: values.stockPolicy,
@@ -208,7 +208,7 @@ function CreateForm({
               ...(values.nominalPackKg === null ? {} : { nominalPackKg: values.nominalPackKg }),
               ...(values.barcode === '' ? {} : { barcode: values.barcode }),
               ...(values.description === '' ? {} : { description: values.description }),
-            };
+            });
             const created = await create.mutateAsync({ body }, { idempotencyKey: keyFor(body) });
             await navigate(`/products/${created.id}`);
           }}
@@ -216,9 +216,15 @@ function CreateForm({
         >
           <p className="text-control-sm text-fg-muted">{t('create.hint')}</p>
           <WriteFailureView failure={failure} title={t('create.failed')} />
-          <FormField name="sku" label={t('create.fields.sku')} required requiredLabel={required}>
-            {(field) => <Input {...field} autoComplete="off" autoCapitalize="characters" />}
-          </FormField>
+          <dl className="grid gap-1" data-slot="sku-given">
+            <dt className="text-control-sm font-semibold">{t('create.fields.sku')}</dt>
+            <dd className="text-control-sm text-fg-muted">{t('create.skuGiven')}</dd>
+          </dl>
+          {serverGivesSku() ? null : (
+            <Alert severity="info" title={t('create.skuWaits')}>
+              {t('create.skuWaitsBody')}
+            </Alert>
+          )}
           <FormField name="name" label={t('create.fields.name')} required requiredLabel={required}>
             {(field) => <Input {...field} autoComplete="off" />}
           </FormField>
@@ -265,7 +271,7 @@ function CreateForm({
             {(field) => <Textarea {...field} rows={3} />}
           </FormField>
           <div>
-            <FormSubmitButton loadingLabel={t('create.creating')}>
+            <FormSubmitButton loadingLabel={t('create.creating')} disabled={!serverGivesSku()}>
               {t('create.submit')}
             </FormSubmitButton>
           </div>

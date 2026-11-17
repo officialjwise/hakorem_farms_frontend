@@ -25,7 +25,7 @@ Option 3.
 - **`ApiClient.callRequested(operation, input, options)`** sends it through the same transport as `call`, and refuses an operation the generated manifest now lists, so the request is deleted rather than kept beside the real operation.
 - **Fields a request adds to an existing response** (`OfflinePack.receiptLinkTemplate`, `SyncResultItem.receiptMessage`) are read only by the request's module, and only with the switch on. The stored record keeps whatever the server sent, so nothing is lost when the field lands.
 - **With the switch off**, every screen that depends on a request says in words what is not available and carries on: no PIN lock, no offline mobile money, no witness, no receipt link. The sale is never blocked.
-- **The e2e build** (`pnpm test:e2e`, `pnpm screenshots`, CI) is built with `HK_REQUESTED_CONTRACT=CR-032,CR-033`, and `e2e/support/requested.ts` answers the requested operations after the same session and permission checks as the rest of the fake.
+- **The e2e build** (`pnpm test:e2e`, `pnpm screenshots`, CI) is built with `HK_REQUESTED_CONTRACT=CR-032,CR-033,CR-034`, and `e2e/support/requested.ts` answers the requested operations after the same session and permission checks as the rest of the fake.
 - **When a request lands**: sync, delete its module and its id from `CONTRACT_REQUESTS` in `switch.ts`, call the generated client, and drop the id from the builds. Its screens and specs stay.
 
 ## Consequences

@@ -67,3 +67,17 @@ export function installTillPins(api: FakeApi): { issued: number } {
 
 /** CR-033: the receipt page the till builds the link from. */
 export const RECEIPT_LINK_TEMPLATE = 'https://hakoremfarms.com/r/{saleId}';
+
+/**
+ * CR-034: the server gives each product its SKU. The fake adds one to the body the screen sent (without a
+ * SKU) before Prism, whose 1.x validation still requires it, answers; the bodies the screen sent are kept.
+ */
+export function installServerSku(api: FakeApi): { sent: Record<string, unknown>[] } {
+  const sent: Record<string, unknown>[] = [];
+  let next = 1;
+  api.serverFills('createProduct', (body) => {
+    sent.push(body);
+    return { ...body, sku: `PRD-${String(next++).padStart(4, '0')}` };
+  });
+  return { sent };
+}
