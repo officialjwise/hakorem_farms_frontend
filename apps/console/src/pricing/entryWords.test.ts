@@ -31,12 +31,12 @@ const entry = (change: Partial<Entry>): Entry =>
 describe('a price line names its selling unit and its break in that unit (2.1.0)', () => {
   it("shows a crate break with the API's own figure in the base unit, never one worked out", () => {
     expect(entryWords(entry({ minQty: '10.000', minQtyBase: '300.000' }), t, units)).toEqual([
-      'per Crate',
+      'per crate',
       'from 10 Crate (300 in the base unit)',
     ]);
   });
   it('shows a single egg with no break as its unit alone', () => {
-    expect(entryWords(entry({ uom: 'UNIT' }), t, units)).toEqual(['per Unit']);
+    expect(entryWords(entry({ uom: 'UNIT' }), t, units)).toEqual(['per unit']);
   });
   it('names no unit on a per-kilogram price', () => {
     expect(entryWords(entry({ basis: 'PER_KG', uom: 'KG' }), t, units)).toEqual([]);

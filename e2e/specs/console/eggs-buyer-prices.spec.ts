@@ -38,15 +38,15 @@ test.describe('bulk buyer prices for eggs', () => {
     });
     const rows = preview.getByRole('row').filter({ hasText: 'Eggs, big' });
     await expect(rows).toHaveCount(3);
-    await expect(rows.nth(0)).toContainText('per Crate');
+    await expect(rows.nth(0)).toContainText('per crate');
     await expect(rows.nth(1)).toContainText('from 10 Crate (300 in the base unit)');
     await expect(rows.nth(1)).toContainText('GH₵55.00');
-    await expect(rows.nth(2)).toContainText('per Unit');
+    await expect(rows.nth(2)).toContainText('per unit');
     await expect(rows.nth(2)).toContainText('GH₵2.20');
     // A crate and a single egg are told apart on their buttons too.
     await expect(
       page.getByRole('button', {
-        name: 'Change the prices of Eggs, big, per Crate, from 10 Crate (300 in the base unit)',
+        name: 'Change the prices of Eggs, big, per crate, from 10 Crate (300 in the base unit)',
       }),
     ).toBeVisible();
     await expectNoHorizontalScroll(page);

@@ -398,9 +398,10 @@ export function ReceiptNewScreen() {
     { query: { supplierId, limit: 100 } },
     { staleClass: 'working', enabled: kind === 'PURCHASE' && supplierId !== '' },
   );
-  const open = (orders.data?.items ?? []).filter(
-    (o) => o.supplier.id === supplierId && RECEIVABLE.includes(o.status),
-  );
+  // The order this screen was opened from is offered even before the list has it.
+  const open = [...(linked.data === undefined ? [] : [linked.data]), ...(orders.data?.items ?? [])]
+    .filter((o) => o.supplier.id === supplierId && RECEIVABLE.includes(o.status))
+    .filter((o, i, all) => all.findIndex((p) => p.id === o.id) === i);
   // The fixed reasons for goods turned away at the door (2.3.0): `reference`.
   const reasons = useApiAllPages(
     'listReasonCodes',

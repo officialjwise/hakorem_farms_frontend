@@ -7,6 +7,7 @@ import {
 } from '../../support/helpers';
 import {
   eggOrder,
+  eggReceipt,
   EGGS_ID,
   ORDER_ID,
   ORDER_LINE_ID,
@@ -93,41 +94,7 @@ test.describe('buying eggs by the crate', () => {
     seedEggs(api);
     api.rewrite('getPurchaseOrder', (body) => eggOrder(body as S['PurchaseOrder'], 'SENT'));
     // The receipt as the server answers it: 18 crates in (540 eggs), 2 crates turned away, cracked.
-    api.rewrite('getGoodsReceipt', (body) => {
-      const receipt = body as S['GoodsReceipt'];
-      const line = receipt.lines[0];
-      if (line === undefined) return receipt;
-      return {
-        ...receipt,
-        status: 'DRAFT',
-        receiptNo: null,
-        supplier: SUPPLIER,
-        location: STORE,
-        purchaseOrder: { id: ORDER_ID, docType: 'PURCHASE_ORDER', number: 'PO-2026-DDW-000052' },
-        lines: [
-          {
-            ...line,
-            product: { id: EGGS_ID, sku: 'EGG-0003', name: 'Eggs, big' },
-            purchaseOrderLineId: ORDER_LINE_ID,
-            uom: 'CRATE',
-            baseUom: 'UNIT',
-            qtyReceived: '18.000',
-            qtyRejected: '2.000',
-            qtyReceivedBase: '540.000',
-            qtyRejectedBase: '60.000',
-            rejectionReasonCode: 'CRACKED',
-            rejectionNote: null,
-            weightKg: null,
-            weightSource: null,
-            valuePesewas: 85500,
-            animals: [],
-          },
-        ],
-        totalValuePesewas: 85500,
-        postedAt: null,
-        postedBy: null,
-      };
-    });
+    api.rewrite('getGoodsReceipt', (body) => eggReceipt(body as S['GoodsReceipt']));
 
     await signIn(page, USERS.storekeeper, `/purchase-orders/${ORDER_ID}`);
     await page.getByRole('link', { name: 'Receive a delivery' }).click();
@@ -135,6 +102,10 @@ test.describe('buying eggs by the crate', () => {
     // The order fills the supplier, the place and the line: its product and unit are the order's.
     await expect(page.getByText('Eggs, big, ordered in Crate')).toBeVisible();
     await expect(page.getByRole('combobox', { name: /^Supplier/ })).toContainText(SUPPLIER.name);
+    await expect(page.getByRole('combobox', { name: /^Purchase order/ })).toContainText(
+      'PO-2026-DDW-000052',
+    );
+    await expect(page.getByRole('combobox', { name: /^Received at/ })).toContainText(STORE.name);
     await page.getByLabel(/^Accepted, in Crate, line 1/).fill('18');
     await page.getByLabel(/^Rejected at the door, in Crate, line 1/).fill('2');
     await page.getByLabel(/^Cost of the accepted quantity, GHS, line 1/).fill('855.00');

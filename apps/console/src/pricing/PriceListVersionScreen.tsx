@@ -271,7 +271,7 @@ export function entryWords(
           min: entry.weightBand.minKg,
           max: entry.weightBand.maxKg,
         }),
-    entry.basis === 'PER_KG' ? undefined : t('entry.perUnit', { unit: units.name(entry.uom) }),
+    entry.basis === 'PER_KG' ? undefined : t('entry.perUnit', { unit: unitWord(entry.uom, units) }),
     entry.minQty === '0.000'
       ? undefined
       : entry.minQtyBase === entry.minQty
@@ -282,6 +282,25 @@ export function entryWords(
             base: formatQuantity(entry.minQtyBase, { places: 0 }),
           }),
   ].filter((part): part is string => part !== undefined);
+}
+
+/** A selling unit as a word after "per": "crate", "unit". */
+function unitWord(code: string, units: { name: (code: string) => string }): string {
+  return units.name(code).toLowerCase();
+}
+
+/**
+ * What a price multiplies, in words: "per kg" for a weight, otherwise per the entry's own selling unit,
+ * so a crate's band reads "per crate" and never "per unit" (2.1.0).
+ */
+function basisWords(
+  entry: PriceListEntry,
+  t: (key: string, options?: Record<string, unknown>) => string,
+  units: { name: (code: string) => string },
+): string {
+  return entry.basis === 'PER_KG' || entry.uom === 'UNIT' || entry.uom === 'HEAD'
+    ? t(`basis.${entry.basis}`)
+    : t('entry.perUnit', { unit: unitWord(entry.uom, units) });
 }
 
 /** A line's own name for its buttons: two lines of one product (a crate, an egg) never share one. */
@@ -312,6 +331,7 @@ function LineName({ entry }: { entry: PriceListEntry }) {
 /** A line's price: the band with its list price, or "quote only". Every figure is the API's. */
 function Price({ entry, empty }: { entry: PriceListEntry | null; empty: string }) {
   const { t } = useTranslation('catalogue');
+  const units = useUnits();
   if (entry === null) return <span>{empty}</span>;
   if (entry.quoteOnly) return <span>{t('entry.quoteOnly')}</span>;
   return (
@@ -321,7 +341,7 @@ function Price({ entry, empty }: { entry: PriceListEntry | null; empty: string }
         ceilingPricePesewas: entry.ceilingPricePesewas,
         listPricePesewas: entry.listPricePesewas,
       }}
-      basisLabel={t(`basis.${entry.basis}`)}
+      basisLabel={basisWords(entry, t as never, units)}
       toLabel={t('entry.to')}
       listPriceLabel={t('entry.listPrice')}
     />
@@ -570,7 +590,8 @@ function EditEntryDialog({
       quoteOnly: entry.quoteOnly,
     },
   });
-  const basis = t(`basis.${entry.basis}`);
+  const units = useUnits();
+  const basis = basisWords(entry, t as never, units);
   const money = (name: 'listPricePesewas' | 'floorPricePesewas' | 'ceilingPricePesewas') => (
     <FormField
       name={name}

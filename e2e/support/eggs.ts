@@ -21,7 +21,7 @@ export const STORE = {
   id: '019a7a84-6045-7cc6-b1fe-d53368984e11',
   code: 'STORE-1',
   name: 'Feed and produce store',
-  kind: 'STORE',
+  kind: 'STORE' as const,
 };
 export const ORDER_ID = '019a7ab4-96c6-764d-ab85-6daa1377e687';
 export const ORDER_LINE_ID = '019a7ab5-0c1e-7d3a-9b2f-4e6a8c1d2f30';
@@ -35,8 +35,15 @@ export function asSeededEggs<T extends { id: string; baseUom: string; name: stri
     : product;
 }
 
-/** `listProducts` with the eggs in the seed's shape. */
+/** `listProducts` with the eggs in the seed's shape, and the store they are delivered to. */
 export function seedEggs(api: FakeApi): void {
+  // The contract's location example lists the farm and its pens; the eggs come into the store.
+  api.rewrite('listLocations', (body) => {
+    const page = body as { data: Record<string, unknown>[] };
+    const first = page.data[0];
+    if (first === undefined || page.data.some((l) => l.id === STORE.id)) return page;
+    return { ...page, data: [...page.data, { ...first, ...STORE }] };
+  });
   api.rewrite('listProducts', (body) => {
     const page = body as { data: S['Product'][] };
     return { ...page, data: page.data.map(asSeededEggs) };
@@ -184,4 +191,40 @@ export function eggsByTheEgg(products: Record<string, unknown>[]): Record<string
       ],
     };
   });
+}
+
+/** The receipt against that order as the server answers it: 18 crates in (540 eggs), 2 cracked turned away. */
+export function eggReceipt(receipt: S['GoodsReceipt']): S['GoodsReceipt'] {
+  const line = receipt.lines[0];
+  if (line === undefined) return receipt;
+  return {
+    ...receipt,
+    status: 'DRAFT',
+    receiptNo: null,
+    supplier: SUPPLIER,
+    location: STORE,
+    purchaseOrder: { id: ORDER_ID, docType: 'PURCHASE_ORDER', number: 'PO-2026-DDW-000052' },
+    lines: [
+      {
+        ...line,
+        product: EGGS_REF,
+        purchaseOrderLineId: ORDER_LINE_ID,
+        uom: 'CRATE',
+        baseUom: 'UNIT',
+        qtyReceived: '18.000',
+        qtyRejected: '2.000',
+        qtyReceivedBase: '540.000',
+        qtyRejectedBase: '60.000',
+        rejectionReasonCode: 'CRACKED',
+        rejectionNote: null,
+        weightKg: null,
+        weightSource: null,
+        valuePesewas: 85500,
+        animals: [],
+      },
+    ],
+    totalValuePesewas: 85500,
+    postedAt: null,
+    postedBy: null,
+  };
 }
