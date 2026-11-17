@@ -19,7 +19,7 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-013 | 2026-11-15 | Open                     |
 | CR-014 | 2026-11-15 | Open                     |
 | CR-015 | 2026-11-15 | Open                     |
-| CR-016 | 2026-11-15 | Open                     |
+| CR-016 | 2026-11-15 | Closed (2.0.0)           |
 | CR-017 | 2026-11-15 | Open                     |
 | CR-018 | 2026-11-15 | Open                     |
 | CR-019 | 2026-11-15 | Open                     |
@@ -260,6 +260,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 **Request:** `POST /labels` with `{ productIds?, stockUnitIds?, copies, format }`, answered with a `SignedUrl` to a PDF, so label printing is server rendered, archived and audited like every other document.
 
 **Until this lands:** the labels screen draws each label in the browser from `Product.barcode` (or `sku`) and `StockUnit.identifier` as a Code 128 barcode, and prints with the browser's print dialog. Nothing is written to the API.
+
+**Closed (F10d, 2026-11-17):** contract 2.0.0 removed the product barcode, and the owner decided labels print text only. The labels screen no longer draws a barcode: each label prints its name, its SKU or its batch or tag, and its facts as text, still from the browser. The server-rendered PDF stays the backend's BL-049. The meat pack labels (`printPackLabels`) are unchanged, barcode included.
 
 ## CR-017. Name the refusals for closing a branch (clarification)
 
