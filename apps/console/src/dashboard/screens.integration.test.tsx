@@ -68,34 +68,24 @@ describe('the dashboard against the Prism mock', () => {
     expect(NOT_IN_CONTRACT).not.toContain('animalsOnHand');
   });
 
-  it('before sales and billing: each figure the server lists as pending is named, never a zero', async () => {
-    mock.prefer = 'example=beforeSalesAndBilling';
+  it('before the exception report: each figure the server lists as pending is named, never a zero', async () => {
+    // 1.52.0: the sales figures answer numbers; only the alerts and today's exceptions wait for B12.
+    mock.prefer = 'example=beforeExceptionReport';
     mock.preferPath = '/dashboard';
     await renderApp('/', await signedIn('owner'));
     const pending = await screen.findByRole('region', {
       name: 'Figures still to come from the server',
     });
-    for (const label of [
-      'Sales today',
-      'Sales per day',
-      'Sales this month',
-      'Sales by channel today',
-      'Selling best today',
-      'Needs attention',
-      'Exceptions recorded today',
-    ]) {
+    for (const label of ['Needs attention', 'Exceptions recorded today']) {
       expect(within(pending).getByText(label)).toHaveAttribute('data-slot', 'pending-figure');
     }
     expect(pending.textContent).not.toMatch(/\d/);
-    // Receivables (1.39.0) and cash (1.37.0) answer from the ledger now, so they are no longer pending.
-    expect(within(pending).queryByText('Owed by customers')).toBeNull();
-    expect(within(pending).queryByText('Cash on hand')).toBeNull();
-    // The row carries only what the server sent; nothing pending appears there, as zero or otherwise.
-    // The money row shows what is owed and the cash, and none of the pending sales figures.
+    for (const label of ['Sales today', 'Sales this month', 'Owed by customers', 'Cash on hand']) {
+      expect(within(pending).queryByText(label)).toBeNull();
+    }
     const money = screen.getByRole('region', { name: 'Today at a glance' });
     expect(within(money).getByText('Owed by customers')).toBeInTheDocument();
     expect(within(money).getByText('Cash on hand')).toBeInTheDocument();
-    expect(within(money).queryByText('Sales today')).toBeNull();
     const row = screen.getByRole('region', { name: 'Stock and animals' });
     expect(within(row).getByText('Stock value')).toBeInTheDocument();
     expect(within(row).getByText('Animals on hand')).toBeInTheDocument();
