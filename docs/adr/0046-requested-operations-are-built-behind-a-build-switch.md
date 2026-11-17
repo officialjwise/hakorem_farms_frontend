@@ -1,6 +1,6 @@
 # 0046. Build against a contract request behind a build switch, never by calling what the contract lacks
 
-- Status: proposed (the owner asked for "a local mock override shaped exactly as" CR-032 and CR-033, F9 report; this is how)
+- Status: accepted (owner, 2026-11-17), on three conditions, each enforced (below). Proposed in F10: the owner asked for "a local mock override shaped exactly as" CR-032 and CR-033 (F9 report); this is how
 - Date: 2026-11-16
 - Session: F10
 
@@ -28,9 +28,17 @@ Option 3.
 - **The e2e build** (`pnpm test:e2e`, `pnpm screenshots`, CI) is built with `HK_REQUESTED_CONTRACT=CR-032,CR-033,CR-034`, and `e2e/support/requested.ts` answers the requested operations after the same session and permission checks as the rest of the fake.
 - **When a request lands**: sync, delete its module and its id from `CONTRACT_REQUESTS` in `switch.ts`, call the generated client, and drop the id from the builds. Its screens and specs stay.
 
+## The owner's conditions (2026-11-17)
+
+Approved "if every switch names its contract request, is deleted when that request lands, and a production build fails if a switch is on for an operation the contract doesn't carry". Each is enforced, not only written down:
+
+1. **Every switch names its request.** A switch is a request id (`CR-032`), and `CONTRACT_REQUESTS` in `requested/switch.ts` lists only ids; an id with no module fails the build's first read. Every `RequestedOperation` carries its `request`.
+2. **Deleted when the request lands.** `requested/landed.ts` checks, at type-check time, that the generated client still lacks what each request asks for (an operation, a response field, or for CR-034 that `ProductCreate` still requires `sku`). When `pnpm sync-contract` brings a contract that carries it, the type check fails with "CR-0xx is in the contract now: delete its switch", so the sync cannot be committed with the switch in place. `switch.test.ts` fails if a switch has no such check. `callRequested` still refuses an operation the manifest lists, at run time.
+3. **A build for a real API fails with a switch on.** `vite.config.ts` calls `assertSwitchesAllowed` before anything is built: with any switch on, a build or dev server whose `HK_API_BASE_URL` is anything but `/mock` stops with an error naming the switches. Every switch is for a shape the contract does not carry (condition 2), so this is the rule "a switch on for an operation the contract doesn't carry" in a production build. Only the e2e and CI builds, against `/mock`, set it.
+
 ## Consequences
 
 - The till's PIN and receipt flows are built and proved end to end against the requested shapes, and a production build calls nothing the contract does not list.
 - The proof is only as good as the request: the fake answers what the frontend asked for. If the backend lands a different shape, the screens follow the contract, as for any change.
-- A deploy that sets `HK_REQUESTED_CONTRACT` against a backend without the operations gets a refusal (404) where the request is used; the till shows the feature as unavailable. DEPLOYMENT.md says not to set it.
+- A deploy cannot set `HK_REQUESTED_CONTRACT`: its build is for a real API, so it fails before building (condition 3). DEPLOYMENT.md says so.
 - Revisit if a request needs a server state the e2e fake cannot hold.

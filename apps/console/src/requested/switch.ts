@@ -29,6 +29,26 @@ export function parseRequestedContract(raw: string | undefined): ReadonlySet<Con
   return new Set(ids as ContractRequest[]);
 }
 
+/** The one API a switched-on build may talk to: the e2e fake and Prism, behind the `/mock` path (ADR 0025). */
+export const MOCK_API_BASE_URL = '/mock';
+
+/**
+ * The owner's condition on ADR 0046 (2026-11-17): a build for a real API fails if any switch is on. Every
+ * switch is for a shape the contract does not carry (`landed.ts` fails the type check once it
+ * does), so a build that talks to anything but the mock with a switch on would call what the API lacks.
+ * `vite.config.ts` calls this for every build and dev server; unit tests (mode `test`) do not.
+ */
+export function assertSwitchesAllowed(
+  rawRequested: string | undefined,
+  apiBaseUrl: string | undefined,
+): void {
+  const on = parseRequestedContract(rawRequested);
+  if (on.size === 0 || (apiBaseUrl ?? '').trim() === MOCK_API_BASE_URL) return;
+  throw new Error(
+    `${REQUESTED_CONTRACT_VARIABLE} switches on ${[...on].join(', ')}, which the contract does not carry, in a build for ${apiBaseUrl?.trim() || 'no API'}. A switch may be on only in a build against ${MOCK_API_BASE_URL} (ADR 0046): unset ${REQUESTED_CONTRACT_VARIABLE} for any other API.`,
+  );
+}
+
 /** Whether this build was built against the request. */
 export function requestedOn(request: ContractRequest): boolean {
   // Written out in full: Vite replaces the literal at build time (vite.config.ts).
