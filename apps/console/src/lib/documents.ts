@@ -11,6 +11,10 @@ const DOCUMENT_PATH: Record<string, string> = {
   MORTALITY_RECORD: '/mortality/',
   BREEDING_RECORD: '/breeding/',
   PROCESSING_ORDER: '/processing-orders/',
+  PURCHASE_ORDER: '/purchase-orders/',
+  SUPPLIER_INVOICE: '/supplier-invoices/',
+  SUPPLIER_PAYMENT: '/supplier-payments/',
+  SUPPLIER_CLAIM: '/supplier-claims/',
   // F8: a billing document's kind is its docType (`ArchivedDocument.businessDocument`).
   INVOICE: '/billing-documents/',
   RECEIPT: '/billing-documents/',

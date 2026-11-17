@@ -9,6 +9,7 @@ import {
   type OperationId,
   type OperationInput,
   type QueryOperationId,
+  type RequestedOperation,
 } from '@hakorem/api-client';
 import { isSameResource, queryKey } from './queryKeys';
 import { STALE_TIME_MS, DEFAULT_STALE_CLASS, type StaleClass } from './staleness';
@@ -136,6 +137,17 @@ export interface ApiHooks {
   ) => ApiMutation<Op>;
 }
 
+/** The input of a requested read: its path and query, as `callRequested` takes them. */
+export interface RequestedInput {
+  path?: Record<string, string>;
+  query?: Record<string, unknown>;
+}
+
+/** The key of a requested read, apart from every generated operation's (ADR 0052). */
+export function requestedQueryKey(operation: RequestedOperation, input: RequestedInput) {
+  return ['requested', operation.operationId, input] as const;
+}
+
 /**
  * Builds the two hooks every screen uses, bound to an app's `ApiClient` (ADR 0022). The client is passed in
  * rather than read from a context: the app creates it once beside its one QueryClient, and there is no
@@ -238,4 +250,28 @@ export function createApiHooks(api: ApiClient): ApiHooks {
   }
 
   return { useApiQuery, useApiAllPages, useApiMutation };
+}
+
+/**
+ * A read a contract request asks for and the contract does not list yet (ADR 0046, ADR 0052), through
+ * `callRequested`, with the same stale classes, retry and four states as `useApiQuery`. Only a module in
+ * the console's `requested/` calls it, with `enabled` set by the request's switch; the answer is cast to
+ * that module's type. Its key is `['requested', operationId, input]`, which no real operation shares. It is
+ * built apart from `createApiHooks`, so an app that never reads a requested operation (the till) does not
+ * carry it.
+ */
+export function createRequestedQuery(api: Pick<ApiClient, 'callRequested'>) {
+  return function useRequestedQuery<Data>(
+    operation: RequestedOperation,
+    input: RequestedInput,
+    options: QueryOptions = {},
+  ): UseQueryResult<Data, ApiError> {
+    return useQuery<Data, ApiError>({
+      queryKey: requestedQueryKey(operation, input),
+      queryFn: ({ signal }) => api.callRequested(operation, input, { signal }) as Promise<Data>,
+      staleTime: STALE_TIME_MS[options.staleClass ?? DEFAULT_STALE_CLASS],
+      enabled: options.enabled,
+      refetchInterval: options.refetchInterval,
+    });
+  };
 }

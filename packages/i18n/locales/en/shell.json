@@ -132,7 +132,15 @@
     "statementNew": "New statement",
     "purchaseOrders": "Purchase orders",
     "purchaseOrderNew": "New purchase order",
-    "purchaseOrder": "Purchase order"
+    "purchaseOrder": "Purchase order",
+    "supplierInvoices": "Supplier invoices",
+    "supplierInvoiceNew": "Enter a supplier invoice",
+    "supplierInvoice": "Supplier invoice",
+    "supplierPayments": "Supplier payments",
+    "supplierPaymentNew": "Prepare a payment",
+    "supplierPayment": "Supplier payment",
+    "supplierClaim": "Claim with a supplier",
+    "supplierAccount": "Supplier's account"
   },
   "placeholder": {
     "title": "This area is built in a later session",

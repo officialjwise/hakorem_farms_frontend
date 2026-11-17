@@ -424,6 +424,7 @@
     "claimed": "Claimed:",
     "note": "Note for the supplier",
     "noteHint": "Optional. For example, which crates and who signed the delivery note.",
+    "open": "Open the claim to settle it",
     "noteShown": "Note: {{note}}",
     "openBody": "Open: on {{supplier}}'s account until their invoice or credit note settles it.",
     "settledBody": "Settled by {{by}}.",

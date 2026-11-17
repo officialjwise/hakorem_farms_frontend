@@ -231,6 +231,22 @@ const OWNER_EGG_PERMISSIONS = [
   'pur.supplier_invoice.create',
 ];
 
+/**
+ * Supplier invoices and payments (F10g), as seeded for the Owner: entering, matching and approving an
+ * invoice, asking for and approving a variance, preparing, approving and paying a payment.
+ */
+const OWNER_PAYABLE_PERMISSIONS = [
+  'pur.supplier_invoice.read',
+  'pur.supplier_invoice.create',
+  'pur.supplier_invoice.match',
+  'pur.supplier_invoice.approve',
+  'pur.supplier_invoice.variance_approve',
+  'pur.supplier_payment.read',
+  'pur.supplier_payment.create',
+  'pur.supplier_payment.approve',
+  'pur.supplier_payment.pay',
+];
+
 /** What the owner holds for the F5b screens: the dashboard, branches and locations, and the new lists. */
 const OWNER_F5B_PERMISSIONS = [
   'rpt.dashboard.owner',
@@ -383,6 +399,14 @@ const MANAGER_PERMISSIONS = [
   'bil.credit_note.create',
   'bil.credit_note.approve',
   'doc.document.read',
+  // F10g, as seeded: the Manager reads supplier invoices, approves a variance and a payment, and prepares
+  // one; never approves an invoice or records a payment as paid.
+  'mdm.supplier.read',
+  'pur.supplier_invoice.read',
+  'pur.supplier_invoice.variance_approve',
+  'pur.supplier_payment.read',
+  'pur.supplier_payment.create',
+  'pur.supplier_payment.approve',
   ...MANAGER_TILL_PERMISSIONS,
 ];
 
@@ -403,6 +427,14 @@ const ACCOUNTANT_PERMISSIONS = [
   // 2.4.0: the Accountant raises and reads a claim with a supplier, as the seed gives it.
   'pur.supplier_invoice.read',
   'pur.supplier_invoice.create',
+  // F10g, as seeded: the Accountant matches and approves invoices and records payments as paid, and
+  // approves no payment.
+  'pur.supplier_invoice.match',
+  'pur.supplier_invoice.approve',
+  'pur.supplier_payment.read',
+  'pur.supplier_payment.pay',
+  'mdm.supplier.read',
+  'iam.approval.read',
 ];
 
 /** Keyed by lower-case email. Permission codes are the contract's `x-permission` values. */
@@ -426,6 +458,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
       ...OWNER_F6B_PERMISSIONS,
       ...OWNER_F8_PERMISSIONS,
       ...OWNER_EGG_PERMISSIONS,
+      ...OWNER_PAYABLE_PERMISSIONS,
       ...MANAGER_TILL_PERMISSIONS,
     ],
     moreBranches: SELLING_POINTS,
