@@ -65,3 +65,38 @@ export function useUnits() {
     name: (code: string): string => byCode.get(code)?.name ?? code,
   };
 }
+
+/** One unit a line can be counted in: the product's base unit, or a unit it converts from. */
+export interface LineUnit {
+  code: string;
+  /** For a converted unit, how many base units it is, as the API states it (`UomConversion.factor`). */
+  factor: string | null;
+}
+
+/**
+ * The units a product's line may be entered in (contract 2.2.0): its base unit first, then each live
+ * conversion's `fromUom`, from `listUomConversions`. The server converts; this only offers the choice and
+ * shows the conversion the API holds ("a crate is 30 eggs"), never a quantity worked out from it.
+ */
+export function useLineUnits(product: { id: string; baseUom: string } | null): {
+  units: LineUnit[];
+  loading: boolean;
+} {
+  // A product's conversions change rarely: `reference` (ADR 0028).
+  const conversions = useApiAllPages(
+    'listUomConversions',
+    { query: { productId: product?.id ?? '', limit: 100 } },
+    { staleClass: 'reference', enabled: product !== null },
+  );
+  if (product === null) return { units: [], loading: false };
+  const converted = (conversions.data?.items ?? [])
+    .filter((c) => c.product.id === product.id && c.toUom === product.baseUom)
+    .map((c) => ({ code: c.fromUom, factor: c.factor }))
+    .filter(
+      (u, i, all) => u.code !== product.baseUom && all.findIndex((v) => v.code === u.code) === i,
+    );
+  return {
+    units: [{ code: product.baseUom, factor: null }, ...converted],
+    loading: conversions.isPending,
+  };
+}

@@ -478,7 +478,14 @@
       "listPricePesewas": "List price, GHS {{basis}}",
       "floorPricePesewas": "Floor price, GHS {{basis}}",
       "ceilingPricePesewas": "Ceiling price, GHS {{basis}}",
-      "quoteOnly": "Quote only"
+      "quoteOnly": "Quote only",
+      "product": "Product",
+      "basis": "The price is",
+      "unit": "Sold by",
+      "listIn": "List price per {{unit}}, GHS",
+      "floorIn": "Floor price per {{unit}}, GHS",
+      "ceilingIn": "Ceiling price per {{unit}}, GHS",
+      "minQtyIn": "From how many, in {{unit}}"
     },
     "quoteOnlyHint": "The line cannot be sold at a list price; it becomes a quote.",
     "save": "Save prices",
@@ -491,7 +498,16 @@
     "removeTitle": "Drop {{name}} from the draft?",
     "removeBody": "From the draft's start the line will no longer be priced by this list.",
     "removeConfirm": "Drop the line",
-    "removed": "{{name}} dropped from the draft"
+    "removed": "{{name}} dropped from the draft",
+    "perUnit": "per {{unit}}",
+    "minQtyBoth": "from {{qty}} ({{base}} in the base unit)",
+    "add": "Add a price",
+    "addTitle": "Add a price to the draft",
+    "addBody": "A crate and a single egg are two prices of their own. Amounts in cedis; the server checks the floor, list and ceiling against each other.",
+    "addSave": "Add the price",
+    "added": "A price for {{name}} added to the draft",
+    "unitHint": "The unit the customer buys: a crate or a single egg.",
+    "minQtyHint": "Leave empty for any quantity. A bulk buyer's break, for example from 10, counted in {{unit}}."
   },
   "submit": {
     "open": "Submit for approval",
@@ -504,5 +520,41 @@
     "activated": "The draft was approved and will take effect from its start.",
     "failed": "The draft was not submitted",
     "denied": "You cannot submit this draft"
+  },
+  "buyer": {
+    "title": "Give these prices to a buyer",
+    "intro": "A buyer on this list is priced from it first: its crate price, its single egg price and its quantity breaks. A buyer has one list at a time.",
+    "customer": "Buyer",
+    "matches": "Matching buyers",
+    "typeMore": "Type at least two letters",
+    "noMatch": "No buyer matches",
+    "from": "From",
+    "until": "Until",
+    "untilHint": "Optional. After it, the buyer goes back to their tier's prices.",
+    "untilWrong": "The last day must be after the first.",
+    "replaces": "I understand this replaces any list the buyer has from that day",
+    "replacesRequired": "Tick this to give the buyer these prices.",
+    "save": "Give the buyer these prices",
+    "saving": "Saving",
+    "notSaved": "The buyer was not given these prices",
+    "denied": "You cannot give buyers a price list",
+    "done": "{{name}} pays {{list}} from {{from}}.",
+    "openEnded": "Until another list is given to them.",
+    "endsOn": "Until {{until}}, then their tier's prices."
+  },
+  "newBuyerList": {
+    "open": "New price list for a buyer",
+    "title": "New price list for a buyer",
+    "intro": "For a hotel, a chop bar or a reseller buying in bulk. Its prices go in a draft, which another person approves; then give it to the buyer.",
+    "name": "Name",
+    "code": "Code",
+    "codeHint": "Capital letters, digits and hyphens, for example CUST-ASANTEWAA.",
+    "codeWrong": "Use 2 to 40 capital letters, digits, hyphens or underscores.",
+    "taxInclusive": "Prices include tax",
+    "taxInclusiveHint": "Ticked, the buyer pays the price shown; not ticked, levies are added on top.",
+    "save": "Create the price list",
+    "saving": "Creating",
+    "notSaved": "The price list was not created",
+    "denied": "You cannot create price lists"
   }
 }

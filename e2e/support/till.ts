@@ -62,6 +62,8 @@ export function expectedHash(sale: SentSale): string {
 export interface TillServerOptions {
   /** The branch allows unverified mobile money offline: the pack lists the method (OFFLINE_SYNC 5.2). */
   offlineMobileMoney?: boolean;
+  /** Changes the pack's products, for a state its example cannot show (the egg session: two units). */
+  products?: (products: Record<string, unknown>[]) => Record<string, unknown>[];
 }
 
 export function installTillServer(
@@ -72,9 +74,13 @@ export function installTillServer(
   const server: TillServer = { batches: [], applied: new Map(), totals: new Map() };
   let receipt = 6200;
   api.rewrite('getOfflinePack', (body) => {
-    const pack = body as { policy: { offlineTenderMethodIds: string[] } };
+    const pack = body as {
+      policy: { offlineTenderMethodIds: string[] };
+      products: Record<string, unknown>[];
+    };
     return {
       ...pack,
+      products: options.products === undefined ? pack.products : options.products(pack.products),
       generatedAt: new Date().toISOString(),
       validUntil: new Date(Date.now() + 24 * 3_600_000).toISOString(),
       policy: {

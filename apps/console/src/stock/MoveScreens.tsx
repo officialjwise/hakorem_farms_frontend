@@ -33,7 +33,7 @@ import {
 import { PageHeader } from '../lib/ScreenHeader';
 import { useAuth } from '../auth/AuthProvider';
 import { BranchScopeNote } from '../branch/BranchScopeNote';
-import { useApiMutation, useApiQuery } from '../data/api';
+import { useApiAllPages, useApiMutation, useApiQuery } from '../data/api';
 import { When } from '../iam/presentation';
 import { isApprovalPending } from '../lib/approval';
 import { ConfirmDialog } from '../lib/ConfirmDialog';
@@ -48,6 +48,7 @@ import {
   ReceiptStatusBadge,
   TransferStatusBadge,
 } from './presentation';
+import { ReceiptClaims } from './ReceiptClaims';
 import { ReceiveTransfer } from './ReceiveTransfer';
 import {
   ANY,
@@ -921,6 +922,14 @@ export function ReceiptScreen() {
   const receipt = useApiQuery('getGoodsReceipt', { path: { id } });
   const post = useApiMutation('postGoodsReceipt', { invalidates: ['listStockOnHand'] });
   const keyFor = useIntentKey();
+  // The reasons a line names when goods were turned away at the door (2.3.0): `reference`.
+  const reasons = useApiAllPages(
+    'listReasonCodes',
+    { query: { domain: 'GOODS_RECEIPT_REJECTION', limit: 100 } },
+    { staleClass: 'reference' },
+  );
+  const reasonName = (code: string) =>
+    reasons.data?.items.find((r) => r.code === code)?.description ?? code;
   return (
     <DocDetail
       area="receipts"
@@ -930,12 +939,35 @@ export function ReceiptScreen() {
         const qty = (value: string, uom: string) => (
           <QuantityDisplay quantity={value} unit={units.name(uom)} places={units.places(uom)} />
         );
+        // A line entered in crates shows the crates, and the eggs the server booked beneath (2.2.0).
+        const counted = (value: string, base: string, l: S['GoodsReceiptLine']) =>
+          l.uom === l.baseUom ? (
+            qty(value, l.uom)
+          ) : (
+            <span className="grid">
+              <span>{qty(value, l.uom)}</span>
+              <span className="text-control-sm text-fg-muted">{qty(base, l.baseUom)}</span>
+            </span>
+          );
+        const rejected = r.lines.filter((l) => l.rejectionReasonCode !== null);
         const summary = (
           <ul className="grid list-disc gap-1 ps-5">
             {r.lines.map((line) => (
               <li key={line.id}>
-                {line.product.name}, {qty(line.qtyReceived, line.uom)}, {t('lines.atCost')}{' '}
-                <MoneyDisplay pesewas={line.valuePesewas} />
+                {line.product.name}, {qty(line.qtyReceived, line.uom)}
+                {line.uom === line.baseUom ? null : (
+                  <> ({qty(line.qtyReceivedBase, line.baseUom)})</>
+                )}
+                , {t('lines.atCost')} <MoneyDisplay pesewas={line.valuePesewas} />
+                {line.rejectionReasonCode === null ? null : (
+                  <>
+                    {'. '}
+                    {t('receipts.rejectedLine', {
+                      reason: reasonName(line.rejectionReasonCode),
+                    })}{' '}
+                    {qty(line.qtyRejected, line.uom)}
+                  </>
+                )}
               </li>
             ))}
             <li>
@@ -982,12 +1014,26 @@ export function ReceiptScreen() {
                 {
                   head: t('receipts.columns.accepted'),
                   numeric: true,
-                  cell: (l) => qty(l.qtyReceived, l.uom),
+                  cell: (l) => counted(l.qtyReceived, l.qtyReceivedBase, l),
                 },
                 {
                   head: t('receipts.columns.rejected'),
                   numeric: true,
-                  cell: (l) => qty(l.qtyRejected, l.uom),
+                  cell: (l) => counted(l.qtyRejected, l.qtyRejectedBase, l),
+                },
+                {
+                  head: t('receipts.columns.why'),
+                  cell: (l) =>
+                    l.rejectionReasonCode === null ? (
+                      NOT_APPLICABLE
+                    ) : (
+                      <span className="grid">
+                        <span>{reasonName(l.rejectionReasonCode)}</span>
+                        {l.rejectionNote === null ? null : (
+                          <span className="text-control-sm text-fg-muted">{l.rejectionNote}</span>
+                        )}
+                      </span>
+                    ),
                 },
                 {
                   head: t('lines.valueHead'),
@@ -996,6 +1042,15 @@ export function ReceiptScreen() {
                 },
               ]}
             />
+            {rejected.length > 0 ? (
+              <Alert
+                severity="warning"
+                title={t('receipts.rejectedTitle', { count: rejected.length })}
+              >
+                {t('receipts.rejectedBody')}
+              </Alert>
+            ) : null}
+            {rejected.length > 0 ? <ReceiptClaims receipt={r} reasonName={reasonName} /> : null}
             {r.status === 'DRAFT' && auth.can('inv.goods_receipt.post') ? (
               <DraftAction
                 label={t('receipts.post')}

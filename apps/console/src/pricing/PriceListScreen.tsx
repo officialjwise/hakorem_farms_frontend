@@ -38,6 +38,7 @@ import { useIntentKey } from '../lib/queries';
 import { useStateLabels } from '../lib/states';
 import { useCursorPages } from '../lib/useCursorPages';
 import { useWriteFailure, WriteFailureView, type WriteFailure } from '../lib/writeFailure';
+import { AssignToBuyer } from './BuyerPrices';
 import { AppliesTo } from './PriceListsScreen';
 import { VersionStatusBadge } from './presentation';
 
@@ -98,6 +99,7 @@ export function PriceListScreen() {
           </div>
           <Versions list={current} />
           <NewVersion list={current} />
+          <AssignToBuyer list={current} />
         </article>
       )}
     </QueryBoundary>

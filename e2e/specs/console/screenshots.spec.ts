@@ -4,6 +4,15 @@ import type { FakeApi } from '../../support/fakeApi';
 import { signInWithTotp, USERS } from '../../support/helpers';
 import { installTillServer, openTillShift, find } from '../../support/till';
 import { PEOPLE, installTillPins } from '../../support/requested';
+import type { components } from '@hakorem/api-client';
+import {
+  eggEntries,
+  eggOrder,
+  eggReceipt,
+  eggsByTheEgg,
+  ORDER_ID,
+  seedEggs,
+} from '../../support/eggs';
 
 /**
  * Screenshots of every screen a phase built, for the owner to review from a phone (owner, 2026-11-15).
@@ -751,6 +760,195 @@ for (const shot of TEN_SHOTS) {
       await shot.act(page, api, (off) => api.setNetwork(context, !off));
       await page.screenshot({
         path: `../docs/screenshots/F10/${shot.name}-${width}.png`,
+        fullPage: true,
+        scale: 'css',
+      });
+    });
+  }
+}
+
+/**
+ * The egg session (F10f, ADR 0049): buying in crates, bulk buyer prices, and a crate or a single egg at
+ * the till (CR-038, requested). The shops run on phones, so every one is shot at 360 px too.
+ */
+const ROYAL_PALM_LIST = '019a7aa4-e168-70ca-8603-157e47958e5c';
+const EGG_DRAFT = '019a7aa3-e9f0-71af-86e7-23c27a0d9ca0';
+const eggPrices = (api: FakeApi) => {
+  seedEggs(api);
+  api.rewrite('listPriceListEntries', (body) => {
+    const answer = body as { data: components['schemas']['PriceListEntry'][] };
+    const first = answer.data[0];
+    return first === undefined ? answer : { ...answer, data: eggEntries(first) };
+  });
+};
+const EGG_SHOTS: Shot[] = [
+  { name: 'purchase-orders', path: '/purchase-orders', ready: 'PO-2026-DDW-000040' },
+  {
+    name: 'purchase-order-new',
+    path: '/purchase-orders/new',
+    ready: 'Save the draft',
+    prepare: seedEggs,
+    act: async (page) => {
+      await page.getByRole('combobox', { name: /^Product 1/ }).fill('Eggs');
+      await page.getByRole('option', { name: 'Eggs, big (EGG-0003)' }).click();
+      await page.getByRole('combobox', { name: 'Counted in, line 1' }).click();
+      await page.getByRole('option', { name: 'Crate (30 Unit)' }).click();
+      await page.getByLabel(/^Ordered, in Crate, line 1/).fill('20');
+    },
+  },
+  {
+    name: 'purchase-order',
+    path: `/purchase-orders/${ORDER_ID}`,
+    ready: 'PO-2026-DDW-000052',
+    prepare: (api) =>
+      api.rewrite('getPurchaseOrder', (body) =>
+        eggOrder(body as components['schemas']['PurchaseOrder'], 'DRAFT'),
+      ),
+  },
+  {
+    name: 'goods-receipt-from-order',
+    path: `/goods-receipts/new?purchaseOrder=${ORDER_ID}`,
+    ready: 'ordered in Crate',
+    prepare: (api) => {
+      seedEggs(api);
+      api.rewrite('getPurchaseOrder', (body) =>
+        eggOrder(body as components['schemas']['PurchaseOrder'], 'SENT'),
+      );
+    },
+    act: async (page) => {
+      await page.getByLabel(/^Accepted, in Crate, line 1/).fill('18');
+      await page.getByLabel(/^Rejected at the door, in Crate, line 1/).fill('2');
+      await page.getByRole('combobox', { name: /^Why it was rejected, line 1/ }).click();
+      await page.getByRole('option', { name: 'Cracked on arrival' }).click();
+      await page.getByLabel(/^Cost of the accepted quantity, GHS, line 1/).fill('855.00');
+    },
+  },
+  {
+    name: 'goods-receipt-rejected',
+    path: `/goods-receipts/${ID}`,
+    ready: 'turned away at the door',
+    prepare: (api) =>
+      api.rewrite('getGoodsReceipt', (body) =>
+        eggReceipt(body as components['schemas']['GoodsReceipt']),
+      ),
+  },
+  {
+    name: 'goods-receipt-claim',
+    path: `/goods-receipts/${ID}`,
+    ready: 'account until their invoice',
+    prepare: (api) =>
+      api.rewrite('getGoodsReceipt', (body) => ({
+        ...eggReceipt(body as components['schemas']['GoodsReceipt']),
+        status: 'POSTED',
+        receiptNo: 'GRN-2026-DDW-000081',
+      })),
+  },
+  {
+    name: 'price-list-egg-prices',
+    path: `/price-list-versions/${EGG_DRAFT}`,
+    ready: 'from 10 Crate',
+    prepare: eggPrices,
+  },
+  {
+    name: 'price-list-add-price',
+    path: `/price-list-versions/${EGG_DRAFT}`,
+    ready: 'from 10 Crate',
+    prepare: eggPrices,
+    act: async (page) => {
+      await page.getByRole('button', { name: 'Add a price' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Add a price to the draft' });
+      await dialog.getByRole('combobox', { name: /^Product/ }).fill('Eggs');
+      await page.getByRole('option', { name: 'Eggs, big (EGG-0003)' }).click();
+      await dialog.getByRole('combobox', { name: 'Sold by' }).click();
+      await page.getByRole('option', { name: 'Crate' }).click();
+      await dialog.getByLabel('From how many, in Crate').fill('50');
+    },
+  },
+  {
+    name: 'buyer-price-list',
+    path: `/price-lists/${ROYAL_PALM_LIST}`,
+    ready: 'Give these prices to a buyer',
+    prepare: (api) =>
+      api.rewrite('getPriceList', (body) => ({
+        ...(body as object),
+        id: ROYAL_PALM_LIST,
+        code: 'CUST-ROYALPALM',
+        name: 'Royal Palm Hotel contract prices',
+        kind: 'CUSTOMER',
+        channel: null,
+        customerTier: null,
+      })),
+  },
+  {
+    name: 'price-lists-new-buyer-list',
+    path: '/price-lists',
+    ready: 'Royal Palm Hotel contract prices',
+    act: async (page) => {
+      await page.getByRole('button', { name: 'New price list for a buyer' }).click();
+    },
+  },
+];
+
+for (const shot of EGG_SHOTS) {
+  for (const width of WIDTHS) {
+    test(`@screenshots F10f ${shot.name} at ${width}`, async ({ page, api }) => {
+      shot.prepare?.(api);
+      await page.emulateMedia({ colorScheme: 'light' });
+      await page.setViewportSize({ width, height: width === 360 ? 800 : 900 });
+      await signInWithTotp(page, USERS.owner, shot.path);
+      await expect(page.getByText(shot.ready).first()).toBeVisible();
+      await expect(page.getByText(/^Loading/)).toHaveCount(0);
+      await shot.act?.(page);
+      await page.screenshot({
+        path: `../docs/screenshots/F10f/${shot.name}-${width}.png`,
+        fullPage: true,
+        scale: 'css',
+      });
+    });
+  }
+}
+
+const EGG_TILL_SHOTS: { name: string; act: (page: Page) => Promise<void> }[] = [
+  {
+    name: 'till-choose-unit',
+    act: async (page) => {
+      await page.getByRole('button', { name: 'Eggs, big', exact: true }).click();
+      await expect(
+        page.getByRole('dialog', { name: 'Sell Eggs, big by which unit?' }),
+      ).toBeVisible();
+    },
+  },
+  {
+    name: 'till-crate-and-eggs',
+    act: async (page) => {
+      for (const unit of [/^By the crate/, /^By the unit/]) {
+        await page.getByRole('button', { name: 'Eggs, big', exact: true }).click();
+        await page
+          .getByRole('dialog', { name: 'Sell Eggs, big by which unit?' })
+          .getByRole('button', { name: unit })
+          .click();
+      }
+      await page.getByRole('button', { name: 'Change Eggs, big, by the unit' }).click();
+      const line = page.getByRole('dialog', { name: 'Change Eggs, big' });
+      await line.getByRole('textbox', { name: /^Quantity/ }).fill('6');
+      await line.getByRole('button', { name: 'Save the item' }).click();
+      await expect(line).toBeHidden();
+    },
+  },
+];
+
+for (const shot of EGG_TILL_SHOTS) {
+  for (const width of WIDTHS) {
+    test(`@screenshots F10f ${shot.name} at ${width}`, async ({ page, api }) => {
+      installTillServer(api, (sale) => sale.tenders.reduce((sum, t) => sum + t.amountPesewas, 0), {
+        products: eggsByTheEgg,
+      });
+      await page.emulateMedia({ colorScheme: 'light' });
+      await page.setViewportSize({ width, height: width === 360 ? 800 : 900 });
+      await openTillShift(page);
+      await shot.act(page);
+      await page.screenshot({
+        path: `../docs/screenshots/F10f/${shot.name}-${width}.png`,
         fullPage: true,
         scale: 'css',
       });

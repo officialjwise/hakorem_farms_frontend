@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CircleCheck, CirclePlus, CircleMinus, PencilLine, Send, Tags } from 'lucide-react';
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
@@ -18,8 +18,11 @@ import {
   Form,
   FormField,
   FormSubmitButton,
+  Field,
   MoneyInput,
   MutationFailure,
+  NumberInput,
+  Select,
   NOT_APPLICABLE,
   PriceBandDisplay,
   QueryBoundary,
@@ -34,9 +37,13 @@ import {
   TableRow,
   TableRowHeader,
   type QueryLike,
+  type QuantityPlaces,
   Alert,
+  formatQuantity,
 } from '@hakorem/ui';
 import { PageHeader } from '../lib/ScreenHeader';
+import { ProductPicker, type ProductRef } from '../stock/LinesEditor';
+import { toQuantity, useLineUnits, useUnits } from '../stock/units';
 import { useAuth } from '../auth/AuthProvider';
 import { When } from '../iam/presentation';
 import { PAGE_CAP_EXCEEDED, useApiAllPages, useApiMutation, useApiQuery } from '../data/api';
@@ -50,6 +57,7 @@ import {
   type ChangeKind,
   type PreviewRow,
   type PriceListEntry,
+  type PriceListEntryInput,
 } from './preview';
 import { VersionStatusBadge } from './presentation';
 
@@ -242,10 +250,19 @@ function ChangeBadge({ kind }: { kind: ChangeKind }) {
   );
 }
 
-/** Product, then grade and band when the line has them: what the line prices. */
-function LineName({ entry }: { entry: PriceListEntry }) {
-  const { t } = useTranslation('catalogue');
-  const parts = [
+/**
+ * What a line prices, in words: the product, its grade and band, the selling unit (a crate or a single
+ * egg, 2.1.0), and the quantity break counted in that unit, with the same break in the base unit as the
+ * API states it (`minQtyBase`). Nothing is converted here.
+ */
+export function entryWords(
+  entry: PriceListEntry,
+  t: (key: string, options?: Record<string, unknown>) => string,
+  units: { name: (code: string) => string; places: (code: string) => QuantityPlaces },
+): string[] {
+  const qty = (value: string, code: string) =>
+    `${formatQuantity(value, { places: units.places(code) })} ${units.name(code)}`;
+  return [
     entry.grade?.name,
     entry.weightBand === null
       ? undefined
@@ -254,8 +271,52 @@ function LineName({ entry }: { entry: PriceListEntry }) {
           min: entry.weightBand.minKg,
           max: entry.weightBand.maxKg,
         }),
-    entry.minQty === '0.000' ? undefined : t('entry.minQty', { qty: entry.minQty }),
+    entry.basis === 'PER_KG' ? undefined : t('entry.perUnit', { unit: unitWord(entry.uom, units) }),
+    entry.minQty === '0.000'
+      ? undefined
+      : entry.minQtyBase === entry.minQty
+        ? t('entry.minQty', { qty: qty(entry.minQty, entry.uom) })
+        : // The entry names no base unit (`ProductRef` has none), so the base figure is shown bare.
+          t('entry.minQtyBoth', {
+            qty: qty(entry.minQty, entry.uom),
+            base: formatQuantity(entry.minQtyBase, { places: 0 }),
+          }),
   ].filter((part): part is string => part !== undefined);
+}
+
+/** A selling unit as a word after "per": "crate", "unit". */
+function unitWord(code: string, units: { name: (code: string) => string }): string {
+  return units.name(code).toLowerCase();
+}
+
+/**
+ * What a price multiplies, in words: "per kg" for a weight, otherwise per the entry's own selling unit,
+ * so a crate's band reads "per crate" and never "per unit" (2.1.0).
+ */
+function basisWords(
+  entry: PriceListEntry,
+  t: (key: string, options?: Record<string, unknown>) => string,
+  units: { name: (code: string) => string },
+): string {
+  return entry.basis === 'PER_KG' || entry.uom === 'UNIT' || entry.uom === 'HEAD'
+    ? t(`basis.${entry.basis}`)
+    : t('entry.perUnit', { unit: unitWord(entry.uom, units) });
+}
+
+/** A line's own name for its buttons: two lines of one product (a crate, an egg) never share one. */
+function entryName(
+  entry: PriceListEntry,
+  t: (key: string, options?: Record<string, unknown>) => string,
+  units: { name: (code: string) => string; places: (code: string) => QuantityPlaces },
+): string {
+  return [entry.product.name, ...entryWords(entry, t, units)].join(', ');
+}
+
+/** Product, then grade and band when the line has them, its unit and its break: what the line prices. */
+function LineName({ entry }: { entry: PriceListEntry }) {
+  const { t } = useTranslation('catalogue');
+  const units = useUnits();
+  const parts = entryWords(entry, t as never, units);
   return (
     <span className="grid">
       <span className="font-semibold">{entry.product.name}</span>
@@ -270,6 +331,7 @@ function LineName({ entry }: { entry: PriceListEntry }) {
 /** A line's price: the band with its list price, or "quote only". Every figure is the API's. */
 function Price({ entry, empty }: { entry: PriceListEntry | null; empty: string }) {
   const { t } = useTranslation('catalogue');
+  const units = useUnits();
   if (entry === null) return <span>{empty}</span>;
   if (entry.quoteOnly) return <span>{t('entry.quoteOnly')}</span>;
   return (
@@ -279,7 +341,7 @@ function Price({ entry, empty }: { entry: PriceListEntry | null; empty: string }
         ceilingPricePesewas: entry.ceilingPricePesewas,
         listPricePesewas: entry.listPricePesewas,
       }}
-      basisLabel={t(`basis.${entry.basis}`)}
+      basisLabel={basisWords(entry, t as never, units)}
       toLabel={t('entry.to')}
       listPriceLabel={t('entry.listPrice')}
     />
@@ -305,20 +367,31 @@ function Preview({
   const counts = countChanges(rows);
   const [editing, setEditing] = useState<PriceListEntry | null>(null);
   const [removing, setRemoving] = useState<PriceListEntry | null>(null);
+  const [adding, setAdding] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const units = useUnits();
+  const named = (entry: PriceListEntry) => entryName(entry, t as never, units);
   const replace = useApiMutation('replacePriceListEntries');
   const keyFor = useIntentKey();
   const from = <When instant={version.validFrom} />;
 
-  /** Sends the whole draft back with one line changed or dropped (the contract replaces every entry). */
-  const send = async (change: { id: string; next: PriceListEntry | null }) => {
-    const entries = draftEntries.flatMap((entry) =>
-      entry.id !== change.id
-        ? [toInput(entry)]
-        : change.next === null
-          ? []
-          : [toInput(change.next)],
-    );
+  /**
+   * Sends the whole draft back with one line changed, dropped or added (the contract replaces every
+   * entry).
+   */
+  const send = async (
+    change: { id: string; next: PriceListEntry | null } | { add: PriceListEntryInput },
+  ) => {
+    const entries =
+      'add' in change
+        ? [...draftEntries.map(toInput), change.add]
+        : draftEntries.flatMap((entry) =>
+            entry.id !== change.id
+              ? [toInput(entry)]
+              : change.next === null
+                ? []
+                : [toInput(change.next)],
+          );
     const body = { version: version.version, entries };
     await replace.mutateAsync({ path: { id: version.id }, body }, { idempotencyKey: keyFor(body) });
   };
@@ -388,7 +461,7 @@ function Preview({
                           <Button
                             size="sm"
                             variant="secondary"
-                            aria-label={t('entry.editFor', { name: line.product.name })}
+                            aria-label={t('entry.editFor', { name: named(line) })}
                             onClick={() => {
                               replace.reset();
                               setNotice(null);
@@ -400,7 +473,7 @@ function Preview({
                           <Button
                             size="sm"
                             variant="secondary"
-                            aria-label={t('entry.removeFor', { name: line.product.name })}
+                            aria-label={t('entry.removeFor', { name: named(line) })}
                             onClick={() => {
                               replace.reset();
                               setNotice(null);
@@ -419,6 +492,32 @@ function Preview({
           </TableBody>
         </Table>
       </TableContainer>
+      {editable ? (
+        <div>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              replace.reset();
+              setNotice(null);
+              setAdding(true);
+            }}
+          >
+            <CirclePlus aria-hidden="true" />
+            {t('entry.add')}
+          </Button>
+        </div>
+      ) : null}
+      {adding ? (
+        <AddEntryDialog
+          error={replace.error}
+          onClose={() => setAdding(false)}
+          onSave={async (add, name) => {
+            await send({ add });
+            setAdding(false);
+            setNotice(t('entry.added', { name }));
+          }}
+        />
+      ) : null}
       {editing !== null ? (
         <EditEntryDialog
           entry={editing}
@@ -491,7 +590,8 @@ function EditEntryDialog({
       quoteOnly: entry.quoteOnly,
     },
   });
-  const basis = t(`basis.${entry.basis}`);
+  const units = useUnits();
+  const basis = basisWords(entry, t as never, units);
   const money = (name: 'listPricePesewas' | 'floorPricePesewas' | 'ceilingPricePesewas') => (
     <FormField
       name={name}
@@ -553,6 +653,143 @@ function EditEntryDialog({
           </FormSubmitButton>
         </DialogActions>
       </Form>
+    </Dialog>
+  );
+}
+
+/**
+ * A new price in the draft: a product, the unit it is sold in (a crate or a single egg, each with its own
+ * price, never one worked out from the other: 2.1.0), what the price multiplies, the band, and a quantity
+ * break counted in that unit ("from 10 crates"). The server converts the break to the base unit and checks
+ * the band; its refusal stays in the dialog.
+ */
+function AddEntryDialog({
+  error,
+  onClose,
+  onSave,
+}: {
+  error: Parameters<typeof MutationFailure>[0]['error'];
+  onClose: () => void;
+  onSave: (entry: PriceListEntryInput, name: string) => Promise<void>;
+}) {
+  const { t } = useTranslation(['catalogue', 'stock', 'common']);
+  const failureLabels = useEntryFailureLabels();
+  const names = useUnits();
+  const required = t('common:field.required');
+  const [product, setProduct] = useState<ProductRef | null>(null);
+  const [uom, setUom] = useState<string | null>(null);
+  const [basis, setBasis] = useState<'PER_UNIT' | 'PER_HEAD' | 'PER_KG'>('PER_UNIT');
+  const [list, setList] = useState<number | null>(null);
+  const [floor, setFloor] = useState<number | null>(null);
+  const [ceiling, setCeiling] = useState<number | null>(null);
+  const [minQty, setMinQty] = useState('');
+  const [quoteOnly, setQuoteOnly] = useState(false);
+  const [checked, setChecked] = useState(false);
+  const [pending, setPending] = useState(false);
+  const { units } = useLineUnits(product);
+  const unit = uom ?? product?.baseUom ?? '';
+  const breakQty = minQty.trim() === '' ? '0.000' : toQuantity(minQty);
+  const ready =
+    product !== null && list !== null && floor !== null && ceiling !== null && breakQty !== null;
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    setChecked(true);
+    if (!ready) return;
+    const entry: PriceListEntryInput = {
+      productId: product.id,
+      basis,
+      listPricePesewas: list,
+      floorPricePesewas: floor,
+      ceilingPricePesewas: ceiling,
+      quoteOnly,
+      minQty: breakQty,
+      // A PER_KG price names no unit (NOT_PER_KG); the base unit is sent as nothing.
+      ...(basis === 'PER_KG' || uom === null ? {} : { uom }),
+    };
+    setPending(true);
+    onSave(entry, product.name)
+      .catch(() => undefined)
+      .finally(() => setPending(false));
+  };
+  const money = (label: string, value: number | null, set: (value: number | null) => void) => (
+    <Field
+      label={label}
+      required
+      requiredLabel={required}
+      error={checked && value === null ? required : undefined}
+    >
+      <MoneyInput value={value} onValueChange={set} />
+    </Field>
+  );
+  const per = unit === '' ? '' : names.name(unit);
+  return (
+    <Dialog
+      open
+      onOpenChange={(open) => (open ? undefined : onClose())}
+      title={t('entry.addTitle')}
+      description={t('entry.addBody')}
+      closeLabel={t('common:actions.cancel')}
+      icon={Tags}
+      requiredNote={t('common:field.requiredNote')}
+    >
+      <form className="grid gap-3 pb-2" onSubmit={submit} noValidate>
+        <MutationFailure error={error} labels={failureLabels} />
+        <ProductPicker
+          label={t('entry.fields.product')}
+          value={product}
+          onChange={(next) => {
+            setProduct(next);
+            setUom(null);
+          }}
+          {...(checked && product === null ? { error: required } : {})}
+        />
+        <Field label={t('entry.fields.basis')}>
+          <Select
+            value={basis}
+            onValueChange={(value) =>
+              setBasis(
+                value === 'PER_KG' ? 'PER_KG' : value === 'PER_HEAD' ? 'PER_HEAD' : 'PER_UNIT',
+              )
+            }
+            options={(['PER_UNIT', 'PER_HEAD', 'PER_KG'] as const).map((value) => ({
+              value,
+              label: t(`basis.${value}`),
+            }))}
+          />
+        </Field>
+        {product !== null && basis !== 'PER_KG' && units.length > 1 ? (
+          <Field label={t('entry.fields.unit')} hint={t('entry.unitHint')}>
+            <Select
+              value={unit}
+              onValueChange={(code) => setUom(code === product.baseUom ? null : code)}
+              options={units.map((u) => ({ value: u.code, label: names.name(u.code) }))}
+            />
+          </Field>
+        ) : null}
+        {money(t('entry.fields.listIn', { unit: per }), list, setList)}
+        {money(t('entry.fields.floorIn', { unit: per }), floor, setFloor)}
+        {money(t('entry.fields.ceilingIn', { unit: per }), ceiling, setCeiling)}
+        <Field
+          label={t('entry.fields.minQtyIn', { unit: per })}
+          hint={t('entry.minQtyHint', { unit: per })}
+          error={
+            checked && breakQty === null
+              ? t('stock:lines.qtyInvalid', { count: names.places(unit) })
+              : undefined
+          }
+        >
+          <NumberInput decimals={names.places(unit)} value={minQty} onValueChange={setMinQty} />
+        </Field>
+        <Field label={t('entry.fields.quoteOnly')} hint={t('entry.quoteOnlyHint')}>
+          <Checkbox checked={quoteOnly} onCheckedChange={(next) => setQuoteOnly(next === true)} />
+        </Field>
+        <DialogActions cancelLabel={t('common:actions.cancel')} onCancel={onClose}>
+          <Button type="submit" loading={pending} loadingLabel={t('entry.saving')}>
+            <CircleCheck aria-hidden="true" />
+            {t('entry.addSave')}
+          </Button>
+        </DialogActions>
+      </form>
     </Dialog>
   );
 }

@@ -2,45 +2,49 @@
 
 Things the frontend needs that `contract/openapi.yaml` does not yet offer, or must offer in a specific shape. The backend track reads this file at the start of each session and either implements each request or explains in its report why not. Each entry names the screen that needs it.
 
-| Id     | Date       | Status                   |
-| ------ | ---------- | ------------------------ |
-| CR-001 | 2026-11-13 | Closed                   |
-| CR-002 | 2026-11-13 | Closed                   |
-| CR-003 | 2026-11-14 | Answered (1.7.0, 1.16.0) |
-| CR-004 | 2026-11-14 | Answered (1.2.0, 1.11.0) |
-| CR-005 | 2026-11-14 | Answered (1.53.0)        |
-| CR-006 | 2026-11-14 | Answered (1.2.0, 1.4.0)  |
-| CR-007 | 2026-11-14 | Answered (1.3.0)         |
-| CR-008 | 2026-11-14 | Answered (1.3.0)         |
-| CR-009 | 2026-11-15 | Open                     |
-| CR-010 | 2026-11-15 | Open                     |
-| CR-011 | 2026-11-15 | Open                     |
-| CR-012 | 2026-11-15 | Open                     |
-| CR-013 | 2026-11-15 | Open                     |
-| CR-014 | 2026-11-15 | Open                     |
-| CR-015 | 2026-11-15 | Open                     |
-| CR-016 | 2026-11-15 | Closed (2.0.0)           |
-| CR-017 | 2026-11-15 | Open                     |
-| CR-018 | 2026-11-15 | Open                     |
-| CR-019 | 2026-11-15 | Open                     |
-| CR-020 | 2026-11-15 | Open                     |
-| CR-021 | 2026-11-15 | Answered (1.26.0)        |
-| CR-022 | 2026-11-15 | Closed                   |
-| CR-023 | 2026-11-15 | Answered (1.53.0), built |
-| CR-024 | 2026-11-15 | Closed                   |
-| CR-025 | 2026-11-15 | Answered (1.31.0), built |
-| CR-026 | 2026-11-15 | Answered (1.40.0)        |
-| CR-027 | 2026-11-16 | Answered (1.53.0)        |
-| CR-028 | 2026-11-16 | Answered (1.54.0)        |
-| CR-029 | 2026-11-16 | Answered (1.46.0), built |
-| CR-030 | 2026-11-16 | Answered (1.43.0)        |
-| CR-031 | 2026-11-16 | Planned shape (1.45.0)   |
-| CR-032 | 2026-11-16 | Open, amended F10d       |
-| CR-033 | 2026-11-16 | Open, amended F10e       |
-| CR-034 | 2026-11-17 | Answered (2.0.0), built  |
-| CR-035 | 2026-11-17 | Open (backend B09e)      |
-| CR-036 | 2026-11-17 | Open (backend B09e)      |
-| CR-037 | 2026-11-17 | Open                     |
+| Id     | Date       | Status                    |
+| ------ | ---------- | ------------------------- |
+| CR-001 | 2026-11-13 | Closed                    |
+| CR-002 | 2026-11-13 | Closed                    |
+| CR-003 | 2026-11-14 | Answered (1.7.0, 1.16.0)  |
+| CR-004 | 2026-11-14 | Answered (1.2.0, 1.11.0)  |
+| CR-005 | 2026-11-14 | Answered (1.53.0)         |
+| CR-006 | 2026-11-14 | Answered (1.2.0, 1.4.0)   |
+| CR-007 | 2026-11-14 | Answered (1.3.0)          |
+| CR-008 | 2026-11-14 | Answered (1.3.0)          |
+| CR-009 | 2026-11-15 | Open                      |
+| CR-010 | 2026-11-15 | Open                      |
+| CR-011 | 2026-11-15 | Open                      |
+| CR-012 | 2026-11-15 | Open                      |
+| CR-013 | 2026-11-15 | Open                      |
+| CR-014 | 2026-11-15 | Open                      |
+| CR-015 | 2026-11-15 | Open                      |
+| CR-016 | 2026-11-15 | Closed (2.0.0)            |
+| CR-017 | 2026-11-15 | Open                      |
+| CR-018 | 2026-11-15 | Open                      |
+| CR-019 | 2026-11-15 | Open                      |
+| CR-020 | 2026-11-15 | Open                      |
+| CR-021 | 2026-11-15 | Answered (1.26.0)         |
+| CR-022 | 2026-11-15 | Closed                    |
+| CR-023 | 2026-11-15 | Answered (1.53.0), built  |
+| CR-024 | 2026-11-15 | Closed                    |
+| CR-025 | 2026-11-15 | Answered (1.31.0), built  |
+| CR-026 | 2026-11-15 | Answered (1.40.0)         |
+| CR-027 | 2026-11-16 | Answered (1.53.0)         |
+| CR-028 | 2026-11-16 | Answered (1.54.0)         |
+| CR-029 | 2026-11-16 | Answered (1.46.0), built  |
+| CR-030 | 2026-11-16 | Answered (1.43.0)         |
+| CR-031 | 2026-11-16 | Planned shape (1.45.0)    |
+| CR-032 | 2026-11-16 | Open, amended F10d        |
+| CR-033 | 2026-11-16 | Open, amended F10e        |
+| CR-034 | 2026-11-17 | Answered (2.0.0), built   |
+| CR-035 | 2026-11-17 | Answered (2.3.0), built   |
+| CR-036 | 2026-11-17 | Answered (2.4.0), built   |
+| CR-037 | 2026-11-17 | Answered (2.4.0)          |
+| CR-038 | 2026-11-17 | Open, built behind switch |
+| CR-039 | 2026-11-17 | Open                      |
+| CR-040 | 2026-11-17 | Open                      |
+| CR-041 | 2026-11-17 | Open                      |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -583,6 +587,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 
 **Until this lands:** nothing is built on it this session. The egg session's receipt screen (part a) is built against this shape behind `HK_REQUESTED_CONTRACT` (ADR 0046) if it has not landed by then.
 
+**Answered in 2.3.0 (B09e continued 2), built in the egg session:** `rejectionReasonCode` and `rejectionNote` on the receipt line, the `GOODS_RECEIPT_REJECTION` domain (`CRACKED`, `BROKEN`, `DIRTY`, `SHORT`, `WRONG_ITEM_DELIVERED`, `QUALITY_REJECTED`), and `BREAKAGE` and `RODENT_DAMAGE` among the adjustment reasons. The receipt screen asks for the reason, and the note when the reason needs one, before it sends.
+
 ## CR-036. A claim raised from a goods receipt's rejected lines (additive)
 
 - **Goes to:** the backend's egg phase, B09e, which is next (owner, 2026-11-17). It arrives through the contract; the frontend builds nothing against it before then.
@@ -599,6 +605,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 
 **Until this lands:** no claim screen. The egg session's part a builds the receipt's rejection with its reason (CR-035) first.
 
+**Answered in 2.4.0 (B09e continued 3, ADR-0076), built in the egg session:** `raiseSupplierClaim` from a posted purchase receipt against an order, its value the server's from the order's price (the body takes only a note), and `listGoodsReceiptClaims`, so the receipt shows its claim, open or settled. The owner had said to wait for the contract (2026-11-17); it landed during the session. The claim's credit note and its settlement by an invoice (`draftSupplierClaimCreditNote`, `settleSupplierClaim`) belong to the supplier invoice screens, which are not built yet.
+
 ## CR-037. The examples name a void's approval `ord.order.void.approve`; the operations and the seed say `ord.void.approve` (example fix)
 
 - **Raised by:** frontend F10e, checking the test fake against `components.x-seeded-roles` (CR-023).
@@ -607,3 +615,52 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 **Request:** change the examples to `ord.void.approve`, or say which name is right.
 
 **Until this lands:** the fake follows the seed (`ord.void.approve`).
+
+**Answered in 2.4.0:** the examples name `ord.void.approve`.
+
+## CR-038. The till sells a product in more than one unit, each with its own price (additive)
+
+- **Raised by:** frontend, the egg session, part b: "crate and single egg as two units of one product, at the till and in the shop, each with its own price" (owner, ADR 0049).
+- **Contract read first (2.3.0):** 2.1.0 gives a price list entry, a price resolution and a staff order line a selling unit (`uom`), and says "a counter or online sale ... keep[s] the unit the line was sold in". But the till cannot sell a second unit: `OfflineProduct` carries one `saleUom`, one `priceBand` and one `priceListEntryId`, and `CounterSaleLine` (the line of a counter sale and of an offline sale) names no unit. The till totals offline from the pack's band (BUILD_PROMPT's one exception), so it needs each unit's own band in the pack; it must never work out a single egg's price from a crate's.
+
+**Request:**
+
+1. **`OfflineProduct.sellingUnits`**: an array, one entry per unit the product is sold by at this register, the product's `saleUom` first. Each `{ uom: string, priceListEntryId: uuid | null, priceBand: PriceBand | null, quoteOnly: boolean }`, priced exactly as `priceBand` is today (the register's lists, no quantity break), for its own unit. A product sold in one unit has one entry, the same as its `saleUom` and `priceBand`.
+2. **`CounterSaleLine.uom`** (optional string): the unit the line is sold in, one of the product's `sellingUnits`; absent means `saleUom`, as today. `quantity` and `agreedUnitPricePesewas` are in it. The server converts to the base unit for stock (30 eggs a crate), re-prices by that unit's entry at sync, and answers the order line with its unit (`OrderLine.uom`, as 2.1.0 does). A unit the product is not sold by is `VALIDATION_FAILED` on `/lines/{i}/uom`, or the sync's own refusal.
+3. A return (`createReturn`) of a line sold by the egg refunds by the egg: the receipt line names its unit already (2.1.0); say so in its description.
+
+**Until this lands:** the till is built against this shape behind `HK_REQUESTED_CONTRACT=CR-038` (ADR 0046): `apps/console/src/requested/sellingUnits.ts`, answered in the e2e suite by a rewrite of the pack. With the switch off, a product is sold in its `saleUom` alone, as before.
+
+## CR-039. The shop sells a product in more than one unit, each with its own price (additive)
+
+- **Raised by:** frontend, the egg session, part b: the crate and the single egg in the shop.
+- **Contract read first (2.3.0):** `CatalogueItem` and `ProductDetail` carry one `saleUom` and one price range (`priceFromPesewas`, `priceToPesewas`), and `CartLineAdd` takes a `productId` and a `quantity` only, so the shop cannot offer the single egg beside the crate, nor say which a customer put in the basket. `CartLine.uom` is answered already.
+
+**Request:**
+
+1. **`ProductDetail.sellingUnits`** (and `CatalogueItem.sellingUnits`): one entry per unit sold online, `saleUom` first, each `{ uom: string, uomName: string, priceFromPesewas: Pesewas | null, priceToPesewas: Pesewas | null, availability: ... }`, each priced by its own entry, never derived.
+2. **`CartLineAdd.uom`** (optional): the unit added; absent means `saleUom`. The cart keeps it (`CartLine.uom`), checkout and placement price by it, and stock is reserved in the base unit (as `confirmOrder` does, 2.1.0).
+3. A crate and a single egg of one product are two cart lines.
+
+**Until this lands:** nothing is built in the shop (owner, 2026-11-17: the till goes behind a switch and the shop waits). The storefront has no switch mechanism; adding one would be a new pattern.
+
+## CR-040. A goods receipt line against a purchase order: is `valuePesewas` required? (description fix or additive)
+
+- **Raised by:** frontend, the egg session, part a: receiving a delivery against a purchase order.
+- **Contract read first (2.3.0):** `GoodsReceiptLineInput.valuePesewas` is in `required`, yet its description says "Defaults from the purchase order line". The screen cannot work out the value itself (quantity times the order's price is the server's arithmetic), so today the storekeeper types the cost of what was accepted from the supplier's paper.
+
+**Request:** either make `valuePesewas` optional on a line that names `purchaseOrderLineId`, valued by the server from the order line for the accepted quantity (the receipt's answer shows it), or remove "Defaults from the purchase order line" from the description.
+
+**Until this lands:** the receipt screen asks for the cost on every line, against an order or not.
+
+## CR-041. Who holds a buyer's price list, and an entry's base unit (additive)
+
+- **Raised by:** frontend, the egg session, part c: bulk buyer prices.
+- **Contract read first (2.3.0):** `assignCustomerPriceList` (`PUT /customers/{id}/price-list`) has no read: neither a customer nor a price list answers which list a buyer holds, or who holds a list, so the screen can show only the answer to its own write. And `PriceListEntry.minQtyBase` is "the same break in the product's base unit", but the entry names no base unit (`ProductRef` has none), so the screen shows "from 10 Crate (300 in the base unit)" without saying eggs.
+
+**Request:**
+
+1. **`GET /customers/{id}/price-list`** (`getCustomerPriceList`, `mdm.customer.read`): the buyer's assignments, current and future, each a `PriceListAssignment`; and **`listPriceListAssignments`** on a price list (`GET /price-lists/{id}/assignments`), the buyers who hold it, with their windows.
+2. **`PriceListEntry.baseUom`** (string): the unit `minQtyBase` is in.
+
+**Until this lands:** the price list screen shows the assignment just made, from its answer; the break's base figure is shown bare.

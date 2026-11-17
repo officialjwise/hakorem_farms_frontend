@@ -208,6 +208,27 @@ const STOCK_PERMISSIONS = [
   'inv.goods_receipt.read',
   'inv.goods_receipt.create',
   'inv.goods_receipt.post',
+  // The egg session (2.3.0): the supplier on a goods receipt, and purchase orders drafted and received.
+  'mdm.supplier.read',
+  'pur.purchase_order.read',
+  'pur.purchase_order.create',
+];
+
+/**
+ * What the Owner holds beyond the Storekeeper for buying and bulk prices (the egg session), as seeded:
+ * submitting past the limit is approved by another person, sending, closing and cancelling an order, and
+ * giving a buyer their own price list.
+ */
+const OWNER_EGG_PERMISSIONS = [
+  'pur.purchase_order.approve',
+  'pur.purchase_order.send',
+  'pur.purchase_order.close',
+  'mdm.price_list.assign',
+  'mdm.price_list.create',
+  'mdm.customer.read',
+  // 2.4.0: a claim for goods rejected at the door is raised and read with the supplier invoice permissions.
+  'pur.supplier_invoice.read',
+  'pur.supplier_invoice.create',
 ];
 
 /** What the owner holds for the F5b screens: the dashboard, branches and locations, and the new lists. */
@@ -379,6 +400,9 @@ const ACCOUNTANT_PERMISSIONS = [
   'bil.debit_note.create',
   'bil.credit_note.create',
   'doc.document.read',
+  // 2.4.0: the Accountant raises and reads a claim with a supplier, as the seed gives it.
+  'pur.supplier_invoice.read',
+  'pur.supplier_invoice.create',
 ];
 
 /** Keyed by lower-case email. Permission codes are the contract's `x-permission` values. */
@@ -401,6 +425,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
       ...OWNER_F6_PERMISSIONS,
       ...OWNER_F6B_PERMISSIONS,
       ...OWNER_F8_PERMISSIONS,
+      ...OWNER_EGG_PERMISSIONS,
       ...MANAGER_TILL_PERMISSIONS,
     ],
     moreBranches: SELLING_POINTS,

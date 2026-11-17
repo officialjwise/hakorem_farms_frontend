@@ -31,6 +31,7 @@ import {
   findInPack,
   isSoldByUnit,
   newLine,
+  unitChoices,
   sellableUnits,
   sellingBlock,
   tiles,
@@ -236,6 +237,12 @@ function Selling({
         setChoice({ kind: 'unit', product, units });
         return;
       }
+      // A crate or a single egg (CR-038, requested): the cashier says which, each at its own price.
+      const choices = unitChoices(product);
+      if (choices.length > 1) {
+        setChoice({ kind: 'sellingUnit', product, units: choices });
+        return;
+      }
       add(newLine(product, null), product.product.name);
     },
     [pack, lines, add, t],
@@ -433,6 +440,10 @@ function Selling({
             if (unit === null) pick(product.product.id);
             else add(newLine(product, unit), product.product.name);
           }}
+          onChooseSellingUnit={(product, unit) => {
+            setChoice(null);
+            add(newLine(product, null, unit), product.product.name);
+          }}
         />
       ) : null}
       {editingLine !== null && shift !== null ? (
@@ -477,10 +488,13 @@ function CartRow({
 }) {
   const { t } = useTranslation('pos');
   const problem = lineProblem(line);
+  // A crate and single eggs of one product are two lines, told apart by their unit (CR-038).
   const name =
     line.stockUnitIdentifier !== null
       ? `${line.productName} ${line.stockUnitIdentifier}`
-      : line.productName;
+      : line.soldInUom !== null && line.soldInUom !== undefined
+        ? t('line.byUnit', { name: line.productName, unit: line.soldInUom.toLowerCase() })
+        : line.productName;
   return (
     <li className="grid gap-1 rounded-md border border-border p-3" data-slot="cart-line">
       <div className="flex flex-wrap items-start justify-between gap-2">

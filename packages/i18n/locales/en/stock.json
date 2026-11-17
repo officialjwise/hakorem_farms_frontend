@@ -195,7 +195,27 @@
     "directionHead": "Gain or loss",
     "qtyHead": "Quantity",
     "valueHead": "Value at cost",
-    "valuedAtPosting": "Valued when posted"
+    "valuedAtPosting": "Valued when posted",
+    "unit": "Counted in, line {{number}}",
+    "unitHint": "A crate or a single egg. The server works out the eggs.",
+    "unitOf": "{{unit}} ({{factor}} {{base}})",
+    "fromOrder": "{{product}}, ordered in {{unit}}",
+    "accepted": "Accepted, line {{number}}",
+    "acceptedIn": "Accepted, in {{unit}}, line {{number}}",
+    "rejected": "Rejected at the door, line {{number}}",
+    "rejectedIn": "Rejected at the door, in {{unit}}, line {{number}}",
+    "rejectedHint": "Cracked, broken, dirty or short. Leave empty if nothing was turned away.",
+    "rejectionReason": "Why it was rejected, line {{number}}",
+    "chooseRejectionReason": "Choose a reason",
+    "rejectionNote": "Note on the rejection, line {{number}}",
+    "rejectionNoteHint": "Optional. What the driver was told, for example.",
+    "rejectionNoteRequired": "This reason needs a note.",
+    "rejectedSummary": "rejected",
+    "ordered": "Ordered, line {{number}}",
+    "orderedIn": "Ordered, in {{unit}}, line {{number}}",
+    "price": "Price per unit, GHS, line {{number}}",
+    "priceIn": "Price per {{unit}}, GHS, line {{number}}",
+    "priceHint": "Leave empty to use the last price paid to this supplier."
   },
   "move": {
     "draftHint": "Saving makes a draft. Nothing moves until you post it, after checking the exact lines.",
@@ -324,8 +344,21 @@
       "received": "Received",
       "value": "Total at cost",
       "accepted": "Accepted",
-      "rejected": "Rejected"
-    }
+      "rejected": "Rejected",
+      "why": "Why rejected"
+    },
+    "supplier": "Supplier",
+    "chooseSupplier": "Choose the supplier",
+    "order": "Purchase order",
+    "orderHint": "Choose the order this delivery is for, and its lines are filled in.",
+    "noOrder": "No purchase order",
+    "orderOption": "{{order}}, ordered {{date}}",
+    "orderUnnumbered": "Order not yet numbered",
+    "reasonsError": "The reasons for rejecting goods could not be loaded. A line that rejects anything cannot be saved until they load.",
+    "rejectedLine": "Rejected, {{reason}}:",
+    "rejectedTitle_one": "{{count}} line was turned away at the door",
+    "rejectedTitle_other": "{{count}} lines were turned away at the door",
+    "rejectedBody": "What was rejected never enters stock, and the total at cost is for what was accepted."
   },
   "receive": {
     "title": "Receive what arrived",
@@ -370,5 +403,33 @@
     "anyReason": "Any reason",
     "supplier": "Supplier",
     "anySupplier": "Any supplier"
+  },
+  "claims": {
+    "title": "Claim with the supplier",
+    "loading": "Loading the claim",
+    "none": "No claim yet",
+    "error": "The claim could not be loaded",
+    "denied": "You cannot see supplier claims",
+    "afterPosting": "Once this receipt is posted, a claim for the rejected goods can be raised with the supplier.",
+    "notClaimable": "A claim is raised only from a purchase received against a purchase order.",
+    "whoRaises": "The owner or the accountant raises a claim with the supplier for the rejected goods.",
+    "noneYet": "No claim has been raised for this receipt yet. The owner or the accountant raises it.",
+    "intro": "Ask the supplier to credit or replace what was turned away. The server works out the value from the order's price; nothing is typed.",
+    "raise": "Raise a claim",
+    "raising": "Raising the claim",
+    "raiseTitle": "Raise a claim with {{supplier}}?",
+    "raiseBody": "One claim for this receipt's rejected lines. It moves no stock and stays open until the supplier's invoice or credit note settles it.",
+    "notRaised": "The claim was not raised",
+    "raised": "A claim is raised with {{supplier}}.",
+    "claimed": "Claimed:",
+    "note": "Note for the supplier",
+    "noteHint": "Optional. For example, which crates and who signed the delivery note.",
+    "noteShown": "Note: {{note}}",
+    "openBody": "Open: on {{supplier}}'s account until their invoice or credit note settles it.",
+    "settledBody": "Settled by {{by}}.",
+    "status": {
+      "OPEN": "Open",
+      "SETTLED": "Settled"
+    }
   }
 }
