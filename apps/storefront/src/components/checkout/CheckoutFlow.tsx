@@ -32,6 +32,7 @@ import { DetailsForm } from './DetailsForm';
 import { ShopData } from '../ShopData';
 import { Done } from './Done';
 import { Review } from './Review';
+import { referenceCopy, RequestReference } from '../RequestReference';
 
 type S = components['schemas'];
 
@@ -95,6 +96,7 @@ function Flow({ words }: { words: Words }) {
         description={refusal(words, cart.error)}
         reference={cart.error.correlationId}
         referenceLabel={word(words, 'cart.reference')}
+        referenceCopy={referenceCopy(words)}
         action={retry}
       />
     );
@@ -194,7 +196,8 @@ function Flow({ words }: { words: Words }) {
                   )}
                   {failure.correlationId === '' ? null : (
                     <p className="text-sm">
-                      {word(words, 'cart.reference')} {failure.correlationId}
+                      {word(words, 'cart.reference')}{' '}
+                      <RequestReference value={failure.correlationId} words={words} />
                     </p>
                   )}
                 </Alert>

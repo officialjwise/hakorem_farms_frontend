@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { QueryBoundaryLabels } from '@hakorem/ui';
+import { useReferenceCopy } from './RequestReference';
 
 /** The words that name what this screen is about. The rest of a QueryBoundary's labels are the same everywhere. */
 export interface ScreenStateWords {
@@ -17,10 +18,12 @@ export interface ScreenStateWords {
  */
 export function useStateLabels(words: ScreenStateWords): QueryBoundaryLabels {
   const { t } = useTranslation('common');
+  const referenceCopy = useReferenceCopy();
   return {
     errorDescription: t('states.errorBody'),
     retry: t('states.retry'),
     reference: t('states.reference'),
+    referenceCopy,
     deniedDescription: t('states.deniedBody'),
     ...words,
   };

@@ -7,6 +7,7 @@ import { word, type Words } from '../../lib/words';
 import { CartLines } from './CartLines';
 import { useCart } from './useCart';
 import { ShopData } from '../ShopData';
+import { referenceCopy } from '../RequestReference';
 
 /**
  * The basket drawer: its lines, the API's estimated subtotal and what it does not include, and the way on
@@ -33,6 +34,7 @@ function Drawer({
     errorDescription: word(words, 'cart.errorBody'),
     retry: word(words, 'cart.retry'),
     reference: word(words, 'cart.reference'),
+    referenceCopy: referenceCopy(words),
     deniedTitle: word(words, 'cart.errorTitle'),
   };
   return (

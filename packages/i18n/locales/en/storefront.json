@@ -82,7 +82,10 @@
       "title": "The products could not be loaded",
       "body": "The shop did not answer. Check your connection and try again.",
       "retry": "Try again",
-      "reference": "If it keeps happening, quote this reference:"
+      "reference": "If it keeps happening, quote this reference:",
+      "copy": "Copy the full reference",
+      "copied": "Copied",
+      "copyFailed": "Could not copy. Select it to copy by hand."
     },
     "paging": "More products"
   },
@@ -212,6 +215,9 @@
     "errorBody": "Check your connection and try again.",
     "retry": "Try again",
     "reference": "If it keeps happening, quote this reference:",
+    "referenceCopy": "Copy the full reference",
+    "referenceCopied": "Copied",
+    "referenceCopyFailed": "Could not copy. Select it to copy by hand.",
     "gone": "Your basket has ended. Start a new one from the shop.",
     "items_one": "item",
     "items_other": "items"

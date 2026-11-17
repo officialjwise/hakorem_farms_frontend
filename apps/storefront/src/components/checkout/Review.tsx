@@ -22,6 +22,7 @@ import { toE164 } from '../../lib/phone';
 import { fill, refusal, word, type Words } from '../../lib/words';
 import { perUnit } from '../cart/CartLines';
 import { slotDay, type PayMethod } from './details';
+import { RequestReference } from '../RequestReference';
 
 type S = components['schemas'];
 type Checkout = S['Checkout'];
@@ -315,7 +316,8 @@ function Pay({
           {refusal(words, place.error)}
           {place.error.correlationId === '' ? null : (
             <span className="block text-sm">
-              {word(words, 'cart.reference')} {place.error.correlationId}
+              {word(words, 'cart.reference')}{' '}
+              <RequestReference value={place.error.correlationId} words={words} />
             </span>
           )}
         </Alert>

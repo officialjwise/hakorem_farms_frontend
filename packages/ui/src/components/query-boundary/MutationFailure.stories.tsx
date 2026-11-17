@@ -9,6 +9,7 @@ const labels: QueryBoundaryLabels = {
   errorDescription: 'Check the connection. Nothing was changed. Try again.',
   retry: 'Try again',
   reference: 'Quote this reference to support:',
+  referenceCopy: { copy: 'Copy the full reference', copied: 'Copied', failed: 'Could not copy' },
   deniedTitle: 'You cannot adjust stock',
   deniedDescription: 'Ask the owner to add the stock adjustment permission to your role.',
 };

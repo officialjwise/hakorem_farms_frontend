@@ -32,6 +32,11 @@ export function LoadFailed({
       description={description}
       reference={error.correlationId}
       referenceLabel={t('listing.error.reference')}
+      referenceCopy={{
+        copy: t('listing.error.copy'),
+        copied: t('listing.error.copied'),
+        failed: t('listing.error.copyFailed'),
+      }}
       action={action}
     />
   );

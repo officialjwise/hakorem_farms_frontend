@@ -90,7 +90,10 @@ describe('checkout, against the real Prism', () => {
     const alert = title.closest('[role="alert"]');
     // The contract's shared 422 example has a code the shop has no words for: the server's sentence shows.
     expect(alert).toHaveTextContent(/veterinary withdrawal period/);
-    expect(alert).toHaveTextContent('019a7b1d-f4de-751c-aa55-5aa0965fd37e');
+    // The last eight characters, grouped, and a button that copies all of it (ADR 0051).
+    expect(alert).toHaveTextContent('quote this reference: 965f d37e');
+    expect(alert).not.toHaveTextContent('019a7b1d-f4de-751c-aa55-5aa0965fd37e');
+    expect(within(alert).getByRole('button', { name: 'Copy the full reference' })).toBeVisible();
   });
 
   it('with no basket, says so and leads back to the shop', async () => {

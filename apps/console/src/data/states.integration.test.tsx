@@ -30,6 +30,7 @@ const labels: QueryBoundaryLabels = {
   errorDescription: 'Check the connection and try again.',
   retry: 'Try again',
   reference: 'Quote this reference to support:',
+  referenceCopy: { copy: 'Copy the full reference', copied: 'Copied', failed: 'Could not copy' },
   deniedTitle: 'You do not have access to products',
 };
 
@@ -113,7 +114,10 @@ describe('a screen against the Prism mock, in its four states', () => {
     mount({ Prefer: 'code=500' });
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Products could not be loaded');
-    expect(alert).toHaveTextContent('019a7b1e-32bc-78e3-8e1c-970f89c10fed');
+    // The last eight characters, grouped; the button copies the whole reference (ADR 0051).
+    expect(alert).toHaveTextContent('Quote this reference to support: 89c1 0fed');
+    expect(alert).not.toHaveTextContent('019a7b1e-32bc-78e3-8e1c-970f89c10fed');
+    expect(screen.getByRole('button', { name: 'Copy the full reference' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
   });
 

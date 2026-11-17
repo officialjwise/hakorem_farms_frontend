@@ -10,6 +10,7 @@
   "states": {
     "errorBody": "Check the connection and try again. If it keeps happening, quote the reference.",
     "reference": "Quote this reference to support:",
+    "referenceCopy": "Copy the full reference",
     "retry": "Try again",
     "deniedBody": "Your role does not include the permission this needs. Ask the owner or a manager to grant it.",
     "notFound": "Not found",

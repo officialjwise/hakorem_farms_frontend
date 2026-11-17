@@ -5,6 +5,7 @@ import {
   formatDateTime,
   formatMoney,
   formatQuantity,
+  formatReference,
   formatWeight,
 } from './format';
 
@@ -241,5 +242,30 @@ describe('formatDateTime (Africa/Accra, UTC+0 all year)', () => {
 
   it('names the business time zone', () => {
     expect(BUSINESS_TIME_ZONE).toBe('Africa/Accra');
+  });
+});
+
+describe('formatReference (owner, 2026-11-17)', () => {
+  it('shows the last eight characters of a request reference in two groups of four', () => {
+    expect(formatReference('019a7b1d-f4de-751c-aa55-5aa0965fd37e')).toBe('965f d37e');
+  });
+
+  it('takes the end, where the random part is, not the start, which encodes the time', () => {
+    // Two UUIDv7 references a moment apart share their start and differ at the end.
+    const first = formatReference('019a7b1d-f4de-751c-aa55-5aa0965fd37e');
+    const second = formatReference('019a7b1d-f4de-7a2b-9c11-0b3e44a1c8f2');
+    expect(first).not.toBe(second);
+    expect(first).not.toContain('019a');
+  });
+
+  it('leaves hyphens and spaces out before counting', () => {
+    expect(formatReference('019a7b1d-9811')).toBe('7b1d 9811');
+    expect(formatReference('ab-cd ef-12-34')).toBe('cdef 1234');
+  });
+
+  it('shows a reference of eight characters or fewer whole, and nothing for none', () => {
+    expect(formatReference('3f2a9c1e')).toBe('3f2a 9c1e');
+    expect(formatReference('9c1e7')).toBe('9c1e 7');
+    expect(formatReference('')).toBe('');
   });
 });

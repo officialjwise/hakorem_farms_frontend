@@ -1,17 +1,29 @@
 import { TriangleAlert } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { cn } from '../../lib/cn';
+import { formatReference } from '../../format/format';
+import { CopyId, type CopyLabels } from '../copy-id/CopyId';
 import type { BadgeIcon } from '../status-badge/StatusBadge';
 
 /** Rejects an empty string literal at compile time. Dynamic blank strings are rejected at render. */
 type NonEmpty<T extends string> = T extends '' ? never : T;
 
 type ReferenceProps =
-  | { reference?: undefined; referenceLabel?: never }
+  | { reference?: undefined; referenceLabel?: never; referenceCopy?: never }
   | {
-      /** The correlation id of a failed request, so a support call starts with a reference instead of a guess. */
+      /**
+       * Something to quote to support: the correlation id of a failed request, so a support call starts
+       * with a reference instead of a guess, or a plain reference such as a permission's name. Blank shows
+       * nothing.
+       */
       reference: string;
       referenceLabel: string;
+      /**
+       * Given for a request reference (a correlation id), always: it is then shown by its last eight
+       * characters in two groups (`formatReference`) with a button that copies all of it (owner,
+       * 2026-11-17; ADR 0051). Without it the reference is shown whole, for one a person reads in full.
+       */
+      referenceCopy?: CopyLabels;
     };
 
 export type ErrorStateProps<L extends string = string> = ReferenceProps & {
@@ -36,6 +48,7 @@ export function ErrorState<L extends string>({
   compact = false,
   reference,
   referenceLabel,
+  referenceCopy,
   className,
 }: ErrorStateProps<L>) {
   if (title.trim() === '') {
@@ -54,11 +67,22 @@ export function ErrorState<L extends string>({
       <Icon aria-hidden="true" focusable="false" className="size-7 stroke-critical" />
       <p className="text-base font-semibold text-balance text-fg">{title}</p>
       {description ? <p className="text-sm text-balance text-fg-muted">{description}</p> : null}
-      {reference !== undefined ? (
+      {reference === undefined || reference.trim() === '' ? null : referenceCopy === undefined ? (
         <p className="text-xs text-fg-muted">
           {referenceLabel} <code className="font-mono text-fg">{reference}</code>
         </p>
-      ) : null}
+      ) : (
+        <p className="text-xs text-fg-muted">
+          {referenceLabel}{' '}
+          <CopyId
+            value={reference}
+            shown={formatReference(reference)}
+            copyLabel={referenceCopy.copy}
+            copiedLabel={referenceCopy.copied}
+            failedLabel={referenceCopy.failed}
+          />
+        </p>
+      )}
       {action ? <div className="mt-2">{action}</div> : null}
     </div>
   );

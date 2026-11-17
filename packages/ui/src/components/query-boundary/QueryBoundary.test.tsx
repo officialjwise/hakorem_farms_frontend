@@ -16,6 +16,7 @@ const labels: QueryBoundaryLabels = {
   errorDescription: 'Check the connection.',
   retry: 'Try again',
   reference: 'Reference:',
+  referenceCopy: { copy: 'Copy the full reference', copied: 'Copied', failed: 'Could not copy' },
   deniedTitle: 'No access to products',
   deniedDescription: 'Ask the owner.',
 };
@@ -83,7 +84,7 @@ describe('QueryBoundary', () => {
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent('Products could not be loaded');
     expect(alert).toHaveTextContent('Something went wrong on our side.');
-    expect(alert).toHaveTextContent('Reference: abc-123');
+    expect(alert).toHaveTextContent('Reference: abc1 23');
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(query.refetch).toHaveBeenCalledTimes(1);
   });
@@ -140,7 +141,7 @@ describe('MutationFailure', () => {
       />,
     );
     expect(screen.getByRole('alert')).toHaveTextContent('Goat G-0163 is on hold.');
-    expect(screen.getByRole('alert')).toHaveTextContent('Reference: r-1');
+    expect(screen.getByRole('alert')).toHaveTextContent('Reference: r1');
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(onRetry).toHaveBeenCalledTimes(1);
   });

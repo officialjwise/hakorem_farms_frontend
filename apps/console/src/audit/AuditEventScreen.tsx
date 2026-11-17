@@ -23,6 +23,7 @@ import { When } from '../iam/presentation';
 import { PageHeader } from '../lib/ScreenHeader';
 import { useStateLabels } from '../lib/states';
 import { changeRows, show, type AuditAction, type AuditEvent } from './presentation';
+import { RequestReference } from '../lib/RequestReference';
 
 /**
  * FR-AUD-001 and 006: one event, with what changed laid out as before and after, field by field. At 360 px
@@ -107,7 +108,9 @@ function EventDetail({ record, back }: { record: AuditEvent; back: ReactNode }) 
             <dt className="text-fg-muted">{t('event.record')}</dt>
             <dd>{record.entityType}</dd>
             <dt className="text-fg-muted">{t('event.correlation')}</dt>
-            <dd className="font-mono break-all">{record.correlationId}</dd>
+            <dd>
+              <RequestReference value={record.correlationId} />
+            </dd>
             <dt className="text-fg-muted">{t('event.sealed')}</dt>
             <dd>
               {record.sealed && record.chainSeq !== null

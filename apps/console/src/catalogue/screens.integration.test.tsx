@@ -12,7 +12,8 @@ import { queryClient } from '../data/api';
 import { renderApp, signedIn } from '../test/harness';
 import { holdResponses, mock } from '../test/integration-setup';
 
-const PRISM_500_REFERENCE = '019a7b1e-32bc-78e3-8e1c-970f89c10fed';
+/** Prism's 500 reference (`019a7b1e-…-970f89c10fed`) as a screen shows it: the last eight, grouped (ADR 0051). */
+const PRISM_500_REFERENCE = '89c1 0fed';
 const ANY_ID = '019a7a86-3046-711a-a652-1a7389f79351';
 /** The draft in the contract's `getPriceListVersion` example. */
 const DRAFT_ID = '019a7aa3-e9f0-71af-86e7-23c27a0d9ca0';

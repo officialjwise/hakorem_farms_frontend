@@ -7,7 +7,11 @@ import type { ServerFailure } from './serverErrors';
 const meta = {
   title: 'Forms/FormError',
   component: FormError,
-  args: { title: 'The sale was not saved', referenceLabel: 'Reference' },
+  args: {
+    title: 'The sale was not saved',
+    referenceLabel: 'Reference',
+    referenceCopy: { copy: 'Copy the full reference', copied: 'Copied', failed: 'Could not copy' },
+  },
 } satisfies Meta<typeof FormError>;
 
 export default meta;
@@ -47,6 +51,11 @@ function DismissibleDemo({ title, referenceLabel }: { title: string; referenceLa
       failure={failure}
       title={title}
       referenceLabel={referenceLabel}
+      referenceCopy={{
+        copy: 'Copy the full reference',
+        copied: 'Copied',
+        failed: 'Could not copy',
+      }}
       onDismiss={() => setFailure(null)}
       dismissLabel="Dismiss"
     />

@@ -31,6 +31,7 @@ import {
   useKindName,
   type ApprovalRequest,
 } from './presentation';
+import { useReferenceCopy } from '../lib/RequestReference';
 
 /**
  * One approval request, with its evidence before the decision: what is asked, the amount, who asked and
@@ -181,6 +182,7 @@ function EvidencePhoto({ fileId }: { fileId: string }) {
   const { t } = useTranslation(['approvals', 'common']);
   const file = useApiQuery('getFile', { path: { id: fileId } });
   const signed = useApiMutation('createFileSignedUrl');
+  const referenceCopy = useReferenceCopy();
   const clean = file.data?.scanStatus === 'CLEAN';
   const { mutate, status } = signed;
   useEffect(() => {
@@ -201,6 +203,7 @@ function EvidencePhoto({ fileId }: { fileId: string }) {
         description={failure.message}
         reference={failure.correlationId}
         referenceLabel={t('common:states.reference')}
+        referenceCopy={referenceCopy}
       />
     );
   }

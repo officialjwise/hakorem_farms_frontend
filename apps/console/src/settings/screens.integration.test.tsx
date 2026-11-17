@@ -10,7 +10,8 @@ import { themePreference } from '../lib/preferences';
 import { renderApp, signedIn } from '../test/harness';
 import { holdResponses, mock } from '../test/integration-setup';
 
-const PRISM_500_REFERENCE = '019a7b1e-32bc-78e3-8e1c-970f89c10fed';
+/** Prism's 500 reference (`019a7b1e-…-970f89c10fed`) as a screen shows it: the last eight, grouped (ADR 0051). */
+const PRISM_500_REFERENCE = '89c1 0fed';
 
 afterEach(() => {
   queryClient.clear();

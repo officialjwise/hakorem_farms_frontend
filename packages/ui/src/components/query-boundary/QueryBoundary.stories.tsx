@@ -15,6 +15,7 @@ const labels: QueryBoundaryLabels = {
   errorDescription: 'Check the connection and try again.',
   retry: 'Try again',
   reference: 'Quote this reference to support:',
+  referenceCopy: { copy: 'Copy the full reference', copied: 'Copied', failed: 'Could not copy' },
   deniedTitle: 'You do not have access to products',
   deniedDescription: 'Ask the owner to add the product permission to your role.',
 };
@@ -91,7 +92,9 @@ export const ErrorWithReference: Story = {
   },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('alert')).toHaveTextContent('019a7b1e-32bc');
+    // The last eight characters, grouped, and a button that copies all of it (ADR 0051).
+    await expect(canvas.getByRole('alert')).toHaveTextContent('89c1 0fed');
+    await expect(canvas.getByRole('alert')).not.toHaveTextContent('019a7b1e');
     await userEvent.click(canvas.getByRole('button', { name: 'Try again' }));
     await expect(args.query.refetch).toHaveBeenCalledTimes(1);
   },
@@ -121,7 +124,7 @@ export const DeniedBySession: Story = {
   args: { denied: true, query: pending },
 };
 
-/** The retry button is reached with Tab and activated with Enter, then with Space. */
+/** The reference's copy button comes first, then the retry, reached with Tab and activated with Enter, then Space. */
 export const KeyboardPath: Story = {
   args: {
     query: failed(
@@ -130,6 +133,8 @@ export const KeyboardPath: Story = {
   },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
+    await userEvent.tab();
+    await expect(canvas.getByRole('button', { name: 'Copy the full reference' })).toHaveFocus();
     await userEvent.tab();
     await expect(canvas.getByRole('button', { name: 'Try again' })).toHaveFocus();
     await userEvent.keyboard('{Enter}');

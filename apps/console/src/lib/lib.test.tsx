@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useForm } from 'react-hook-form';
 import { I18nextProvider } from 'react-i18next';
 import { createMemoryRouter, Link, RouterProvider } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@hakorem/api-client';
 import { createI18n } from '@hakorem/i18n';
 import { Input, UIProvider } from '@hakorem/ui';
@@ -14,6 +14,7 @@ import { fakeBrowser } from '../test/fakeFetch';
 import { signedIn } from '../test/harness';
 import { LeaveGuardDialog, useLeaveGuard } from './LeaveGuard';
 import { useIntentKey } from './queries';
+import { RequestReference } from './RequestReference';
 import { useCursorPages } from './useCursorPages';
 
 const toastLabels = { region: 'Notifications', announcement: 'Notification', close: 'Close' };
@@ -239,5 +240,37 @@ describe('useStepUp', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Save' }));
     await waitFor(() => expect(caught).toBe(failure));
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+});
+
+describe('RequestReference (owner, 2026-11-17; ADR 0051)', () => {
+  it('shows the last eight characters, grouped, and copies the whole reference', async () => {
+    const i18n = await createI18n({ namespaces: ['common'] });
+    const writeText = vi.fn(() => Promise.resolve());
+    const user = userEvent.setup();
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    render(
+      <I18nextProvider i18n={i18n}>
+        <p>
+          Reference: <RequestReference value="019a7b1d-f4de-751c-aa55-5aa0965fd37e" />
+        </p>
+      </I18nextProvider>,
+    );
+    expect(screen.getByText('965f d37e')).toBeInTheDocument();
+    expect(screen.queryByText(/019a7b1d/)).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Copy the full reference' }));
+    expect(writeText).toHaveBeenCalledWith('019a7b1d-f4de-751c-aa55-5aa0965fd37e');
+    expect(await screen.findByRole('status')).toHaveTextContent('Copied');
+    Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });
+  });
+
+  it('renders nothing for a failure that had no answer', async () => {
+    const i18n = await createI18n({ namespaces: ['common'] });
+    const { container } = render(
+      <I18nextProvider i18n={i18n}>
+        <RequestReference value="" />
+      </I18nextProvider>,
+    );
+    expect(container).toBeEmptyDOMElement();
   });
 });

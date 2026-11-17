@@ -15,6 +15,7 @@ const labels: QueryBoundaryLabels = {
   errorDescription: 'Check the connection.',
   retry: 'Try again',
   reference: 'Reference:',
+  referenceCopy: { copy: 'Copy the full reference', copied: 'Copied', failed: 'Could not copy' },
   deniedTitle: 'No access to products',
 };
 
@@ -58,7 +59,7 @@ describe('the shared states, wired to a real query', () => {
       json(envelope('INTERNAL', 'Something went wrong.', 'ref-77'), 500),
     );
     render(<Harness hooks={broken.hooks} />, { wrapper: broken.wrapper });
-    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Reference: ref-77'));
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Reference: ref7 7'));
   });
 });
 
