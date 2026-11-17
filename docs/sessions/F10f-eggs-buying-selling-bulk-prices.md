@@ -185,8 +185,6 @@ Every new screen's spec runs axe and checks for no sideways scroll at 360 px.
 
 ## Gates, each run on its own
 
-<!-- e2e filled in below -->
-
 | Check                                                               | Exit | Count                                                                        |
 | ------------------------------------------------------------------- | ---- | ---------------------------------------------------------------------------- |
 | `format:check`, `lint`, `typecheck`                                 | 0    |                                                                              |
@@ -195,7 +193,7 @@ Every new screen's spec runs axe and checks for no sideways scroll at 360 px.
 | `test:integration`                                                  | 0    | console 244, storefront 15                                                   |
 | `test:a11y`                                                         | n/r  | not run: `packages/ui` is unchanged; every new screen's spec runs axe        |
 | `budget:console`                                                    | 0    | till 246.9 of 250 kB (was 246.2); back office 278.8 of 300 kB (was 278.5)    |
-| `test:e2e`, full run                                                | TBD  | TBD                                                                          |
+| `test:e2e`, full run                                                | 0    | 274 of 274 in 6.0 minutes (was 266: 8 egg tests)                             |
 
 ## For the owner
 
