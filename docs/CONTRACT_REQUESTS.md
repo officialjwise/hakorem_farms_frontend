@@ -551,7 +551,7 @@ The PIN unlocks the till and records approvals only. The till enforces the attem
 **Request:**
 
 1. **A public receipt read** (no session) by an unguessable token: the official receipt number, the sale reference (`provisionalRef`), the lines, the tenders, the change and the business's details, and, until the sale has synced, a state saying the receipt is being recorded.
-2. **The link can be made on the till offline**, so it can be shown as a QR code at the counter before the sale reaches the server. The simplest shape: the link names the sale's client id (a UUIDv7, 74 random bits), and the public read answers "being recorded" until that sale arrives. If the backend prefers a server-signed token, say how the till gets one offline.
+2. **The link can be made on the till offline**, so it can be shown at the counter and printed before the sale reaches the server (as text: the owner allows no QR code but the TOTP enrolment image, 2026-11-17). The simplest shape: the link names the sale's client id (a UUIDv7, 74 random bits), and the public read answers "being recorded" until that sale arrives. If the backend prefers a server-signed token, say how the till gets one offline.
 3. **The SMS is sent once on sync** for a sale that carried `customerPhone`, with the link, the official number and the sale reference; and the sync result (or the order) says whether it was sent.
 
 **Until this lands:** the till shows the sale reference and its own receipt on screen; nothing reaches the customer's phone.
@@ -561,3 +561,17 @@ The PIN unlocks the till and records approvals only. The till enforces the attem
 1. `OfflinePack.receiptLinkTemplate` (string, an absolute `https` URL containing `{saleId}`, for example `https://hakoremfarms.com/r/{saleId}`): the till makes the link offline from the sale's client id, so it can show and print it before the sale reaches the server.
 2. `SyncResultItem.receiptMessage` (object or null): `{ channel: SMS, status: QUEUED | SENT | FAILED | NO_PHONE }`. The server sends the SMS once, on the sale's first sync, to the sale's `customerPhone`, with the link, the official number and the sale reference; a resend (`DUPLICATE`) answers the first result's status and sends nothing.
 3. `getPublicReceipt`: `GET /shop/receipts/{saleId}`, public, cacheable for a recorded sale. 200 `PublicReceipt`: `{ saleId, state: RECORDING | RECORDED, saleReference, receiptNo (null while RECORDING), occurredAt, business: { name, phone }, lines: [{ name, quantity, saleUom, weightKg, stockUnitIdentifier, unitPricePesewas, amountPesewas }], totalPesewas, tenders: [{ name, amountPesewas, tenderedPesewas, unverified }], changePesewas, currency }`. An id the server has never seen answers 200 `RECORDING` with only `saleId` and `state`, never 404, so a link shown at the counter works before the sale syncs and says nothing about whether an id exists. `quantity` and `weightKg` are the contract's three-place strings.
+
+## CR-034. The server generates each product's SKU (changed request body)
+
+- **Raised by:** frontend, the owner's decision (2026-11-17): "SKU stays, but the server generates it. Make it read-only on the product forms: never typed, shown once the product is saved."
+- **Contract read first (1.53.0):** `ProductCreate` requires `sku` (a free string), so the console must type one. `ProductUpdate` has no `sku`, so a SKU already cannot change after creation. `Product.sku` is answered on every product read, and `listProducts` sorts and searches by it.
+- **Why it matters:** with the owner's rule the console has no SKU to send, so in a build against 1.53.0 it cannot create a product at all.
+
+**Request:**
+
+1. `ProductCreate.sku` removed (or optional and ignored). The server generates the SKU in the create transaction, unique across the catalogue, and answers it in `Product.sku` on the 201. Its format is the backend's (the owner's example codes are short and readable, such as `LIV-GOAT` or `EGG-BIG`); say in the description how it is formed, so staff can read one aloud.
+2. The SKU never changes after creation (as today: not in `ProductUpdate`), and import (`importMasterData` for products) names an existing product by its SKU but never sets one on a new row.
+3. The SKU remains what `listProducts` and the till's search find a product by.
+
+**Until this lands:** the create form has no SKU field and says the SKU is given by the server. In a build switched on for CR-034 (the e2e and CI builds, ADR 0046) it sends the body without `sku`; in a build for the real API the "Create product" button is disabled with words, and existing products can be changed as before.

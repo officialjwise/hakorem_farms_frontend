@@ -1,4 +1,5 @@
 import { expect, test } from '../../support/test';
+import { installServerSku } from '../../support/requested';
 import {
   expectNoAxeViolations,
   expectNoHorizontalScroll,
@@ -140,12 +141,18 @@ test.describe('products', () => {
     await expectNoHorizontalScroll(page);
   });
 
-  test('the owner creates a product by the keyboard, choosing how its stock is kept', async ({
+  test('the owner creates a product by the keyboard, choosing how its stock is kept; the server gives the SKU', async ({
     page,
+    api,
   }) => {
+    const server = installServerSku(api);
     await signInWithTotp(page, USERS.owner, '/products/new');
     await expect(page.getByRole('heading', { name: 'New product', level: 1 })).toBeVisible();
-    await page.getByLabel(/^sku/i).fill('LIV-DUCK');
+    // The SKU is never typed (owner, 2026-11-17; CR-034): no field, and words saying who gives it.
+    await expect(page.getByRole('textbox', { name: /^sku/i })).toHaveCount(0);
+    await expect(page.locator('[data-slot="sku-given"]')).toContainText(
+      'Given by the server when the product is saved',
+    );
     await page.getByLabel(/^name/i).fill('Duck');
     for (const [label, option] of [
       [/^category/i, 'Live poultry'],
@@ -162,8 +169,11 @@ test.describe('products', () => {
     await expectNoAxeViolations(page);
     await expectNoHorizontalScroll(page);
     await page.getByRole('button', { name: 'Create product' }).click();
-    // Prism answers with its example product, so the new screen is that one.
+    // Prism answers with its example product, so the new screen is that one, its SKU shown read-only.
     await expect(page.getByRole('heading', { name: 'Stock-keeping facts' })).toBeVisible();
+    expect(server.sent).toHaveLength(1);
+    expect(server.sent[0]).not.toHaveProperty('sku');
+    expect(server.sent[0]).toMatchObject({ name: 'Duck' });
   });
 });
 

@@ -93,7 +93,7 @@ function usePrintWords(entry: SaleEntry): PrintWords {
     handed: (name) => t('receipt.handed', { name }),
     unverified: t('receipt.unverified'),
     reference: t('receipt.reference'),
-    scan: t('receipt.scan'),
+    link: t('receipt.link'),
     saleId: t('receipt.saleId'),
     thanks: t('receipt.thanks'),
   };

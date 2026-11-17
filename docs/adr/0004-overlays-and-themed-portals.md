@@ -24,7 +24,7 @@ Theme and density are set by `data-theme` and `data-density` on an ancestor. Por
   - **Role:** `surface`, so it emits `bg-scrim` only (assumption A-F0-04).
 - **Tooltips:** they do not exist on touch, and the POS is touch. A Tooltip is never the only route to information, the same rule as StatusBadge. A control that needs explaining gets a visible label or hint.
 - **Focus:** Radix owns the focus trap and focus return, and we do not override either.
-- **Barcode focus story:** a story with the POS barcode focus trap and an open Dialog together proves they do not fight. Focus stays in the Dialog while it is open, and returns to the barcode field when it closes.
+- **Barcode focus story** (superseded by ADR 0048, 2026-11-17: the till has no barcode field, so there is no trap to prove): a story with the POS barcode focus trap and an open Dialog together proves they do not fight. Focus stays in the Dialog while it is open, and returns to the barcode field when it closes.
   - **Deferred to F1** (owner decision 2026-11-13), where the real POS focus trap is built. It is a required F1 story in `docs/BUILD_PROMPT.md`.
   - **No stand-in in F0:** a stand-in trap would prove only that the stand-in works.
 

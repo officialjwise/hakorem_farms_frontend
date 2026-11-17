@@ -193,7 +193,10 @@
     "packHint": "For packs sold by weight, for example 15.000.",
     "submit": "Create product",
     "creating": "Creating the product",
-    "failed": "The product was not created"
+    "failed": "The product was not created",
+    "skuGiven": "Given by the server when the product is saved. It is never typed.",
+    "skuWaits": "Adding a product waits for the server to give SKUs",
+    "skuWaitsBody": "The server does not give each product its SKU yet, and a SKU is never typed here. Products already in the catalogue can be changed as before."
   },
   "categories": {
     "title": "Categories",

@@ -2,7 +2,8 @@
  * The receipt as a 58 mm ESC/POS printer takes it (ADR 0045): 32 characters a line in font A, plain ASCII
  * (the cedi sign is not in a thermal printer's code pages, so money is written `GHS 1,234.50`, the
  * formatters' document form), the sale reference printed and labelled as a sale reference, never as a
- * receipt number, and a QR code the printer draws itself (`GS ( k`), so the till needs no QR library.
+ * receipt number, and the customer's receipt link written out in full. No QR code: the owner keeps the
+ * TOTP enrolment image as the console's only QR code (2026-11-17).
  *
  * Pure: words in, bytes out. The words come from the caller in the till's language; nothing here
  * computes money, it prints the receipt's own figures.
@@ -25,7 +26,8 @@ export interface PrintWords {
   handed: (tender: string) => string;
   unverified: string;
   reference: string;
-  scan: string;
+  /** The line above the receipt link. */
+  link: string;
   saleId: string;
   thanks: string;
 }
@@ -35,7 +37,7 @@ export interface PrintInput {
   officialNo: string | null;
   /** A reprint: printed as a copy at the top, never a new receipt. */
   copy: boolean;
-  /** The customer's receipt page (CR-033), or null: the QR then carries the sale id (OFFLINE_SYNC 4.3). */
+  /** The customer's receipt page (CR-033), printed in full, or null where the server offers none. */
   link: string | null;
   words: PrintWords;
 }
@@ -137,7 +139,7 @@ export function receiptLines(input: PrintInput): {
   }
   body.push(...pair(words.change, money(receipt.changePesewas)), RULE);
   const footer = [
-    ...wrap(words.scan),
+    ...(input.link !== null ? [...wrap(words.link), ...wrap(input.link)] : []),
     ...wrap(words.saleId),
     ...wrap(receipt.saleId),
     ...wrap(words.thanks),
@@ -146,7 +148,6 @@ export function receiptLines(input: PrintInput): {
 }
 
 const ESC = 0x1b;
-const GS = 0x1d;
 const LF = 0x0a;
 const INIT = [ESC, 0x40];
 const ALIGN = { left: [ESC, 0x61, 0], centre: [ESC, 0x61, 1] } as const;
@@ -156,19 +157,6 @@ const FEED = [ESC, 0x64, 4];
 
 function text(lines: readonly string[]): number[] {
   return lines.flatMap((line) => [...Array.from(line, (c) => c.charCodeAt(0)), LF]);
-}
-
-/** A QR code drawn by the printer (model 2, module size 5, error correction M). */
-export function qrCommand(data: string): number[] {
-  const bytes = Array.from(ascii(data), (c) => c.charCodeAt(0));
-  const length = bytes.length + 3;
-  return [
-    ...[GS, 0x28, 0x6b, 4, 0, 0x31, 0x41, 0x32, 0],
-    ...[GS, 0x28, 0x6b, 3, 0, 0x31, 0x43, 5],
-    ...[GS, 0x28, 0x6b, 3, 0, 0x31, 0x45, 0x31],
-    ...[GS, 0x28, 0x6b, length & 0xff, length >> 8, 0x31, 0x50, 0x30, ...bytes],
-    ...[GS, 0x28, 0x6b, 3, 0, 0x31, 0x51, 0x30],
-  ];
 }
 
 export function encodeReceipt(input: PrintInput): Uint8Array {
@@ -184,8 +172,6 @@ export function encodeReceipt(input: PrintInput): Uint8Array {
     ...ALIGN.left,
     ...text(body),
     ...ALIGN.centre,
-    ...qrCommand(input.link ?? input.receipt.saleId),
-    LF,
     ...text(footer),
     ...FEED,
   ]);

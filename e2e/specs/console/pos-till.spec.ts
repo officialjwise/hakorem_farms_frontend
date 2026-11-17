@@ -6,7 +6,7 @@ import {
   USERS,
 } from '../../support/helpers';
 import { expect, test } from '../../support/test';
-import { installTillServer, openTillShift, scan, type SentSale } from '../../support/till';
+import { installTillServer, openTillShift, find, type SentSale } from '../../support/till';
 
 /**
  * F9's other till flows at 360 px: hold and recall offline and online, a price agreed below the list price
@@ -44,7 +44,7 @@ test('a sale held offline stays on this till and comes back at the pack price', 
 test('online, a held sale goes to the register with its lines', async ({ page, api }) => {
   installTillServer(api, serverTotal);
   await openTillShift(page);
-  await scan(page, 'G-0157');
+  await find(page, 'G-0157', /G-0157$/);
   const sent = page.waitForRequest((r) => r.method() === 'POST' && r.url().includes('/held-sales'));
   await page.getByRole('button', { name: 'Hold this sale' }).click();
   await page
@@ -65,7 +65,7 @@ test('an agreed price needs a reason and stays inside the cashier limits', async
 }) => {
   const server = installTillServer(api, serverTotal);
   await openTillShift(page);
-  await scan(page, 'G-0142');
+  await find(page, 'G-0142', /G-0142$/);
   await page.getByRole('button', { name: 'Change Goat G-0142' }).click();
   const line = page.getByRole('dialog', { name: 'Change G-0142' });
   const price = line.getByRole('textbox', { name: /^Agreed price a head/ });

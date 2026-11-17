@@ -2,7 +2,7 @@
  * The till on this device (ADR 0043): what is stored (store.ts), the one place it changes, and when the
  * queue is sent (sync.ts). It is a module-level store that screens read with `useTill()`
  * (`useSyncExternalStore`, as `useOnlineStatus` does), not a React context: the till document has one
- * till, and the barcode bar in the shell and the sale screen under it share it without a provider.
+ * till, and the shell and the sale screen under it share it without a provider.
  *
  * When the queue is sent: as soon as a record is queued; when the browser says it is online again; and,
  * while records wait and the server cannot be reached, after a backoff (5 s doubling to 5 min, with
@@ -374,7 +374,7 @@ export class Till {
     return shift !== null && this.verifierFor(shift.cashierId) !== null;
   }
 
-  /** Locks the till until the shift's cashier enters their PIN. Selling, scanning and paying stop. */
+  /** Locks the till until the shift's cashier enters their PIN. Selling and paying stop. */
   async lock(): Promise<void> {
     if (!this.canLock()) return;
     const { meta } = this.snapshotOrThrow();

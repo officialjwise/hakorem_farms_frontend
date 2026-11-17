@@ -1,6 +1,6 @@
 # 0014. The POS shell owns the barcode field and its focus trap
 
-- Status: accepted
+- Status: superseded by 0048 (owner, 2026-11-17: no barcode scanning at the till)
 - Date: 2026-11-14
 - Session: F1 (implements the required story from ADR 0004)
 

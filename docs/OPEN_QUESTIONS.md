@@ -14,7 +14,9 @@ Questions that are not design decisions and are not ours to answer: each names w
 
 ## For the owner
 
-### Q-F10-01. May the till take a QR code library for the on-screen receipt link?
+### Q-F10-01. May the till take a QR code library for the on-screen receipt link? (withdrawn)
+
+- **Withdrawn by the owner, 2026-11-17:** the console keeps one QR code, the TOTP enrolment image the server draws, and no other. No QR library, and none drawn by the till or its printer. The receipt link is shown and printed as text.
 
 - **Raised:** 2026-11-16, F10.
 - **The question:** the opening message asks for the receipt link "shown as a QR code at the counter". Drawing a QR code on screen needs an encoder. Adding one (`uqr` 0.1.3, MIT, no dependencies) was refused by the session's permission check, and a hand-written encoder could not be checked against a decoder in this environment, so a code that does not scan could reach the counter.

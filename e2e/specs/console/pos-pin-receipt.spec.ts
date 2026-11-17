@@ -33,7 +33,7 @@ test('the till locks and opens on the cashier’s PIN with the network off; the 
   const requestsBefore = api.log.length;
   await lockedTill(page);
   // Nothing to scan into and nothing to sell while locked.
-  await expect(page.locator('[data-slot="barcode-bar"]')).toBeHidden();
+  await expect(page.getByRole('searchbox', { name: /^Search by name, SKU or tag/ })).toBeHidden();
   await expect(page.getByRole('region', { name: 'This sale' })).toBeHidden();
   await expectNoAxeViolations(page);
   await expectNoHorizontalScroll(page);
@@ -320,6 +320,8 @@ test('a Bluetooth printer where there is one: connected on a tap, the 58 mm rece
   expect(printed).toContain('Sale reference     P-T1-312-0001');
   expect(printed).toContain('Total                 GHS 650.00');
   expect(printed).toContain('Change                 GHS 50.00');
-  expect(printed).toMatch(/1P0https:\/\/hakoremfarms\.com\/r\/[0-9a-f-]{36}/);
+  // The link printed in full; no QR code (owner, 2026-11-17: the TOTP image is the only one).
+  expect(printed).toContain('Your receipt online:\nhttps://hakoremfarms.com/r/');
+  expect(printed).not.toContain(String.fromCharCode(0x1d));
   await expectNoAxeViolations(page);
 });

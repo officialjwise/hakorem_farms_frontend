@@ -194,9 +194,14 @@ export async function openTillShift(page: Page): Promise<void> {
   await expect(page.getByRole('heading', { name: 'Find an item' })).toBeVisible();
 }
 
-/** Types a code into the barcode bar and presses Enter, as a scanner does. */
-export async function scan(page: Page, code: string): Promise<void> {
-  const bar = page.getByRole('textbox', { name: /^Barcode/ });
-  await bar.fill(code);
-  await bar.press('Enter');
+/**
+ * Finds an item the way a cashier does with no scanner (owner, 2026-11-17, ADR 0048): types into the sale
+ * screen's search and taps the result. An animal or lot is found by its tag.
+ */
+export async function find(page: Page, query: string, result: string | RegExp): Promise<void> {
+  await page.getByRole('searchbox', { name: /^Search by name, SKU or tag/ }).fill(query);
+  await page
+    .getByRole('list', { name: 'Items found' })
+    .getByRole('button', { name: result })
+    .click();
 }

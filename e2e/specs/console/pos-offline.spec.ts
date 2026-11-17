@@ -5,7 +5,7 @@ import {
   expectedHash,
   installTillServer,
   openTillShift,
-  scan,
+  find,
   type SentSale,
 } from '../../support/till';
 
@@ -40,7 +40,7 @@ test('the F9 gate: a full sale with the network off, synced exactly once on reco
   const syncsBefore = api.log.filter((e) => e.operationId === 'syncOfflineSales').length;
 
   // A goat by its tag: the pack's list price, its last weight carried as an estimate.
-  await scan(page, 'G-0142');
+  await find(page, 'G-0142', /G-0142$/);
   await expect(page.getByText('Added G-0142')).toBeVisible();
   // Beef by the kilogram: its line opens for the weight at once.
   await page.getByRole('button', { name: 'Beef, 15 kg pack' }).click();
@@ -161,7 +161,7 @@ test('an answer lost on the way back: the till resends the same sale, and the se
   const server = installTillServer(api, serverTotal);
   await openTillShift(page);
   await api.setNetwork(context, false);
-  await scan(page, '603490011');
+  await find(page, 'beef', 'Beef, 15 kg pack');
   const line = page.getByRole('dialog', { name: 'Change Beef, 15 kg pack' });
   await line.getByRole('textbox', { name: /^Weight \(kg\)/ }).fill('2.000');
   await line.getByRole('button', { name: 'Save the item' }).click();
@@ -188,7 +188,7 @@ test('an answer lost on the way back: the till resends the same sale, and the se
   await expect(page.getByText('Sent and recorded (already on the server)')).toBeVisible();
 });
 
-test('a cashier sells offline from the tiles, with the scanner refusing an animal that is not sellable', async ({
+test('a cashier finds items offline by search, and an animal that is not sellable is refused in words', async ({
   page,
   context,
   api,
@@ -196,14 +196,13 @@ test('a cashier sells offline from the tiles, with the scanner refusing an anima
   installTillServer(api, serverTotal);
   await openTillShift(page);
   await api.setNetwork(context, false);
-  await scan(page, 'G-0163');
+  const search = page.getByRole('searchbox', { name: /^Search by name, SKU or tag/ });
+  await search.fill('G-0163');
   await expect(page.getByText('G-0163 cannot be sold here')).toBeVisible();
-  await scan(page, '999000');
-  await expect(page.getByText('Nothing on this till has the code 999000')).toBeVisible();
-  // Two items share a barcode in the pack: the till asks which.
-  await scan(page, '603470011');
-  const choose = page.getByRole('dialog', { name: 'Which item has the code 603470011?' });
-  await choose.getByRole('button', { name: 'Yam, tuber' }).click();
+  // A barcode is not something the till looks for any more (ADR 0048).
+  await search.fill('603470011');
+  await expect(page.getByText('Nothing matches “603470011”')).toBeVisible();
+  await find(page, 'yam', 'Yam, tuber');
   await expect(page.getByText('Added Yam, tuber')).toBeVisible();
   await expect(page.locator('[data-slot="cart-total"]')).toHaveText(formatMoney(2500));
   await expectNoAxeViolations(page);

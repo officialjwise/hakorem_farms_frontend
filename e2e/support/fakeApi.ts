@@ -114,6 +114,7 @@ export class FakeApi {
     pattern: RegExp;
     answer: (request: unknown, path: string) => unknown;
   }[] = [];
+  private readonly fillers = new Map<string, (body: Record<string, unknown>) => unknown>();
   private readonly prefers = new Map<string, string>();
   private readonly refusals = new Map<string, { status: number; code: string; message: string }>();
 
@@ -150,6 +151,17 @@ export class FakeApi {
     }
     const pattern = new RegExp(`^${operation.path.replace(/\{[^}]+\}/g, '[^/]+')}$`);
     this.requested.push({ operation, pattern, answer });
+  }
+
+  /**
+   * Adds what the server itself supplies under a contract request to a request body before it goes on to
+   * Prism (ADR 0046): CR-034's server-given SKU on `createProduct`, which Prism's 1.x validation still
+   * requires. The screen sends the body without it; the test sees the server's answer.
+   */
+  serverFills(operationId: string, fill: (body: Record<string, unknown>) => unknown): void {
+    if (!(operationId in operationManifest))
+      throw new Error(`${operationId} is not in the contract.`);
+    this.fillers.set(operationId, fill);
   }
 
   /** Asks Prism for one of the operation's own documented answers, for example `code=202`. */
@@ -283,6 +295,11 @@ export class FakeApi {
     }
     const change = this.rewrites.get(operation.id);
     const cursor = url.searchParams.get('cursor');
+    const filler = this.fillers.get(operation.id);
+    if (filler !== undefined && text !== '') {
+      const body = JSON.parse(text) as Record<string, unknown>;
+      return route.continue({ postData: JSON.stringify(filler(body)) });
+    }
     if (change === undefined && (method !== 'GET' || cursor === null)) return route.continue();
     const response = await route.fetch();
     if (!response.ok()) return route.fulfill({ response });

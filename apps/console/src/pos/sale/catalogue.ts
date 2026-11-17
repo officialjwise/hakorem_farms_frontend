@@ -1,6 +1,6 @@
 /**
- * Finding what to sell in the offline pack (OFFLINE_SYNC.md 5.1): by barcode, by an animal's or a lot's
- * identifier, by name, or by tile. Everything here reads the pack the till downloaded; nothing calls the
+ * Finding what to sell in the offline pack (OFFLINE_SYNC.md 5.1): by tapping a tile, or by searching for a
+ * name, a SKU, or an animal's or a lot's tag. No barcode scanning at the till (owner, 2026-11-17, ADR 0048). Everything here reads the pack the till downloaded; nothing calls the
  * API, so it works with the network off.
  */
 import type { components } from '@hakorem/api-client';
@@ -12,15 +12,14 @@ import type { OfflinePack, TillSnapshot } from '../offline/types';
 type OfflineProduct = components['schemas']['OfflineProduct'];
 type OfflineStockUnit = components['schemas']['OfflineStockUnit'];
 
-export type ScanMatch =
-  | { kind: 'unit'; product: OfflineProduct; unit: OfflineStockUnit }
-  /** An animal or lot the pack says is not sellable here (sold, on hold, or at another location). */
-  | { kind: 'unsellable'; product: OfflineProduct | null; unit: OfflineStockUnit }
-  | { kind: 'product'; product: OfflineProduct }
-  /** The same barcode on more than one product: the cashier chooses. */
-  | { kind: 'several'; products: OfflineProduct[] }
-  | { kind: 'quote-only'; product: OfflineProduct }
-  | { kind: 'none'; code: string };
+/** What the search box found: animals and lots by their tag, and products by name or SKU. */
+export interface FindResults {
+  /** Sellable animals and lots whose tag contains the search, not already on the sale. */
+  units: { product: OfflineProduct; unit: OfflineStockUnit }[];
+  /** Animals and lots the pack has with that exact tag but not for sale here (sold, on hold, elsewhere). */
+  unsellable: OfflineStockUnit[];
+  products: OfflineProduct[];
+}
 
 const normal = (text: string) => text.trim().toUpperCase();
 
@@ -37,31 +36,30 @@ export function sellableUnits(pack: OfflinePack, product: OfflineProduct): Offli
   return pack.stockUnits.filter((unit) => unit.productId === product.product.id && unit.sellable);
 }
 
-export function matchScan(pack: OfflinePack, code: string): ScanMatch {
-  const wanted = normal(code);
-  const unit = pack.stockUnits.find((entry) => normal(entry.identifier) === wanted);
-  if (unit !== undefined) {
+export function findInPack(
+  pack: OfflinePack,
+  query: string,
+  onSale: readonly string[] = [],
+): FindResults {
+  const wanted = normal(query);
+  const words = wanted.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return { units: [], unsellable: [], products: [] };
+  const units: FindResults['units'] = [];
+  const unsellable: OfflineStockUnit[] = [];
+  for (const unit of pack.stockUnits) {
+    const tag = normal(unit.identifier);
     const product = productById(pack, unit.productId);
-    if (!unit.sellable || product === null) return { kind: 'unsellable', product, unit };
-    return { kind: 'unit', product, unit };
+    if (unit.sellable && product !== null && tag.includes(wanted)) {
+      if (!onSale.includes(unit.id)) units.push({ product, unit });
+    } else if (tag === wanted) {
+      unsellable.push(unit);
+    }
   }
-  const products = pack.products.filter(
-    (entry) => entry.barcode !== null && normal(entry.barcode) === wanted,
-  );
-  if (products.length > 1) return { kind: 'several', products };
-  const [product] = products;
-  if (product === undefined) return { kind: 'none', code: code.trim() };
-  if (product.quoteOnly) return { kind: 'quote-only', product };
-  return { kind: 'product', product };
-}
-
-export function searchProducts(pack: OfflinePack, query: string): OfflineProduct[] {
-  const words = normal(query).split(/\s+/).filter(Boolean);
-  if (words.length === 0) return [];
-  return pack.products.filter((entry) => {
-    const text = normal(`${entry.product.name} ${entry.product.sku} ${entry.barcode ?? ''}`);
+  const products = pack.products.filter((entry) => {
+    const text = normal(`${entry.product.name} ${entry.product.sku}`);
     return words.every((word) => text.includes(word));
   });
+  return { units, unsellable, products };
 }
 
 /** The tiles, in the pack's order, grouped by their category. */

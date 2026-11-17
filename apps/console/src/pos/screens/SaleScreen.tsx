@@ -2,12 +2,12 @@ import {
   Banknote,
   PackageSearch,
   Pencil,
-  ScanBarcode,
+  ShoppingBasket,
   Store,
   Trash2,
   TriangleAlert,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import {
@@ -28,10 +28,9 @@ import { getTill, useTill } from '../offline/till';
 import type { OfflinePack, SaleEntry, TillSnapshot } from '../offline/types';
 import { quantityText } from '../presentation';
 import {
+  findInPack,
   isSoldByUnit,
-  matchScan,
   newLine,
-  searchProducts,
   sellableUnits,
   sellingBlock,
   tiles,
@@ -42,7 +41,6 @@ import { HeldSales } from '../sale/HeldSales';
 import { LineDialog, lineProblem } from '../sale/LineDialog';
 import { PayDialog } from '../sale/PayDialog';
 import { SaleDone } from '../sale/SaleDone';
-import { onScan } from '../scans';
 
 /**
  * The sale screen (FR-POS, F9), the till's index route, loaded with the document so it works with the
@@ -243,51 +241,17 @@ function Selling({
     [pack, lines, add, t],
   );
 
-  useEffect(
-    () =>
-      onScan((code) => {
-        if (block !== null) return;
-        const match = matchScan(pack, code);
-        switch (match.kind) {
-          case 'unit':
-            add(newLine(match.product, match.unit), match.product.product.name);
-            return;
-          case 'product':
-            pick(match.product.product.id);
-            return;
-          case 'several':
-            setChoice({ kind: 'product', code, products: match.products });
-            return;
-          case 'unsellable':
-            setNotice({
-              severity: 'critical',
-              title: t('sale.notice.unsellable', { name: match.unit.identifier }),
-              body: t('sale.notice.unsellableBody'),
-            });
-            return;
-          case 'quote-only':
-            setNotice({
-              severity: 'warning',
-              title: t('sale.notice.quoteOnly', { name: match.product.product.name }),
-            });
-            return;
-          case 'none':
-            setNotice({
-              severity: 'warning',
-              title: t('sale.notice.unknown', { code: match.code }),
-              body: t('sale.notice.unknownBody'),
-            });
-        }
-      }),
-    [pack, block, add, pick, t],
-  );
-
   const total = useMemo(
     () => cartTotal(lines.filter((l) => lineProblem(l) !== 'NO_WEIGHT')),
     [lines],
   );
   const blocked = lines.some((l) => lineProblem(l) !== null);
-  const results = searchProducts(pack, query);
+  const results = findInPack(
+    pack,
+    query,
+    lines.flatMap((l) => (l.stockUnitId !== null ? [l.stockUnitId] : [])),
+  );
+  const found = results.units.length + results.unsellable.length + results.products.length;
   const editingLine = lines.find((l) => l.key === editing) ?? null;
   const completed =
     snapshot.entries.find((e): e is SaleEntry => e.kind === 'SALE' && e.id === done) ?? null;
@@ -322,13 +286,39 @@ function Selling({
             />
           </Field>
           {query.trim() !== '' ? (
-            results.length === 0 ? (
+            found === 0 ? (
               <p className="text-fg-muted" role="status">
                 {t('sale.find.none', { query: query.trim() })}
               </p>
             ) : (
               <ul className="grid gap-2" aria-label={t('sale.find.results')}>
-                {results.map((product) => (
+                {results.unsellable.map((unit) => (
+                  <li key={unit.id}>
+                    <Alert
+                      severity="critical"
+                      title={t('sale.notice.unsellable', { name: unit.identifier })}
+                    >
+                      {t('sale.notice.unsellableBody')}
+                    </Alert>
+                  </li>
+                ))}
+                {results.units.map(({ product, unit }) => (
+                  <li key={unit.id}>
+                    <Button
+                      variant="secondary"
+                      size="lg"
+                      fullWidth
+                      disabled={block !== null}
+                      onClick={() => {
+                        add(newLine(product, unit), product.product.name);
+                        setQuery('');
+                      }}
+                    >
+                      {t('sale.find.unit', { name: product.product.name, tag: unit.identifier })}
+                    </Button>
+                  </li>
+                ))}
+                {results.products.map((product) => (
                   <li key={product.product.id}>
                     <Button
                       variant="secondary"
@@ -384,7 +374,7 @@ function Selling({
         {lines.length === 0 ? (
           <EmptyState
             compact
-            icon={ScanBarcode}
+            icon={ShoppingBasket}
             title={t('sale.cart.emptyTitle')}
             description={t('sale.cart.emptyBody')}
           />
