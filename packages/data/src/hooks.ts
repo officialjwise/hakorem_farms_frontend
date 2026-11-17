@@ -135,17 +135,6 @@ export interface ApiHooks {
     operation: Op,
     options?: MutationOptions<Op>,
   ) => ApiMutation<Op>;
-  /**
-   * A read a contract request asks for and the contract does not list yet (ADR 0046, ADR 0052), through
-   * `callRequested`, with the same stale classes, retry and four states as `useApiQuery`. Only a module in
-   * the console's `requested/` calls it, with `enabled` set by the request's switch; the answer is cast to
-   * that module's type. Its key is `['requested', operationId, input]`, which no real operation shares.
-   */
-  useRequestedQuery: <Data>(
-    operation: RequestedOperation,
-    input: RequestedInput,
-    options?: QueryOptions,
-  ) => UseQueryResult<Data, ApiError>;
 }
 
 /** The input of a requested read: its path and query, as `callRequested` takes them. */
@@ -260,7 +249,19 @@ export function createApiHooks(api: ApiClient): ApiHooks {
     });
   }
 
-  function useRequestedQuery<Data>(
+  return { useApiQuery, useApiAllPages, useApiMutation };
+}
+
+/**
+ * A read a contract request asks for and the contract does not list yet (ADR 0046, ADR 0052), through
+ * `callRequested`, with the same stale classes, retry and four states as `useApiQuery`. Only a module in
+ * the console's `requested/` calls it, with `enabled` set by the request's switch; the answer is cast to
+ * that module's type. Its key is `['requested', operationId, input]`, which no real operation shares. It is
+ * built apart from `createApiHooks`, so an app that never reads a requested operation (the till) does not
+ * carry it.
+ */
+export function createRequestedQuery(api: Pick<ApiClient, 'callRequested'>) {
+  return function useRequestedQuery<Data>(
     operation: RequestedOperation,
     input: RequestedInput,
     options: QueryOptions = {},
@@ -272,7 +273,5 @@ export function createApiHooks(api: ApiClient): ApiHooks {
       enabled: options.enabled,
       refetchInterval: options.refetchInterval,
     });
-  }
-
-  return { useApiQuery, useApiAllPages, useApiMutation, useRequestedQuery };
+  };
 }

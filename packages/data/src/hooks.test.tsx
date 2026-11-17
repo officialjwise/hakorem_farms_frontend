@@ -1,6 +1,11 @@
 import { ApiError, NetworkError } from '@hakorem/api-client';
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { MAX_ALL_PAGES, PAGE_CAP_EXCEEDED, PageCapExceededError } from './hooks';
+import {
+  createRequestedQuery,
+  MAX_ALL_PAGES,
+  PAGE_CAP_EXCEEDED,
+  PageCapExceededError,
+} from './hooks';
 import { envelope, json, testData } from './testing';
 
 const page = {
@@ -272,9 +277,10 @@ describe('useRequestedQuery (ADR 0052)', () => {
 
   it('reads the requested operation under its own key, apart from every generated one', async () => {
     const answer = { owedPesewas: 94_050 };
-    const { hooks, wrapper, queryClient, requests } = testData(() => json(answer));
+    const { api, wrapper, queryClient, requests } = testData(() => json(answer));
+    const useRequestedQuery = createRequestedQuery(api);
     const input = { path: { id: 's/1' } };
-    const { result } = renderHook(() => hooks.useRequestedQuery(balance, input), { wrapper });
+    const { result } = renderHook(() => useRequestedQuery(balance, input), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(requests[0]?.url).toBe('http://api.test/v1/suppliers/s%2F1/balance');
     expect(result.current.data).toEqual(answer);
@@ -282,9 +288,10 @@ describe('useRequestedQuery (ADR 0052)', () => {
   });
 
   it('sends nothing while its switch holds it back', async () => {
-    const { hooks, wrapper, requests } = testData(() => json({}));
+    const { api, wrapper, requests } = testData(() => json({}));
+    const useRequestedQuery = createRequestedQuery(api);
     const { result } = renderHook(
-      () => hooks.useRequestedQuery(balance, { path: { id: 's1' } }, { enabled: false }),
+      () => useRequestedQuery(balance, { path: { id: 's1' } }, { enabled: false }),
       { wrapper },
     );
     await Promise.resolve();
@@ -293,8 +300,9 @@ describe('useRequestedQuery (ADR 0052)', () => {
   });
 
   it('fails with the normalised ApiError and does not retry a 403', async () => {
-    const { hooks, wrapper, requests } = testData(() => json(envelope('FORBIDDEN'), 403));
-    const { result } = renderHook(() => hooks.useRequestedQuery(balance, { path: { id: 's1' } }), {
+    const { api, wrapper, requests } = testData(() => json(envelope('FORBIDDEN'), 403));
+    const useRequestedQuery = createRequestedQuery(api);
+    const { result } = renderHook(() => useRequestedQuery(balance, { path: { id: 's1' } }), {
       wrapper,
     });
     await waitFor(() => expect(result.current.isError).toBe(true));
