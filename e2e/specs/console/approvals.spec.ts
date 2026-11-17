@@ -129,7 +129,10 @@ test.describe('the approvals inbox', () => {
     const alert = dialog.getByRole('alert');
     await expect(alert).toContainText('It was not approved');
     await expect(alert).toContainText('You made this request, so you cannot approve or reject it.');
-    await expect(alert).toContainText('019a7b1d-5a33-73ab-98e3-438b35eabc69');
+    // The reference's last eight characters, grouped, with a button that copies all of it (ADR 0051).
+    await expect(alert).toContainText('35ea bc69');
+    await expect(alert).not.toContainText('019a7b1d-5a33-73ab-98e3-438b35eabc69');
+    await expect(alert.getByRole('button', { name: 'Copy the full reference' })).toBeVisible();
     await expectNoAxeViolations(page);
   });
 
