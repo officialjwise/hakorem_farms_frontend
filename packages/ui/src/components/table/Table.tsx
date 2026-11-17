@@ -3,6 +3,7 @@
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
 import { createContext, useContext, type ComponentPropsWithRef, type ReactNode } from 'react';
 import { cn } from '../../lib/cn';
+import type { CopyLabels } from '../copy-id/CopyId';
 import { EmptyState } from '../empty-state/EmptyState';
 import { ErrorState } from '../error-state/ErrorState';
 import { Skeleton } from '../skeleton/Skeleton';
@@ -305,11 +306,13 @@ export function TableLoadingRows({ columns, rows = 5, label }: TableLoadingRowsP
 }
 
 type ReferenceProps =
-  | { reference?: undefined; referenceLabel?: never }
+  | { reference?: undefined; referenceLabel?: never; referenceCopy?: never }
   | {
       /** The correlation id of a failed request, so a support call starts with a reference instead of a guess. */
       reference: string;
       referenceLabel: string;
+      /** Its copy button: the last eight characters are shown and all of it is copied (ADR 0051). */
+      referenceCopy: CopyLabels;
     };
 
 export type TableMessageRowProps = ReferenceProps & {
@@ -330,6 +333,7 @@ export function TableMessageRow({
   action,
   reference,
   referenceLabel,
+  referenceCopy,
 }: TableMessageRowProps) {
   return (
     <tr role="row" data-slot="table-message-row" data-tone={tone}>
@@ -341,6 +345,7 @@ export function TableMessageRow({
             action={action}
             reference={reference}
             referenceLabel={referenceLabel ?? ''}
+            referenceCopy={referenceCopy}
           />
         ) : tone === 'error' ? (
           <ErrorState title={title} description={description} action={action} />

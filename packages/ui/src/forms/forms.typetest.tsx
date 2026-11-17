@@ -36,7 +36,16 @@ export function Valid() {
         {() => <Checkbox label="PPR" />}
       </FormFieldGroup>
       <FormSubmitButton loadingLabel="Saving">Save</FormSubmitButton>
-      <FormError failure={null} title="Not saved" referenceLabel="Reference" />
+      <FormError
+        failure={null}
+        title="Not saved"
+        referenceLabel="Reference"
+        referenceCopy={{
+          copy: 'Copy the full reference',
+          copied: 'Copied',
+          failed: 'Could not copy',
+        }}
+      />
     </Form>
   );
 }
@@ -87,11 +96,29 @@ export function Invalid() {
 
       {/* A failure panel with no words for what did not happen. */}
       {/* @ts-expect-error title is required */}
-      <FormError failure={null} referenceLabel="Reference" />
+      <FormError
+        failure={null}
+        referenceLabel="Reference"
+        referenceCopy={{
+          copy: 'Copy the full reference',
+          copied: 'Copied',
+          failed: 'Could not copy',
+        }}
+      />
 
       {/* A dismiss button without a name. */}
       {/* @ts-expect-error dismissLabel is required with onDismiss */}
-      <FormError failure={null} title="Not saved" referenceLabel="Reference" onDismiss={() => {}} />
+      <FormError
+        failure={null}
+        title="Not saved"
+        referenceLabel="Reference"
+        referenceCopy={{
+          copy: 'Copy the full reference',
+          copied: 'Copied',
+          failed: 'Could not copy',
+        }}
+        onDismiss={() => {}}
+      />
 
       {/* The handler's values are the form's output type. */}
       {/* @ts-expect-error values do not match the form */}

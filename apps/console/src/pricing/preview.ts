@@ -17,13 +17,18 @@ export interface PreviewRow {
 }
 
 /**
- * The contract refuses two entries with the same product, grade, band and quantity break
- * (`replacePriceListEntries`), so those four name one line across versions.
+ * The contract refuses two entries with the same product, grade, band, selling unit and quantity break
+ * (`replacePriceListEntries`), so those five name one line across versions. A crate and a single egg are
+ * two lines (2.1.0).
  */
 export function entryKey(entry: PriceListEntry): string {
-  return [entry.product.id, entry.grade?.id ?? '', entry.weightBand?.id ?? '', entry.minQty].join(
-    '|',
-  );
+  return [
+    entry.product.id,
+    entry.grade?.id ?? '',
+    entry.weightBand?.id ?? '',
+    entry.uom,
+    entry.minQty,
+  ].join('|');
 }
 
 /** Every field a person can change on a line. Compared, never computed with. */
@@ -83,6 +88,9 @@ export function toInput(entry: PriceListEntry): PriceListEntryInput {
     floorPricePesewas: entry.floorPricePesewas,
     ceilingPricePesewas: entry.ceilingPricePesewas,
     quoteOnly: entry.quoteOnly,
+    // The break as entered, in the entry's selling unit, so a crate's price stays a crate's. A PER_KG
+    // entry never names a unit (the contract refuses it with NOT_PER_KG).
     minQty: entry.minQty,
+    ...(entry.basis === 'PER_KG' ? {} : { uom: entry.uom }),
   };
 }

@@ -38,6 +38,22 @@ export const Long: Story = {
   ),
 };
 
+/**
+ * A request reference: its last eight characters are shown in two groups, and the button copies all of it
+ * for support (owner, 2026-11-17; ADR 0051).
+ */
+export const RequestReference: Story = {
+  parameters: { matrix: true },
+  render: () => (
+    <CopyId
+      value="019a7b1d-f4de-751c-aa55-5aa0965fd37e"
+      shown="965f d37e"
+      copyLabel="Copy the full reference"
+      {...LABELS}
+    />
+  ),
+};
+
 /** Copied: the button's icon changes and the words say so. */
 export const Copied: Story = {
   render: () => (

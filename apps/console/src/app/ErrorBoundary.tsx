@@ -1,9 +1,11 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, ErrorState } from '@hakorem/ui';
+import { useReferenceCopy } from '../lib/RequestReference';
 
 function Fallback({ reference }: { reference: string }) {
   const { t } = useTranslation('shell');
+  const referenceCopy = useReferenceCopy();
   return (
     <main id="main" className="grid min-h-dvh place-items-center p-6">
       <ErrorState
@@ -11,6 +13,7 @@ function Fallback({ reference }: { reference: string }) {
         description={t('boundary.body')}
         reference={reference}
         referenceLabel={t('boundary.reference')}
+        referenceCopy={referenceCopy}
         action={<Button onClick={() => window.location.reload()}>{t('boundary.reload')}</Button>}
       />
     </main>

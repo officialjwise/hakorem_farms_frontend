@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Lock } from 'lucide-react';
 import { Button } from '../button/Button';
 import { ErrorState } from './ErrorState';
@@ -19,6 +20,46 @@ describe('ErrorState', () => {
     );
     expect(screen.getByText('3f2a9c1e')).toBeInTheDocument();
     expect(screen.getByText(/Quote this reference/)).toBeInTheDocument();
+  });
+
+  it('shows a request reference by its last eight characters, and copies all of it', async () => {
+    const writeText = vi.fn(() => Promise.resolve());
+    const user = userEvent.setup();
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    render(
+      <ErrorState
+        title="Stock could not be loaded"
+        reference="019a7b1d-f4de-751c-aa55-5aa0965fd37e"
+        referenceLabel="Quote this reference to support:"
+        referenceCopy={{
+          copy: 'Copy the full reference',
+          copied: 'Copied',
+          failed: 'Could not copy',
+        }}
+      />,
+    );
+    expect(screen.getByText('965f d37e')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).not.toHaveTextContent('019a7b1d');
+    await user.click(screen.getByRole('button', { name: 'Copy the full reference' }));
+    expect(writeText).toHaveBeenCalledWith('019a7b1d-f4de-751c-aa55-5aa0965fd37e');
+    Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });
+  });
+
+  it('shows nothing for a blank reference', () => {
+    render(
+      <ErrorState
+        title="Stock could not be loaded"
+        reference=""
+        referenceLabel="Quote this reference to support:"
+        referenceCopy={{
+          copy: 'Copy the full reference',
+          copied: 'Copied',
+          failed: 'Could not copy',
+        }}
+      />,
+    );
+    expect(screen.queryByText(/Quote this reference/)).toBeNull();
+    expect(screen.queryByRole('button')).toBeNull();
   });
 
   it('shows its action', () => {

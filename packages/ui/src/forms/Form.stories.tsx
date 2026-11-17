@@ -10,6 +10,7 @@ import {
   type ServerErrorEnvelope,
   type ServerFailure,
 } from './serverErrors';
+import { formatReference } from '../format/format';
 
 const meta = {
   title: 'Forms/Form',
@@ -73,6 +74,11 @@ function FarmForm({
           failure={failure}
           title="The animal was not saved"
           referenceLabel="Reference"
+          referenceCopy={{
+            copy: 'Copy the full reference',
+            copied: 'Copied',
+            failed: 'Could not copy',
+          }}
           onDismiss={() => setFailure(null)}
           dismissLabel="Dismiss"
         />
@@ -136,7 +142,9 @@ export const Failed: Story = {
     const alert = await canvas.findByRole('alert');
     await expect(alert).toHaveTextContent('The animal was not saved');
     await expect(alert).toHaveTextContent('The dam GT-0207 is under a withdrawal hold.');
-    await expect(alert).toHaveTextContent(`Reference ${rejected.error.correlationId}`);
+    await expect(alert).toHaveTextContent(
+      `Reference ${formatReference(rejected.error.correlationId)}`,
+    );
 
     const weight = canvas.getByRole('textbox', { name: 'Weight (kg)' });
     await expect(weight).toBeInvalid();

@@ -137,7 +137,7 @@ const CASHIER_PERMISSIONS = [
   'pos.shift.open',
   'pos.shift.close',
   'mdm.product.read',
-  'inv.stock.read',
+  // Not `inv.stock.read`: the seeded Cashier does not hold it (2.2.0, CR-023). The till's stock is the pack's.
   'pay.payment.create',
   'ord.order.read',
   // 1.39.0 and 1.40.0: the Cashier reads the branch's billing documents and reprints them.
@@ -186,7 +186,11 @@ const OWNER_CATALOGUE_PERMISSIONS = [
   'mdm.price_list.update',
 ];
 
-/** What a storekeeper holds for the F5 screens (and the owner too): stock, counts and movements. */
+/**
+ * What a storekeeper holds for the F5 screens (and the owner too): stock, counts and movements. Posting a
+ * count's variances (`inv.stock_take.post`) is the Owner's and the Manager's in the seed (CR-023), so the
+ * Storekeeper counts and a manager posts.
+ */
 const STOCK_PERMISSIONS = [
   'inv.stock.read',
   'mdm.product.read',
@@ -195,7 +199,6 @@ const STOCK_PERMISSIONS = [
   'inv.stock_take.read',
   'inv.stock_take.create',
   'inv.stock_take.count',
-  'inv.stock_take.post',
   'inv.adjustment.read',
   'inv.adjustment.create',
   'inv.transfer.read',
@@ -331,10 +334,12 @@ const FARM_HAND_PERMISSIONS = [
  */
 const MANAGER_PERMISSIONS = [
   ...CASHIER_PERMISSIONS,
+  'inv.stock.read',
   'iam.user.read',
   'iam.approval.read',
   'iam.approval.cancel.own',
-  'ord.order.void.approve',
+  // The seed's name (`voidSale`'s approver); the `listRoles` example still says `ord.order.void.approve`.
+  'ord.void.approve',
   'inv.adjustment.approve',
   'liv.mortality.approve',
   'mdm.price_list.approve',
@@ -390,6 +395,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
       ...OWNER_PERMISSIONS,
       ...OWNER_CATALOGUE_PERMISSIONS,
       ...STOCK_PERMISSIONS,
+      'inv.stock_take.post',
       ...OWNER_F5B_PERMISSIONS,
       ...OWNER_F5C_PERMISSIONS,
       ...OWNER_F6_PERMISSIONS,

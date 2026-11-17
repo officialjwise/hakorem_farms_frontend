@@ -29,6 +29,7 @@ import type { OfflinePack, PinApprovalRecord, SaleEntry } from '../offline/types
 import { approvers } from '../pin/pin';
 import { PinApprovalField } from '../pin/PinCheck';
 import { tenderMethods } from './catalogue';
+import { RequestReference } from '../../lib/RequestReference';
 
 type PaymentMethodRef = components['schemas']['PaymentMethodRef'];
 type Payment = components['schemas']['Payment'];
@@ -410,9 +411,12 @@ function MobileMoney({
       {error !== null ? (
         <Alert severity="critical" title={t('momo.refused')}>
           {error.message}
-          {error.correlationId !== ''
-            ? ` ${t('referenceIs', { reference: error.correlationId })}`
-            : ''}
+          {error.correlationId !== '' ? (
+            <>
+              {' '}
+              {t('referenceLabel')} <RequestReference value={error.correlationId} />
+            </>
+          ) : null}
         </Alert>
       ) : null}
     </fieldset>

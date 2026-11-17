@@ -2,6 +2,7 @@ import type { FieldValues, UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { ErrorState, FormError, mapServerErrors, type ServerFailure } from '@hakorem/ui';
 import { ApiError, NetworkError } from '../types';
+import { useReferenceCopy } from '../../lib/RequestReference';
 
 const KNOWN_CODES = [
   'INVALID_CREDENTIALS',
@@ -63,6 +64,7 @@ export function useAuthFailure<T extends FieldValues>(
 
 export function AuthFailureView({ failure }: { failure: AuthFailure | null }) {
   const { t } = useTranslation('auth');
+  const referenceCopy = useReferenceCopy();
   if (failure === null) return null;
   if (failure.kind === 'api') {
     return (
@@ -70,6 +72,7 @@ export function AuthFailureView({ failure }: { failure: AuthFailure | null }) {
         failure={failure.failure}
         title={t('errors.failureTitle')}
         referenceLabel={t('common.reference')}
+        referenceCopy={referenceCopy}
       />
     );
   }

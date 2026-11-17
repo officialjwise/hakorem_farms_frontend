@@ -6,6 +6,9 @@
  *                  requires (Idempotency-Key, X-CSRF-Token). The data layer derives query keys and
  *                  mutation headers from this table, so nothing about an operation is written by hand.
  *
+ *   seededRoles.ts the roles the backend seeds, from `components.x-seeded-roles` (CR-023): each role's code,
+ *                  name, TOTP rule and permissions, so the test fakes can be checked against the real seed.
+ *
  * A `format: binary` property is typed `Blob`, and each row says whether its body is JSON or
  * `multipart/form-data`, so `call()` can send a file (ADR 0037).
  *
@@ -38,6 +41,27 @@ interface RawOperation {
 interface RawDocument {
   info: { version: string };
   paths: Record<string, Record<string, unknown>>;
+  components?: { 'x-seeded-roles'?: RawSeededRole[] };
+}
+
+interface RawSeededRole {
+  code: string;
+  name: string;
+  requiresTotp: boolean;
+  permissions: string[];
+}
+
+/** The seeded roles, sorted by code with sorted permissions, so the file changes only when the seed does. */
+function buildSeededRoles(document: RawDocument): RawSeededRole[] {
+  const roles = document.components?.['x-seeded-roles'] ?? [];
+  return roles
+    .map(({ code, name, requiresTotp, permissions }) => ({
+      code,
+      name,
+      requiresTotp,
+      permissions: [...permissions].sort(),
+    }))
+    .sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
 }
 
 interface ManifestRow {
@@ -130,7 +154,17 @@ export async function generate(): Promise<Record<string, string>> {
     '',
   ].join('\n');
 
-  return { 'schema.ts': schema, 'operations.ts': operations };
+  const seededRoles = [
+    head,
+    '/**',
+    ' * The roles the backend seeds (`components.x-seeded-roles`, generated there from its migrations; CR-023).',
+    " * For checking test fakes against the real seed. A screen decides by the session's permissions, never by this.",
+    ' */',
+    `export const seededRoles = ${JSON.stringify(buildSeededRoles(document), null, 2)} as const;`,
+    '',
+  ].join('\n');
+
+  return { 'schema.ts': schema, 'operations.ts': operations, 'seededRoles.ts': seededRoles };
 }
 
 async function main() {

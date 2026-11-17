@@ -1,7 +1,8 @@
 import { useSyncExternalStore } from 'react';
 
 /**
- * A value remembered on the device for this visitor: which cart is theirs, and which checkout is open.
+ * A value remembered on the device for this visitor: which cart is theirs. The open checkout is the cart's
+ * own (`Cart.checkoutId`, CR-029), so it is not remembered here.
  * An id proves nothing on its own: the API checks the guest cookie it set with the cart, so another
  * visitor's id is a 404. Storage can be refused (a private window, a full disk); then the value lasts as
  * long as the page, which is still a working shop.
@@ -50,9 +51,16 @@ function remembered(key: string) {
 }
 
 const cart = remembered('hk_cart');
-const checkout = remembered('hk_checkout');
 
 export const rememberCart = cart.remember;
 export const useCartId = cart.useValue;
-export const rememberCheckout = checkout.remember;
-export const useCheckoutId = checkout.useValue;
+
+/**
+ * The cart's open checkout, as the server says (CR-029): its id while the cart is at checkout, so a second
+ * tab or device with the same cart cookie opens the same checkout. Null in every other status.
+ */
+export function openCheckoutId(
+  cart: { status: string; checkoutId: string | null } | undefined,
+): string | null {
+  return cart?.status === 'CHECKOUT' ? cart.checkoutId : null;
+}

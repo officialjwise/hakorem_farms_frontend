@@ -46,6 +46,8 @@ const TRANSFER: components['schemas']['StockTransfer'] = {
       stockUnit: null,
       uom: 'CRATE',
       qtyDispatched: '20.000',
+      baseUom: 'CRATE',
+      qtyDispatchedBase: '20.000',
       qtyReceived: null,
       varianceQty: null,
       varianceReasonCode: null,

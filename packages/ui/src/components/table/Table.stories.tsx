@@ -364,6 +364,11 @@ export const ErrorState: Story = {
             description="The connection dropped before the server answered. Your data is safe."
             reference="req_01JD2K8M4NQ7"
             referenceLabel="Reference"
+            referenceCopy={{
+              copy: 'Copy the full reference',
+              copied: 'Copied',
+              failed: 'Could not copy',
+            }}
             action={
               <Button size="sm" variant="secondary">
                 <RotateCw />

@@ -10,7 +10,8 @@ test.describe('session expiry and silent refresh', () => {
     api,
   }) => {
     await api.installClock(page, new Date('2026-11-14T08:00:00Z'));
-    await signIn(page, USERS.cashier, '/stock');
+    // The Storekeeper: the seeded Cashier cannot open stock on hand (CR-023).
+    await signIn(page, USERS.storekeeper, '/stock');
     await expect(page.getByRole('heading', { name: 'Stock' })).toBeVisible();
     // The browser's cookies, read the way a developer would look in the cookie panel.
     const before = structuredClone(api.jar);

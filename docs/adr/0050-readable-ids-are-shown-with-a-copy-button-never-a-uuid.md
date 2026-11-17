@@ -27,4 +27,5 @@ Option 2.
 
 - A person reads, copies and searches by the same code the server gives.
 - **Two things still carry a UUID, for the owner** (F10d report): the digital receipt link CR-033 builds from the sale's client id, which the owner asked to be printed in full as text; and the request references (`correlationId`) error states show for support.
+- **Answered (owner, 2026-11-17, F10e):** the request reference shows its last eight characters and copies in full (ADR 0051); the receipt link carries a random token the till makes, not the sale id (CR-033, amended).
 - Revisit if the backend gives another readable code (an order number for every order, a token for the receipt link).

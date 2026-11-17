@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { getWords } from '../../i18n/server';
-import { rememberCart, rememberCheckout } from '../../lib/cartId';
+import { rememberCart } from '../../lib/cartId';
 import { mock } from '../../test-integration-setup';
 import { Root } from '../../test-wrapper';
 import { CheckoutFlow } from './CheckoutFlow';
@@ -16,7 +16,6 @@ async function renderCheckout() {
 }
 
 beforeEach(() => {
-  rememberCheckout(null);
   rememberCart(CART);
 });
 
@@ -87,10 +86,14 @@ describe('checkout, against the real Prism', () => {
     mock.preferPath = `/shop/carts/${CART}/checkout`;
     await user.click(screen.getByRole('button', { name: 'Hold my items and show the total' }));
     const title = await screen.findByText('Your items could not be held');
-    const alert = title.closest('[role="alert"]');
+    const alert = title.closest<HTMLElement>('[role="alert"]');
+    if (alert === null) throw new Error('The failure is not inside an alert.');
     // The contract's shared 422 example has a code the shop has no words for: the server's sentence shows.
     expect(alert).toHaveTextContent(/veterinary withdrawal period/);
-    expect(alert).toHaveTextContent('019a7b1d-f4de-751c-aa55-5aa0965fd37e');
+    // The last eight characters, grouped, and a button that copies all of it (ADR 0051).
+    expect(alert).toHaveTextContent('quote this reference: 965f d37e');
+    expect(alert).not.toHaveTextContent('019a7b1d-f4de-751c-aa55-5aa0965fd37e');
+    expect(within(alert).getByRole('button', { name: 'Copy the full reference' })).toBeVisible();
   });
 
   it('with no basket, says so and leads back to the shop', async () => {

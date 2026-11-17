@@ -81,9 +81,10 @@ describe('login screen', () => {
   });
 
   it('success without TOTP: lands on the dashboard, or where the user was going', async () => {
+    // The Storekeeper: the seeded Cashier cannot open stock on hand (CR-023).
     const { router } = await renderApp('/login?next=%2Fstock', newClient());
-    await fill(/email or phone number/i, USERS.cashier.identifier);
-    await fill(/^password/i, USERS.cashier.password);
+    await fill(/email or phone number/i, USERS.storekeeper.identifier);
+    await fill(/^password/i, USERS.storekeeper.password);
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
     await screen.findByRole('heading', { name: 'Stock on hand' }, { timeout: 5000 });
     expect(router.state.location.pathname).toBe('/stock');
@@ -329,7 +330,7 @@ describe('forgot and reset password', () => {
 describe('session expired screen', () => {
   it('says the session ended, in words, and offers to sign in again, remembering the page', async () => {
     const real = newClient();
-    await real.loginStaff(USERS.cashier);
+    await real.loginStaff(USERS.storekeeper);
     const client: AuthClient = {
       ...real,
       // The access token is already due for renewal, and the server refuses the renewal.

@@ -3,7 +3,7 @@
   "cancel": "Cancel",
   "toSale": "Go to the sale",
   "reference": "Reference",
-  "referenceIs": "Reference: {{reference}}.",
+  "referenceLabel": "Reference:",
   "status": {
     "QUEUED": "On this till, not sent yet",
     "SENDING": "Sending",

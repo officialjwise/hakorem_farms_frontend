@@ -24,6 +24,32 @@ describe('CopyId', () => {
     expect(code).toHaveClass('font-mono', 'break-all');
   });
 
+  it('shows what it is given to show, and copies the whole value (a request reference)', async () => {
+    const writeText = vi.fn(() => Promise.resolve());
+    const user = userEvent.setup();
+    clipboard(writeText);
+    render(
+      <CopyId
+        value="019a7b1d-f4de-751c-aa55-5aa0965fd37e"
+        shown="965f d37e"
+        copyLabel="Copy the full reference"
+        copiedLabel="Copied"
+        failedLabel="Could not copy"
+      />,
+    );
+    expect(screen.getByText('965f d37e').tagName).toBe('CODE');
+    expect(screen.queryByText(/019a7b1d/)).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Copy the full reference' }));
+    expect(writeText).toHaveBeenCalledWith('019a7b1d-f4de-751c-aa55-5aa0965fd37e');
+  });
+
+  it('refuses a blank shown text', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    expect(() => render(<CopyId value="cus_8F3K2M9Q7X4T1V6B" shown=" " {...LABELS} />)).toThrow(
+      /shown/,
+    );
+  });
+
   it('copies the id by the keyboard and says so in words', async () => {
     const writeText = vi.fn(() => Promise.resolve());
     // After setup: user-event puts its own clipboard on navigator.

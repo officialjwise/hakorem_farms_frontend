@@ -98,13 +98,18 @@ describe('Table', () => {
             title="Stock could not be loaded"
             reference="req_01JD2K8M4N"
             referenceLabel="Reference"
+            referenceCopy={{
+              copy: 'Copy the full reference',
+              copied: 'Copied',
+              failed: 'Could not copy',
+            }}
           />
         </TableBody>
       </Table>,
     );
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent('Stock could not be loaded');
-    expect(alert).toHaveTextContent('req_01JD2K8M4N');
+    expect(alert).toHaveTextContent('JD2K 8M4N');
     expect(screen.getByRole('cell')).toHaveAttribute('colspan', '5');
   });
 

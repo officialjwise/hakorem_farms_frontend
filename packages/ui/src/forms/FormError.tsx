@@ -1,5 +1,6 @@
 import { ErrorState } from '../components/error-state/ErrorState';
 import { Button } from '../components/button/Button';
+import type { CopyLabels } from '../components/copy-id/CopyId';
 import type { ServerFailure } from './serverErrors';
 
 /** Rejects an empty string literal at compile time. Dynamic blank strings are rejected at render. */
@@ -15,6 +16,8 @@ export type FormErrorProps<L extends string = string> = DismissProps & {
   title: NonEmpty<L>;
   /** The label before the correlation id, for example "Reference". */
   referenceLabel: string;
+  /** The reference's copy button: it shows the last eight characters and copies all of it (ADR 0051). */
+  referenceCopy: CopyLabels;
   className?: string;
 };
 
@@ -35,6 +38,7 @@ export function FormError<L extends string>({
   failure,
   title,
   referenceLabel,
+  referenceCopy,
   onDismiss,
   dismissLabel,
   className,
@@ -72,6 +76,7 @@ export function FormError<L extends string>({
         description={failure.message}
         reference={failure.correlationId}
         referenceLabel={referenceLabel}
+        referenceCopy={referenceCopy}
         action={action}
       />
     </div>

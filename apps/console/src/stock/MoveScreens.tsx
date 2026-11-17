@@ -870,12 +870,12 @@ export function TransferScreen() {
                 {
                   head: t('transfers.columns.arrived'),
                   numeric: true,
-                  cell: (l) => qty(l.qtyReceived, l.uom),
+                  cell: (l) => qty(l.qtyReceived, l.baseUom),
                 },
                 {
                   head: t('transfers.columns.variance'),
                   numeric: true,
-                  cell: (l) => qty(l.varianceQty, l.uom),
+                  cell: (l) => qty(l.varianceQty, l.baseUom),
                 },
                 {
                   head: t('transfers.columns.reason'),

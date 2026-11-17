@@ -3,6 +3,7 @@
 import { Lock } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Button } from '../button/Button';
+import type { CopyLabels } from '../copy-id/CopyId';
 import { EmptyState } from '../empty-state/EmptyState';
 import { ErrorState } from '../error-state/ErrorState';
 import { Skeleton } from '../skeleton/Skeleton';
@@ -46,6 +47,11 @@ export interface QueryBoundaryLabels {
   retry: string;
   /** The words before the reference, for example "Quote this reference to support:". */
   reference: string;
+  /**
+   * The reference's copy button. The reference shows its last eight characters and the button copies
+   * all of it (ADR 0051).
+   */
+  referenceCopy: CopyLabels;
   deniedTitle: string;
   deniedDescription?: string;
 }
@@ -78,7 +84,13 @@ function FailureState({
   error: FailureLike;
   labels: Pick<
     QueryBoundaryLabels,
-    'errorTitle' | 'errorDescription' | 'retry' | 'reference' | 'deniedTitle' | 'deniedDescription'
+    | 'errorTitle'
+    | 'errorDescription'
+    | 'retry'
+    | 'reference'
+    | 'referenceCopy'
+    | 'deniedTitle'
+    | 'deniedDescription'
   >;
   onRetry?: () => void;
   compact?: boolean;
@@ -114,6 +126,7 @@ function FailureState({
       description={description}
       reference={error.correlationId}
       referenceLabel={labels.reference}
+      referenceCopy={labels.referenceCopy}
       action={retry}
     />
   );
@@ -172,7 +185,13 @@ export interface MutationFailureProps {
   error: FailureLike | null;
   labels: Pick<
     QueryBoundaryLabels,
-    'errorTitle' | 'errorDescription' | 'retry' | 'reference' | 'deniedTitle' | 'deniedDescription'
+    | 'errorTitle'
+    | 'errorDescription'
+    | 'retry'
+    | 'reference'
+    | 'referenceCopy'
+    | 'deniedTitle'
+    | 'deniedDescription'
   >;
   /** Retries the same user intent, with the same idempotency key. Omit for no retry button. */
   onRetry?: () => void;

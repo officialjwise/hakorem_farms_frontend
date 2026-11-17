@@ -17,10 +17,23 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = { parameters: { matrix: true } };
 
-/** A failed request leaves its correlation id on screen, so a support call starts with a reference. */
+/**
+ * A failed request leaves its correlation id on screen, so a support call starts with a reference: its last
+ * eight characters, in two groups, with a button that copies all of it (owner, 2026-11-17; ADR 0051).
+ */
 export const WithReference: Story = {
   parameters: { matrix: true },
-  args: { reference: '3f2a9c1e-7b24-4d0e-9a51-0c6d2e8f41b7', referenceLabel: 'Reference:' },
+  args: {
+    reference: '019a7b1d-f4de-751c-aa55-5aa0965fd37e',
+    referenceLabel: 'Quote this reference to support:',
+    referenceCopy: { copy: 'Copy the full reference', copied: 'Copied', failed: 'Could not copy' },
+  },
+};
+
+/** A reference a person reads in full, such as a permission's name, is shown whole with no copy button. */
+export const WithPlainReference: Story = {
+  parameters: { matrix: true },
+  args: { reference: 'inv.transfer.receive', referenceLabel: 'Permission needed:' },
 };
 
 export const WithRetry: Story = {

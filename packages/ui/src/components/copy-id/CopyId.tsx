@@ -8,9 +8,27 @@ import { Button } from '../button/Button';
 /** Rejects an empty string literal at compile time. Dynamic blank strings are rejected at render. */
 type NonEmpty<T extends string> = T extends '' ? never : T;
 
+/** The three things a copy button says, already translated. ErrorState and QueryBoundary take them for a reference. */
+export interface CopyLabels {
+  /** The copy button's name, for example "Copy the full reference". */
+  copy: string;
+  /** Said once it is on the clipboard, for example "Copied". */
+  copied: string;
+  /** Said when the browser refuses the clipboard. */
+  failed: string;
+}
+
 export type CopyIdProps<V extends string = string, L extends string = string> = {
-  /** Required. The readable id, shown in full: a SKU, a public id (`cus_…`, `sup_…`) or a document number. */
+  /**
+   * Required. What is copied: a SKU, a public id (`cus_…`, `sup_…`), a document number, or a request
+   * reference. Shown in full unless `shown` is given.
+   */
   value: NonEmpty<V>;
+  /**
+   * What is shown when it is not the whole value: a request reference's last eight characters
+   * (`formatReference`, owner 2026-11-17). The whole `value` is still what is copied. Blank is refused.
+   */
+  shown?: string;
   /** Required, already translated: the copy button's name, for example "Copy cus_8F3K2M9Q7X4T1V6B". */
   copyLabel: NonEmpty<L>;
   /** Already translated: said once the id is on the clipboard, for example "Copied". */
@@ -30,10 +48,12 @@ const SAID_MS = 2000;
 /**
  * CopyId. A readable id in the monospace face, wrapping anywhere so it fits at 360 px, with a button that
  * copies it (owner, 2026-11-17: every id gets a copy button). What happened is said in words beside it.
- * Never a UUID: the caller passes a code a person reads.
+ * Never a UUID in full: the caller passes a code a person reads, or a request reference with `shown`, its
+ * last eight characters, while the button copies all of it for support (ADR 0051).
  */
 export function CopyId<V extends string, L extends string>({
   value,
+  shown,
   copyLabel,
   copiedLabel,
   failedLabel,
@@ -41,6 +61,8 @@ export function CopyId<V extends string, L extends string>({
 }: CopyIdProps<V, L>) {
   if (value.trim() === '') throw new Error('CopyId needs a non-empty value.');
   if (copyLabel.trim() === '') throw new Error('CopyId needs a non-empty copyLabel.');
+  if (shown !== undefined && shown.trim() === '')
+    throw new Error('CopyId needs a non-empty shown.');
   const [outcome, setOutcome] = useState<Outcome>('idle');
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
@@ -70,7 +92,7 @@ export function CopyId<V extends string, L extends string>({
       data-slot="copy-id"
       className={cn('inline-flex max-w-full flex-wrap items-center gap-1 align-middle', className)}
     >
-      <code className="min-w-0 font-mono font-semibold break-all text-fg">{value}</code>
+      <code className="min-w-0 font-mono font-semibold break-all text-fg">{shown ?? value}</code>
       <Button size="sm" variant="ghost" iconOnly aria-label={copyLabel} onClick={copy}>
         {outcome === 'copied' ? <Check /> : <Copy />}
       </Button>

@@ -175,3 +175,20 @@ export function formatDateTime(
   const d = new Date(ms);
   return `${d.getUTCFullYear()}-${two(d.getUTCMonth() + 1)}-${two(d.getUTCDate())} ${two(d.getUTCHours())}:${two(d.getUTCMinutes())}`;
 }
+
+/** How many characters of a request reference are shown (owner, 2026-11-17). */
+export const REFERENCE_SHOWN = 8;
+
+/**
+ * A request reference (the error envelope's `correlationId`, a UUIDv7) as a person reads it out: its last
+ * eight characters in two groups of four, `965f d37e` (owner, 2026-11-17; ADR 0051). The end, never the
+ * start: the start of the id encodes the time, so two failures a second apart would share it, and the
+ * random part is at the end. Hyphens and spaces are left out before counting. A reference of eight
+ * characters or fewer is shown whole. The full reference is what support needs, so it is copied in full
+ * (`CopyId`'s `shown`); this is only what is shown.
+ */
+export function formatReference(reference: string): string {
+  const characters = reference.replace(/[\s-]/g, '');
+  const tail = characters.slice(-REFERENCE_SHOWN);
+  return (tail.match(/.{1,4}/g) ?? []).join(' ');
+}

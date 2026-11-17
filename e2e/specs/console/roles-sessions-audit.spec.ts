@@ -63,7 +63,9 @@ test.describe('audit log', () => {
     await page.getByRole('link', { name: 'Open the event of 2026-11-13 08:03' }).first().click();
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Price overridden');
     await expect(page.getByRole('region', { name: 'What changed' })).toBeVisible();
-    await expect(page.getByText('019a7a9b-9385-775f-bc98-7ecead58f7ac')).toBeVisible();
+    // The request reference by its last eight characters, grouped, copied in full (ADR 0051).
+    await expect(page.getByText('ad58 f7ac')).toBeVisible();
+    await expect(page.getByText('019a7a9b-9385-775f-bc98-7ecead58f7ac')).toHaveCount(0);
     await expectNoAxeViolations(page);
     await expectNoHorizontalScroll(page);
   });

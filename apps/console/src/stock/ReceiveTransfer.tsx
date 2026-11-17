@@ -128,8 +128,10 @@ export function ReceiveTransfer({ transfer }: { transfer: Transfer }) {
           ? state.quantity
           : (line.qtyDispatched ?? '');
       const reason = arrivals[line.id]?.reason ?? '';
+      // Counted in the unit the line was sent in (crates or eggs); the server converts to the base unit.
       return {
         lineId: line.id,
+        uom: line.uom,
         qtyReceived: quantity,
         ...(state?.kind === 'short' && reason !== '' ? { varianceReasonCode: reason } : {}),
       };

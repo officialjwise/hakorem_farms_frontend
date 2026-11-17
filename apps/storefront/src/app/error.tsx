@@ -13,6 +13,9 @@ const WORDS = {
   body: 'This page stopped working. Try again.',
   retry: 'Try again',
   reference: 'Reference',
+  copy: 'Copy the full reference',
+  copied: 'Copied',
+  copyFailed: 'Could not copy. Select it to copy by hand.',
 };
 
 export default function GlobalError({
@@ -32,6 +35,7 @@ export default function GlobalError({
       description={WORDS.body}
       reference={error.digest}
       referenceLabel={WORDS.reference}
+      referenceCopy={{ copy: WORDS.copy, copied: WORDS.copied, failed: WORDS.copyFailed }}
       action={action}
     />
   ) : (

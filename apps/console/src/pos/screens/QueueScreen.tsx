@@ -8,6 +8,7 @@ import { getTill, useTill } from '../offline/till';
 import type { QueueEntry, SaleEntry } from '../offline/types';
 import { EntryStatus, Receipt } from '../presentation';
 import { LazyReceiptOut } from '../parts';
+import { RequestReference } from '../../lib/RequestReference';
 
 /**
  * The till's queue (OFFLINE_SYNC section 6): every sale, cash movement and shift open on this device that the
@@ -72,9 +73,12 @@ export function QueueScreen() {
             )}
           >
             {sync.blocked.message}
-            {sync.blocked.correlationId !== ''
-              ? ` ${t('referenceIs', { reference: sync.blocked.correlationId })}`
-              : ''}
+            {sync.blocked.correlationId !== '' ? (
+              <>
+                {' '}
+                {t('referenceLabel')} <RequestReference value={sync.blocked.correlationId} />
+              </>
+            ) : null}
           </Alert>
         ) : null}
         {snapshot.meta.counterGaps.length > 0 ? (
@@ -202,9 +206,12 @@ function Row({ entry, onCopy }: { entry: QueueEntry; onCopy: (entry: SaleEntry) 
       {entry.failure !== null ? (
         <Alert severity="critical" title={t('queue.refused')}>
           {entry.failure.message}
-          {entry.failure.correlationId !== ''
-            ? ` ${t('referenceIs', { reference: entry.failure.correlationId })}`
-            : ''}
+          {entry.failure.correlationId !== '' ? (
+            <>
+              {' '}
+              {t('referenceLabel')} <RequestReference value={entry.failure.correlationId} />
+            </>
+          ) : null}
         </Alert>
       ) : null}
     </li>

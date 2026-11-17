@@ -34,7 +34,13 @@ export interface ReasonDialogProps {
   error: FailureLike | null;
   failureLabels: Pick<
     QueryBoundaryLabels,
-    'errorTitle' | 'errorDescription' | 'retry' | 'reference' | 'deniedTitle' | 'deniedDescription'
+    | 'errorTitle'
+    | 'errorDescription'
+    | 'retry'
+    | 'reference'
+    | 'referenceCopy'
+    | 'deniedTitle'
+    | 'deniedDescription'
   >;
   destructive?: boolean;
 }

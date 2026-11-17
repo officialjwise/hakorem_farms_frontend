@@ -13,6 +13,8 @@ function entry(over: Partial<PriceListEntry> & { id: string; productId?: string 
     ceilingPricePesewas: 98000,
     quoteOnly: false,
     minQty: '0.000',
+    minQtyBase: '0.000',
+    uom: 'HEAD',
     currency: 'GHS',
     ...rest,
   };
@@ -68,6 +70,16 @@ describe('previewChanges', () => {
     expect(entryKey(entry({ id: 'x', minQty: '10.000' }))).not.toBe(entryKey(entry({ id: 'x' })));
   });
 
+  it('a crate and a single egg of the same product are two lines', () => {
+    const egg = entry({ id: 'e', productId: 'egg', uom: 'UNIT', listPricePesewas: 250 });
+    const crate = entry({ id: 'c', productId: 'egg', uom: 'CRATE', listPricePesewas: 6000 });
+    expect(entryKey(egg)).not.toBe(entryKey(crate));
+    expect(previewChanges([egg, crate], [egg, crate]).map((r) => r.kind)).toEqual([
+      'unchanged',
+      'unchanged',
+    ]);
+  });
+
   it('with no active version every line is added', () => {
     expect(previewChanges([], [entry({ id: 'd' })]).map((r) => r.kind)).toEqual(['added']);
   });
@@ -84,6 +96,16 @@ describe('toInput', () => {
       ceilingPricePesewas: 98000,
       quoteOnly: false,
       minQty: '0.000',
+      uom: 'HEAD',
     });
+  });
+
+  it("keeps a crate's price a crate's: the selling unit and the break as entered go back", () => {
+    const crate = entry({ id: 'c', uom: 'CRATE', minQty: '10.000', minQtyBase: '300.000' });
+    expect(toInput(crate)).toMatchObject({ uom: 'CRATE', minQty: '10.000' });
+  });
+
+  it('a PER_KG entry names no unit, which the contract refuses on it', () => {
+    expect(toInput(entry({ id: 'k', basis: 'PER_KG', uom: 'KG' }))).not.toHaveProperty('uom');
   });
 });
