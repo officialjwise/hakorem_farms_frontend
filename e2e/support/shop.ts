@@ -2,10 +2,10 @@ import type { BrowserContext, Page } from '@playwright/test';
 import { expect } from './test';
 
 /**
- * The storefront against the Prism mock: its server reads the catalogue from Prism, and its browser talks
- * to Prism for the cart and checkout (HK_API_BASE_URL=http://127.0.0.1:4010 at build). The mock's product
- * photographs are on the real media origin, which a test must not depend on: they are refused, so every
- * card shows its tile, as it does for a product with no photograph.
+ * The storefront against the Prism mock: its server reads the catalogue, and its browser talks for the cart
+ * and checkout, through the shop API in front of Prism (HK_API_BASE_URL=http://127.0.0.1:4011 at build,
+ * ADR 0054). The mock's product photographs are on the real media origin, which a test must not depend on:
+ * they are refused, so every card shows its tile, as it does for a product with no photograph.
  */
 export async function refusePhotos(context: BrowserContext): Promise<void> {
   await context.route('https://media.hakoremfarms.com/**', (route) => route.abort());
