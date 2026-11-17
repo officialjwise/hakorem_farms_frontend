@@ -15,7 +15,7 @@ import {
   Skeleton,
 } from '@hakorem/ui';
 import { useApiMutation, useApiQuery } from '../../lib/browserApi';
-import { rememberCart, rememberCheckout, useCheckoutId } from '../../lib/cartId';
+import { openCheckoutId, rememberCart } from '../../lib/cartId';
 import { fill, refusal, word, type Words } from '../../lib/words';
 import { CartLines } from '../cart/CartLines';
 import { useCart } from '../cart/useCart';
@@ -51,13 +51,15 @@ type S = components['schemas'];
 function Flow({ words }: { words: Words }) {
   const w = (path: string) => word(words, `checkout.${path}`);
   const { id: cartId, query: cart } = useCart();
-  const checkoutId = useCheckoutId();
+  // The cart says which checkout is open (CR-029), on this device or another with the same cart.
+  const checkoutId = openCheckoutId(cart.data);
   const [details, setDetails] = useState<Details>(EMPTY_DETAILS);
   const [errors, setErrors] = useState<DetailsErrors>({});
   const [quote, setQuote] = useState<S['DeliveryQuote'] | null>(null);
   const [editing, setEditing] = useState(false);
   const [placed, setPlaced] = useState<S['PlaceOrderResult'] | null>(null);
-  const start = useApiMutation('startCheckout');
+  // The cart moves to CHECKOUT and names its checkout: read it again.
+  const start = useApiMutation('startCheckout', { invalidates: ['getCart'] });
   const update = useApiMutation('updateCheckout');
   const open = useApiQuery(
     'getCheckout',
@@ -118,11 +120,10 @@ function Flow({ words }: { words: Words }) {
         );
       } else {
         const body = toCheckoutStart(details);
-        const started = await start.mutateAsync(
+        await start.mutateAsync(
           { path: { id: cartId }, body },
           { idempotencyKey: keyFor(JSON.stringify(['start', cartId, body, checkout?.id ?? null])) },
         );
-        rememberCheckout(started.id);
       }
       setEditing(false);
     } catch (error) {
@@ -238,7 +239,6 @@ function Flow({ words }: { words: Words }) {
             }}
             onPlaced={(result) => {
               rememberCart(null);
-              rememberCheckout(null);
               setPlaced(result);
             }}
           />

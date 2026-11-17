@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { getWords } from '../../i18n/server';
-import { rememberCart, rememberCheckout } from '../../lib/cartId';
+import { rememberCart } from '../../lib/cartId';
 import { mock } from '../../test-integration-setup';
 import { Root } from '../../test-wrapper';
 import { CheckoutFlow } from './CheckoutFlow';
@@ -16,7 +16,6 @@ async function renderCheckout() {
 }
 
 beforeEach(() => {
-  rememberCheckout(null);
   rememberCart(CART);
 });
 
