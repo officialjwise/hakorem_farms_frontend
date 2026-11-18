@@ -99,6 +99,7 @@ F10j keeps its sign-off shot. Its old drop shots stay as the record of F10j.
 
 - **CR-050** (was CR-045): renumbered; part 2 answered by 2.6.0; part 1 open, now with the owner's PIN rule.
 - **CR-040, CR-042, CR-043 and CR-044:** answered by 2.9.0, built. The table gains their rows.
+- **CR-051, new:** the offline pack names its units, for one and for more. Until then the till's cart says "6 egg", the code in lower case.
 
 ## Decisions recorded
 
@@ -108,7 +109,24 @@ F10j keeps its sign-off shot. Its old drop shots stay as the record of F10j.
 
 ## Gates, each run on its own
 
-_Pending: the full e2e run, integration, the budget and the screenshots are running; this table is filled in when they finish._
+| Check                                                     | Exit | Count                                                                                            |
+| --------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------ |
+| `format:check`, `lint`                                    | 0    |                                                                                                  |
+| `typecheck` (every package)                               | 0    |                                                                                                  |
+| `sync-contract:check`                                     | 0    | backend `5815c06`, 2.10.0                                                                        |
+| `test:unit`                                               | 0    | console 301 (was 298), data 31, api-client 30, ui 900, storefront 34, i18n 6                     |
+| `test:integration`                                        | 0    | console 249 (the mock's operation count is 644), storefront 15                                   |
+| `budget:console`                                          | 0    | till 241.9 of 250 kB (was 242.1); back office 282.3 of 300 kB (was 281.1)                        |
+| `test:e2e`, full run                                      | 0    | 294 of 294 in 6.6 minutes (was 292). The first run failed 3, each fixed and named in its commit. |
+| `screenshots` (F10k; F10, F10f, F10g, F10j run)           | 0    | F10k 12 of 12; the other phases' 58 shots pass, two repaired, their images not retaken           |
+| `tokens:check`, `fonts:check`, `icons:check`, `test:a11y` | n/r  | not run: no token, font, icon or `packages/ui` change                                            |
+
+**The first full run failed three tests**, all this session's:
+
+- **The invoice page fell over** while it read the product for a quantity variance: `QuantityDisplay` refuses an empty unit. Fixed in `ac78c7c`.
+- **Two specs still expected the old unit words.** One said "0.400 Kilogram", the other "By the unit". Fixed in `e2fa28b`.
+
+**The integration test's operation count** went from 642 to 644 (`countForceClosedShift`, `getSupplierBalance`).
 
 ## For the owner
 
@@ -130,6 +148,8 @@ Read ADR 0038, 0046 and 0052.
    - syncOfflineSales or getOfflinePack moved into code: take the till's queue to the real API and
      settle A-F10-07.
    - CR-033, CR-038 or CR-041 landed: as the F10f and F10g opening messages say.
+   - CR-051 landed (OfflinePack.uoms): the till says "6 eggs" from the pack's names; update
+     eggs-selling.spec.ts's "6 egg".
 2. The online sale on completeCounterSale (2.6.0), if the owner wants it before the offline sync lands.
 3. Decide how the storefront's e2e answers a state the contract's examples cannot show, in an ADR
    (carried from F10e).
