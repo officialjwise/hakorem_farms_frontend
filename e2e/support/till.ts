@@ -80,6 +80,8 @@ export interface TillServerOptions {
   offlineMobileMoney?: boolean;
   /** Changes the pack's products, for a state its example cannot show (the egg session: two units). */
   products?: (products: Record<string, unknown>[]) => Record<string, unknown>[];
+  /** The pack exactly as 2.11.0 answers it: the goat with no band (CR-052), not `goatPricedPerHead`. */
+  contractPack?: boolean;
   /** CR-050, requested: the supervisors signed in at the branch. The manager, unless a test says none. */
   witnesses?: { id: string; displayName: string }[];
 }
@@ -154,8 +156,9 @@ export function installTillServer(
         ...pack.reasonCodes.filter((reason) => reason.domain !== 'CASH_MOVEMENT'),
         ...CASH_REASONS,
       ],
-      products:
-        options.products === undefined
+      products: options.contractPack
+        ? pack.products
+        : options.products === undefined
           ? goatPricedPerHead(pack.products)
           : options.products(goatPricedPerHead(pack.products)),
       generatedAt: new Date().toISOString(),

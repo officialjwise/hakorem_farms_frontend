@@ -33,6 +33,7 @@ import {
   newLine,
   unitChoices,
   sellableUnits,
+  soldThroughQuotes,
   sellingBlock,
   tiles,
   type SellingBlock,
@@ -163,6 +164,18 @@ function NoPack({ online }: { online: boolean }) {
   );
 }
 
+/** A tile's name, and in words beneath it why it is not sold here as it is (never colour alone). */
+function TileWords({ name, note }: { name: string; note: string | null }) {
+  return (
+    <span className="grid gap-0.5">
+      <span>{name}</span>
+      {note === null ? null : (
+        <span className="text-control-sm font-normal text-fg-muted">{note}</span>
+      )}
+    </span>
+  );
+}
+
 type Notice = { severity: 'warning' | 'critical' | 'info'; title: string; body?: string } | null;
 
 function Selling({
@@ -220,6 +233,14 @@ function Selling({
         setNotice({
           severity: 'warning',
           title: t('sale.notice.quoteOnly', { name: product.product.name }),
+        });
+        return;
+      }
+      if (soldThroughQuotes(pack, product)) {
+        setNotice({
+          severity: 'warning',
+          title: t('sale.notice.throughQuotes', { name: product.product.name }),
+          body: t('sale.notice.throughQuotesBody'),
         });
         return;
       }
@@ -317,11 +338,20 @@ function Selling({
                       fullWidth
                       disabled={block !== null}
                       onClick={() => {
-                        add(newLine(product, unit), product.product.name);
+                        if (soldThroughQuotes(pack, product)) pick(product.product.id);
+                        else add(newLine(product, unit), product.product.name);
                         setQuery('');
                       }}
                     >
-                      {t('sale.find.unit', { name: product.product.name, tag: unit.identifier })}
+                      <TileWords
+                        name={t('sale.find.unit', {
+                          name: product.product.name,
+                          tag: unit.identifier,
+                        })}
+                        note={
+                          soldThroughQuotes(pack, product) ? t('sale.tile.throughQuotes') : null
+                        }
+                      />
                     </Button>
                   </li>
                 ))}
@@ -360,7 +390,16 @@ function Selling({
                       disabled={block !== null || product.quoteOnly}
                       onClick={() => pick(product.product.id)}
                     >
-                      {product.product.name}
+                      <TileWords
+                        name={product.product.name}
+                        note={
+                          product.quoteOnly
+                            ? t('sale.tile.quoteOnly')
+                            : soldThroughQuotes(pack, product)
+                              ? t('sale.tile.throughQuotes')
+                              : null
+                        }
+                      />
                     </Button>
                   </li>
                 ))}

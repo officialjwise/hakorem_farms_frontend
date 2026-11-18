@@ -878,7 +878,7 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 
 **Request:** the band each sellable animal is sold at, resolved as the server would at the counter (the register's lists, a buyer with no account, its grade and its weight band from `lastWeightKg`): `OfflineStockUnit.priceBand: PriceBand | null` and `OfflineStockUnit.priceListEntryId: uuid | null`, null when the animal has no price at this register. A product priced per kilogram keeps its own band, and the scale gives the weight. Say in `syncOfflineSales` how an animal re-weighed at the sale is priced if its weight moved it to another band.
 
-**Until this lands:** a till with the real pack refuses a goat in words and sells everything else. The e2e pack gives the goat the per-head band of 2.10.0's example (`goatPricedPerHead` in `e2e/support/till.ts`), so the till's own tests still run with an animal.
+**Until this lands** (the owner, 2026-11-18: the backend adds each animal's price to the pack late in the till work): with the real pack, an animal's tile says "Sold through quotes and orders" before it is tapped, and a tap, or its tag found by search, says the animal is sold through quotes and orders, not at this till, and to make a quote or an order in the back office. Nothing goes on the sale, and everything else sells (`soldThroughQuotes` in `pos/sale/catalogue.ts`; `pos-till.spec.ts` with the pack as 2.11.0 answers it). The other till specs give the goat the per-head band of 2.10.0's example (`goatPricedPerHead` in `e2e/support/till.ts`), so they still run with an animal.
 
 ## CR-053. An order names its pick lists and the answer it waits for (additive)
 
