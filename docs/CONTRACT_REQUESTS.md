@@ -50,9 +50,9 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-044 | 2026-11-17 | Answered (2.9.0), built   |
 | CR-045 | 2026-11-18 | Answered (2.12.0), built  |
 | CR-046 | 2026-11-18 | Open                      |
-| CR-047 | 2026-11-18 | Open                      |
+| CR-047 | 2026-11-18 | Part answered (2.12.0)    |
 | CR-048 | 2026-11-18 | Open                      |
-| CR-049 | 2026-11-18 | Open                      |
+| CR-049 | 2026-11-18 | Answered (2.12.0)         |
 | CR-050 | 2026-11-18 | Part 2 answered (2.6.0)   |
 | CR-051 | 2026-11-18 | Open                      |
 | CR-052 | 2026-11-18 | Open                      |
@@ -813,6 +813,8 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 
 **Until this lands:** nothing is switched. The page shows the status the API gives: an expired quote says when it expired and how to ask for a new one; a replaced one says the farm sent a newer version and this link can no longer be used. A refused acceptance reads the quote again and shows its state in words.
 
+**Part answered in 2.12.0 (F10l):** items 1 and 3. The token is `quo_` and 256 random bits, kept as its hash, answered once by `issueQuoteVersion` (`QuoteVersion.acceptanceLinkToken`), and a closed link is 422 `QUOTE_LINK_CLOSED` with `EXPIRED`, `REPLACED` or `WITHDRAWN` and nothing of the quote (ADR-0087). The link page says each in words. Item 2 is open: `PublicQuote` still has no `acceptedName`, `decidedAt` or `supersededAt`.
+
 ## CR-048. Who quotes, holds, releases and approves: the seed for quotes and wholesale, and a second person on a release and a limit change (seed, behaviour)
 
 - **Raised by:** frontend, F10i, on the owner's decision (2026-11-18): "Sales builds, revises, sends and converts quotes, and never approves an override. The Accountant may put an account on hold. Releasing a hold, approving an over-limit override and changing a credit limit are Owner or Manager only, never the person who asked."
@@ -846,6 +848,8 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 **Request:** `PublicQuoteRequest.quantity: Quantity` and `PublicQuoteRequest.uom: string` (pattern `^[A-Z]{2,10}$`, `CRATE` or `UNIT` for eggs), both optional and sent together; `RfqCreate` takes the same two, and `Rfq` answers them (null when not given), so the quote builder can start the line from them.
 
 **Until this lands:** the form writes the number into `requirements` as "Crates wanted: N" (A-F10-11), and the request's page shows the buyer's words.
+
+**Answered in 2.12.0 (F10l), not built:** `PublicQuoteRequest.quantity` and `uom`, but only with `productId`. The shop's form names no product, so the count stays in `requirements` (A-F10-11) until the form asks which product.
 
 ## CR-051. The offline pack names its units, for one and for more (additive)
 
