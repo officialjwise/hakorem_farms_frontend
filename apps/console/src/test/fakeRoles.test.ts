@@ -14,13 +14,8 @@ const NOT_SEEDED: Readonly<Record<string, string>> = {
   'rpt.exceptions.read': 'reporting',
   'rpt.report.read': 'reporting',
   'rpt.report.export': 'reporting',
-  // Quotes, wholesale accounts and the ageing (B10, CR-046 item 5; A-F10-10).
-  'quo.rfq.read': 'B10',
-  'quo.rfq.update': 'B10',
-  'quo.quote.read': 'B10',
-  'quo.quote.create': 'B10',
-  'quo.quote.issue': 'B10',
-  'quo.quote.convert': 'B10',
+  // Wholesale accounts and the ageing (B10 continued, CR-046 item 5; A-F10-10). The quote grants are
+  // seeded from 2.12.0.
   'whl.account.read': 'B10',
   'whl.account.manage': 'B10',
   'whl.account.hold': 'B10',
