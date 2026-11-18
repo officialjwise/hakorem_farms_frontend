@@ -54,7 +54,7 @@ jobs:
         env:
           HK_API_BASE_URL: /mock
           # The contract requests the e2e fake answers in their requested shape (ADR 0046).
-          HK_REQUESTED_CONTRACT: CR-032,CR-033,CR-038,CR-042,CR-046,CR-047
+          HK_REQUESTED_CONTRACT: CR-032,CR-033,CR-038,CR-042,CR-045,CR-046,CR-047
       - name: Console bundle budget, per document (ADR 0030, PERFORMANCE_BUDGET.md)
         run: pnpm budget:console
       - name: Build the storefront (Next.js), against the e2e suite's shop API in front of Prism (ADR 0054)

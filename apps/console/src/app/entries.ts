@@ -28,9 +28,10 @@ export const ENTRY_DOCUMENT: Record<ConsoleEntry, string> = {
 
 /**
  * The catalogue namespaces each document loads at boot, before its first screen renders. The till's are
- * the ones its shell, sign-in and sale screen use. `pnpm budget:console` counts them in the initial load.
+ * the ones its shell, sign-in and sale screen use; it loads the refusal words and the shift screens' words
+ * once its sale screen is up (`preloadTillScreens`). `pnpm budget:console` counts these in the initial load.
  */
 export const ENTRY_NAMESPACES: Record<ConsoleEntry, Namespace[]> = {
-  'back-office': ['common', 'shell', 'auth', 'iam', 'audit'],
+  'back-office': ['common', 'shell', 'auth', 'iam', 'audit', 'refusals'],
   pos: ['common', 'shell', 'auth', 'pos'],
 };

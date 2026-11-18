@@ -1,6 +1,6 @@
 import { ApiError, apiBaseUrl, createApiClient, type ApiClient } from '@hakorem/api-client';
 import { createApiHooks, createQueryClient } from '@hakorem/data';
-import { inWords } from './refusals';
+import { inWordsWhenLoaded } from './refusals';
 import { sessionHooks } from './session';
 
 /** The one QueryClient (ADR 0022), mounted by `DataProvider`. */
@@ -25,14 +25,14 @@ const lazyApi: ApiClient = {
   call: (...args) =>
     getApi()
       .call(...args)
-      .catch((error: unknown) => {
-        throw error instanceof ApiError ? inWords(error) : error;
+      .catch(async (error: unknown) => {
+        throw error instanceof ApiError ? await inWordsWhenLoaded(error) : error;
       }),
   callRequested: (...args) =>
     getApi()
       .callRequested(...args)
-      .catch((error: unknown) => {
-        throw error instanceof ApiError ? inWords(error) : error;
+      .catch(async (error: unknown) => {
+        throw error instanceof ApiError ? await inWordsWhenLoaded(error) : error;
       }),
 };
 

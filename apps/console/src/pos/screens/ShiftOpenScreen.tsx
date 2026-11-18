@@ -5,17 +5,21 @@ import { Link, useNavigate } from 'react-router';
 import { Alert, Button, EmptyState, Field, MoneyDisplay, MoneyInput, Skeleton } from '@hakorem/ui';
 import { useAuth } from '../../auth/AuthProvider';
 import { ConfirmDialog } from '../../lib/ConfirmDialog';
+import { RequestReference } from '../../lib/RequestReference';
 import { useOnlineStatus } from '../../lib/useOnlineStatus';
-import { getTill, useTill } from '../offline/till';
+import { getTill, ShiftRefused, useTill } from '../offline/till';
+import type { EntryFailure } from '../offline/types';
 
 /**
  * Opening a shift with its float (FR-POS shift management, OFFLINE_SYNC section 10). The shift is made on
  * the till with its own id and queued, so it opens with the network off too, provided the till holds an
  * offline pack to sell from; online, the pack is downloaded for the new shift. The float is confirmed first.
+ * Online it is sent at once (`openShift`, 2.5.0), and a refusal stays on this screen in words with its
+ * reference: the till holds no shift then, so the cashier can put it right and open again.
  * Permission: `pos.shift.open` (the route's).
  */
 export function ShiftOpenScreen() {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posShift', 'pos']);
   const auth = useAuth();
   const navigate = useNavigate();
   const online = useOnlineStatus();
@@ -23,19 +27,19 @@ export function ShiftOpenScreen() {
   const [float, setFloat] = useState<number | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [pending, setPending] = useState(false);
-  const [failed, setFailed] = useState<string | null>(null);
+  const [failed, setFailed] = useState<EntryFailure | null>(null);
   const [tried, setTried] = useState(false);
   const snapshot = till.snapshot;
 
-  if (snapshot === null) return <Skeleton label={t('sale.loading')} shape="block" />;
+  if (snapshot === null) return <Skeleton label={t('pos:sale.loading')} shape="block" />;
   if (snapshot.device === null) {
     return (
       <EmptyState
-        title={t('sale.noDevice.title')}
-        description={t('sale.noDevice.askManager')}
+        title={t('pos:sale.noDevice.title')}
+        description={t('pos:sale.noDevice.askManager')}
         action={
           <Button asChild variant="secondary">
-            <Link to="/pos">{t('toSale')}</Link>
+            <Link to="/pos">{t('pos:toSale')}</Link>
           </Button>
         }
       />
@@ -48,7 +52,7 @@ export function ShiftOpenScreen() {
         description={t('open.alreadyBody')}
         action={
           <Button asChild>
-            <Link to="/pos">{t('toSale')}</Link>
+            <Link to="/pos">{t('pos:toSale')}</Link>
           </Button>
         }
       />
@@ -63,6 +67,17 @@ export function ShiftOpenScreen() {
       {noPackOffline ? <Alert severity="critical" title={t('open.noPackOffline')} /> : null}
       {!online && snapshot.pack !== null ? (
         <Alert severity="warning" title={t('open.offline')} />
+      ) : null}
+      {failed !== null && !confirming ? (
+        <Alert severity="critical" title={t('open.failed')}>
+          {failed.message}
+          {failed.correlationId !== '' ? (
+            <>
+              {' '}
+              {t('pos:referenceLabel')} <RequestReference value={failed.correlationId} />
+            </>
+          ) : null}
+        </Alert>
       ) : null}
       <form
         className="grid gap-4"
@@ -95,11 +110,7 @@ export function ShiftOpenScreen() {
         confirmLabel={t('open.confirm')}
         pendingLabel={t('open.opening')}
         pending={pending}
-        error={
-          failed === null
-            ? null
-            : { status: 0, code: 'TILL_STORE', message: failed, correlationId: '' }
-        }
+        error={failed === null ? null : { status: 0, ...failed }}
         failedTitle={t('open.failed')}
         onConfirm={() => {
           if (float === null || auth.session === null) return;
@@ -118,8 +129,12 @@ export function ShiftOpenScreen() {
               navigate('/pos');
             })
             .catch((error: unknown) => {
-              if (getTill().getState().snapshot?.shift === null) {
-                setFailed(error instanceof Error ? error.message : String(error));
+              if (error instanceof ShiftRefused) {
+                setFailed(error.failure);
+                setConfirming(false);
+              } else if (getTill().getState().snapshot?.shift === null) {
+                const message = error instanceof Error ? error.message : String(error);
+                setFailed({ code: 'TILL_STORE', message, correlationId: '' });
               } else {
                 setConfirming(false);
               }

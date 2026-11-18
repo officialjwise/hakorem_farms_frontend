@@ -94,38 +94,45 @@ test('an agreed price needs a reason and stays inside the cashier limits', async
   });
 });
 
-test('a cash drop is queued and sent; the close is blind and refused until the queue is empty', async ({
+test('a cash drop made offline is kept, sent on reconnecting, and is unwitnessed; the close waits for it', async ({
   page,
   context,
   api,
 }) => {
-  installTillServer(api, serverTotal);
+  const server = installTillServer(api, serverTotal);
   await openTillShift(page);
   await page.getByRole('link', { name: 'Shift', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Shift SH-2026-DDW-T1-0312' })).toBeVisible();
 
   await api.setNetwork(context, false);
   await page.getByRole('textbox', { name: /^Amount/ }).fill('500');
+  // A drop's one reason is chosen for the cashier; offline with no PIN on the till, nobody can witness it.
+  await expect(page.locator('[data-slot="cash-unwitnessed"]')).toContainText(
+    'The till is offline and holds no supervisor’s PIN',
+  );
   await page.getByRole('button', { name: 'Record it' }).click();
-  await page
-    .getByRole('dialog', { name: 'Record this Cash drop?' })
-    .getByRole('button', { name: 'Record it' })
-    .click();
-  await expect(page.getByText('Cash drop recorded on this till.')).toBeVisible();
+  const confirm = page.getByRole('dialog', { name: 'Record this Cash drop?' });
+  await expect(confirm).toContainText('Cash dropped to the safe');
+  await expect(confirm).toContainText('Unwitnessed');
+  await confirm.getByRole('button', { name: 'Record it' }).click();
+  await expect(page.getByText('Cash drop kept on this till.')).toBeVisible();
   await expect(page.getByText('Closing a shift needs the server. Connect the till.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Declare the count' })).toBeDisabled();
   await expectNoAxeViolations(page);
 
-  const sent = page.waitForRequest((r) => r.url().endsWith('/pos/sync'));
+  const sent = page.waitForRequest(
+    (r) => r.method() === 'POST' && r.url().endsWith('/cash-movements'),
+  );
   await api.setNetwork(context, true);
-  const batch = (await sent).postDataJSON() as {
-    cashMovements: { kind: string; amountPesewas: number }[];
-  };
-  expect(batch.cashMovements).toEqual([
-    expect.objectContaining({ kind: 'CASH_DROP', amountPesewas: 50000 }),
-  ]);
-  // The answer names no cash movement, so the till keeps it waiting and the close stays refused.
-  await expect(page.getByText(/1 record is still on this till/)).toBeVisible();
+  const body = (await sent).postDataJSON() as Record<string, unknown>;
+  expect(body).toMatchObject({ kind: 'CASH_DROP', amountPesewas: 50000, reasonCode: 'SAFE_DROP' });
+  expect(body).not.toHaveProperty('witnessId');
+  await expect(page.getByText('Cash drop recorded, unwitnessed.')).toBeVisible();
+  const moved = page.locator('[data-slot="cash-moved"]');
+  await expect(moved.first()).toContainText('Cash drop');
+  await expect(moved.first()).toContainText('Unwitnessed');
+  await expect(page.getByRole('button', { name: 'Declare the count' })).toBeEnabled();
+  expect(server.batches).toHaveLength(0);
 });
 
 test('the close is blind: the count is declared before the expected figures are shown', async ({

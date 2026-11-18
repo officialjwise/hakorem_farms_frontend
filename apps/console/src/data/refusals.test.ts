@@ -3,8 +3,10 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { ApiError, NetworkError } from '@hakorem/api-client';
 import { describe, expect, it } from 'vitest';
-import common from '../../../../packages/i18n/locales/en/common.json';
-import { inWords, type RefusalWords } from './refusals';
+import refusals from '../../../../packages/i18n/locales/en/refusals.json';
+import { ENTRY_NAMESPACES } from '../app/entries';
+import { TILL_NAMESPACES } from '../pos/routes';
+import { attachRefusalWords, inWords, inWordsWhenLoaded, type RefusalWords } from './refusals';
 
 const contract = readFileSync(
   fileURLToPath(new URL('../../../../contract/openapi.yaml', import.meta.url)),
@@ -21,8 +23,8 @@ function documentedCodes(): string[] {
 }
 
 const say: RefusalWords = (key) => {
-  const [, kind, code] = key.split('.');
-  const table = common.refusals[kind as 'codes' | 'rules'] as Record<string, string>;
+  const [kind, code] = key.split('.');
+  const table = refusals[kind as 'codes' | 'rules'] as Record<string, string>;
   return table[code ?? ''] ?? null;
 };
 
@@ -33,7 +35,7 @@ describe('refusals in words (ADR 0038)', () => {
   it('has words for every code the contract documents', () => {
     const codes = documentedCodes();
     expect(codes.length).toBeGreaterThan(80);
-    const missing = codes.filter((code) => say(`refusals.codes.${code}`) === null);
+    const missing = codes.filter((code) => say(`codes.${code}`) === null);
     expect(missing).toEqual([]);
   });
 
@@ -95,5 +97,38 @@ describe('refusals in words (ADR 0038)', () => {
   it('does nothing before the catalogue is attached', () => {
     const error = refusal('MAKER_CANNOT_CHECK', 'The maker cannot check.');
     expect(inWords(error, null)).toBe(error);
+  });
+
+  it('waits for the refusal words before saying a refusal, where they load on demand', async () => {
+    let loaded = false;
+    const detach = attachRefusalWords({
+      say: (key) => (loaded ? say(key) : null),
+      load: () =>
+        new Promise<void>((resolve) =>
+          setTimeout(() => {
+            loaded = true;
+            resolve();
+          }, 5),
+        ),
+    });
+    const said = await inWordsWhenLoaded(refusal('MAKER_CANNOT_CHECK', 'The maker cannot check.'));
+    detach();
+    expect(said.message).toMatch(/You made this request, so you cannot approve/);
+  });
+
+  it('keeps the server’s sentence when the refusal words cannot be fetched', async () => {
+    const detach = attachRefusalWords({
+      say: () => null,
+      load: () => Promise.reject(new Error('offline')),
+    });
+    const error = refusal('MAKER_CANNOT_CHECK', 'The maker cannot check.');
+    const said = await inWordsWhenLoaded(error);
+    detach();
+    expect(said).toBe(error);
+  });
+
+  it('keeps the refusal and shift words out of the till’s first load, and in the back office’s', () => {
+    for (const namespace of TILL_NAMESPACES) expect(ENTRY_NAMESPACES.pos).not.toContain(namespace);
+    expect(ENTRY_NAMESPACES['back-office']).toContain('refusals');
   });
 });

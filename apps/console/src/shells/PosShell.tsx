@@ -16,7 +16,7 @@ import { OfflineBanner, OfflineIndicator } from './OfflineIndicator';
  * ADR 0014).
  */
 export function PosShell() {
-  const { t } = useTranslation(['shell', 'pos']);
+  const { t, i18n } = useTranslation(['shell', 'pos']);
   const auth = useAuth();
   const navigate = useNavigate();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -53,9 +53,9 @@ export function PosShell() {
     if (!hasTill()) return undefined;
     const online = () => getTill().online();
     window.addEventListener('online', online);
-    void preloadTillScreens();
+    void preloadTillScreens(i18n);
     return () => window.removeEventListener('online', online);
-  }, []);
+  }, [i18n]);
 
   const signOut = async () => {
     setConfirmOpen(false);

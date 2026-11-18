@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import type { CartLine } from './cart';
 import { canonicalJson, sha256Hex } from './payloadHash';
 import { memoryStore } from './store';
-import { backoffMs, flushQueue, needsAttention, MAX_BATCH } from './sync';
-import { Till } from './till';
-import type { DeviceRecord, OfflineSale, SaleEntry } from './types';
+import { backoffMs, flushQueue, needsAttention, MAX_BATCH, ONLINE_MOVEMENT_MS } from './sync';
+import { ShiftRefused, Till } from './till';
+import type { CashMovementEntry, DeviceRecord, OfflineSale, SaleEntry } from './types';
 
 const DEVICE: DeviceRecord = {
   deviceId: '019a7a95-0000-7000-8000-000000000001',
@@ -372,6 +372,129 @@ describe('a sale on the queue', () => {
     expect((await h.store.read()).entries.filter((e) => e.kind === 'SALE')).toHaveLength(1);
     await flushQueue({ store: h.store, call: h.call, now: () => new Date('2026-11-17T09:01:00Z') });
     expect((await h.store.read()).entries.filter((e) => e.kind === 'SALE')).toHaveLength(0);
+  });
+});
+
+const DROP = { kind: 'CASH_DROP' as const, amountPesewas: 50000, reasonCode: 'SAFE_DROP' };
+
+/** `recordCashMovement` as 2.5.0 answers it: the movement as recorded. */
+const recorded = (sent: Sent) => {
+  const body = sent.input.body as { id: string; kind: string; amountPesewas: number };
+  return {
+    ...body,
+    reasonCode: 'SAFE_DROP',
+    note: null,
+    witness: null,
+    actor: { id: 'c1', displayName: 'Adwoa Darko' },
+    occurredAt: '2026-11-16T09:00:00Z',
+  };
+};
+
+const movements = (h: ReturnType<typeof harness>) =>
+  (h.till.getState().snapshot?.entries ?? []).filter(
+    (e): e is CashMovementEntry => e.kind === 'CASH_MOVEMENT',
+  );
+
+describe('a shift the server refuses as it opens (2.5.0)', () => {
+  it('lets the shift go, throws the refusal in its words, and keeps the record for a manager', async () => {
+    const h = harness(
+      server({
+        openShift: () => {
+          throw new ApiError({
+            status: 422,
+            code: 'SHIFT_ALREADY_OPEN',
+            message:
+              'A shift is already open here. You already have a shift that is not closed, on another till.',
+            correlationId: 'ref-open',
+            details: [{ field: null, code: 'CASHIER_HAS_OPEN_SHIFT', message: 'open' }],
+          });
+        },
+      }).script,
+    );
+    await h.till.start();
+    const opening = h.till.openShift({
+      cashierId: 'c1',
+      cashierName: 'Adwoa Darko',
+      openingFloatPesewas: 20000,
+    });
+    await expect(opening).rejects.toBeInstanceOf(ShiftRefused);
+    await expect(opening).rejects.toThrow(/on another till/);
+    const snapshot = h.till.getState().snapshot;
+    expect(snapshot?.shift).toBeNull();
+    expect(snapshot?.entries).toEqual([
+      expect.objectContaining({ kind: 'SHIFT_OPEN', localStatus: 'FAILED_PERMANENT' }),
+    ]);
+  });
+});
+
+describe('a cash movement on the queue (2.5.0)', () => {
+  it('is sent alone with recordCashMovement while fresh, keyed by its own id, on its shift', async () => {
+    const s = server({ recordCashMovement: recorded });
+    const h = harness(s.script);
+    await openWithShift(h);
+    const entry = await h.till.recordCashMovement(DROP);
+    await h.till.flush();
+    const sent = h.sent.filter((x) => x.operation === 'recordCashMovement');
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.key).toBe(entry.id);
+    expect(sent[0]?.input.path?.id).toBe(entry.shiftId);
+    expect(sent[0]?.input.body).toEqual({
+      ...DROP,
+      id: entry.id,
+      occurredAt: entry.payload.occurredAt,
+    });
+    expect(movements(h)[0]).toMatchObject({ localStatus: 'APPLIED', failure: null });
+    // Never in the offline batch as well.
+    expect(h.syncs()).toHaveLength(0);
+  });
+
+  it('waits for the offline batch once it is older than the server takes alone', async () => {
+    let online = false;
+    const s = server({ recordCashMovement: recorded });
+    const h = harness((sent) => {
+      if (!online && sent.operation !== 'openShift') throw new NetworkError();
+      return s.script(sent);
+    });
+    await openWithShift(h);
+    await h.till.recordCashMovement(DROP);
+    await h.till.flush();
+    h.advance(ONLINE_MOVEMENT_MS);
+    online = true;
+    const before = h.sent.length;
+    await h.till.flush();
+    const after = h.sent.slice(before);
+    expect(after.filter((x) => x.operation === 'recordCashMovement')).toHaveLength(0);
+    const batch = h.syncs()[0]?.input.body as { cashMovements: { kind: string }[] };
+    expect(batch.cashMovements).toEqual([expect.objectContaining({ kind: 'CASH_DROP' })]);
+  });
+
+  it('keeps a refusal on the record, in its words with the reference, and never sends it again', async () => {
+    const s = server({
+      recordCashMovement: () => {
+        throw new ApiError({
+          status: 422,
+          code: 'CASH_MOVEMENT_INVALID',
+          message:
+            'The cash movement was not recorded. A cash drop needs a supervisor as its witness.',
+          correlationId: 'ref-drop',
+          details: [{ field: null, code: 'WITNESS_REQUIRED', message: 'witness' }],
+        });
+      },
+    });
+    const h = harness(s.script);
+    await openWithShift(h);
+    await h.till.recordCashMovement(DROP);
+    await h.till.flush();
+    await h.till.flush();
+    expect(h.sent.filter((x) => x.operation === 'recordCashMovement')).toHaveLength(1);
+    const [entry] = movements(h);
+    expect(entry?.localStatus).toBe('FAILED_PERMANENT');
+    expect(entry?.failure).toEqual({
+      code: 'CASH_MOVEMENT_INVALID',
+      message: 'The cash movement was not recorded. A cash drop needs a supervisor as its witness.',
+      correlationId: 'ref-drop',
+    });
+    expect(needsAttention(entry as CashMovementEntry)).toBe(true);
   });
 });
 
