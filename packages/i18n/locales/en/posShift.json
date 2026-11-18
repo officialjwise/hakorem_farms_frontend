@@ -6,7 +6,7 @@
     "floatHint": "The cash in the drawer before the first sale.",
     "floatError": "Enter the float, even if it is zero.",
     "noPackOffline": "The till is offline and has no prices: it cannot open a shift until it reconnects.",
-    "offline": "The till is offline. The shift opens on this till and reaches the server when it reconnects.",
+    "offline": "The till is offline. The shift opens on this till and is sent when it reconnects. If that is more than five minutes from now, the server takes it only once it accepts shifts opened offline; the queue shows it until then.",
     "review": "Open the shift",
     "confirmTitle": "Open the shift with this float?",
     "confirmBody": "The float is recorded for your shift on {{register}}.",
@@ -40,20 +40,40 @@
     "reason": "Reason",
     "reasonPlaceholder": "Choose a reason",
     "reasonError": "Choose the reason.",
-    "noReasons": "The till holds no reasons for this; connect it to read them.",
-    "note": "Note (optional)",
+    "noReasons": "The till holds no reason for a {{kind}}. Connect it to read them.",
+    "note": "Note",
+    "noteOptional": "Optional.",
+    "noteRequired": "This reason needs a note.",
+    "noteError": "Write the note.",
+    "witness": "Witness to the cash drop",
+    "witnessHint": "The supervisor who takes the cash enters their PIN on this till.",
+    "witnessError": "The supervisor who takes the cash enters their PIN first.",
+    "witnessed": "Witnessed by {{name}}",
+    "signedIn": "Supervisor who takes the cash",
+    "signedInHint": "Supervisors signed in at this branch now.",
+    "signedInPlaceholder": "Choose a supervisor",
+    "signedInError": "Choose the supervisor who takes the cash.",
+    "witnessesLoading": "Looking for supervisors signed in at the branch",
+    "witnessesFailed": "The till could not see who is signed in at the branch. Look again before recording the drop.",
+    "witnessesRetry": "Look again",
+    "unwitnessed": {
+      "title": "This drop is recorded unwitnessed",
+      "noneSignedIn": "No supervisor is signed in at the branch. The drop goes ahead, marked unwitnessed for the owner’s exception report.",
+      "cannotSee": "The till cannot see yet which supervisors are signed in at the branch, so the drop is sent without a witness and marked unwitnessed.",
+      "offline": "The till is offline and holds no supervisor’s PIN, so the drop is kept without a witness and marked unwitnessed."
+    },
+    "unwitnessedShort": "Unwitnessed",
     "review": "Record it",
     "confirmTitle": "Record this {{kind}}?",
-    "confirmBody": "It is kept on this till and sent at once.",
+    "confirmBody": "It is kept on this till and sent to the server at once.",
     "confirmOffline": "The till is offline: it is kept on this till and sent when it reconnects.",
     "record": "Record it",
     "recording": "Recording",
-    "recorded": "{{kind}} recorded on this till.",
-    "failed": "It was not recorded",
-    "witness": "Witness to the cash drop",
-    "witnessHint": "The person who takes the cash enters their PIN on this till.",
-    "witnessed": "Witnessed by {{name}}",
-    "noWitness": "No one on this till can witness a cash drop with a PIN. It is recorded without a witness."
+    "sending": "{{kind}}: sending it to the server.",
+    "kept": "{{kind}} kept on this till. It is sent when the till reconnects.",
+    "recorded": "{{kind}} recorded.",
+    "recordedUnwitnessed": "{{kind}} recorded, unwitnessed.",
+    "failed": "The {{kind}} was not recorded"
   },
   "report": {
     "titleX": "X report: the shift so far",
@@ -78,7 +98,8 @@
     "voids_other": "{{count}} voids",
     "overrides_one": "{{count}} price override",
     "overrides_other": "{{count}} price overrides",
-    "refunds": "Refunds"
+    "refunds": "Refunds",
+    "xBlind": "A reading of the shift so far. It never shows the cash the till expects."
   },
   "closeShift": {
     "title": "Close the shift",
@@ -120,6 +141,24 @@
     "approving": "Signing the close off",
     "confirmTitle": "Sign this close off?",
     "confirmBody": "This posts {{name}}'s over or short to the accounts and closes the shift for good.",
-    "failed": "The close was not signed off"
+    "failed": "The close was not signed off",
+    "closedNo": "Shift {{number}} is closed",
+    "signedOffBy": "Signed off by {{name}}",
+    "tillFree": "The over or short is posted and the Z report is stored. The till is free for the next shift.",
+    "stepUp": "Signing off asks for a code from your authenticator app."
+  },
+  "moved": {
+    "title": "Cash moved on this shift",
+    "loading": "Reading the cash moved on this shift",
+    "empty": "No cash has moved on this shift yet",
+    "failed": "The cash moved on this shift could not be read",
+    "denied": "You cannot read this shift’s cash",
+    "by": "by {{name}}",
+    "kinds": {
+      "FLOAT_IN": "Opening float",
+      "CASH_DROP": "Cash drop",
+      "PAY_OUT": "Pay-out",
+      "PAY_IN": "Pay-in"
+    }
   }
 }

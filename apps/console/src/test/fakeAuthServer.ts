@@ -34,7 +34,8 @@ const MIN_PASSWORD_LENGTH = 12;
 export const STEP_UP_TTL_MS = 5 * 60 * 1000;
 
 /**
- * The operations the contract marks "Requires step-up" that the F3 screens call. The fake answers them with
+ * The operations the contract marks "Requires step-up" that the F3 screens call, and the till's sign-off of a
+ * shift's close (2.5.0). The fake answers them with
  * 403 `STEP_UP_REQUIRED` until the session has stepped up in the last five minutes, as API.md 3.4 says the
  * server does. The list is the contract's descriptions, read by hand: the operation table does not carry it.
  */
@@ -45,6 +46,7 @@ export const STEP_UP_OPERATIONS: ReadonlySet<string> = new Set([
   'updateRole',
   'createGrant',
   'revokeGrant',
+  'approveShiftClose',
 ]);
 
 /** The code the fake accepts for any user with TOTP. It is the contract's own example code. */

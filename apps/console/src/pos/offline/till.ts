@@ -94,6 +94,14 @@ export interface TillDeps {
   clearTimer?: (handle: unknown) => void;
 }
 
+/** The server refused a shift as it opened; the till holds no shift. Its words are the refusal's. */
+export class ShiftRefused extends Error {
+  constructor(readonly failure: EntryFailure) {
+    super(failure.message);
+    this.name = 'ShiftRefused';
+  }
+}
+
 export class Till {
   private state: TillState = {
     snapshot: null,
@@ -565,7 +573,10 @@ export class Till {
 
   /**
    * Opens a shift on this till with its float (section 10): the record is made here with a client id and
-   * queued, so it opens offline too, and is sent at once.
+   * queued, so it opens offline too, and is sent at once. If the server refuses it at once (2.5.0: another
+   * shift of the cashier's or the till's is not closed, the till is retired, the clock is out), nothing was
+   * sold on it, so the till lets it go and throws the refusal for the screen to say; the refused record stays
+   * on the queue for a manager, as every refusal does.
    */
   async openShift(input: {
     cashierId: string;
@@ -613,6 +624,12 @@ export class Till {
     await this.store.putEntries([entry]);
     await this.reload();
     await this.flush();
+    const sent = this.snapshotOrThrow().entries.find((e) => e.id === id);
+    if (sent?.localStatus === 'FAILED_PERMANENT' && sent.failure !== null) {
+      await this.store.saveShift(null);
+      await this.reload();
+      throw new ShiftRefused(sent.failure);
+    }
     return shift;
   }
 

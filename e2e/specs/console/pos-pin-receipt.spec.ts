@@ -219,11 +219,17 @@ test('offline mobile money on a supervisor’s PIN: not yet verified on the rece
   );
 });
 
-test('a cash drop takes its witness’s PIN, and the witness goes with it', async ({ page, api }) => {
+test('offline, a cash drop takes its witness’s PIN, and the witness goes with it', async ({
+  page,
+  context,
+  api,
+}) => {
   const server = installTillServer(api, serverTotal);
   installTillPins(api);
   await openTillShift(page);
   await page.getByRole('link', { name: 'Shift', exact: true }).click();
+  // Online the till names a supervisor signed in at the branch (CR-045); offline it takes a PIN.
+  await api.setNetwork(context, false);
   await page.getByRole('textbox', { name: /^Amount/ }).fill('500');
   await expect(page.getByRole('button', { name: 'Record it' })).toBeVisible();
   await page.getByLabel(/^PIN/).fill(PEOPLE.manager.pin);
@@ -232,17 +238,21 @@ test('a cash drop takes its witness’s PIN, and the witness goes with it', asyn
   await page.getByRole('button', { name: 'Record it' }).click();
   const confirm = page.getByRole('dialog', { name: 'Record this Cash drop?' });
   await expect(confirm).toContainText('Witnessed by Kwabena Owusu');
-  const sent = page.waitForRequest((r) => r.url().endsWith('/pos/sync'));
   await confirm.getByRole('button', { name: 'Record it' }).click();
-  const batch = (await sent).postDataJSON() as { cashMovements: Record<string, unknown>[] };
-  expect(batch.cashMovements).toEqual([
-    expect.objectContaining({
-      kind: 'CASH_DROP',
-      amountPesewas: 50000,
-      witnessId: PEOPLE.manager.id,
-    }),
-  ]);
-  await expect.poll(() => server.batches.length).toBe(1);
+  await expect(page.getByText('Cash drop kept on this till.')).toBeVisible();
+  // Back within five minutes, it goes alone to recordCashMovement (2.5.0), witness and all.
+  const sent = page.waitForRequest(
+    (r) => r.method() === 'POST' && r.url().endsWith('/cash-movements'),
+  );
+  await api.setNetwork(context, true);
+  expect((await sent).postDataJSON()).toMatchObject({
+    kind: 'CASH_DROP',
+    amountPesewas: 50000,
+    reasonCode: 'SAFE_DROP',
+    witnessId: PEOPLE.manager.id,
+  });
+  await expect(page.getByText('Cash drop recorded.')).toBeVisible();
+  expect(server.movements).toHaveLength(1);
 });
 
 test('the digital receipt: the SMS goes to the phone given, and the link is made on the till', async ({

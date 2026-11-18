@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '../../support/test';
 import type { FakeApi } from '../../support/fakeApi';
-import { signInWithTotp, USERS } from '../../support/helpers';
+import { confirmStepUp, signInWithTotp, USERS } from '../../support/helpers';
 import { installTillServer, openTillShift, find } from '../../support/till';
 import { PEOPLE, installTillPins } from '../../support/requested';
 import {
@@ -712,8 +712,10 @@ const TEN_SHOTS: TenShot[] = [
   },
   {
     name: 'cash-drop-witness',
-    act: async (page) => {
+    act: async (page, _api, offline) => {
       await page.getByRole('link', { name: 'Shift', exact: true }).click();
+      // Offline the till cannot see who is signed in, so the supervisor witnesses with a PIN (2.5.0).
+      await offline(true);
       await page.getByRole('textbox', { name: /^Amount/ }).fill('500');
       await page.getByLabel(/^PIN/).fill(PEOPLE.manager.pin);
       await page.getByRole('button', { name: 'Approve with this PIN' }).click();
@@ -774,6 +776,134 @@ for (const shot of TEN_SHOTS) {
       await shot.act(page, api, (off) => api.setNetwork(context, !off));
       await page.screenshot({
         path: `../docs/screenshots/F10/${shot.name}-${width}.png`,
+        fullPage: true,
+        scale: 'css',
+      });
+    });
+  }
+}
+
+/**
+ * F10i, the till's shift on contract 2.5.0 (CR-045 as requested): a drop witnessed by a supervisor signed in
+ * at the branch, a drop plainly unwitnessed when none is (dark and compact too), a refused drop, and the
+ * shift signed off with its Z report. Each opens the cashier's shift first, as F09 does.
+ */
+interface ShiftShot {
+  name: string;
+  theme?: 'light' | 'dark';
+  density?: 'compact';
+  witnesses?: { id: string; displayName: string }[];
+  refuseDrop?: boolean;
+  act: (page: Page) => Promise<void>;
+}
+
+async function dropReady(page: Page, choose: boolean) {
+  await page.getByRole('link', { name: 'Shift', exact: true }).click();
+  await page.getByRole('textbox', { name: /^Amount/ }).fill('500');
+  if (choose) {
+    await page.getByRole('combobox', { name: /^Supervisor who takes the cash/ }).click();
+    await page.getByRole('option', { name: PEOPLE.manager.name }).click();
+  }
+}
+
+async function recordDrop(page: Page) {
+  await page.getByRole('button', { name: 'Record it' }).click();
+  await page
+    .getByRole('dialog', { name: 'Record this Cash drop?' })
+    .getByRole('button', { name: 'Record it' })
+    .click();
+}
+
+const SHIFT_SHOTS: ShiftShot[] = [
+  { name: 'drop-witness-signed-in', act: async (page) => dropReady(page, true) },
+  {
+    name: 'drop-witnessed-recorded',
+    act: async (page) => {
+      await dropReady(page, true);
+      await recordDrop(page);
+      await expect(page.locator('[data-slot="cash-moved"]').first()).toContainText('Witnessed by');
+    },
+  },
+  {
+    name: 'drop-unwitnessed',
+    witnesses: [],
+    act: async (page) => {
+      await dropReady(page, false);
+      await recordDrop(page);
+      await expect(page.getByText('Cash drop recorded, unwitnessed.')).toBeVisible();
+    },
+  },
+  {
+    name: 'drop-unwitnessed-dark-compact',
+    witnesses: [],
+    theme: 'dark',
+    density: 'compact',
+    act: async (page) => {
+      await dropReady(page, false);
+      await recordDrop(page);
+      await expect(page.getByText('Cash drop recorded, unwitnessed.')).toBeVisible();
+    },
+  },
+  {
+    name: 'drop-refused',
+    refuseDrop: true,
+    act: async (page) => {
+      await dropReady(page, true);
+      await recordDrop(page);
+      await expect(page.locator('[data-slot="cash-outcome"]')).toBeVisible();
+    },
+  },
+  {
+    name: 'shift-signed-off',
+    act: async (page) => {
+      await page.getByRole('link', { name: 'Shift', exact: true }).click();
+      await page.getByRole('textbox', { name: /^Cash counted/ }).fill('8225');
+      await page.getByRole('textbox', { name: /^Mobile money counted/ }).fill('4120');
+      await page.getByRole('button', { name: 'Declare the count' }).click();
+      await page
+        .getByRole('dialog', { name: 'Declare this count?' })
+        .getByRole('button', { name: 'Declare the count' })
+        .click();
+      await page.getByRole('button', { name: 'Sign out' }).click();
+      await page
+        .getByRole('dialog', { name: 'Sign out of the point of sale?' })
+        .getByRole('button', { name: 'Sign out' })
+        .click();
+      await signInWithTotp(page, USERS.manager, '/pos/shift');
+      await page.getByRole('textbox', { name: /^Sign-off note/ }).fill('Counted twice');
+      await page.getByRole('button', { name: 'Sign the close off' }).click();
+      await page
+        .getByRole('dialog', { name: 'Sign this close off?' })
+        .getByRole('button', { name: 'Sign the close off' })
+        .click();
+      await confirmStepUp(page);
+      await expect(page.getByRole('heading', { name: 'Z report: the closed shift' })).toBeVisible();
+      await expect(page.getByText(/^Made/)).toBeVisible();
+    },
+  },
+];
+
+for (const shot of SHIFT_SHOTS) {
+  for (const width of WIDTHS) {
+    test(`@screenshots F10i ${shot.name} at ${width}`, async ({ page, api }) => {
+      installTillServer(api, (sale) => sale.tenders.reduce((sum, t) => sum + t.amountPesewas, 0), {
+        ...(shot.witnesses === undefined ? {} : { witnesses: shot.witnesses }),
+      });
+      if (shot.refuseDrop === true) {
+        api.refuse('recordCashMovement', 422, 'CASH_MOVEMENT_INVALID', 'Not recorded.');
+      }
+      await page.emulateMedia({ colorScheme: shot.theme ?? 'light' });
+      await page.setViewportSize({ width, height: width === 360 ? 800 : 900 });
+      await openTillShift(page);
+      if (shot.theme === 'dark') {
+        await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+      }
+      if (shot.density === 'compact') {
+        await page.evaluate(() => document.documentElement.setAttribute('data-density', 'compact'));
+      }
+      await shot.act(page);
+      await page.screenshot({
+        path: `../docs/screenshots/F10i/${shot.name}-${width}.png`,
         fullPage: true,
         scale: 'css',
       });
