@@ -9,7 +9,7 @@ export interface RouteHandle {
   /** The permission code the route needs, or null when any signed-in user may open it. */
   permission: string | null;
   /** Which shell the route renders in. Decides density, theme default and chrome. */
-  shell: 'back-office' | 'pos';
+  shell: 'back-office' | 'pos' | 'driver';
   /** Key into the `shell` namespace's `nav` group, used for the page title and the breadcrumb. */
   crumb: NavKey;
 }
@@ -110,7 +110,18 @@ export type NavKey =
   | 'debitNote'
   | 'statements'
   | 'statement'
-  | 'statementNew';
+  | 'statementNew'
+  | 'orderFulfilment'
+  | 'fulfilments'
+  | 'fulfilment'
+  | 'deliveries'
+  | 'routes'
+  | 'route'
+  | 'driverRun'
+  | 'driverStop'
+  | 'driverProof'
+  | 'driverFailure'
+  | 'driverCash';
 
 export function isRouteHandle(value: unknown): value is RouteHandle {
   return (

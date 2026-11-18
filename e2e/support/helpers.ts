@@ -19,6 +19,8 @@ export const USERS = {
   },
   /** Sales (F10i): quotes, no TOTP. */
   sales: { identifier: 'kojo.antwi@hakoremfarms.com', password: 'Mango-Season-2026!' },
+  /** Driver (F11): today's run on a phone, no TOTP. */
+  driver: { identifier: 'kwesi.appiah@hakoremfarms.com', password: 'Mango-Season-2026!' },
 } as const;
 
 export const TOTP_CODE = '481205';

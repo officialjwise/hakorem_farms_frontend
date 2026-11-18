@@ -499,6 +499,38 @@ const ACCOUNTANT_PERMISSIONS = [
   'mdm.customer.read',
 ];
 
+/**
+ * F11, orders and delivery (B11 seeds none of it yet; CR-056 asks): the Storekeeper picks and reads the
+ * order it picks; the Manager and the Owner also take the customer's answer, dispatch, and plan and start
+ * the runs; the Driver reads and works their own run, uploads the proof's photograph and reads the
+ * failure reasons. A-F11-01.
+ */
+const PICK_PERMISSIONS = ['ord.fulfilment.read', 'ord.fulfilment.pick', 'ord.order.read'];
+const DISPATCH_PERMISSIONS = [
+  'ord.fulfilment.read',
+  'ord.fulfilment.pick',
+  'ord.fulfilment.dispatch',
+  'ord.order.update',
+  'del.delivery.read',
+  'del.delivery.assign',
+  'del.route.read',
+  'del.route.manage',
+  // Seeded for the Manager already: the vans are vehicle locations.
+  'mdm.location.read',
+];
+const DRIVER_PERMISSIONS = [
+  // The seed's Driver.
+  'iam.session.read',
+  'iam.session.revoke',
+  'mdm.product.read',
+  // Not seeded for the Driver yet (CR-056).
+  'del.delivery.read.assigned',
+  'del.delivery.update.assigned',
+  'del.proof.create',
+  'platform.file.upload',
+  'mdm.reason_code.read',
+];
+
 /** Keyed by lower-case email. Permission codes are the contract's `x-permission` values. */
 export const FAKE_USERS: Record<string, FakeUser> = {
   'ama.mensah@hakoremfarms.com': {
@@ -523,6 +555,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
       ...OWNER_PAYABLE_PERMISSIONS,
       ...WHOLESALE_PERMISSIONS,
       ...MANAGER_TILL_PERMISSIONS,
+      ...DISPATCH_PERMISSIONS,
     ],
     moreBranches: SELLING_POINTS,
   },
@@ -534,7 +567,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
     mustChangePassword: false,
     roleCode: 'MANAGER',
     roleName: 'Manager',
-    permissions: MANAGER_PERMISSIONS,
+    permissions: [...MANAGER_PERMISSIONS, ...DISPATCH_PERMISSIONS],
   },
   'adwoa.darko@hakoremfarms.com': {
     id: '019a7a86-ac02-78a8-ade0-935170bb0c2f',
@@ -554,7 +587,18 @@ export const FAKE_USERS: Record<string, FakeUser> = {
     mustChangePassword: false,
     roleCode: 'STOREKEEPER',
     roleName: 'Storekeeper',
-    permissions: STOCK_PERMISSIONS,
+    permissions: [...STOCK_PERMISSIONS, ...PICK_PERMISSIONS],
+  },
+  // F11: the driver the contract's delivery examples name, so a run's `driver` is the signed-in driver.
+  'kwesi.appiah@hakoremfarms.com': {
+    id: '019a7a87-46ad-7a19-bf51-aa66d1302344',
+    displayName: 'Kwesi Appiah',
+    password: 'Mango-Season-2026!',
+    totp: false,
+    mustChangePassword: false,
+    roleCode: 'DRIVER',
+    roleName: 'Driver',
+    permissions: DRIVER_PERMISSIONS,
   },
   'kofi.adjei@hakoremfarms.com': {
     id: '019a7a86-7e21-7c3d-9a5b-1f4e6d8c2a35',

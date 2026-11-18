@@ -13,6 +13,8 @@ import type billingNs from '../locales/en/billing.json';
 import type buyingNs from '../locales/en/buying.json';
 import type payablesNs from '../locales/en/payables.json';
 import type wholesaleNs from '../locales/en/wholesale.json';
+import type driverNs from '../locales/en/driver.json';
+import type fulfilmentNs from '../locales/en/fulfilment.json';
 import type posNs from '../locales/en/pos.json';
 import type posShiftNs from '../locales/en/posShift.json';
 import type refusalsNs from '../locales/en/refusals.json';
@@ -66,6 +68,8 @@ export const NAMESPACES = [
   'buying',
   'payables',
   'wholesale',
+  'fulfilment',
+  'driver',
   'refusals',
 ] as const;
 export type Namespace = (typeof NAMESPACES)[number];
@@ -100,6 +104,8 @@ export const catalogue: Record<
     buying: () => import('../locales/en/buying.json'),
     payables: () => import('../locales/en/payables.json'),
     wholesale: () => import('../locales/en/wholesale.json'),
+    fulfilment: () => import('../locales/en/fulfilment.json'),
+    driver: () => import('../locales/en/driver.json'),
     refusals: () => import('../locales/en/refusals.json'),
   },
 };
@@ -179,6 +185,8 @@ declare module 'i18next' {
       buying: typeof buyingNs;
       payables: typeof payablesNs;
       wholesale: typeof wholesaleNs;
+      fulfilment: typeof fulfilmentNs;
+      driver: typeof driverNs;
       refusals: typeof refusalsNs;
     };
   }

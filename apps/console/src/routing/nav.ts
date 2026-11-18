@@ -42,6 +42,9 @@ import {
   Truck,
   Users,
   type LucideIcon,
+  PackageCheck,
+  Route as RouteIcon,
+  Smartphone,
 } from 'lucide-react';
 import type { NavKey } from './handle';
 
@@ -79,8 +82,7 @@ export const POS_NAV: NavItem = {
 };
 
 /**
- * The back office sidebar, grouped by the job a person is doing (F5b). Orders is a placeholder until its
- * own session builds it.
+ * The back office sidebar, grouped by the job a person is doing (F5b).
  */
 export const BACK_OFFICE_GROUPS: readonly NavGroup[] = [
   {
@@ -96,6 +98,21 @@ export const BACK_OFFICE_GROUPS: readonly NavGroup[] = [
     items: [
       POS_NAV,
       { key: 'orders', path: '/orders', permission: 'ord.order.read', icon: ShoppingBasket },
+      // F11: picking, dispatch and the runs; and the driver's own run, on a phone.
+      {
+        key: 'fulfilments',
+        path: '/fulfilments',
+        permission: 'ord.fulfilment.read',
+        icon: PackageCheck,
+      },
+      { key: 'deliveries', path: '/deliveries', permission: 'del.delivery.read', icon: Truck },
+      { key: 'routes', path: '/routes', permission: 'del.route.read', icon: RouteIcon },
+      {
+        key: 'driverRun',
+        path: '/driver',
+        permission: 'del.delivery.read.assigned',
+        icon: Smartphone,
+      },
       { key: 'rfqs', path: '/rfqs', permission: 'quo.rfq.read', icon: Inbox },
       { key: 'quotes', path: '/quotes', permission: 'quo.quote.read', icon: FileSignature },
       {

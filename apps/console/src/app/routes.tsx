@@ -1,7 +1,6 @@
 import type { RouteObject } from 'react-router';
 import type { RouteHandle } from '../routing/handle';
 import { NotFoundScreen } from '../screens/NotFoundScreen';
-import { PlaceholderScreen } from '../screens/PlaceholderScreen';
 import { BackOfficeShell } from '../shells/BackOfficeShell';
 import { appRoutes } from './appRoutes';
 import { lazyScreen } from './LazyScreen';
@@ -18,6 +17,12 @@ const back = (permission: string | null, crumb: RouteHandle['crumb']): RouteHand
   shell: 'back-office',
   crumb,
 });
+
+/** A driver's screen: the run they are given, on a phone (F11). */
+const driver = (
+  crumb: RouteHandle['crumb'],
+  permission = 'del.delivery.read.assigned',
+): RouteHandle => ({ permission, shell: 'driver', crumb });
 
 /** Everything behind sign-in. Each leaf must declare its permission in `handle` (routes.test.ts checks). */
 export const protectedRoutes: RouteObject[] = [
@@ -652,9 +657,21 @@ export const protectedRoutes: RouteObject[] = [
         handle: back('ord.order.read', 'orders'),
         children: [
           {
+            // F11: every channel's orders in one list.
             index: true,
-            element: <PlaceholderScreen area="orders" />,
+            element: lazyScreen(() =>
+              import('../fulfilment/OrderScreens').then((m) => m.OrdersScreen),
+            ),
             handle: back('ord.order.read', 'orders'),
+          },
+          {
+            // F11: the order's picking, consent and delivery. `:id` stays F10i's page (its payment and
+            // credit), so the two lanes never edit one screen.
+            path: ':id/fulfilment',
+            element: lazyScreen(() =>
+              import('../fulfilment/OrderScreens').then((m) => m.OrderFulfilmentScreen),
+            ),
+            handle: back('ord.order.read', 'orderFulfilment'),
           },
           {
             // F10i: an order made from a quote, where a credit order's credit is checked.
@@ -663,6 +680,54 @@ export const protectedRoutes: RouteObject[] = [
               import('../wholesale/OrderScreen').then((m) => m.OrderScreen),
             ),
             handle: back('ord.order.read', 'order'),
+          },
+        ],
+      },
+      // F11: picking, dispatch and the delivery runs, loaded on demand (ADR 0032).
+      {
+        path: 'fulfilments',
+        handle: back('ord.fulfilment.read', 'fulfilments'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../fulfilment/PickScreens').then((m) => m.FulfilmentsScreen),
+            ),
+            handle: back('ord.fulfilment.read', 'fulfilments'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../fulfilment/PickScreens').then((m) => m.PickScreen),
+            ),
+            handle: back('ord.fulfilment.read', 'fulfilment'),
+          },
+        ],
+      },
+      {
+        path: 'deliveries',
+        element: lazyScreen(() =>
+          import('../fulfilment/DispatchScreens').then((m) => m.DeliveriesScreen),
+        ),
+        handle: back('del.delivery.read', 'deliveries'),
+      },
+      {
+        path: 'routes',
+        handle: back('del.route.read', 'routes'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../fulfilment/DispatchScreens').then((m) => m.RoutesScreen),
+            ),
+            handle: back('del.route.read', 'routes'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../fulfilment/DispatchScreens').then((m) => m.RouteScreen),
+            ),
+            handle: back('del.route.read', 'route'),
           },
         ],
       },
@@ -811,6 +876,47 @@ export const protectedRoutes: RouteObject[] = [
             handle: back('aud.audit.read', 'auditEvent'),
           },
         ],
+      },
+    ],
+  },
+  {
+    // F11: the driver's phone, in its own full-screen frame (ADR 0055). One chunk holds the frame and every
+    // driver screen, so each opens later with no signal.
+    path: 'driver',
+    element: lazyScreen(() => import('../driver/DriverScreens').then((m) => m.DriverShell)),
+    children: [
+      {
+        index: true,
+        element: lazyScreen(() => import('../driver/DriverScreens').then((m) => m.DriverRunScreen)),
+        handle: driver('driverRun'),
+      },
+      {
+        path: 'cash',
+        element: lazyScreen(() =>
+          import('../driver/DriverScreens').then((m) => m.DriverCashScreen),
+        ),
+        handle: driver('driverCash'),
+      },
+      {
+        path: 'stops/:id',
+        element: lazyScreen(() =>
+          import('../driver/DriverScreens').then((m) => m.DriverStopScreen),
+        ),
+        handle: driver('driverStop'),
+      },
+      {
+        path: 'stops/:id/delivered',
+        element: lazyScreen(() =>
+          import('../driver/DriverScreens').then((m) => m.DriverProofScreen),
+        ),
+        handle: driver('driverProof', 'del.proof.create'),
+      },
+      {
+        path: 'stops/:id/not-delivered',
+        element: lazyScreen(() =>
+          import('../driver/DriverScreens').then((m) => m.DriverFailureScreen),
+        ),
+        handle: driver('driverFailure', 'del.delivery.update.assigned'),
       },
     ],
   },
