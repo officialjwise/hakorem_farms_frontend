@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { operationManifest } from '@hakorem/api-client';
+import { GET_ORDER_CREDIT_CHECK, REQUEST_CREDIT_OVERRIDE } from './creditControl';
 import { GET_SUPPLIER_BALANCE } from './supplierBalance';
 import { LIST_TILL_PIN_VERIFIERS, REPORT_TILL_PIN_EVENTS } from './tillPin';
 import {
@@ -65,5 +66,7 @@ describe("the owner's conditions on ADR 0046", () => {
     expect(LIST_TILL_PIN_VERIFIERS.operationId in operationManifest).toBe(false);
     expect(REPORT_TILL_PIN_EVENTS.operationId in operationManifest).toBe(false);
     expect(GET_SUPPLIER_BALANCE.operationId in operationManifest).toBe(false);
+    expect(GET_ORDER_CREDIT_CHECK.operationId in operationManifest).toBe(false);
+    expect(REQUEST_CREDIT_OVERRIDE.operationId in operationManifest).toBe(false);
   });
 });

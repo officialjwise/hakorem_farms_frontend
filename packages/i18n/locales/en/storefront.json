@@ -6,7 +6,10 @@
     "categoryDescription": "{{category}} from HaKorem Farms, from the farm to your table.",
     "searchTitle": "Search",
     "checkoutTitle": "Checkout",
-    "siteName": "HaKorem Farms"
+    "siteName": "HaKorem Farms",
+    "quoteRequestTitle": "Ask for a quote",
+    "quoteRequestDescription": "Buying eggs by the crate, live animals or meat in bulk? Tell HaKorem Farms what you need and we will send you a priced quote.",
+    "quoteTitle": "Your quote"
   },
   "header": {
     "home": "HaKorem Farms, home",
@@ -425,7 +428,8 @@
     "about": "HaKorem Farms. Livestock, meat and fresh produce from our farm in Ghana. HaKorem means the vinedresser, the farmer.",
     "shop": "Shop",
     "buyingByWeight": "Weighed items are priced per kg and charged on their weighed weight, never more than the most shown at checkout.",
-    "rights": "© HaKorem Farms. All rights reserved."
+    "rights": "© HaKorem Farms. All rights reserved.",
+    "quote": "Ask for a quote"
   },
   "notFound": {
     "title": "Page not found",
@@ -442,5 +446,143 @@
     "region": "Notifications ({hotkey})",
     "announcement": "Notification",
     "close": "Dismiss notification"
+  },
+  "quoteRequest": {
+    "title": "Ask for a quote",
+    "intro": "Buying in bulk for a bakery, a kitchen, a chop bar or a shop? Tell us what you need and how many crates. We will call or message you with a priced quote, usually within one working day.",
+    "name": "Your name",
+    "phone": "Phone number",
+    "phoneHint": "We call or WhatsApp you on this number. For example 024 451 2876.",
+    "email": "Email address",
+    "emailHint": "Optional. For a copy of the quote by email.",
+    "requirements": "What you want",
+    "requirementsHint": "For example: big eggs every Friday, or twenty goats of about 25 kg for a funeral.",
+    "crates": "How many crates",
+    "cratesHint": "Optional. For eggs or produce sold by the crate. Leave it empty for anything else.",
+    "neededBy": "Needed by",
+    "neededByHint": "Optional. The day you need it.",
+    "deliveryArea": "Delivery area",
+    "deliveryAreaHint": "Optional. The town or area we would deliver to, for example Kasoa.",
+    "consent": "You may call, message or WhatsApp me about this request",
+    "consentHint": "We use your number only for this request.",
+    "required": "Required",
+    "submit": "Send my request",
+    "sending": "Sending your request",
+    "cratesLine": "Crates wanted: {{crates}}",
+    "errors": {
+      "title": "Some details need correcting",
+      "name": "Enter your name.",
+      "phone": "Enter a phone number we can call, for example 024 451 2876.",
+      "email": "Enter an email address like ama@example.com, or leave it empty.",
+      "requirements": "Say what you want.",
+      "requirementsLong": "Keep it under {{max}} characters. You have {{count}}.",
+      "crates": "Enter a whole number of crates, from 1, or leave it empty.",
+      "neededBy": "Choose a day from today on, or leave it empty.",
+      "consent": "Tick this so we may contact you about your request."
+    },
+    "failed": "Your request was not sent",
+    "rateLimited": "Too many requests have come from this phone or connection in a short time. Wait a few minutes and send it again, or call the farm.",
+    "doneTitle": "Request {{rfqNo}} is with us",
+    "doneBody": "Keep this number. Quote it when you call us about this request.",
+    "another": "Ask for something else"
+  },
+  "quote": {
+    "title": "Quote {{quoteNo}}",
+    "version": "Version {{versionNo}}",
+    "forCustomer": "For {{name}}",
+    "validUntil": "Valid until {{when}} (Accra time)",
+    "linesLabel": "What the quote is for",
+    "columns": {
+      "item": "Item",
+      "quantity": "Quantity",
+      "price": "Price",
+      "lineTotal": "Line total"
+    },
+    "per": "{{price}} {{per}}",
+    "perBasis": {
+      "PER_HEAD": "a head",
+      "PER_KG": "per kg",
+      "PER_UNIT": "each"
+    },
+    "uomOne": {
+      "CRATE": "crate",
+      "UNIT": "item",
+      "HEAD": "head",
+      "KG": "kg",
+      "PACK": "pack",
+      "BUNCH": "bunch",
+      "TUBER": "tuber",
+      "BAG": "bag",
+      "TRAY": "tray"
+    },
+    "uomOther": {
+      "CRATE": "crates",
+      "UNIT": "items",
+      "HEAD": "head",
+      "KG": "kg",
+      "PACK": "packs",
+      "BUNCH": "bunches",
+      "TUBER": "tubers",
+      "BAG": "bags",
+      "TRAY": "trays"
+    },
+    "totalsLabel": "The total",
+    "deliveryFee": "Delivery",
+    "net": "Before tax",
+    "tax": "Tax and levies",
+    "gross": "Total",
+    "terms": "Terms",
+    "deliveryEstimate": "Delivery",
+    "document": "Download the quote (PDF)",
+    "status": {
+      "ISSUED": "Waiting for your answer",
+      "ACCEPTED": "Accepted",
+      "DECLINED": "Declined",
+      "EXPIRED": "Expired",
+      "SUPERSEDED": "Replaced by a newer version"
+    },
+    "issued": {
+      "title": "Do you accept this quote?",
+      "body": "Accept it to tell the farm to go ahead. We will call you to arrange the deposit and delivery."
+    },
+    "acceptedName": "Your full name",
+    "acceptedNameHint": "Typed in place of a signature.",
+    "acceptedNameMissing": "Type your full name to accept.",
+    "accept": "Accept this quote",
+    "decline": "Decline",
+    "confirmAccept": {
+      "title": "Accept quote {{quoteNo}}?",
+      "body": "You are accepting version {{versionNo}} for a total of {{total}}, as {{name}}.",
+      "confirm": "Yes, accept the quote",
+      "sending": "Accepting the quote"
+    },
+    "confirmDecline": {
+      "title": "Decline quote {{quoteNo}}?",
+      "body": "The farm will be told you do not want version {{versionNo}}.",
+      "reason": "Why? (optional)",
+      "reasonHint": "For example: found it closer to home.",
+      "confirm": "Yes, decline",
+      "sending": "Declining the quote"
+    },
+    "cancel": "Go back",
+    "close": "Close",
+    "refusedTitle": "The quote could not be answered",
+    "refusedBody": "It may have expired or been replaced while it was open. Its state now is shown above.",
+    "acceptedTitle": "You accepted this quote",
+    "acceptedBody": "Thank you. The farm has your acceptance and will call you to arrange the deposit and delivery.",
+    "declinedTitle": "You declined this quote",
+    "declinedBody": "Thank you for letting us know. Ask for a new quote at any time.",
+    "expiredTitle": "This quote has expired",
+    "expiredBody": "It was valid until {{when}} (Accra time), so it can no longer be accepted. Ask us for a new quote and we will price it again.",
+    "supersededTitle": "This quote was replaced by a newer version",
+    "supersededBody": "The farm changed the quote and sent you the new version by message. This link can no longer be used: open the newest link we sent you, or ask us to send it again.",
+    "askAgain": "Ask for a new quote",
+    "contact": "Or contact the farm",
+    "call": "Call {{phone}}",
+    "whatsapp": "WhatsApp {{phone}}",
+    "whatsappLabel": "WhatsApp {{phone}} (opens WhatsApp)",
+    "notFoundTitle": "This link is not valid",
+    "notFoundBody": "Check that you opened the whole link from the message we sent. If it still does not open, ask the farm to send it again.",
+    "errorTitle": "The quote could not be loaded"
   }
 }

@@ -28,6 +28,14 @@ export async function SiteFooter() {
             <ul className="grid gap-1">
               <li>
                 <Link
+                  href="/quote"
+                  className="inline-flex h-control-sm items-center text-accent-text underline"
+                >
+                  {t('footer.quote')}
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/search"
                   className="inline-flex h-control-sm items-center text-accent-text underline"
                 >

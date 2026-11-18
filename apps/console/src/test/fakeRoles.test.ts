@@ -8,7 +8,8 @@ import { FAKE_USERS } from './fakeAuthServer';
  * them to the role named here. When the seed grants one, its line below fails: delete it and match the seed.
  */
 const NOT_SEEDED: Readonly<Record<string, string>> = {
-  // The till (B9b). The owner set who holds them (F9, A-F9-01).
+  // The till's devices and a forced close (B9b continued): 2.5.0 seeded the rest. The owner set who holds
+  // them (F9, A-F9-01).
   'pos.device.read': 'B9b',
   'pos.device.enrol': 'B9b',
   'pos.shift.force_close': 'B9b',
@@ -21,6 +22,17 @@ const NOT_SEEDED: Readonly<Record<string, string>> = {
   // Wholesale statements.
   'whl.statement.read': 'wholesale',
   'whl.statement.create': 'wholesale',
+  // Quotes, wholesale accounts and the ageing (B10, CR-046 item 5; A-F10-10).
+  'quo.rfq.read': 'B10',
+  'quo.rfq.update': 'B10',
+  'quo.quote.read': 'B10',
+  'quo.quote.create': 'B10',
+  'quo.quote.issue': 'B10',
+  'quo.quote.convert': 'B10',
+  'whl.account.read': 'B10',
+  'whl.account.manage': 'B10',
+  'whl.account.hold': 'B10',
+  'whl.ageing.read': 'B10',
 };
 
 const seeded = new Set<string>(seededRoles.flatMap((role) => [...role.permissions]));

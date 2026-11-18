@@ -140,7 +140,17 @@
     "supplierPaymentNew": "Prepare a payment",
     "supplierPayment": "Supplier payment",
     "supplierClaim": "Claim with a supplier",
-    "supplierAccount": "Supplier's account"
+    "supplierAccount": "Supplier's account",
+    "quotes": "Quotes",
+    "quoteNew": "New quote",
+    "quote": "Quote",
+    "rfqs": "Requests for quote",
+    "rfq": "Request for quote",
+    "order": "Order",
+    "businessAccounts": "Wholesale accounts",
+    "businessAccountNew": "Open a wholesale account",
+    "businessAccount": "Wholesale account",
+    "ageing": "Ageing"
   },
   "placeholder": {
     "title": "This area is built in a later session",

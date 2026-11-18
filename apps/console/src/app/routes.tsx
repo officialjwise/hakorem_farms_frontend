@@ -649,8 +649,98 @@ export const protectedRoutes: RouteObject[] = [
       },
       {
         path: 'orders',
-        element: <PlaceholderScreen area="orders" />,
         handle: back('ord.order.read', 'orders'),
+        children: [
+          {
+            index: true,
+            element: <PlaceholderScreen area="orders" />,
+            handle: back('ord.order.read', 'orders'),
+          },
+          {
+            // F10i: an order made from a quote, where a credit order's credit is checked.
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../wholesale/OrderScreen').then((m) => m.OrderScreen),
+            ),
+            handle: back('ord.order.read', 'order'),
+          },
+        ],
+      },
+      // F10i: quotes, requests for quote, wholesale accounts and ageing, loaded on demand (ADR 0032).
+      {
+        path: 'quotes',
+        handle: back('quo.quote.read', 'quotes'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../wholesale/QuoteScreens').then((m) => m.QuotesScreen),
+            ),
+            handle: back('quo.quote.read', 'quotes'),
+          },
+          {
+            path: 'new',
+            element: lazyScreen(() =>
+              import('../wholesale/QuoteScreens').then((m) => m.QuoteNewScreen),
+            ),
+            handle: back('quo.quote.create', 'quoteNew'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() =>
+              import('../wholesale/QuoteScreens').then((m) => m.QuoteScreen),
+            ),
+            handle: back('quo.quote.read', 'quote'),
+          },
+        ],
+      },
+      {
+        path: 'rfqs',
+        handle: back('quo.rfq.read', 'rfqs'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() => import('../wholesale/RfqScreens').then((m) => m.RfqsScreen)),
+            handle: back('quo.rfq.read', 'rfqs'),
+          },
+          {
+            path: ':id',
+            element: lazyScreen(() => import('../wholesale/RfqScreens').then((m) => m.RfqScreen)),
+            handle: back('quo.rfq.read', 'rfq'),
+          },
+        ],
+      },
+      {
+        path: 'business-accounts',
+        handle: back('whl.account.read', 'businessAccounts'),
+        children: [
+          {
+            index: true,
+            element: lazyScreen(() =>
+              import('../wholesale/AccountScreens').then((m) => m.BusinessAccountsScreen),
+            ),
+            handle: back('whl.account.read', 'businessAccounts'),
+          },
+          {
+            path: 'new',
+            element: lazyScreen(() =>
+              import('../wholesale/AccountScreens').then((m) => m.BusinessAccountNewScreen),
+            ),
+            handle: back('whl.account.manage', 'businessAccountNew'),
+          },
+          {
+            path: ':customerId',
+            element: lazyScreen(() =>
+              import('../wholesale/AccountScreens').then((m) => m.BusinessAccountScreen),
+            ),
+            handle: back('whl.account.read', 'businessAccount'),
+          },
+        ],
+      },
+      {
+        path: 'ageing',
+        element: lazyScreen(() => import('../wholesale/AgeingScreen').then((m) => m.AgeingScreen)),
+        handle: back('whl.ageing.read', 'ageing'),
       },
       // F3. Each leaf's permission is the x-permission of the operation it reads (or, for a form, writes).
       {
