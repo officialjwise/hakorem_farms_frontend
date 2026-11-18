@@ -18,7 +18,6 @@ import {
   wrongInvoice,
 } from '../../support/payables';
 import type { components } from '@hakorem/api-client';
-import { GET_ORDER_CREDIT_CHECK } from '../../../apps/console/src/requested/creditControl';
 import {
   CUSTOMER,
   ORDER_ID as QUOTE_ORDER_ID,
@@ -1295,7 +1294,7 @@ for (const shot of PAYABLE_SHOTS) {
 /**
  * Quotes, wholesale and credit control (F10i): the egg quote built and priced by the API, its versions,
  * the order made from it with the server's credit refusal and the override, the buyer's account and the
- * ageing. The credit check is CR-046's requested shape.
+ * ageing. The credit check is the server's (2.14.0).
  */
 const pageWith = <T>(body: unknown, rows: T[]) => ({ ...(body as object), data: rows });
 const WHOLESALE_SHOTS: Shot[] = [
@@ -1386,7 +1385,7 @@ const WHOLESALE_SHOTS: Shot[] = [
     ready: 'Over the limit by',
     prepare: (api) => {
       api.rewrite('getOrder', (body) => quoteOrder(body as SS['SalesOrder'], 'PLACED'));
-      api.respondRequested(GET_ORDER_CREDIT_CHECK, () => overLimit());
+      api.respond('getOrderCreditCheck', () => overLimit());
       api.refuse('confirmOrder', 422, 'CREDIT_LIMIT_EXCEEDED', 'Over the credit limit.');
     },
     act: async (page) => {
@@ -1404,7 +1403,7 @@ const WHOLESALE_SHOTS: Shot[] = [
     ready: 'Override approved by Kwabena Owusu',
     prepare: (api) => {
       api.rewrite('getOrder', (body) => quoteOrder(body as SS['SalesOrder'], 'PLACED'));
-      api.respondRequested(GET_ORDER_CREDIT_CHECK, () => overLimit(overrideState('APPROVED')));
+      api.respond('getOrderCreditCheck', () => overLimit(overrideState('APPROVED')));
     },
   },
   {

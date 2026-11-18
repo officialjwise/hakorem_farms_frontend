@@ -254,9 +254,8 @@ const OWNER_PAYABLE_PERMISSIONS = [
 ];
 
 /**
- * F10i: quotes, requests for quote, wholesale accounts, the ageing and an order's credit check. The seed
- * grants no quo.* or whl.* permission yet (B10, CR-046 item 5); the Owner and the Manager hold all of
- * them here (A-F10-10). The order, price and proforma permissions are the seed's own.
+ * F10i: quotes, requests for quote, wholesale accounts, the ageing and an order's credit check, as the
+ * seed gives the Owner and the Manager (quo.* from 2.12.0, whl.* from 2.14.0 and 2.16.0, CR-048).
  */
 const WHOLESALE_PERMISSIONS = [
   'quo.rfq.read',
@@ -268,6 +267,8 @@ const WHOLESALE_PERMISSIONS = [
   'whl.account.read',
   'whl.account.manage',
   'whl.account.hold',
+  'whl.account.release',
+  'whl.credit.override',
   'whl.ageing.read',
   'mdm.customer.read',
   'mdm.price.resolve',
@@ -280,7 +281,7 @@ const WHOLESALE_PERMISSIONS = [
 /**
  * F10i, the owner (2026-11-18): Sales builds, revises, sends and converts quotes, and never approves a
  * credit override. What the seed gives the role (the customer, price, order and proforma permissions), and
- * the quote permissions not seeded yet (A-F10-10, CR-048). No hold, no terms, no approvals.
+ * the quote and account reads seeded from 2.12.0 and 2.14.0. No hold, no terms, no approvals.
  */
 const SALES_PERMISSIONS = [
   'mdm.customer.read',
@@ -491,8 +492,8 @@ const ACCOUNTANT_PERMISSIONS = [
   'pur.supplier_payment.pay',
   'mdm.supplier.read',
   'iam.approval.read',
-  // F10i, the owner (2026-11-18): the Accountant may put a wholesale account on hold, and never releases
-  // one or changes a credit limit (A-F10-10, CR-048).
+  // F10i, as seeded from 2.14.0 (CR-048): the Accountant may put a wholesale account on hold, and never
+  // releases one or changes a credit limit.
   'whl.account.read',
   'whl.account.hold',
   'whl.ageing.read',

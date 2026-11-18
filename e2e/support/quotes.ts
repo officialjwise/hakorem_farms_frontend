@@ -2,15 +2,15 @@
  * The quotes and credit session's fixtures (F10i, contract 2.5.0): Asantewaa Chop Bar asks for 10 crates
  * of big eggs and 30 single eggs. The API prices a crate at GH₵60.00 and a single egg at GH₵2.20, each by
  * its own entry; the quote's totals, the order's estimate, the account's figures, the ageing and the credit
- * check (CR-046, requested) are all the server's answers, stated as the server would give them. The
+ * check (2.14.0) are all the server's answers, stated as the server would give them. The
  * screens never work one out.
  */
 import type { components } from '@hakorem/api-client';
-import type { OrderCreditCheck } from '../../apps/console/src/requested/creditControl';
 import { EGGS_REF } from './eggs';
 import { MANAGER, OWNER } from './payables';
 
 type S = components['schemas'];
+type OrderCreditCheck = S['OrderCreditCheck'];
 
 export const CUSTOMER = {
   id: '019a7a87-c269-71a7-b6df-2344b7f49c22',
@@ -292,7 +292,7 @@ export function eggOrder(
 }
 
 /**
- * CR-046's credit check of the order: GH₵4,620.00 owed before it, GH₵666.00 more, against a GH₵5,000.00
+ * The server's credit check of the order (2.14.0): GH₵4,620.00 owed before it, GH₵666.00 more, against a GH₵5,000.00
  * limit, so GH₵286.00 over (the server's figure). `override` adds the request for an override.
  */
 export function overLimit(override: OrderCreditCheck['override'] = null): OrderCreditCheck {
@@ -300,6 +300,7 @@ export function overLimit(override: OrderCreditCheck['override'] = null): OrderC
     order: { id: ORDER_ID, docType: 'SALES_ORDER', number: ORDER_NO },
     customer: CUSTOMER,
     outcome: 'OVER_LIMIT',
+    reasons: ['OVER_LIMIT'],
     creditLimitPesewas: 500000,
     exposurePesewas: 462000,
     orderPesewas: 66600,
@@ -366,9 +367,12 @@ export function chopBarAccount(base: S['BusinessAccount']): S['BusinessAccount']
     exposurePesewas: 462000,
     availableCreditPesewas: 38000,
     overduePesewas: 125000,
+    oldestOverdueDays: 38,
     priceList: { id: PRICE_LIST.id, code: PRICE_LIST.code, name: PRICE_LIST.name },
+    pendingCreditLimitPesewas: null,
+    pendingRelease: false,
     currency: 'GHS',
-  } as S['BusinessAccount'];
+  };
 }
 
 /** The buyer's ageing row: GH₵3,370.00 not yet due, GH₵1,250.00 between 31 and 60 days late. */
@@ -381,6 +385,10 @@ export function chopBarAgeing(base: S['AgeingReport']): S['AgeingReport'] {
     days61To90Pesewas: 0,
     daysOver90Pesewas: 0,
     totalPesewas: 462000,
+    ledgerPesewas: 462000,
+    ledgerCreditPesewas: 0,
+    notAgedPesewas: 0,
+    notAgedCreditPesewas: 0,
     creditLimitPesewas: 500000,
     onHold: false,
   };
@@ -396,6 +404,12 @@ export function chopBarAgeing(base: S['AgeingReport']): S['AgeingReport'] {
       days61To90Pesewas: 0,
       daysOver90Pesewas: 0,
       totalPesewas: 462000,
+      ledgerPesewas: 462000,
+      ledgerCreditPesewas: 0,
+      notAgedPesewas: 0,
+      notAgedCreditPesewas: 0,
     },
+    otherPartiesPesewas: 0,
+    otherPartiesCreditPesewas: 0,
   };
 }

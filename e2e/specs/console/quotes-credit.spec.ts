@@ -1,8 +1,4 @@
 import type { components } from '@hakorem/api-client';
-import {
-  GET_ORDER_CREDIT_CHECK,
-  REQUEST_CREDIT_OVERRIDE,
-} from '../../../apps/console/src/requested/creditControl';
 import { seedEggs, EGGS_ID } from '../../support/eggs';
 import {
   expectNoAxeViolations,
@@ -325,7 +321,7 @@ test.describe('a quote for crates and single eggs', () => {
     );
     api.rewrite('convertQuote', (body) => eggOrder(body as S['SalesOrder'], 'PLACED'));
     api.rewrite('getOrder', (body) => eggOrder(body as S['SalesOrder'], 'PLACED'));
-    api.respondRequested(GET_ORDER_CREDIT_CHECK, () => overLimit());
+    api.respond('getOrderCreditCheck', () => overLimit());
 
     await signInWithTotp(page, USERS.owner, `/quotes/${QUOTE_ID}`);
     // How it was accepted, from the API.
@@ -366,7 +362,7 @@ test.describe('credit control', () => {
   }) => {
     const asked = () => api.log.some((e) => e.operationId === 'requestCreditOverride');
     api.rewrite('getOrder', (body) => eggOrder(body as S['SalesOrder'], 'PLACED'));
-    api.respondRequested(GET_ORDER_CREDIT_CHECK, () =>
+    api.respond('getOrderCreditCheck', () =>
       overLimit(asked() ? overrideState('PENDING_APPROVAL') : null),
     );
     api.refuse(
@@ -376,8 +372,8 @@ test.describe('credit control', () => {
       'This order would take Asantewaa Chop Bar GH₵286.00 over its GH₵5,000.00 credit limit.',
     );
     let overrideBody: unknown = null;
-    api.respondRequested(
-      REQUEST_CREDIT_OVERRIDE,
+    api.respond(
+      'requestCreditOverride',
       (request) => {
         overrideBody = request;
         return {
@@ -387,6 +383,7 @@ test.describe('credit control', () => {
           subject: { id: ORDER_ID, docType: 'SALES_ORDER', number: ORDER_NO },
           summary: 'Awaiting approval by a different user with the approving permission',
           requestedAt: '2026-11-17T12:35:00Z',
+          creditCheck: overLimit(),
         };
       },
       202,
@@ -460,7 +457,7 @@ test.describe('credit control', () => {
       }),
     );
     api.rewrite('getOrder', (body) => eggOrder(body as S['SalesOrder'], 'PLACED'));
-    api.respondRequested(GET_ORDER_CREDIT_CHECK, () => overLimit(overrideState('APPROVED')));
+    api.respond('getOrderCreditCheck', () => overLimit(overrideState('APPROVED')));
     api.rewrite('getBusinessAccount', (body) => chopBarAccount(body as S['BusinessAccount']));
     api.rewrite('getAgeingReport', (body) => chopBarAgeing(body as S['AgeingReport']));
     api.rewrite('listCreditOverrides', (body) => {
@@ -475,7 +472,6 @@ test.describe('credit control', () => {
           approvalRequestId: OVERRIDE_APPROVAL_ID,
           approvedBy: MANAGER,
           recordedAt: '2026-11-17T12:50:00Z',
-          // CR-046 adds who asked and why.
           reason: 'They pay every Friday; this week is the festival order',
           requestedBy: { id: '019a7a86-1c4e-7b9a-9e2f-5d3c8a1b7e04', displayName: 'Ama Mensah' },
           overLimitPesewas: 28600,
@@ -614,12 +610,88 @@ test.describe('who may do what (the owner, 2026-11-18)', () => {
     await expectNoAxeViolations(page);
   });
 
-  test('an Owner or Manager releases a hold', async ({ page, api }) => {
-    api.rewrite('getBusinessAccount', onHold);
+  test('an Owner or Manager asks for a release, which waits for a second person (2.14.0)', async ({
+    page,
+    api,
+  }) => {
+    const asked = () => api.log.some((e) => e.operationId === 'releaseBusinessAccount');
+    api.rewrite('getBusinessAccount', (body) => ({ ...onHold(body), pendingRelease: asked() }));
     api.rewrite('getAgeingReport', (body) => chopBarAgeing(body as S['AgeingReport']));
+    api.respond(
+      'releaseBusinessAccount',
+      () => ({
+        status: 'PENDING_APPROVAL',
+        approvalRequestId: OVERRIDE_APPROVAL_ID,
+        kind: 'ACCOUNT_RELEASE',
+        subject: { id: CUSTOMER.id, docType: 'BUSINESS_ACCOUNT', number: null },
+        summary: 'Awaiting approval by a different user with the approving permission',
+        requestedAt: '2026-11-17T13:00:00Z',
+      }),
+      202,
+    );
     await signInWithTotp(page, USERS.manager, `/business-accounts/${CUSTOMER.id}`);
     await expect(page.getByText(/^On hold since/)).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Release from hold' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Change the terms' })).toBeVisible();
+    await page.getByRole('button', { name: 'Release from hold' }).click();
+    const release = page.getByRole('dialog', { name: `Release ${CUSTOMER.name} from hold?` });
+    await release.getByRole('textbox').fill('Cheque cleared this morning');
+    await release.getByRole('button', { name: 'Release from hold' }).click();
+    await expect(
+      page.getByText('The release waits for an Owner or Manager other than you'),
+    ).toBeVisible();
+    // The account, read again, says so, stays on hold, and offers no second release.
+    await expect(
+      page.getByText(/^A release from hold waits for an Owner or Manager/),
+    ).toBeVisible();
+    await expect(page.getByText(/^On hold since/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Release from hold' })).toHaveCount(0);
+    await expectNoHorizontalScroll(page);
+    await expectNoAxeViolations(page);
+  });
+
+  test('changing the terms sends the limit only when it changes, and never a price list (2.14.0)', async ({
+    page,
+    api,
+  }) => {
+    const bodies: Record<string, unknown>[] = [];
+    api.rewrite('getBusinessAccount', (body) => chopBarAccount(body as S['BusinessAccount']));
+    api.rewrite('getAgeingReport', (body) => chopBarAgeing(body as S['AgeingReport']));
+    api.respond('updateBusinessAccount', (request) => {
+      bodies.push(request as Record<string, unknown>);
+      return 'creditLimitPesewas' in (request as object)
+        ? {
+            status: 'PENDING_APPROVAL',
+            approvalRequestId: OVERRIDE_APPROVAL_ID,
+            kind: 'CREDIT_LIMIT_CHANGE',
+            subject: { id: CUSTOMER.id, docType: 'BUSINESS_ACCOUNT', number: null },
+            summary: 'Awaiting approval by a different user with the approving permission',
+            requestedAt: '2026-11-17T13:00:00Z',
+          }
+        : chopBarAccount({} as S['BusinessAccount']);
+    });
+    await signInWithTotp(page, USERS.manager, `/business-accounts/${CUSTOMER.id}`);
+    await page.getByRole('button', { name: 'Change the terms' }).click();
+    const form = page.getByRole('form', { name: 'Change the terms' });
+    // A buyer's prices are given on the price list now, never on the account.
+    await expect(form.getByLabel('Price list')).toHaveCount(0);
+    await form.getByLabel('Payment terms', { exact: false }).fill('45');
+    await form.getByRole('button', { name: 'Save the terms' }).click();
+    await expect(page.getByText(`The terms for ${CUSTOMER.name} were saved`)).toBeVisible();
+    expect(bodies[0]).toMatchObject({ paymentTermsDays: 45 });
+    expect(bodies[0]).not.toHaveProperty('creditLimitPesewas');
+    expect(bodies[0]).not.toHaveProperty('priceListId');
+
+    await page.getByRole('button', { name: 'Change the terms' }).click();
+    await form.getByLabel('Credit limit', { exact: false }).fill('6000');
+    await form.getByLabel('Why this limit').fill('Two years paying on time');
+    await form.getByRole('button', { name: 'Save the terms' }).click();
+    await expect(
+      page.getByText('The new limit waits for an Owner or Manager other than you'),
+    ).toBeVisible();
+    expect(bodies[1]).toMatchObject({
+      creditLimitPesewas: 600000,
+      reason: 'Two years paying on time',
+    });
+    await expectNoAxeViolations(page);
   });
 });
