@@ -583,11 +583,14 @@ export class Till {
     cashierName: string;
     openingFloatPesewas: number;
   }): Promise<ShiftRecord> {
-    const { device, meta, shift: current } = this.snapshotOrThrow();
+    const { device, meta, shift: current, pack } = this.snapshotOrThrow();
     if (device === null) throw new Error('This till is not enrolled.');
     if (current !== null) throw new Error('A shift is already open on this till.');
     const now = this.now();
     const id = newRecordId(now.getTime());
+    // The sequence the receipts print until the server answers (2.15.0, OFFLINE_SYNC 10): the last pack's
+    // `nextShiftSeq`, or one past the last shift this till heard of when that is later (an older pack).
+    const referenceSeq = Math.max(pack?.nextShiftSeq ?? 0, (meta.lastShiftSeq ?? 0) + 1);
     const shift: ShiftRecord = {
       id,
       registerId: device.registerId,
@@ -597,7 +600,7 @@ export class Till {
       openedAt: now.toISOString(),
       shiftSeq: null,
       shiftNo: null,
-      referenceSeq: (meta.lastShiftSeq ?? 0) + 1,
+      referenceSeq,
       lastCounter: 0,
       discountGivenPesewas: 0,
       confirmed: false,
@@ -617,6 +620,8 @@ export class Till {
         registerId: device.registerId,
         openingFloatPesewas: input.openingFloatPesewas,
         openedAt: shift.openedAt,
+        // Sent so the server can flag a sequence that differs from its own; the server's stands.
+        shiftSeq: referenceSeq,
       },
       serverResult: null,
     };

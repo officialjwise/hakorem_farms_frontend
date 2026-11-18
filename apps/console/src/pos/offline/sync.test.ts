@@ -5,7 +5,14 @@ import { canonicalJson, sha256Hex } from './payloadHash';
 import { memoryStore } from './store';
 import { backoffMs, flushQueue, needsAttention, MAX_BATCH, ONLINE_MOVEMENT_MS } from './sync';
 import { ShiftRefused, Till } from './till';
-import type { CashMovementEntry, DeviceRecord, OfflineSale, SaleEntry } from './types';
+import type {
+  CashMovementEntry,
+  DeviceRecord,
+  OfflinePack,
+  OfflineSale,
+  SaleEntry,
+  TillSnapshot,
+} from './types';
 
 const DEVICE: DeviceRecord = {
   deviceId: '019a7a95-0000-7000-8000-000000000001',
@@ -52,7 +59,7 @@ interface Sent {
 type Script = (sent: Sent) => unknown;
 
 /** A clock that moves only when told, and an API that answers from a script and records each call. */
-function harness(script: Script) {
+function harness(script: Script, initial: Partial<TillSnapshot> = {}) {
   let time = new Date('2026-11-16T09:00:00Z').getTime();
   const sent: Sent[] = [];
   const call = (async (
@@ -68,7 +75,7 @@ function harness(script: Script) {
     sent.push(entry);
     return script(entry);
   }) as unknown as ApiClient['call'];
-  const store = memoryStore({ device: DEVICE });
+  const store = memoryStore({ device: DEVICE, ...initial });
   const timers: { run: () => void; ms: number }[] = [];
   const till = new Till({
     store,
@@ -156,6 +163,37 @@ const sale = (h: ReturnType<typeof harness>, lines: CartLine[] = [EGGS], handed 
     cashHandedPesewas: handed,
     customerPhone: null,
   });
+
+describe("a shift opened offline takes the pack's sequence (2.15.0)", () => {
+  it('prints the pack\'s nextShiftSeq in its references, and sends it as shiftSeq', async () => {
+    let online = false;
+    const s = server({
+      openShift: (sent) => {
+        if (!online) throw new NetworkError();
+        const body = sent.input.body as { id: string };
+        return { id: body.id, shiftSeq: 312, shiftNo: 'SH-312' };
+      },
+    });
+    const h = harness(s.script, { pack: { nextShiftSeq: 312 } as OfflinePack });
+    await openWithShift(h);
+    const entry = await sale(h);
+    expect(entry.payload.provisionalRef).toBe('P-T1-312-0001');
+    online = true;
+    await h.till.flush();
+    const opens = h.sent.filter((x) => x.operation === 'openShift');
+    expect(opens.at(-1)?.input.body).toMatchObject({ shiftSeq: 312 });
+  });
+
+  it('takes one past the last shift it heard of when the pack is older', async () => {
+    const s = server();
+    const h = harness(s.script, {
+      pack: { nextShiftSeq: 305 } as OfflinePack,
+      meta: { lastShiftSeq: 310 } as TillSnapshot['meta'],
+    });
+    await openWithShift(h);
+    expect(h.sent[0]?.input.body).toMatchObject({ shiftSeq: 311 });
+  });
+});
 
 describe('a sale on the queue', () => {
   it('opens the shift first, alone, keyed by its own id; then sends the sale once', async () => {
