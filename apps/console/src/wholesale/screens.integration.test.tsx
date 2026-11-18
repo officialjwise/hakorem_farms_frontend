@@ -63,11 +63,10 @@ describe('quotes', () => {
     expect(screen.getByRole('button', { name: 'Record an acceptance' })).toBeVisible();
   });
 
-  it('a new quote says a line by the single egg waits for the server, with the switch off', async () => {
+  it('a new quote is built from the contract, with no notice that a unit waits (CR-045, 2.12.0)', async () => {
     await renderApp('/quotes/new', await signedIn('owner'));
-    expect(
-      await screen.findByText('Lines by the single egg wait for the server', {}, { timeout: 5000 }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Lines' }, { timeout: 5000 })).toBeVisible();
+    expect(screen.queryByText(/single egg wait/)).toBeNull();
   });
 });
 
