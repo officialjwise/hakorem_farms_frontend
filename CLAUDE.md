@@ -42,7 +42,7 @@ pnpm dev:storefront    # Next.js on port 3000
 pnpm dev:console       # Vite on port 5173
 pnpm test:e2e          # builds both apps (console on HK_API_BASE_URL=/mock), then Playwright with axe
 pnpm test:e2e:quarantine  # only the quarantined specs (tag @quarantine, each with its issue)
-pnpm screenshots       # builds both apps, then writes docs/screenshots/<phase>/<screen>-<width>.png (tag @screenshots)
+pnpm screenshots       # F13 only: builds both apps, then writes docs/screenshots/<phase>/<screen>-<width>.png
 pnpm budget:console    # after build:console: fails if the till's or back office's initial load is over budget
 pnpm icons:check       # fails if the console icons or manifest are stale
 pnpm sync-contract     # copy ../backend/contract, regenerate packages/api-client, typecheck everything
@@ -82,6 +82,7 @@ Arrive later, named in `docs/BUILD_PROMPT.md`: `test:e2e:staging` and `lighthous
 - **Every screen ships four states** (loading, empty, error, permission denied) and every component ships its four states with a story each (ADR 0010).
 - **A failed money or stock operation leaves persistent words on screen.** A toast alone fails review.
 - **Check at 360 px**, in both themes and both densities.
+- **No screenshots until F13** (owner, 2026-11-18). A session does not capture screenshots, open images to review them, commit them or embed them in a report. The screenshot specs are out of the e2e run (`e2e/playwright.screenshots.config.ts`); the automated 360 px checks, no sideways scroll and axe, stay in every spec. Reports describe screens in words. F13 takes one full set at 360 and 1280 px for the owner's review.
 - **Git: run `git add`, `git commit` and `git push` as three separate commands.** The permission classifier refuses them chained with `&&`, `;` or a pipe. Likewise run each check on its own: a pipe in a shell chain hides a failing exit code.
 - Before pushing, run `git remote -v` and confirm it shows `hakorem_farms_frontend`. Conventional Commits, one concern per commit, tests in the same commit as the code.
 - **Every phase opens its own pull request and merges it once CI is green** (owner, 2026-11-16). Do not ask first.
