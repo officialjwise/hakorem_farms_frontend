@@ -49,6 +49,7 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-043 | 2026-11-17 | Answered (2.9.0), built   |
 | CR-044 | 2026-11-17 | Answered (2.9.0), built   |
 | CR-050 | 2026-11-18 | Part 2 answered (2.6.0)   |
+| CR-051 | 2026-11-18 | Open                      |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -736,3 +737,12 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 **The witness, as the owner decided (2026-11-18):** the supervisor who takes the cash enters their PIN on the till, checked on the device by the till PIN's rules (CR-032). Naming a supervisor without their PIN is not a witness, so the till never sends a `witnessId` it did not prove that way. The till uses part 1's answer only to know whether a witness is needed: anyone signed in means a PIN is asked for; nobody means the drop goes unwitnessed and no PIN is asked. So part 1 may answer only whether a supervisor is signed in, if that is simpler; the names are shown so the cashier knows whom to ask. Offline, or without part 1, a supervisor who is there enters their PIN, and without one the drop is sent unwitnessed and the server decides.
 
 **Not asked, for the backend to weigh:** the server cannot tell that a `witnessId` came from a PIN. The PIN check is reported with `reportTillPinEvents` (CR-032), as an offline mobile money approval is; if the server should hold the drop to that report, say so and the till will send the approval's verifier version on the movement.
+
+## CR-051. The offline pack names its units, for one and for more (additive)
+
+- **Raised by:** frontend F10k, the till's sale screen, after 2.9.0 gave every unit `singularName` and `pluralName` ("540 eggs", "1 crate").
+- **Contract read first (2.10.0):** `OfflinePack` carries `products` (each with `saleUom` and its codes) and `stockUnits`, but no unit's names. The back office reads them from `listUnitsOfMeasure`, but the till works from its pack offline, so it says the code in lower case: "6 egg", "By the egg".
+
+**Request:** `OfflinePack.uoms`: `{ code, name, singularName, pluralName, displayDecimals }[]`, the units the pack's products are sold or counted in, as `Uom` gives them. Additive; a planned operation, so B9b can add it with `getOfflinePack`.
+
+**Until this lands:** the till says the unit's code in lower case after a quantity ("6 egg"), which is wrong for a plural. Nothing is built on it.

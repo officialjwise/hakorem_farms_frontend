@@ -1095,7 +1095,7 @@ const EGG_TILL_SHOTS: { name: string; act: (page: Page) => Promise<void> }[] = [
   {
     name: 'till-crate-and-eggs',
     act: async (page) => {
-      for (const unit of [/^By the crate/, /^By the unit/]) {
+      for (const unit of [/^By the crate/, /^By the egg/]) {
         await page.getByRole('button', { name: 'Eggs, big', exact: true }).click();
         await page
           .getByRole('dialog', { name: 'Sell Eggs, big by which unit?' })

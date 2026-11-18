@@ -30,9 +30,7 @@ test('a crate and six single eggs are sold offline, each at its own price, and s
   await expect(choose.getByRole('button', { name: /^By the crate/ })).toContainText(
     formatMoney(CRATE),
   );
-  await expect(choose.getByRole('button', { name: /^By the unit/ })).toContainText(
-    formatMoney(EGG),
-  );
+  await expect(choose.getByRole('button', { name: /^By the egg/ })).toContainText(formatMoney(EGG));
   await expectNoAxeViolations(page);
   await choose.getByRole('button', { name: /^By the crate/ }).click();
 
@@ -40,7 +38,7 @@ test('a crate and six single eggs are sold offline, each at its own price, and s
   await page.getByRole('button', { name: 'Eggs, big', exact: true }).click();
   await page
     .getByRole('dialog', { name: 'Sell Eggs, big by which unit?' })
-    .getByRole('button', { name: /^By the unit/ })
+    .getByRole('button', { name: /^By the egg/ })
     .click();
   const cart = page.getByRole('region', { name: 'This sale' });
   await cart
@@ -53,7 +51,8 @@ test('a crate and six single eggs are sold offline, each at its own price, and s
   await line.getByRole('button', { name: 'Save the item' }).click();
   await expect(cart.locator('[data-slot="cart-total"]')).toHaveText(formatMoney(CRATE + 6 * EGG));
   await expect(cart).toContainText('1 crate');
-  await expect(cart).toContainText('6 unit');
+  // The offline pack names no unit, so the till says the code: "6 egg" until CR-051 gives it the names.
+  await expect(cart).toContainText('6 egg');
   await expectNoHorizontalScroll(page);
   await expectNoAxeViolations(page);
 
