@@ -20,6 +20,28 @@ const NOT_SEEDED: Readonly<Record<string, string>> = {
   'whl.account.manage': 'B10',
   'whl.account.hold': 'B10',
   'whl.ageing.read': 'B10',
+  // Orders, fulfilment and delivery (B11, CR-055; A-F11-01).
+  'ord.fulfilment.read': 'B11',
+  'ord.fulfilment.pick': 'B11',
+  'ord.fulfilment.dispatch': 'B11',
+  'ord.order.update': 'B11',
+  'del.delivery.read': 'B11',
+  'del.delivery.assign': 'B11',
+  'del.route.read': 'B11',
+  'del.route.manage': 'B11',
+  'del.delivery.read.assigned': 'B11',
+  'del.delivery.update.assigned': 'B11',
+  'del.proof.create': 'B11',
+};
+
+/**
+ * Permissions the seed grants other roles but not yet this one, which its B11 work needs (CR-055): the
+ * Driver's proof photograph and failure reasons, and the Storekeeper's read of the order it picks. When
+ * the seed grants one to the role, its line fails: delete it.
+ */
+const NOT_SEEDED_FOR_ROLE: Readonly<Record<string, readonly string[]>> = {
+  DRIVER: ['platform.file.upload', 'mdm.reason_code.read'],
+  STOREKEEPER: ['ord.order.read'],
 };
 
 const seeded = new Set<string>(seededRoles.flatMap((role) => [...role.permissions]));
@@ -38,7 +60,10 @@ describe('the test fake holds the seeded roles (CR-023)', () => {
       const role = seededRoles.find((r) => r.code === user.roleCode);
       expect(role, `${user.roleCode} is a seeded role`).toBeDefined();
       const holds = new Set<string>(role?.permissions ?? []);
-      const beyond = user.permissions.filter((p) => !holds.has(p) && !(p in NOT_SEEDED));
+      const planned = NOT_SEEDED_FOR_ROLE[user.roleCode] ?? [];
+      const beyond = user.permissions.filter(
+        (p) => !holds.has(p) && !(p in NOT_SEEDED) && !planned.includes(p),
+      );
       expect(beyond).toEqual([]);
     },
   );
@@ -48,6 +73,16 @@ describe('the test fake holds the seeded roles (CR-023)', () => {
       const role = seededRoles.find((r) => r.code === user.roleCode);
       if (role?.requiresTotp === true) expect(user.totp || user.mustEnrolTotp === true).toBe(true);
     }
+  });
+
+  it.each(
+    Object.entries(NOT_SEEDED_FOR_ROLE).flatMap(([role, codes]) =>
+      codes.map((code) => [role, code] as const),
+    ),
+  )('%s is still not seeded with %s, which another role holds', (role, permission) => {
+    const seededRole = seededRoles.find((r) => r.code === role);
+    expect(seededRole?.permissions as readonly string[] | undefined).not.toContain(permission);
+    expect(seeded.has(permission)).toBe(true);
   });
 
   it.each(Object.entries(NOT_SEEDED))(
