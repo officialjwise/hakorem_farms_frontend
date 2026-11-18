@@ -38,6 +38,8 @@
     "PRICE_OVERRIDE": "Price below the floor",
     "QUOTE_BELOW_MARGIN": "Quote below margin",
     "CREDIT_OVERRIDE": "Credit over the limit",
+    "CREDIT_LIMIT_CHANGE": "Credit limit change",
+    "ACCOUNT_RELEASE": "Account released from hold",
     "REFUND": "Refund",
     "RETURN": "Return",
     "PRICE_LIST_ACTIVATION": "Price list going live",
