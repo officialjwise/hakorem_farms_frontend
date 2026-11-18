@@ -1,5 +1,5 @@
 import type { components } from '@hakorem/api-client';
-import { Banknote, ClipboardCheck, FileText, KeyRound, LockKeyhole } from 'lucide-react';
+import { Banknote, ClipboardCheck, FileText, LockKeyhole } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -12,39 +12,48 @@ import {
   MoneyDisplay,
   MoneyInput,
   QueryBoundary,
-  Select,
   Skeleton,
   formatDateTime,
+  type FailureLike,
 } from '@hakorem/ui';
 import { useAuth } from '../../auth/AuthProvider';
-import { useApiAllPages, useApiMutation, useApiQuery } from '../../data/api';
+import { shownFailure, useStepUp } from '../../auth/StepUp';
+import { useApiMutation, useApiQuery } from '../../data/api';
 import { ConfirmDialog } from '../../lib/ConfirmDialog';
 import { useIntentKey } from '../../lib/queries';
+import { RequestReference } from '../../lib/RequestReference';
 import { useStateLabels } from '../../lib/states';
 import { useOnlineStatus } from '../../lib/useOnlineStatus';
-import { requestedOn } from '../../requested/switch';
 import { pendingCount } from '../offline/sync';
 import { getTill, useTill } from '../offline/till';
-import type { OfflinePack, PinApprovalRecord, ShiftRecord, TillSnapshot } from '../offline/types';
-import { approvers } from '../pin/pin';
-import { PinApprovalField } from '../pin/PinCheck';
+import {
+  CONFIRMED_STATUSES,
+  type OfflinePack,
+  type ShiftRecord,
+  type TillSnapshot,
+} from '../offline/types';
+import { CashMoved } from '../shift/CashMoved';
+import { CashMovementForm } from '../shift/CashMovementForm';
 
 type Shift = components['schemas']['Shift'];
 type ShiftReport = components['schemas']['ShiftReport'];
-type MovementKind = 'CASH_DROP' | 'PAY_OUT' | 'PAY_IN';
 
 /**
- * The shift on this till (FR-POS shift management): what it holds, cash drops, pay-outs and pay-ins (queued,
- * so they work offline), the X report, and the close. The close is blind and online (OFFLINE_SYNC section 2):
- * the cashier declares the count before the expected figures are shown, and only once every sale has been
- * sent; then a supervisor who is not the cashier signs it off, which posts the over or short and gives the
- * Z report.
+ * The shift on this till (FR-POS-015 to FR-POS-019, contract 2.5.0): what it holds, the cash moved on it,
+ * cash drops, pay-outs and pay-ins, the X report, and the close. The close is blind and online
+ * (OFFLINE_SYNC section 2): the cashier declares the count before any expected figure is shown, and only
+ * once every sale has been sent; the API's answer then shows what was expected and the over or short. A
+ * supervisor who is not the cashier signs it off with a fresh step-up, which posts the over or short and
+ * stores the Z report. This screen and its words (`posShift`) load on demand, never with the till.
  */
 export function ShiftScreen() {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posShift', 'pos']);
   const till = useTill();
+  // Kept here: signing the close off frees the till at once, and the Z report is still read afterwards.
+  const [closed, setClosed] = useState<Shift | null>(null);
   const snapshot = till.snapshot;
-  if (snapshot === null) return <Skeleton label={t('sale.loading')} shape="block" />;
+  if (snapshot === null) return <Skeleton label={t('pos:sale.loading')} shape="block" />;
+  if (closed !== null) return <ClosedShift shift={closed} />;
   const shift = snapshot.shift;
   if (snapshot.device === null || shift === null || snapshot.pack === null) {
     return (
@@ -54,26 +63,30 @@ export function ShiftScreen() {
         action={
           <Button asChild size="lg">
             <Link to={snapshot.device === null ? '/pos' : '/pos/shift/open'}>
-              {snapshot.device === null ? t('toSale') : t('sale.noShift.action')}
+              {snapshot.device === null ? t('pos:toSale') : t('pos:sale.noShift.action')}
             </Link>
           </Button>
         }
       />
     );
   }
-  return <OpenShift snapshot={snapshot} shift={shift} pack={snapshot.pack} />;
+  return (
+    <OpenShift snapshot={snapshot} shift={shift} pack={snapshot.pack} onSignedOff={setClosed} />
+  );
 }
 
 function OpenShift({
   snapshot,
   shift,
   pack,
+  onSignedOff,
 }: {
   snapshot: TillSnapshot;
   shift: ShiftRecord;
   pack: OfflinePack;
+  onSignedOff: (shift: Shift) => void;
 }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posShift', 'pos']);
   const auth = useAuth();
   const online = useOnlineStatus();
   const server = useApiQuery(
@@ -88,6 +101,12 @@ function OpenShift({
       ? answered
       : server.data;
   const sales = snapshot.entries.filter((e) => e.kind === 'SALE' && e.shiftId === shift.id).length;
+  const confirmedMovements = snapshot.entries.filter(
+    (e) =>
+      e.kind === 'CASH_MOVEMENT' &&
+      e.shiftId === shift.id &&
+      CONFIRMED_STATUSES.includes(e.localStatus),
+  ).length;
   const status = known?.status ?? 'OPEN';
   const isCashier = auth.session?.principal.id === shift.cashierId;
 
@@ -115,7 +134,16 @@ function OpenShift({
         </dl>
         {!shift.confirmed ? <Alert severity="warning" title={t('shift.notOnServer')} /> : null}
       </section>
-      {status === 'OPEN' && isCashier ? <CashMovement pack={pack} online={online} /> : null}
+      {status === 'OPEN' && isCashier && auth.can('pos.cash.move') ? (
+        <CashMovementForm shift={shift} pack={pack} online={online} />
+      ) : null}
+      {online && shift.confirmed && auth.can('pos.shift.read') ? (
+        <CashMoved
+          shiftId={shift.id}
+          confirmed={confirmedMovements}
+          reasons={pack.reasonCodes.filter((code) => code.domain === 'CASH_MOVEMENT')}
+        />
+      ) : null}
       {online && shift.confirmed && auth.can('pos.shift.report') ? (
         <Report shiftId={shift.id} kind="X" />
       ) : null}
@@ -125,8 +153,8 @@ function OpenShift({
           shift={shift}
           pack={pack}
           online={online}
-          onClosed={(closed) => {
-            setAnswered(closed);
+          onClosed={(closing) => {
+            setAnswered(closing);
             void server.refetch();
           }}
         />
@@ -135,9 +163,9 @@ function OpenShift({
         <Closing
           shift={known}
           isCashier={isCashier}
-          onApproved={(closed) => {
-            setAnswered(closed);
-            void server.refetch();
+          onApproved={async (signedOff) => {
+            onSignedOff(signedOff);
+            await getTill().endShift();
           }}
         />
       ) : null}
@@ -145,162 +173,25 @@ function OpenShift({
   );
 }
 
-function CashMovement({ pack, online }: { pack: OfflinePack; online: boolean }) {
+/** A write that failed, said on the page after its dialog is closed, with its reference. */
+function StillRefused({ title, error }: { title: string; error: FailureLike | null }) {
   const { t } = useTranslation('pos');
-  const [kind, setKind] = useState<MovementKind>('CASH_DROP');
-  const [amount, setAmount] = useState<number | null>(null);
-  const [reason, setReason] = useState('');
-  const [note, setNote] = useState('');
-  const [confirming, setConfirming] = useState(false);
-  const [recorded, setRecorded] = useState<string | null>(null);
-  const [tried, setTried] = useState(false);
-  const fetched = useApiAllPages(
-    'listReasonCodes',
-    { query: { domain: 'CASH_MOVEMENT' } },
-    { enabled: online },
-  );
-  const reasons = [
-    ...pack.reasonCodes.filter((code) => code.domain === 'CASH_MOVEMENT'),
-    ...(fetched.data?.items ?? []).filter(
-      (code) => !pack.reasonCodes.some((p) => p.code === code.code),
-    ),
-  ];
-  const needsReason = kind !== 'CASH_DROP';
-  // A cash drop's witness enters their PIN on this till (OFFLINE_SYNC section 10, CR-032).
-  const { snapshot } = useTill();
-  const localAuth = requestedOn('CR-032') ? (snapshot?.localAuth ?? null) : null;
-  const [witness, setWitness] = useState<PinApprovalRecord | null>(null);
-  const witnesses = localAuth === null ? [] : approvers(localAuth.verifiers, 'CASH_DROP_WITNESS');
-  const needsWitness = kind === 'CASH_DROP' && witnesses.length > 0;
-  const ready =
-    amount !== null &&
-    amount > 0 &&
-    (!needsReason || reason !== '') &&
-    (!needsWitness || witness !== null);
-
+  if (error === null) return null;
   return (
-    <section
-      aria-labelledby="cash-title"
-      className="grid gap-3 rounded-lg border border-border bg-surface p-4"
-    >
-      <h3 id="cash-title" className="text-lg font-semibold">
-        {t('cash.title')}
-      </h3>
-      <Field label={t('cash.kind')}>
-        <Select
-          value={kind}
-          onValueChange={(value) => setKind(value as MovementKind)}
-          options={(['CASH_DROP', 'PAY_OUT', 'PAY_IN'] as const).map((value) => ({
-            value,
-            label: t(`queue.cash.${value}`),
-          }))}
-        />
-      </Field>
-      <Field
-        label={t('cash.amount')}
-        error={tried && (amount === null || amount === 0) ? t('cash.amountError') : undefined}
-      >
-        <MoneyInput value={amount} onValueChange={setAmount} />
-      </Field>
-      {needsReason ? (
-        <Field
-          label={t('cash.reason')}
-          hint={reasons.length === 0 ? t('cash.noReasons') : undefined}
-          error={tried && reason === '' ? t('cash.reasonError') : undefined}
-        >
-          <Select
-            value={reason}
-            onValueChange={setReason}
-            placeholder={t('cash.reasonPlaceholder')}
-            options={reasons.map((code) => ({ value: code.code, label: code.description }))}
-          />
-        </Field>
+    <Alert severity="critical" title={title}>
+      {error.message}
+      {error.correlationId !== '' ? (
+        <>
+          {' '}
+          {t('referenceLabel')} <RequestReference value={error.correlationId} />
+        </>
       ) : null}
-      <Field label={t('cash.note')}>
-        <Input value={note} onChange={(event) => setNote(event.target.value)} autoComplete="off" />
-      </Field>
-      {kind === 'CASH_DROP' && localAuth !== null ? (
-        witness !== null ? (
-          <p className="flex items-center gap-2" data-slot="cash-witness">
-            <KeyRound aria-hidden="true" className="size-icon-md" />
-            {t('cash.witnessed', { name: witness.displayName })}
-          </p>
-        ) : needsWitness ? (
-          <div className="grid gap-2">
-            <p className="text-sm text-fg-muted">{t('cash.witnessHint')}</p>
-            <PinApprovalField
-              approval="CASH_DROP_WITNESS"
-              approvers={witnesses}
-              policy={localAuth.policy}
-              label={t('cash.witness')}
-              onApproved={setWitness}
-            />
-          </div>
-        ) : (
-          <p className="text-sm text-fg-muted">{t('cash.noWitness')}</p>
-        )
-      ) : null}
-      <Button
-        variant="secondary"
-        onClick={() => {
-          setTried(true);
-          setRecorded(null);
-          if (ready) setConfirming(true);
-        }}
-      >
-        {t('cash.review')}
-      </Button>
-      {recorded !== null ? <Alert severity="good" title={recorded} /> : null}
-      <ConfirmDialog
-        open={confirming}
-        onOpenChange={setConfirming}
-        title={t('cash.confirmTitle', { kind: t(`queue.cash.${kind}`) })}
-        body={online ? t('cash.confirmBody') : t('cash.confirmOffline')}
-        confirmLabel={t('cash.record')}
-        pendingLabel={t('cash.recording')}
-        pending={false}
-        error={null}
-        failedTitle={t('cash.failed')}
-        onConfirm={() => {
-          if (amount === null) return;
-          void getTill()
-            .recordCashMovement(
-              {
-                kind,
-                amountPesewas: amount,
-                ...(needsReason ? { reasonCode: reason } : {}),
-                ...(note.trim() !== '' ? { note: note.trim() } : {}),
-                ...(kind === 'CASH_DROP' && witness !== null
-                  ? { witnessId: witness.principalId }
-                  : {}),
-              },
-              kind === 'CASH_DROP' && witness !== null ? [witness] : [],
-            )
-            .then(() => {
-              setWitness(null);
-              setConfirming(false);
-              setRecorded(t('cash.recorded', { kind: t(`queue.cash.${kind}`) }));
-              setAmount(null);
-              setReason('');
-              setNote('');
-              setTried(false);
-            });
-        }}
-      >
-        <p className="flex items-baseline justify-between text-xl font-bold">
-          <span>{t(`queue.cash.${kind}`)}</span>
-          <MoneyDisplay pesewas={amount ?? 0} />
-        </p>
-        {kind === 'CASH_DROP' && witness !== null ? (
-          <p>{t('cash.witnessed', { name: witness.displayName })}</p>
-        ) : null}
-      </ConfirmDialog>
-    </section>
+    </Alert>
   );
 }
 
 function Report({ shiftId, kind }: { shiftId: string; kind: 'X' | 'Z' }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation('posShift');
   const [open, setOpen] = useState(kind === 'Z');
   const x = useApiQuery(
     'getShiftXReport',
@@ -327,6 +218,7 @@ function Report({ shiftId, kind }: { shiftId: string; kind: 'X' | 'Z' }) {
       <h3 id={`report-${kind}`} className="text-lg font-semibold">
         {t(`report.title${kind}`)}
       </h3>
+      {kind === 'X' ? <p className="text-sm text-fg-muted">{t('report.xBlind')}</p> : null}
       {!open ? (
         <Button variant="secondary" onClick={() => setOpen(true)}>
           <FileText aria-hidden="true" />
@@ -342,7 +234,7 @@ function Report({ shiftId, kind }: { shiftId: string; kind: 'X' | 'Z' }) {
 }
 
 function ReportBody({ report }: { report: ShiftReport }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation('posShift');
   return (
     <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1">
       <dt>{t('report.generated')}</dt>
@@ -399,7 +291,7 @@ function Close({
   online: boolean;
   onClosed: (shift: Shift) => void;
 }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation('posShift');
   const close = useApiMutation('closeShift', { invalidates: ['getShift', 'listShifts'] });
   const keyFor = useIntentKey();
   const [declared, setDeclared] = useState<Record<string, number | null>>({});
@@ -453,6 +345,7 @@ function Close({
         <LockKeyhole aria-hidden="true" />
         {t('closeShift.review')}
       </Button>
+      {!confirming ? <StillRefused title={t('closeShift.failed')} error={close.error} /> : null}
       <ConfirmDialog
         open={confirming}
         onOpenChange={setConfirming}
@@ -477,9 +370,9 @@ function Close({
               { path: { id: shift.id }, body },
               { idempotencyKey: keyFor({ shift: shift.id, ...body }) },
             )
-            .then((closed) => {
+            .then((closing) => {
               setConfirming(false);
-              onClosed(closed);
+              onClosed(closing);
             })
             .catch(() => undefined);
         }}
@@ -506,16 +399,18 @@ function Closing({
 }: {
   shift: Shift;
   isCashier: boolean;
-  onApproved: (shift: Shift) => void;
+  onApproved: (shift: Shift) => Promise<void>;
 }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation('posShift');
   const auth = useAuth();
   const approve = useApiMutation('approveShiftClose', { invalidates: ['getShift', 'listShifts'] });
+  const stepUp = useStepUp();
   const keyFor = useIntentKey();
   const [reason, setReason] = useState('');
   const [confirming, setConfirming] = useState(false);
   const mayApprove =
     auth.can('pos.shift.close.approve') && !isCashier && shift.status === 'CLOSING';
+  const refused = shownFailure(approve.error);
   return (
     <section
       aria-labelledby="closing-title"
@@ -524,17 +419,7 @@ function Closing({
       <h3 id="closing-title" className="text-lg font-semibold">
         {shift.status === 'CLOSED' ? t('closing.closed') : t('closing.title')}
       </h3>
-      <ul className="grid gap-2 sm:grid-cols-2">
-        {shift.tenders.map((tender) => (
-          <TenderCount key={tender.paymentMethod.id} tender={tender} />
-        ))}
-      </ul>
-      {shift.overShortDirection !== null && shift.overShortPesewas !== null ? (
-        <p className="text-lg font-semibold" data-slot="over-short">
-          {t(`closing.direction.${shift.overShortDirection}`)}{' '}
-          <MoneyDisplay pesewas={shift.overShortPesewas} />
-        </p>
-      ) : null}
+      <Counted shift={shift} />
       {shift.status === 'CLOSING' ? (
         isCashier ? (
           <p>{t('closing.waitSupervisor')}</p>
@@ -547,6 +432,7 @@ function Closing({
                 autoComplete="off"
               />
             </Field>
+            <p className="text-sm text-fg-muted">{t('closing.stepUp')}</p>
             <Button
               size="lg"
               disabled={reason.trim() === ''}
@@ -558,6 +444,7 @@ function Closing({
               <ClipboardCheck aria-hidden="true" />
               {t('closing.approve')}
             </Button>
+            {!confirming ? <StillRefused title={t('closing.failed')} error={refused} /> : null}
             <ConfirmDialog
               open={confirming}
               onOpenChange={setConfirming}
@@ -566,35 +453,90 @@ function Closing({
               confirmLabel={t('closing.approve')}
               pendingLabel={t('closing.approving')}
               pending={approve.isPending}
-              error={approve.error}
+              error={refused}
               failedTitle={t('closing.failed')}
               onConfirm={() => {
                 const body = { reason: reason.trim() };
-                approve
-                  .mutateAsync(
-                    { path: { id: shift.id }, body },
-                    { idempotencyKey: keyFor({ shift: shift.id, ...body }) },
+                void stepUp
+                  .run(() =>
+                    approve.mutateAsync(
+                      { path: { id: shift.id }, body },
+                      { idempotencyKey: keyFor({ shift: shift.id, ...body }) },
+                    ),
                   )
-                  .then(async (closed) => {
+                  .then(async (signedOff) => {
+                    if (signedOff === null) return;
                     setConfirming(false);
-                    await getTill().endShift();
-                    onApproved(closed);
+                    await onApproved(signedOff);
                   })
                   .catch(() => undefined);
               }}
             />
+            {stepUp.dialog}
           </>
         ) : (
           <p>{t('closing.needsSupervisor')}</p>
         )
       ) : null}
-      {shift.status === 'CLOSED' ? <Report shiftId={shift.id} kind="Z" /> : null}
     </section>
   );
 }
 
+/** Each tender as declared against what was expected, and the shift's over or short, from the API. */
+function Counted({ shift }: { shift: Shift }) {
+  const { t } = useTranslation('posShift');
+  return (
+    <>
+      <ul className="grid gap-2 sm:grid-cols-2">
+        {shift.tenders.map((tender) => (
+          <TenderCount key={tender.paymentMethod.id} tender={tender} />
+        ))}
+      </ul>
+      {shift.overShortDirection !== null && shift.overShortPesewas !== null ? (
+        <p className="text-lg font-semibold" data-slot="over-short">
+          {t(`closing.direction.${shift.overShortDirection}`)}{' '}
+          <MoneyDisplay pesewas={shift.overShortPesewas} />
+        </p>
+      ) : null}
+    </>
+  );
+}
+
+/** The shift as signed off: who signed it, the count, and the stored Z report. The till is free again. */
+function ClosedShift({ shift }: { shift: Shift }) {
+  const { t } = useTranslation(['posShift', 'pos']);
+  return (
+    <div className="grid gap-6">
+      <section aria-labelledby="closed-title" className="grid gap-3">
+        <h2 id="closed-title" className="text-2xl font-bold">
+          {shift.shiftNo !== null
+            ? t('closing.closedNo', { number: shift.shiftNo })
+            : t('closing.closed')}
+        </h2>
+        <Alert
+          severity="good"
+          title={
+            shift.closeApprovedBy !== null
+              ? t('closing.signedOffBy', { name: shift.closeApprovedBy.displayName })
+              : t('closing.closed')
+          }
+        >
+          {t('closing.tillFree')}
+        </Alert>
+        <Counted shift={shift} />
+      </section>
+      <Report shiftId={shift.id} kind="Z" />
+      <div>
+        <Button asChild size="lg">
+          <Link to="/pos">{t('pos:toSale')}</Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function TenderCount({ tender }: { tender: Shift['tenders'][number] }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation('posShift');
   return (
     <li className="rounded-md border border-border p-3">
       <p className="font-semibold">{tender.paymentMethod.name}</p>

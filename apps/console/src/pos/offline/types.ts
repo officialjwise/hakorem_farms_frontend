@@ -12,6 +12,7 @@ type Schemas = components['schemas'];
 export type OfflinePack = Schemas['OfflinePack'];
 export type OfflineSale = Schemas['OfflineSale'];
 export type CashMovementCreate = Schemas['CashMovementCreate'];
+export type CashMovement = Schemas['CashMovement'];
 export type ShiftOpen = Schemas['ShiftOpen'];
 export type Shift = Schemas['Shift'];
 export type SyncResultItem = Schemas['SyncResultItem'];
@@ -139,7 +140,8 @@ export interface SaleEntry extends EntryBase {
 export interface CashMovementEntry extends EntryBase {
   kind: 'CASH_MOVEMENT';
   payload: CashMovementCreate;
-  serverResult: CashMovementSyncItem | null;
+  /** `recordCashMovement`'s answer when sent alone (2.5.0), or the offline batch's item for it. */
+  serverResult: CashMovement | CashMovementSyncItem | null;
   /** The witness's PIN, for a cash drop. */
   approvals?: PinApprovalRecord[];
 }

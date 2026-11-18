@@ -6,7 +6,7 @@
  * (`package.json`, `.github/workflows/ci.yml`), and call the generated client.
  *
  * A request is checked by its first item to land: an operation (CR-032, CR-033's public read) or a field on a
- * response (CR-033) or a request (CR-038's sale line). CR-042 is checked by its read and its schema. CR-034 landed in 2.0.0 and its switch was deleted.
+ * response (CR-033) or a request (CR-038's sale line). CR-042 is checked by its read and its schema; CR-045 by its read (its other half, a drop with no witness when none is signed in, changes no shape). CR-034 landed in 2.0.0 and its switch was deleted.
  */
 import type { components, operationManifest } from '@hakorem/api-client';
 import type { ContractRequest } from './switch';
@@ -31,6 +31,7 @@ const cr038Pack: Lacks<Schemas['OfflineProduct'], 'sellingUnits', 'CR-038'> = tr
 const cr038Line: Lacks<Schemas['CounterSaleLine'], 'uom', 'CR-038'> = true;
 const cr042Read: Lacks<Manifest, 'getSupplierBalance', 'CR-042'> = true;
 const cr042Shape: Lacks<Schemas, 'SupplierBalance', 'CR-042'> = true;
+const cr045Read: Lacks<Manifest, 'listShiftWitnesses', 'CR-045'> = true;
 
 /** One entry per switch, so a new switch without a check fails `switch.test.ts`. */
 export const LANDED_CHECKS: Record<ContractRequest, readonly boolean[]> = {
@@ -38,4 +39,5 @@ export const LANDED_CHECKS: Record<ContractRequest, readonly boolean[]> = {
   'CR-033': [cr033Pack, cr033Result, cr033Read],
   'CR-038': [cr038Pack, cr038Line],
   'CR-042': [cr042Read, cr042Shape],
+  'CR-045': [cr045Read],
 };

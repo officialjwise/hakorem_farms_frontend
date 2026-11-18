@@ -17,6 +17,7 @@ The contract lists every code an operation can refuse with (`x-error-codes`, 83 
 ## Decision
 
 - **The words live in `common:refusals`.** `codes.<CODE>` is the code's sentence, and `rules.<CODE>` is a broken rule's sentence. `common` loads with both documents, so the words are there before any write.
+  - **Amended F10i (2026-11-18), the place only:** the words moved to a `refusals` namespace of their own, with the same `codes` and `rules` tables, so the till need not carry them in its first load. The back office loads it at boot; the till fetches it once the sale screen is up, and a refusal that arrives sooner waits for it (`inWordsWhenLoaded`). Nothing else in this decision changes.
 - **`data/refusals.ts`, `inWords(error)`,** rebuilds the `ApiError` with:
   - the message set to the code's words, followed by the words of each broken rule in `details[]`, whether or not its detail names a field. A confirmation often has no field to hold a rule: closing a branch names `/status`, which no form on that screen has. A rule without words adds the server's sentence only when its detail names no field;
   - the code, status, reference, `retryAfter` and details unchanged, so a screen still branches on the code (`STEP_UP_REQUIRED`, a 409).

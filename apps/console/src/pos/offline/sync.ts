@@ -3,11 +3,13 @@
  * dependency order and records what the server said about each record:
  *
  * 1. a shift opened on the till (`openShift`, alone, with its own id as the idempotency key);
- * 2. that shift's sales and cash movements, in one `syncOfflineSales` batch of at most 500 sales, in
+ * 2. a cash movement made in the last four minutes, alone, with `recordCashMovement` (2.5.0), which takes
+ *    only a time within 300 seconds of the server's clock; older ones wait for the offline batch;
+ * 3. that shift's sales and older cash movements, in one `syncOfflineSales` batch of at most 500 sales, in
  *    ascending device counter, again and again until none is left;
- * 3. the server's total for each sale it took, read back from its order (`getOrder`), so a difference from
+ * 4. the server's total for each sale it took, read back from its order (`getOrder`), so a difference from
  *    the till's total is flagged to a person and never absorbed;
- * 4. records the server confirmed more than 24 hours ago are removed (a reprint is possible until then).
+ * 5. records the server confirmed more than 24 hours ago are removed (a reprint is possible until then).
  *
  * Exactly once is the server's: it applies each sale once by its client id and answers a resend with
  * `DUPLICATE` and the first result (section 9.7). So a pass may always be repeated, and a record is only
@@ -22,6 +24,7 @@ import type { TillStore } from './store';
 import {
   CONFIRMED_STATUSES,
   PENDING_STATUSES,
+  type CashMovementEntry,
   type EntryFailure,
   type QueueEntry,
   type SaleEntry,
@@ -29,6 +32,12 @@ import {
 } from './types';
 
 export const MAX_BATCH = 500;
+/**
+ * `recordCashMovement` refuses an `occurredAt` more than 300 seconds from the server's clock
+ * (`OCCURRED_AT_OUT_OF_WINDOW`, 2.5.0, ADR-0067). A movement is sent that way only while it is younger than
+ * this, a minute inside the window for the request and the clocks; an older one goes in the offline batch.
+ */
+export const ONLINE_MOVEMENT_MS = 240_000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const WEEK_MS = 7 * DAY_MS;
 
@@ -133,7 +142,55 @@ export async function flushQueue(deps: SyncDeps): Promise<FlushOutcome> {
     }
   }
 
-  // 2. Each shift's sales and cash movements, once its open has reached the server.
+  // 2. Fresh cash movements, alone, once their shift's open has reached the server.
+  snapshot = await store.read();
+  const openOf = (shiftId: string) =>
+    snapshot.entries.find((e) => e.kind === 'SHIFT_OPEN' && e.shiftId === shiftId)?.localStatus;
+  const fresh = snapshot.entries.filter(
+    (entry): entry is CashMovementEntry =>
+      entry.kind === 'CASH_MOVEMENT' &&
+      isPending(entry) &&
+      now().getTime() - Date.parse(entry.payload.occurredAt) < ONLINE_MOVEMENT_MS &&
+      [undefined, ...CONFIRMED_STATUSES].includes(openOf(entry.shiftId)),
+  );
+  for (const entry of fresh) {
+    const sending = {
+      ...entry,
+      localStatus: 'SENDING' as const,
+      attempts: entry.attempts + 1,
+      lastAttemptAt: at(),
+    };
+    await store.putEntries([sending]);
+    try {
+      const movement = await call(
+        'recordCashMovement',
+        { path: { id: entry.shiftId }, body: entry.payload },
+        { idempotencyKey: entry.payload.id },
+      );
+      await reached();
+      await store.putEntries([
+        {
+          ...sending,
+          localStatus: 'APPLIED',
+          serverResult: movement,
+          confirmedAt: at(),
+          failure: null,
+        },
+      ]);
+    } catch (error) {
+      const stop = stopFor(error);
+      if (stop !== null) {
+        await store.putEntries([{ ...sending, localStatus: 'QUEUED' }]);
+        return stop;
+      }
+      await reached();
+      await store.putEntries([
+        { ...sending, localStatus: 'FAILED_PERMANENT', failure: failureOf(error as ApiError) },
+      ]);
+    }
+  }
+
+  // 3. Each shift's sales and older cash movements, once its open has reached the server.
   for (;;) {
     snapshot = await store.read();
     const opening = new Map(
@@ -270,10 +327,10 @@ export async function flushQueue(deps: SyncDeps): Promise<FlushOutcome> {
     }
   }
 
-  // 3. The server's total for each sale it took, against the till's.
+  // 4. The server's total for each sale it took, against the till's.
   await reconcile(deps);
 
-  // 4. Records confirmed more than a day ago.
+  // 5. Records confirmed more than a day ago.
   snapshot = await store.read();
   const cutoff = new Date(now().getTime() - DAY_MS).toISOString();
   const expired = snapshot.entries.filter(

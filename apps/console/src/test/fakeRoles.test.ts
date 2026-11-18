@@ -58,4 +58,17 @@ describe('the test fake holds the seeded roles (CR-023)', () => {
       expect(named.has(permission)).toBe(true);
     },
   );
+
+  /**
+   * The backend is letting a Manager approve supplier credit notes (owner, 2026-11-18). Until the seed says
+   * so, the Manager holds no `pur.supplier_invoice.approve`. When it does, this fails: give the fake Manager
+   * the grant (fakeAuthServer.ts), check the payables e2e's approver, and delete this test.
+   */
+  it('the Manager does not approve supplier invoices or credit notes yet', () => {
+    const manager = seededRoles.find((r) => r.code === 'MANAGER');
+    expect(manager?.permissions).not.toContain('pur.supplier_invoice.approve');
+    expect(FAKE_USERS['kwabena.owusu@hakoremfarms.com']?.permissions).not.toContain(
+      'pur.supplier_invoice.approve',
+    );
+  });
 });
