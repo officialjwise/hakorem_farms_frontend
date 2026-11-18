@@ -805,6 +805,8 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 
 **Until this lands:** the order's credit check and the override are built against these shapes behind `HK_REQUESTED_CONTRACT=CR-046` (ADR 0046, ADR 0052, ADR 0053): `apps/console/src/requested/creditControl.ts`, answered in the e2e suite by `e2e/support/requested.ts`. With the switch off, the order page confirms as the contract says, shows a 202 as "waiting for a credit override" with its approval, shows `CREDIT_CHECK_UNAVAILABLE` in words, and says that the amount over waits for the server.
 
+**Answered in 2.14.0 (F10m):** `getOrderCreditCheck`, `requestCreditOverride` (202 `CreditOverridePending`) and `CreditOverride.reason`, `requestedBy` and `overLimitPesewas`, in the requested shape, with `reasons` and an outcome `NO_ACCOUNT` beside it; `confirmOrder` takes `creditOverrideReason`. The switch and `requested/creditControl.ts` are deleted: the order's credit card and the override call the generated client, and the account's overrides always show who asked and why.
+
 ## CR-047. The quote link's token, and what an accepted or replaced quote says (description fix, additive)
 
 - **Raised by:** frontend, the quote acceptance page: "the link carries its own long random token, never a quote number or ID. Show clear states for an expired quote and for one replaced by a newer revision" (owner, 2026-11-17).
@@ -844,6 +846,8 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 4. **A credit override** (CR-046) is approved only by a holder of `whl.credit.override`, never by the person who asked; Sales may ask (it holds `ord.order.confirm`) and never approve.
 
 **Until this lands:** the test fake gives these roles as above (A-F10-10), with `whl.account.manage` standing in for the release permission: the console offers "Release from hold" only to a holder of both `whl.account.hold` and `whl.account.manage`, so the Accountant who may put a hold on never sees it. The account screen already shows a 202 from a limit change or a release as waiting for an Owner or Manager other than the person who asked, with the approval. No switch: the shapes are the contract's.
+
+**Answered in 2.14.0 and 2.16.0 (F10m):** the seed grants `whl.*` as asked (the Owner and the Manager everything, with `whl.account.release` and `whl.credit.override`; Sales and the Accountant the reads, the Accountant the hold); `releaseBusinessAccount` takes `whl.account.release` and answers 202 `ACCOUNT_RELEASE`; every credit-limit change answers 202 `CREDIT_LIMIT_CHANGE`. Built: "Release from hold" is offered to a holder of `whl.account.release`, an account says when a limit or a release waits for its second person (`pendingCreditLimitPesewas`, `pendingRelease`), and the fake's grants match the seed.
 
 ## CR-049. The shop's request for quote takes a quantity and its unit (additive)
 
