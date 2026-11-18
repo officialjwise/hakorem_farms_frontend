@@ -1336,7 +1336,7 @@ const WHOLESALE_SHOTS: Shot[] = [
       const line2 = page.getByRole('heading', { name: 'Line 2' }).locator('..').locator('..');
       await line2.getByRole('combobox', { name: /^Product/ }).fill('Eggs');
       await page.getByRole('option', { name: /^Eggs, big/ }).click();
-      await line2.getByLabel(/^How many, in unit/).fill('30');
+      await line2.getByLabel(/^How many, in eggs/).fill('30');
       await page.getByRole('button', { name: "Get the API's prices" }).click();
       await expect(line2.getByTestId('api-price')).toContainText('2.20');
     },

@@ -244,7 +244,7 @@ function QuoteLineCard({
         : t('lines.unitWithFactor', {
             unit: units.name(unit.code),
             factor: unit.factor,
-            base: units.name(line.product?.baseUom ?? ''),
+            base: units.after(line.product?.baseUom ?? '', unit.factor),
           }),
   }));
   const resolved = line.price?.resolved ?? null;
@@ -292,9 +292,7 @@ function QuoteLineCard({
         ) : null}
         <Field
           label={
-            line.uom === ''
-              ? t('lines.qty')
-              : t('lines.qtyIn', { unit: units.name(line.uom).toLowerCase() })
+            line.uom === '' ? t('lines.qty') : t('lines.qtyIn', { unit: units.many(line.uom) })
           }
           required
           requiredLabel={required}
@@ -328,7 +326,7 @@ function QuoteLineCard({
         ) : (
           <p className="text-control-sm" data-testid="api-price">
             {t('lines.apiPrice', {
-              unit: units.name(resolved.uom).toLowerCase(),
+              unit: units.one(resolved.uom),
               list: resolved.priceList.name,
             })}{' '}
             <MoneyDisplay pesewas={resolved.listPricePesewas} strong />
@@ -348,7 +346,7 @@ function QuoteLineCard({
           label={
             line.uom === ''
               ? t('lines.agreedPrice')
-              : t('lines.agreedPriceIn', { unit: units.name(line.uom).toLowerCase() })
+              : t('lines.agreedPriceIn', { unit: units.one(line.uom) })
           }
           hint={t('lines.agreedPriceHint')}
           required

@@ -34,7 +34,7 @@ export const PRICE_LIST = {
 const SALESPERSON = { id: OWNER.id, displayName: OWNER.displayName };
 
 /** The two prices the API gives this buyer for the big eggs: a crate and a single egg, never derived. */
-export const PRICES = { CRATE: 6000, UNIT: 220 } as const;
+export const PRICES = { CRATE: 6000, EGG: 220 } as const;
 
 /** The buyer as `listCustomers` answers it. */
 export function chopBar(base: S['Customer']): S['Customer'] {
@@ -48,18 +48,18 @@ export function eggPrices(request: S['PriceResolveRequest']): S['PriceResolveRes
     resolvedAt: '2026-11-17T10:00:00Z',
     currency: 'GHS',
     lines: request.lines.map((line) => {
-      const uom = line.uom === 'UNIT' ? 'UNIT' : 'CRATE';
+      const uom = line.uom === 'EGG' ? 'EGG' : 'CRATE';
       return {
         lineRef: line.lineRef,
         outcome: 'RESOLVED' as const,
         resolved: {
-          priceListEntryId: `019a7aa6-0000-7000-8000-00000000000${uom === 'UNIT' ? '1' : '2'}`,
+          priceListEntryId: `019a7aa6-0000-7000-8000-00000000000${uom === 'EGG' ? '1' : '2'}`,
           priceList: PRICE_LIST,
           basis: 'PER_UNIT' as const,
           uom,
           listPricePesewas: PRICES[uom],
-          floorPricePesewas: uom === 'UNIT' ? 200 : 5500,
-          ceilingPricePesewas: uom === 'UNIT' ? 250 : 6500,
+          floorPricePesewas: uom === 'EGG' ? 200 : 5500,
+          ceilingPricePesewas: uom === 'EGG' ? 250 : 6500,
           grade: null,
           weightBand: null,
         },
@@ -76,7 +76,7 @@ function line(
   lineNo: number,
   description: string,
   quantity: string,
-  uom: 'CRATE' | 'UNIT',
+  uom: 'CRATE' | 'EGG',
   lineNetPesewas: number,
 ): S['QuoteLine'] {
   return {
@@ -128,7 +128,7 @@ export function version1(status: S['QuoteVersion']['status']): S['QuoteVersion']
         'CRATE',
         72000,
       ),
-      line('019a7f30-4d5e-7f6a-8b7c-000000000012', 2, 'Eggs, big, single', '30.000', 'UNIT', 6600),
+      line('019a7f30-4d5e-7f6a-8b7c-000000000012', 2, 'Eggs, big, single', '30.000', 'EGG', 6600),
     ],
     acceptance: null,
     documentId: null,
@@ -157,7 +157,7 @@ export function version2(status: S['QuoteVersion']['status']): S['QuoteVersion']
         'CRATE',
         60000,
       ),
-      line('019a7f30-4d5e-7f6a-8b7c-000000000022', 2, 'Eggs, big, single', '30.000', 'UNIT', 6600),
+      line('019a7f30-4d5e-7f6a-8b7c-000000000022', 2, 'Eggs, big, single', '30.000', 'EGG', 6600),
     ],
     acceptance:
       status === 'ACCEPTED'
@@ -211,7 +211,7 @@ export function eggOrder(
     id: string,
     lineNo: number,
     qty: string,
-    uom: 'CRATE' | 'UNIT',
+    uom: 'CRATE' | 'EGG',
     total: number,
     quoteLineId: string,
   ): S['OrderLine'] => ({
@@ -258,7 +258,7 @@ export function eggOrder(
         '019a7f31-0000-7000-8000-000000000002',
         2,
         '30.000',
-        'UNIT',
+        'EGG',
         6600,
         '019a7f30-4d5e-7f6a-8b7c-000000000022',
       ),
