@@ -110,7 +110,7 @@ The till loads its shell and sale screen with the document. Every other till scr
 
 **How to check it:** the deploy workflow's console build step sets `HK_API_BASE_URL` and nothing named `HK_REQUESTED_CONTRACT`.
 
-## 6. Set `HK_SHOP_URL` for every deployed console (ADR 0055)
+## 6. Set `HK_SHOP_URL` for every deployed console (ADR 0056)
 
 The console shows a quote's link once, after it is sent, to copy or send on WhatsApp (the owner, 2026-11-18). The link is the shop's address and the storefront's `/q/{token}` page. The console learns the shop's address only from `HK_SHOP_URL`, read at build time, never from the code.
 

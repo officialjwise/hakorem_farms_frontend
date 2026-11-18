@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { assertShopUrlSet, parseShopUrl, quoteLink, shopUrl, whatsAppLink } from './shopAddress';
 
-describe("the shop's address is the build's setting (ADR 0055)", () => {
+describe("the shop's address is the build's setting (ADR 0056)", () => {
   const before = process.env.HK_SHOP_URL;
   afterEach(() => {
     if (before === undefined) delete process.env.HK_SHOP_URL;

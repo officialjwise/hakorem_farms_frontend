@@ -63,7 +63,7 @@ export default defineConfig(({ mode, isPreview }) => {
   // A switch may be on only in a build against the mock (ADR 0046, the owner's condition): fail here, before
   // anything is built, rather than ship a console that calls what the API lacks.
   if (mode !== 'test') assertSwitchesAllowed(env['HK_REQUESTED_CONTRACT'], env['HK_API_BASE_URL']);
-  // The shop's address for the links the console hands a customer (ADR 0055): a build for a real API
+  // The shop's address for the links the console hands a customer (ADR 0056): a build for a real API
   // fails without it, because a quote's link is answered once and would be lost.
   // `vite preview` only serves a finished build, which was checked when it was built.
   if (mode !== 'test' && isPreview !== true) {

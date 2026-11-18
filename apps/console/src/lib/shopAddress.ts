@@ -1,6 +1,6 @@
 /**
  * The shop's public web address, for the links the console hands a customer (the owner, 2026-11-18;
- * ADR 0055). It is a deployment setting, `HK_SHOP_URL`, read at build time like `HK_API_BASE_URL`
+ * ADR 0056). It is a deployment setting, `HK_SHOP_URL`, read at build time like `HK_API_BASE_URL`
  * (`vite.config.ts`), and never written into the code: staging and production each set their own, the
  * same origin the storefront is served from (`docs/DEPLOYMENT.md`, section 4).
  *
@@ -35,7 +35,7 @@ export function parseShopUrl(raw: string | undefined): string | null {
   return `${url.origin}${url.pathname.replace(/\/+$/, '')}`;
 }
 
-/** Fails a build for any API but the mock that has no shop address (ADR 0055). */
+/** Fails a build for any API but the mock that has no shop address (ADR 0056). */
 export function assertShopUrlSet(raw: string | undefined, apiBaseUrl: string | undefined): void {
   const shop = parseShopUrl(raw);
   if (shop !== null || (apiBaseUrl ?? '').trim() === '/mock') return;

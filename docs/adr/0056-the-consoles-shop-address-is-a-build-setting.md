@@ -1,4 +1,4 @@
-# 0055. The console's shop address is a build setting, `HK_SHOP_URL`, and a build for a real API fails without it
+# 0056. The console's shop address is a build setting, `HK_SHOP_URL`, and a build for a real API fails without it
 
 - Status: accepted (owner, 2026-11-18: "Take the shop's web address from the build's deployment settings, never hard-coded, and record that setting where F13 will read it")
 - Date: 2026-11-18
