@@ -257,6 +257,9 @@ export function LinesEditor({
           const unit = line.product === null ? '' : units.many(lineUom(line));
           const perUnit = line.product === null ? '' : units.one(lineUom(line));
           const fromOrder = line.purchaseOrderLineId !== null;
+          // CR-040 (2.9.0): a line against an order line may leave its value to the server.
+          const valueRequired: { required?: false } | { required: true; requiredLabel: string } =
+            fromOrder ? {} : { required: true, requiredLabel: required };
           const reason = rejectionReasons.find((r) => r.code === line.rejectionReasonCode);
           return (
             <li key={line.key} className="grid gap-2 rounded-md border border-border p-3">
@@ -397,8 +400,7 @@ export function LinesEditor({
                 <Field
                   label={t('lines.value', { number })}
                   hint={fromOrder ? t('lines.valueFromOrderHint') : t('lines.valueHint')}
-                  required={!fromOrder}
-                  requiredLabel={required}
+                  {...valueRequired}
                   error={wrong.includes('value') ? required : undefined}
                 >
                   <MoneyInput
