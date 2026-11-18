@@ -80,7 +80,7 @@ export interface TillServerOptions {
   offlineMobileMoney?: boolean;
   /** Changes the pack's products, for a state its example cannot show (the egg session: two units). */
   products?: (products: Record<string, unknown>[]) => Record<string, unknown>[];
-  /** CR-045, requested: the supervisors signed in at the branch. The manager, unless a test says none. */
+  /** CR-050, requested: the supervisors signed in at the branch. The manager, unless a test says none. */
   witnesses?: { id: string; displayName: string }[];
 }
 
@@ -217,7 +217,7 @@ export function installTillServer(
       page: { nextCursor: null, limit: 25, hasMore: false },
     };
   });
-  // CR-045, requested: who can witness a drop now.
+  // CR-050, requested: who can witness a drop now.
   api.respondRequested(LIST_SHIFT_WITNESSES, () => ({
     data: options.witnesses ?? [MANAGER],
     asOf: new Date().toISOString(),

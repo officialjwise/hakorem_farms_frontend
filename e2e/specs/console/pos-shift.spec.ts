@@ -12,8 +12,8 @@ import { expect, test } from '../../support/test';
 import { enrolTill, installTillServer, openTillShift, type SentSale } from '../../support/till';
 
 /**
- * F10i, the till's shift on contract 2.5.0 at 360 px: a cash drop witnessed by a supervisor signed in at the
- * branch, or plainly unwitnessed when none is (owner, 2026-11-17; CR-045 as requested); a pay-out's reason
+ * F10j, the till's shift on contract 2.5.0 at 360 px: a cash drop witnessed by a supervisor signed in at the
+ * branch, or plainly unwitnessed when none is (owner, 2026-11-17; CR-050 as requested); a pay-out's reason
  * and note; a refused drop and a refused open, each left on screen in words; and the whole close: blind
  * count, the API's over or short, and a supervisor's sign-off with a fresh step-up, then the Z report.
  */

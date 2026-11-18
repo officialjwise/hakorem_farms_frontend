@@ -1,7 +1,8 @@
-# F10i: the till's shift on contract 2.5.0, and its words on demand
+# F10j: the till's shift on contract 2.5.0, and its words on demand
 
 - **Session:** F10 continued, on branch `claude/affectionate-babbage-wimd9c`, from `main` at `678f8c9` (F10h merged as PR #27).
 - **Date:** 2026-11-18
+- **Renamed** from F10i, with its contract request from CR-045 to CR-050: the quotes session (PR #28) is also F10i and also raised a CR-045. Its screenshots moved to `docs/screenshots/F10j/`. The commits and PR #29 keep the old names.
 - **Scope**, in the owner's order:
   1. the sync: the eggs' unit rename and the waiting requests;
   2. the till's refusal words loaded on demand;
@@ -68,11 +69,11 @@ F9 built the shift screens against the planned shapes and sent every cash moveme
 
 | The till is…                    | The witness                                                                        |
 | ------------------------------- | ---------------------------------------------------------------------------------- |
-| Online, a supervisor signed in  | The cashier must choose one of the supervisors signed in at the branch (CR-045)    |
+| Online, a supervisor signed in  | The cashier must choose one of the supervisors signed in at the branch (CR-050)    |
 | Online, no supervisor signed in | None. "This drop is recorded unwitnessed": the drop goes ahead, marked unwitnessed |
 | Offline, a supervisor's PIN     | The supervisor enters their PIN on the till (CR-032)                               |
 | Offline, no PIN                 | None, and the screen says so                                                       |
-| Built with CR-045 off           | A PIN if the till holds one; otherwise none, with words saying the till cannot see |
+| Built with CR-050 off           | A PIN if the till holds one; otherwise none, with words saying the till cannot see |
 
 An unwitnessed drop says so in four places:
 
@@ -83,7 +84,7 @@ An unwitnessed drop says so in four places:
 
 **The contract does not allow this yet.** 2.5.0 refuses a drop without a witness (`WITNESS_REQUIRED`), and no operation tells the till who is signed in. A cashier can read neither the users nor the sessions. The backend recorded the owner's decision as A-273 (d), "built in B09b continued". So:
 
-- **CR-045** asks for `listShiftWitnesses` and for a drop with no witness when nobody is signed in.
+- **CR-050** asks for `listShiftWitnesses` and for a drop with no witness when nobody is signed in.
 - It is built behind its switch (ADR 0046) and on in the e2e and CI builds.
 - With the switch off, against 2.5.0, an unwitnessed drop is refused, and the refusal stays on screen in words.
 
@@ -128,7 +129,7 @@ An unwitnessed drop says so in four places:
 - `fakeRoles.test.ts`, 1 new: the tripwire for the Manager's approval of supplier credit notes.
 - `refusals.test.ts`, 3 new tests: a refusal waits for its words, keeps the server's sentence if they cannot load, and the till's first load has neither namespace.
 
-**Screenshots:** `docs/screenshots/F10i/`, at 360 and 1280 px:
+**Screenshots:** `docs/screenshots/F10j/`, at 360 and 1280 px:
 
 - the drop with a signed-in supervisor;
 - the drop recorded with its witness;
@@ -144,12 +145,12 @@ An unwitnessed drop says so in four places:
 
 ## Contract requests added or changed
 
-- **CR-045:** who can witness a cash drop now (`listShiftWitnesses`), and a drop with no witness when nobody is signed in. Built behind its switch, on in the e2e and CI builds.
+- **CR-050:** who can witness a cash drop now (`listShiftWitnesses`), and a drop with no witness when nobody is signed in. Built behind its switch, on in the e2e and CI builds.
 
 ## Decisions recorded
 
 - ADR 0038 amended, for the place of the words only: they are the `refusals` namespace, loaded on demand in the till.
-- A-F10-07, A-F10-08 and A-F10-09 in `docs/ASSUMPTIONS.md`. A-F10-01 names CR-045.
+- A-F10-07, A-F10-08 and A-F10-09 in `docs/ASSUMPTIONS.md`. A-F10-01 names CR-050.
 
 ## Gates, each run on its own
 
@@ -162,25 +163,25 @@ An unwitnessed drop says so in four places:
 | `test:integration`                                        | 0    | console 249, storefront 15                                                                   |
 | `budget:console`                                          | 0    | till 242.1 of 250 kB (was 247.1); back office 281.1 of 300 kB (was 279.8)                    |
 | `test:e2e`, full run                                      | 0    | 292 of 292 in 5.4 minutes (was 286: the 6 new shift tests)                                   |
-| `screenshots` (F10i, and F10 `cash-drop-witness`)         | 0    | 14 of 14                                                                                     |
+| `screenshots` (F10j, and F10 `cash-drop-witness`)         | 0    | 14 of 14                                                                                     |
 | `tokens:check`, `fonts:check`, `icons:check`, `test:a11y` | n/r  | not run: no token, font, icon or `packages/ui` change                                        |
 
 ## For the owner
 
-1. **An unwitnessed drop is refused by the server today.** Your rule is built and shown, but 2.5.0 still asks every drop for a witness. The backend has your decision as "built in B09b continued", so CR-045 asks for it and for a way to see who is signed in. Until then, a deployed till names a witness only by a supervisor's PIN.
+1. **An unwitnessed drop is refused by the server today.** Your rule is built and shown, but 2.5.0 still asks every drop for a witness. The backend has your decision as "built in B09b continued", so CR-050 asks for it and for a way to see who is signed in. Until then, a deployed till names a witness only by a supervisor's PIN.
 2. **A drop names the supervisor; it does not prove they were there.** That is the backend's reading too: "the witness is named, not signed in", and the drop is checked against the safe when the count is signed off. Say if the supervisor must confirm on their own phone or by PIN instead.
 3. **A cash movement made offline and sent more than five minutes later** waits on the till until the server takes offline movements (B09b continued 2).
 
 ## Opening message for the next session
 
 ```text
-Read CLAUDE.md, docs/SHARED_BRIEF.md and docs/sessions/F10i-the-tills-shift-on-2-5-0.md.
+Read CLAUDE.md, docs/SHARED_BRIEF.md and docs/sessions/F10j-the-tills-shift-on-2-5-0.md.
 Read ADR 0038, 0046 and 0052.
 
 1. pnpm sync-contract:github and read .contract-upstream/CONTRACT_CHANGELOG.md after 2.5.0.
-   - CR-045 landed (landed.ts fails): delete requested/shiftWitnesses.ts and its id (switch.ts, package.json,
+   - CR-050 landed (landed.ts fails): delete requested/shiftWitnesses.ts and its id (switch.ts, package.json,
      ci.yml, CLAUDE.md, DEPLOYMENT.md, ASSUMPTIONS A-F10-01) and call useApiQuery('listShiftWitnesses').
-   - The unwitnessed drop landed without the read: the switch stays; note it in CR-045.
+   - The unwitnessed drop landed without the read: the switch stays; note it in CR-050.
    - syncOfflineSales or getOfflinePack moved into code: take the till's queue to the real API, and
      settle A-F10-07 (a movement older than four minutes goes in the batch).
    - The Manager approves supplier credit notes in the seed: fakeRoles.test.ts's tripwire fails; give

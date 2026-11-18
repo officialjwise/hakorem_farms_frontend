@@ -228,7 +228,7 @@ test('offline, a cash drop takes its witness’s PIN, and the witness goes with 
   installTillPins(api);
   await openTillShift(page);
   await page.getByRole('link', { name: 'Shift', exact: true }).click();
-  // Online the till names a supervisor signed in at the branch (CR-045); offline it takes a PIN.
+  // Online the till names a supervisor signed in at the branch (CR-050); offline it takes a PIN.
   await api.setNetwork(context, false);
   await page.getByRole('textbox', { name: /^Amount/ }).fill('500');
   await expect(page.getByRole('button', { name: 'Record it' })).toBeVisible();
