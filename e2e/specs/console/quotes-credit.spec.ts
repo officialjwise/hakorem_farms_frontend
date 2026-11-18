@@ -202,7 +202,7 @@ test.describe('a quote for crates and single eggs', () => {
     await expectNoAxeViolations(page);
   });
 
-  test('is sent to the customer by WhatsApp and SMS; the server makes the link', async ({
+  test('is issued, and its link is shown once, to copy or send on WhatsApp with the number', async ({
     page,
     api,
   }) => {
@@ -218,7 +218,12 @@ test.describe('a quote for crates and single eggs', () => {
     api.rewrite('listQuoteVersions', (body) =>
       pageOf(body, [version2(issued() ? 'ISSUED' : 'DRAFT'), version1('SUPERSEDED')]),
     );
-    api.rewrite('issueQuoteVersion', () => version2('ISSUED'));
+    const tokens = ['quo_FirstLinkMadeAtIssue_9fK2', 'quo_SecondLinkMadeLater_x7Qp'];
+    let answered = 0;
+    api.respond('issueQuoteVersion', () => ({
+      ...version2('ISSUED'),
+      acceptanceLinkToken: tokens[Math.min(answered++, tokens.length - 1)],
+    }));
     await signInWithTotp(page, USERS.owner, `/quotes/${QUOTE_ID}`);
     await page.getByRole('button', { name: 'Send to the customer' }).click();
     const dialog = page.getByRole('dialog', { name: `Send ${QUOTE_NO}, version 2?` });
@@ -227,8 +232,38 @@ test.describe('a quote for crates and single eggs', () => {
     await dialog.getByRole('button', { name: 'Send to the customer' }).click();
     // Only the channels: the token in the link is the server's, never a number or id of ours.
     expect((await sent).postDataJSON()).toEqual({ channels: ['WHATSAPP', 'SMS'] });
-    await expect(page.getByText(`${QUOTE_NO} was sent to the customer`)).toBeVisible();
+    await expect(
+      page.getByText(`${QUOTE_NO} is issued, and its link is ready to pass on`),
+    ).toBeVisible();
+
+    // The link, from the build's shop address and the server's token, said plainly to be shown once.
+    const panel = page.getByRole('region', { name: "The customer's link" });
+    const first = `http://127.0.0.1:3100/q/${tokens[0]}`;
+    await expect(panel.getByText('This link is shown only once.', { exact: false })).toBeVisible();
+    await expect(panel.getByText(/make a new link from this quote/)).toBeVisible();
+    await expect(panel.getByText(first, { exact: true })).toBeVisible();
+    await expect(panel.getByRole('button', { name: 'Copy the link' })).toBeVisible();
+    const whatsApp = panel.getByRole('link', { name: `Send on WhatsApp to ${CUSTOMER_PHONE}` });
+    const href = new URL((await whatsApp.getAttribute('href')) ?? '');
+    expect(href.origin + href.pathname).toBe(`https://wa.me/${CUSTOMER_PHONE.slice(1)}`);
+    expect(href.searchParams.get('text')).toContain(first);
+    expect(href.searchParams.get('text')).toContain(QUOTE_NO);
+    await expect(whatsApp).toHaveAttribute('rel', 'noopener noreferrer');
+    await expectNoHorizontalScroll(page);
     await expectNoAxeViolations(page);
+
+    // A new link is made from the quote: nothing is sent again, and the new token is shown once.
+    await page.getByRole('button', { name: 'Make a new link' }).click();
+    const again = page.getByRole('dialog', { name: `Make a new link to ${QUOTE_NO}?` });
+    await expect(again).toContainText('Nothing is sent to the customer');
+    const remade = page.waitForRequest(posted(`/quote-versions/${VERSION_2}/issue`));
+    await again.getByRole('button', { name: 'Make a new link' }).click();
+    expect((await remade).postDataJSON()).toEqual({ channels: [] });
+    await expect(page.getByText(`A new link to ${QUOTE_NO} is ready to pass on`)).toBeVisible();
+    await expect(
+      panel.getByText(`http://127.0.0.1:3100/q/${tokens[1]}`, { exact: true }),
+    ).toBeVisible();
+    await expect(panel.getByText(first, { exact: true })).toHaveCount(0);
   });
 
   test('a draft is saved at its own version, the lock 2.12.0 names', async ({ page, api }) => {

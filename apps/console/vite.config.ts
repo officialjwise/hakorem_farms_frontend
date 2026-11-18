@@ -5,6 +5,7 @@ import { loadEnv } from 'vite';
 import type { Connect, Plugin, ProxyOptions } from 'vite';
 import { defineConfig } from 'vitest/config';
 import { ENTRY_DOCUMENT, entryFor } from './src/app/entries.ts';
+import { assertShopUrlSet } from './src/lib/shopAddress.ts';
 import { assertSwitchesAllowed } from './src/requested/switch.ts';
 
 /**
@@ -55,13 +56,19 @@ const input = {
   pos: fileURLToPath(new URL(`./${ENTRY_DOCUMENT.pos}`, import.meta.url)),
 };
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, isPreview }) => {
   // HK_API_BASE_URL is the one variable that decides mock or real API (ADR 0019). The literal
   // `process.env.HK_API_BASE_URL` in @hakorem/api-client is replaced here, at build time.
   const env = loadEnv(mode, process.cwd(), '');
   // A switch may be on only in a build against the mock (ADR 0046, the owner's condition): fail here, before
   // anything is built, rather than ship a console that calls what the API lacks.
   if (mode !== 'test') assertSwitchesAllowed(env['HK_REQUESTED_CONTRACT'], env['HK_API_BASE_URL']);
+  // The shop's address for the links the console hands a customer (ADR 0055): a build for a real API
+  // fails without it, because a quote's link is answered once and would be lost.
+  // `vite preview` only serves a finished build, which was checked when it was built.
+  if (mode !== 'test' && isPreview !== true) {
+    assertShopUrlSet(env['HK_SHOP_URL'], env['HK_API_BASE_URL']);
+  }
   return {
     plugins: [react(), tailwindcss(), entryDocuments],
     // HK_REQUESTED_CONTRACT names the contract requests this build is built against (ADR 0046): the
@@ -73,6 +80,7 @@ export default defineConfig(({ mode }) => {
         ? {}
         : {
             'process.env.HK_REQUESTED_CONTRACT': JSON.stringify(env['HK_REQUESTED_CONTRACT'] ?? ''),
+            'process.env.HK_SHOP_URL': JSON.stringify(env['HK_SHOP_URL'] ?? ''),
           }),
     },
     build: {

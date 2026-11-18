@@ -55,6 +55,7 @@ import { today } from '../payables/instant';
 import { ANY, FilterSelect, countSet, param } from '../stock/filters';
 import { useUnits } from '../stock/units';
 import { CustomerPicker } from './CustomerPicker';
+import { QuoteLink } from './QuoteLink';
 import {
   ISSUE_CHANNELS,
   QUOTE_STATUSES,
@@ -762,9 +763,12 @@ function VersionView({ version: v, current }: { version: Version; current: boole
   );
 }
 
-type Open = 'edit' | 'issue' | 'revise' | 'accept' | 'decline' | 'cancel' | 'convert' | null;
+type Open =
+  'edit' | 'issue' | 'link' | 'revise' | 'accept' | 'decline' | 'cancel' | 'convert' | null;
 type Outcome =
-  | { kind: 'issued' | 'saved' | 'revised' | 'accepted' | 'declined' | 'cancelled' }
+  | { kind: 'saved' | 'revised' | 'accepted' | 'declined' | 'cancelled' }
+  /** Issued, or a new link made: the link's token, answered only this once (null if the server gave none). */
+  | { kind: 'issued' | 'newLink'; token: string | null }
   | { kind: 'margin'; approvalId: string }
   | { kind: 'converted'; order: S['SalesOrder'] };
 
@@ -776,6 +780,8 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
   const quoteName = useQuoteName();
   const [open, setOpen] = useState<Open>(null);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  // Each new link is its own intent: asking again for an issued version answers a fresh token.
+  const [links, setLinks] = useState(0);
   const after = { invalidates: ['listQuotes', 'getQuote', 'listQuoteVersions'] } as const;
   const issue = useApiMutation('issueQuoteVersion', after);
   const revise = useApiMutation('reviseQuote', after);
@@ -799,6 +805,7 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
     !draft &&
     auth.can('quo.quote.create');
   const canRecord = live && auth.can('quo.quote.issue');
+  const canLink = live && auth.can('quo.quote.issue');
   const canConvert =
     q.status === 'ACCEPTED' && q.convertedOrder === null && auth.can('quo.quote.convert');
   const canCancel =
@@ -814,6 +821,14 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
   return (
     <div className="grid gap-3">
       {outcome === null ? null : <OutcomeAlert outcome={outcome} name={quoteName(q)} />}
+      {(outcome?.kind === 'issued' || outcome?.kind === 'newLink') && outcome.token !== null ? (
+        <QuoteLink
+          token={outcome.token}
+          phone={q.contactPhone}
+          contactName={q.contactName}
+          quoteNo={q.quoteNo ?? quoteName(q)}
+        />
+      ) : null}
       {q.status === 'PENDING_APPROVAL' && v.approvalRequestId !== null && outcome === null ? (
         <Alert severity="warning" title={t('outcome.marginWaiting')}>
           <Link to={`/approvals/${v.approvalRequestId}`} className="text-accent-text underline">
@@ -856,6 +871,17 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
           {canRevise ? (
             <Button variant="secondary" onClick={() => setOpen('revise')}>
               {t('actions.revise')}
+            </Button>
+          ) : null}
+          {canLink ? (
+            <Button
+              variant="secondary"
+              onClick={() => {
+                issue.reset();
+                setOpen('link');
+              }}
+            >
+              {t('link.make')}
             </Button>
           ) : null}
           {canRecord ? (
@@ -906,7 +932,7 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
               setOutcome(
                 isApprovalPending(answer)
                   ? { kind: 'margin', approvalId: answer.approvalRequestId }
-                  : { kind: 'issued' },
+                  : { kind: 'issued', token: answer.acceptanceLinkToken },
               );
             })
             .catch(() => undefined);
@@ -914,6 +940,31 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
       >
         {totals}
       </IssueDialog>
+      <ConfirmDialog
+        open={open === 'link'}
+        onOpenChange={(next) => setOpen(next ? 'link' : null)}
+        title={t('link.makeTitle', { name: quoteName(q) })}
+        body={t('link.makeBody')}
+        confirmLabel={t('link.make')}
+        pendingLabel={t('actions.working')}
+        pending={issue.isPending}
+        error={shownFailure(issue.error)}
+        failedTitle={t('link.notMade')}
+        onConfirm={() => {
+          // Nothing is sent again (2.12.0): the server answers a fresh token for the issued version.
+          const input = { path: { id: v.id }, body: { channels: [] } };
+          issue
+            .mutateAsync(input, { idempotencyKey: keyFor({ newLink: v.id, count: links }) })
+            .then((answer) => {
+              setLinks((n) => n + 1);
+              setOpen(null);
+              if (!isApprovalPending(answer)) {
+                setOutcome({ kind: 'newLink', token: answer.acceptanceLinkToken });
+              }
+            })
+            .catch(() => undefined);
+        }}
+      />
       {open === 'revise' ? (
         <ReasonDialog
           open
