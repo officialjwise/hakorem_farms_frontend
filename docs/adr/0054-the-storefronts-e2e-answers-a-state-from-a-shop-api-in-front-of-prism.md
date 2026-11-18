@@ -2,11 +2,11 @@
 
 - Status: accepted (carried from F10e: "decide how the storefront's e2e answers a state the contract's examples cannot show, in an ADR")
 - Date: 2026-11-17
-- Session: F10j
+- Session: F10i
 
 ## Context
 
-The storefront reads on its server (ADR 0015): a page asks the API before any HTML reaches the browser. In the e2e suite that API is Prism, which answers every operation from the contract's one example. The console's suite answers other states in the browser (ADR 0026, `fakeApi.rewrite`), but Playwright cannot route a request a Next.js server makes. Until F10j every storefront state a spec needed was either Prism's example or a status Prism can be asked for. The quote by its link (FR-QUO-003) is not: the page must say "expired", "replaced by a newer version", "accepted" and "declined", and `viewQuoteByLink`'s example is only `ISSUED`. The F10 gate is that page on a phone.
+The storefront reads on its server (ADR 0015): a page asks the API before any HTML reaches the browser. In the e2e suite that API is Prism, which answers every operation from the contract's one example. The console's suite answers other states in the browser (ADR 0026, `fakeApi.rewrite`), but Playwright cannot route a request a Next.js server makes. Until F10i every storefront state a spec needed was either Prism's example or a status Prism can be asked for. The quote by its link (FR-QUO-003) is not: the page must say "expired", "replaced by a newer version", "accepted" and "declined", and `viewQuoteByLink`'s example is only `ISSUED`. The F10 gate is that page on a phone.
 
 ## Options considered
 

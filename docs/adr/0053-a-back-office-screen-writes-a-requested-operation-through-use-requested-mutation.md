@@ -2,12 +2,12 @@
 
 - Status: accepted
 - Date: 2026-11-17
-- Session: F10j
+- Session: F10i
 - Extends: ADR 0046, ADR 0052
 
 ## Context
 
-ADR 0052 gave a back-office screen a requested read and said a requested write still went through `callRequested` directly, "none is needed in the back office yet". Credit control needs one: the seller asks for a credit override with a reason (`requestCreditOverride`, CR-047), which the contract does not list. Calling the client from a click handler would drop what `useApiMutation` guarantees: one idempotency key for the intent and every automatic retry, the normalised error a screen shows with `MutationFailure`, and the refetch of what the write changed (here the order's requested credit check, a requested read whose key no generated operation shares).
+ADR 0052 gave a back-office screen a requested read and said a requested write still went through `callRequested` directly, "none is needed in the back office yet". Credit control needs one: the seller asks for a credit override with a reason (`requestCreditOverride`, CR-046), which the contract does not list. Calling the client from a click handler would drop what `useApiMutation` guarantees: one idempotency key for the intent and every automatic retry, the normalised error a screen shows with `MutationFailure`, and the refetch of what the write changed (here the order's requested credit check, a requested read whose key no generated operation shares).
 
 ## Options considered
 
@@ -24,5 +24,5 @@ Option 2.
 
 ## Consequences
 
-- A requested write has the same key, retry and failure words as any other. When CR-047 lands, `landed.ts` fails, `requested/creditControl.ts` is deleted, and the screen calls `useApiMutation('requestCreditOverride', …)`.
+- A requested write has the same key, retry and failure words as any other. When CR-046 lands, `landed.ts` fails, `requested/creditControl.ts` is deleted, and the screen calls `useApiMutation('requestCreditOverride', …)`.
 - No new provider, context or stylesheet.

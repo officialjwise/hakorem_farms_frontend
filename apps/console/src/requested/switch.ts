@@ -19,7 +19,7 @@ export const CONTRACT_REQUESTS = [
   'CR-042',
   'CR-045',
   'CR-046',
-  'CR-047',
+  'CR-050',
 ] as const;
 export type ContractRequest = (typeof CONTRACT_REQUESTS)[number];
 

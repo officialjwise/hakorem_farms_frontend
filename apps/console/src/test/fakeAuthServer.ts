@@ -250,8 +250,8 @@ const OWNER_PAYABLE_PERMISSIONS = [
 ];
 
 /**
- * F10j: quotes, requests for quote, wholesale accounts, the ageing and an order's credit check. The seed
- * grants no quo.* or whl.* permission yet (B10, CR-047 item 5); the Owner and the Manager hold all of
+ * F10i: quotes, requests for quote, wholesale accounts, the ageing and an order's credit check. The seed
+ * grants no quo.* or whl.* permission yet (B10, CR-046 item 5); the Owner and the Manager hold all of
  * them here (A-F10-10). The order, price and proforma permissions are the seed's own.
  */
 const WHOLESALE_PERMISSIONS = [
@@ -274,9 +274,9 @@ const WHOLESALE_PERMISSIONS = [
 ];
 
 /**
- * F10j, the owner (2026-11-18): Sales builds, revises, sends and converts quotes, and never approves a
+ * F10i, the owner (2026-11-18): Sales builds, revises, sends and converts quotes, and never approves a
  * credit override. What the seed gives the role (the customer, price, order and proforma permissions), and
- * the quote permissions not seeded yet (A-F10-10, CR-049). No hold, no terms, no approvals.
+ * the quote permissions not seeded yet (A-F10-10, CR-048). No hold, no terms, no approvals.
  */
 const SALES_PERMISSIONS = [
   'mdm.customer.read',
@@ -485,8 +485,8 @@ const ACCOUNTANT_PERMISSIONS = [
   'pur.supplier_payment.pay',
   'mdm.supplier.read',
   'iam.approval.read',
-  // F10j, the owner (2026-11-18): the Accountant may put a wholesale account on hold, and never releases
-  // one or changes a credit limit (A-F10-10, CR-049).
+  // F10i, the owner (2026-11-18): the Accountant may put a wholesale account on hold, and never releases
+  // one or changes a credit limit (A-F10-10, CR-048).
   'whl.account.read',
   'whl.account.hold',
   'whl.ageing.read',
@@ -571,7 +571,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
     roleName: 'Accountant',
     permissions: ACCOUNTANT_PERMISSIONS,
   },
-  // F10j: the salesperson the contract's quote examples name.
+  // F10i: the salesperson the contract's quote examples name.
   'kojo.antwi@hakoremfarms.com': {
     id: '019a7a86-e9e0-7c6e-81a7-cfc0641d489e',
     displayName: 'Kojo Antwi',
@@ -582,7 +582,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
     roleName: 'Sales',
     permissions: SALES_PERMISSIONS,
   },
-  // F10j: an Accountant who has set up TOTP, so a spec can act as one past sign-in.
+  // F10i: an Accountant who has set up TOTP, so a spec can act as one past sign-in.
   'esi.boateng@hakoremfarms.com': {
     id: '019a7a86-c4d9-7e25-9f73-3e0b6d2a1f58',
     displayName: 'Esi Boateng',

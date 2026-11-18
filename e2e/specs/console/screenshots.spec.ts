@@ -804,7 +804,7 @@ for (const shot of TEN_SHOTS) {
 }
 
 /**
- * F10i, the till's shift on contract 2.5.0 (CR-045 as requested): a drop witnessed by a supervisor signed in
+ * F10j, the till's shift on contract 2.5.0 (CR-050 as requested): a drop witnessed by a supervisor signed in
  * at the branch, a drop plainly unwitnessed when none is (dark and compact too), a refused drop, and the
  * shift signed off with its Z report. Each opens the cashier's shift first, as F09 does.
  */
@@ -905,7 +905,7 @@ const SHIFT_SHOTS: ShiftShot[] = [
 
 for (const shot of SHIFT_SHOTS) {
   for (const width of WIDTHS) {
-    test(`@screenshots F10i ${shot.name} at ${width}`, async ({ page, api }) => {
+    test(`@screenshots F10j ${shot.name} at ${width}`, async ({ page, api }) => {
       installTillServer(api, (sale) => sale.tenders.reduce((sum, t) => sum + t.amountPesewas, 0), {
         ...(shot.witnesses === undefined ? {} : { witnesses: shot.witnesses }),
       });
@@ -923,7 +923,7 @@ for (const shot of SHIFT_SHOTS) {
       }
       await shot.act(page);
       await page.screenshot({
-        path: `../docs/screenshots/F10i/${shot.name}-${width}.png`,
+        path: `../docs/screenshots/F10j/${shot.name}-${width}.png`,
         fullPage: true,
         scale: 'css',
       });
@@ -1262,9 +1262,9 @@ for (const shot of PAYABLE_SHOTS) {
 }
 
 /**
- * Quotes, wholesale and credit control (F10j): the egg quote built and priced by the API, its versions,
+ * Quotes, wholesale and credit control (F10i): the egg quote built and priced by the API, its versions,
  * the order made from it with the server's credit refusal and the override, the buyer's account and the
- * ageing. The credit check is CR-047's requested shape.
+ * ageing. The credit check is CR-046's requested shape.
  */
 const pageWith = <T>(body: unknown, rows: T[]) => ({ ...(body as object), data: rows });
 const WHOLESALE_SHOTS: Shot[] = [
@@ -1411,7 +1411,7 @@ const WHOLESALE_SHOTS: Shot[] = [
 
 for (const shot of WHOLESALE_SHOTS) {
   for (const width of WIDTHS) {
-    test(`@screenshots F10j ${shot.name} at ${width}`, async ({ page, api }) => {
+    test(`@screenshots F10i ${shot.name} at ${width}`, async ({ page, api }) => {
       shot.prepare?.(api);
       await page.emulateMedia({ colorScheme: 'light' });
       await page.setViewportSize({ width, height: width === 360 ? 800 : 900 });
@@ -1420,7 +1420,7 @@ for (const shot of WHOLESALE_SHOTS) {
       await expect(page.getByText(/^Loading/)).toHaveCount(0);
       await shot.act?.(page);
       await page.screenshot({
-        path: `../docs/screenshots/F10j/${shot.name}-${width}.png`,
+        path: `../docs/screenshots/F10i/${shot.name}-${width}.png`,
         fullPage: true,
         scale: 'css',
       });

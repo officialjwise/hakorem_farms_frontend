@@ -38,11 +38,11 @@ import {
 import { expect, test } from '../../support/test';
 
 /**
- * Quotes, wholesale and credit control (F10j, contract 2.5.0): Asantewaa Chop Bar buys big eggs by the
+ * Quotes, wholesale and credit control (F10i, contract 2.5.0): Asantewaa Chop Bar buys big eggs by the
  * crate and the single egg. A quote is built with lines priced by the API for the buyer (the unit behind
- * CR-046), revised into a new version with the old one kept readable, sent, accepted and made an order
+ * CR-045), revised into a new version with the old one kept readable, sent, accepted and made an order
  * with every link kept. Confirming the credit order is refused by the server with the amount over the
- * limit (CR-047), an override is asked for with a reason, the person who asked cannot approve it, and a
+ * limit (CR-046), an override is asked for with a reason, the person who asked cannot approve it, and a
  * Manager does; the account shows who approved it. The suite runs at 360 px. Every amount shown is the
  * API's: the browser adds nothing up.
  */
@@ -68,7 +68,7 @@ test.describe('a quote for crates and single eggs', () => {
     api.rewrite('listCustomers', (body) => pageOf(body, [chopBar(first<S['Customer']>(body))]));
     api.respond('resolvePrices', (request) => eggPrices(request as S['PriceResolveRequest']));
     // Prism refuses the requested unit (QuoteLineInput takes no uom yet): the fake answers as a server
-    // with CR-046 would.
+    // with CR-045 would.
     api.respond('createQuote', () => eggQuote({} as S['Quote'], 'DRAFT', version1('DRAFT'), 1));
     api.rewrite('getQuote', (body) => eggQuote(body as S['Quote'], 'DRAFT', version1('DRAFT'), 1));
     api.rewrite('listQuoteVersions', (body) => pageOf(body, [version1('DRAFT')]));
@@ -129,7 +129,7 @@ test.describe('a quote for crates and single eggs', () => {
       validUntil: '2026-11-24T23:59:59.999Z',
       taxInclusive: false,
     });
-    // The API's prices, in pesewas, each with its unit (CR-046); no total is sent.
+    // The API's prices, in pesewas, each with its unit (CR-045); no total is sent.
     expect(body.lines).toEqual([
       {
         productId: EGGS_ID,
@@ -419,7 +419,7 @@ test.describe('credit control', () => {
           approvalRequestId: OVERRIDE_APPROVAL_ID,
           approvedBy: MANAGER,
           recordedAt: '2026-11-17T12:50:00Z',
-          // CR-047 adds who asked and why.
+          // CR-046 adds who asked and why.
           reason: 'They pay every Friday; this week is the festival order',
           requestedBy: { id: '019a7a86-1c4e-7b9a-9e2f-5d3c8a1b7e04', displayName: 'Ama Mensah' },
           overLimitPesewas: 28600,

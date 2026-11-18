@@ -136,7 +136,7 @@ describe('the sitemap', () => {
     expect(urls).toContain('https://hakoremfarms.com/c/meat');
     expect(urls).toContain('https://hakoremfarms.com/p/goat');
     expect(urls.some((url) => url.includes('/checkout'))).toBe(false);
-    // F10j: the request-for-quote form is listed; a quote's private link never is.
+    // F10i: the request-for-quote form is listed; a quote's private link never is.
     expect(urls).toContain('https://hakoremfarms.com/quote');
     expect(urls.some((url) => url.includes('/q/'))).toBe(false);
   });

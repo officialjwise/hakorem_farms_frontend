@@ -706,9 +706,10 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 
 **Until this lands:** the invoice screen reads `qtyVariance` in the line's `uom`, positive as "more than was received" and negative as "less", and `priceVariancePesewas` as the line's whole difference ("GH₵10.50 over the order's price on this line"), as A-F10-06 records.
 
-## CR-045. Who can witness a cash drop now, and a drop with no witness when nobody can (additive, behaviour)
+## CR-050. Who can witness a cash drop now, and a drop with no witness when nobody can (additive, behaviour)
 
-- **Raised by:** frontend F10i, the till's shift screen: "a supervisor witnesses the drop when one is signed in at the branch. When none is, the drop goes ahead marked unwitnessed, as the server allows. Show that state plainly" (owner, 2026-11-17; the backend's A-273 (d) records the same decision, "built in B09b continued").
+- **Numbered CR-045 when it was raised** (merged in PR #29, 2026-11-18). The quotes session raised its own CR-045 to CR-049 at the same time, so this one is renumbered CR-050. A backend note that names CR-045 for `listShiftWitnesses` or the unwitnessed drop means this request.
+- **Raised by:** frontend F10j, the till's shift screen: "a supervisor witnesses the drop when one is signed in at the branch. When none is, the drop goes ahead marked unwitnessed, as the server allows. Show that state plainly" (owner, 2026-11-17; the backend's A-273 (d) records the same decision, "built in B09b continued").
 - **Contract read first (2.5.0):** `recordCashMovement` refuses a `CASH_DROP` without a `witnessId` (422 `CASH_MOVEMENT_INVALID`, `WITNESS_REQUIRED`); the witness holds `pos.shift.close.approve` at the branch and is neither the cashier nor the caller, and is named, not signed in (A-273 (d)). Nothing tells the till who that could be: `listUsers` needs `iam.user.read` and `listSessions` needs `iam.session.read.any`, which a cashier holds neither of, and neither says who holds a permission at a branch. `CashMovement.witness` is already nullable.
 
 **Request, two parts:**
@@ -716,18 +717,18 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 1. **`listShiftWitnesses`**, `GET /shifts/{id}/witnesses`, permission `pos.cash.move`, ownership the shift's own cashier, with the device credential as `recordCashMovement` has it. It answers `ShiftWitnessList`: `{ data: PrincipalRef[], asOf: date-time }`, the holders of `pos.shift.close.approve` at the shift's branch with a live staff session now, never the shift's cashier, so every one is a `witnessId` the server takes. An empty `data` means no supervisor is signed in.
 2. **`recordCashMovement` takes a `CASH_DROP` with no `witnessId` when no supervisor is signed in at the branch**, answering `witness: null`, and puts it on the exception report; `WITNESS_REQUIRED` only when one is. No field changes: `witness: null` on a drop is "unwitnessed".
 
-**Until this lands:** the e2e and CI builds switch it on (`HK_REQUESTED_CONTRACT=…,CR-045`, ADR 0046) and the fake answers it (`e2e/support/till.ts`). With the switch off, as a deployed build runs, the till cannot see who is signed in: a drop is sent without a witness unless a supervisor's PIN is on the till (CR-032), and the screen says so ("The till cannot see yet which supervisors are signed in at the branch, so the drop is sent without a witness and marked unwitnessed"). Against 2.5.0 the server refuses it, and the refusal stays on screen in words. `requested/landed.ts` checks the first part.
+**Until this lands:** the e2e and CI builds switch it on (`HK_REQUESTED_CONTRACT=…,CR-050`, ADR 0046) and the fake answers it (`e2e/support/till.ts`). With the switch off, as a deployed build runs, the till cannot see who is signed in: a drop is sent without a witness unless a supervisor's PIN is on the till (CR-032), and the screen says so ("The till cannot see yet which supervisors are signed in at the branch, so the drop is sent without a witness and marked unwitnessed"). Against 2.5.0 the server refuses it, and the refusal stays on screen in words. `requested/landed.ts` checks the first part.
 
-## CR-046. A quote line names the unit it is sold in, a crate or a single egg (additive)
+## CR-045. A quote line names the unit it is sold in, a crate or a single egg (additive)
 
 - **Raised by:** frontend, the quotes session: "build a quote for a customer with crate and egg lines priced by the API" (owner, 2026-11-17).
 - **Contract read first (2.5.0):** `QuoteLine` answers `uom`, but `QuoteLineInput` (taken by `createQuote` and `updateQuoteVersion`) has no `uom`, so a quote cannot say whether "10.000" of the big eggs is ten crates or ten eggs. `PriceResolveLine.uom` (2.1.0) already prices a crate by the crate's entry and a single egg by the base unit's, and `PurchaseOrderLineInput`, `GoodsReceiptLineInput` and `OrderLineInput` take the unit they are entered in.
 
 **Request:** `QuoteLineInput.uom: string` (pattern `^[A-Z]{2,10}$`), optional: the product's sale unit when left out, or a unit it converts from (`CRATE`, `UNIT`); a unit the product is not sold by is 422 `REFERENCE_NOT_FOUND`, as `resolvePrices` answers. `QuoteLine.uom` answers the unit sent, `resolvedUnitPricePesewas` is the entry for that unit (never one derived from the other unit's), and `convertQuote` carries the unit to the order line.
 
-**Until this lands:** the quote builder sends `uom` only in a build switched on for CR-046 (`HK_REQUESTED_CONTRACT`, ADR 0046), from `apps/console/src/requested/quoteLineUnit.ts`. Each line's price comes from `resolvePrices` for that unit and customer, and is sent as `unitPricePesewas`; the person may agree another, and the API's price stays beside it. With the switch off, a line is in the product's sale unit and the screen says that a line by the single egg waits for the server.
+**Until this lands:** the quote builder sends `uom` only in a build switched on for CR-045 (`HK_REQUESTED_CONTRACT`, ADR 0046), from `apps/console/src/requested/quoteLineUnit.ts`. Each line's price comes from `resolvePrices` for that unit and customer, and is sent as `unitPricePesewas`; the person may agree another, and the API's price stays beside it. With the switch off, a line is in the product's sale unit and the screen says that a line by the single egg waits for the server.
 
-## CR-047. A credit order past the limit or the terms is refused with the amount over, and an override is asked for with a reason (behaviour, additive)
+## CR-046. A credit order past the limit or the terms is refused with the amount over, and an override is asked for with a reason (behaviour, additive)
 
 - **Raised by:** frontend, the credit control session: "a sale that would take a customer past their limit, or a customer past their terms, is refused by the server; show the refusal in words, with the amount over. An override needs an Owner or Manager, a reason, and is never approved by the person asking. Show who approved it" (owner, 2026-11-17).
 - **Contract read first (2.5.0):** `confirmOrder` answers **202** `CREDIT_OVERRIDE` for a business account over its limit or on hold; until B10 it refuses a credit order with 422 `ORDER_INVALID` `CREDIT_CHECK_UNAVAILABLE` (A-224). Nothing answers by how much the order is over, nothing refuses a customer past their terms, the override carries no reason (`confirmOrder` takes no body), and `CreditOverride` names `approvedBy` but neither the reason nor who asked. `BusinessAccount` answers `exposurePesewas`, `availableCreditPesewas` and `overduePesewas`; working out "over by" from them and the order's estimate would be the browser computing money. No seeded role holds any `quo.*` or `whl.*` permission yet.
@@ -766,9 +767,9 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 4. `CreditOverride` gains `reason: string`, `requestedBy: PrincipalRef` and `overLimitPesewas: Pesewas`.
 5. The seed grants the `quo.*` and `whl.*` permissions (CR-023). The frontend fake assumes: the Owner and the Manager hold all of them; the Sales role holds `quo.rfq.read`, `quo.rfq.update`, `quo.quote.read`, `quo.quote.create`, `quo.quote.issue`, `quo.quote.convert`, `whl.account.read` and `whl.ageing.read`; the Accountant holds `whl.account.read`, `whl.account.hold` and `whl.ageing.read` (A-F10-10).
 
-**Until this lands:** the order's credit check and the override are built against these shapes behind `HK_REQUESTED_CONTRACT=CR-047` (ADR 0046, ADR 0052, ADR 0053): `apps/console/src/requested/creditControl.ts`, answered in the e2e suite by `e2e/support/requested.ts`. With the switch off, the order page confirms as the contract says, shows a 202 as "waiting for a credit override" with its approval, shows `CREDIT_CHECK_UNAVAILABLE` in words, and says that the amount over waits for the server.
+**Until this lands:** the order's credit check and the override are built against these shapes behind `HK_REQUESTED_CONTRACT=CR-046` (ADR 0046, ADR 0052, ADR 0053): `apps/console/src/requested/creditControl.ts`, answered in the e2e suite by `e2e/support/requested.ts`. With the switch off, the order page confirms as the contract says, shows a 202 as "waiting for a credit override" with its approval, shows `CREDIT_CHECK_UNAVAILABLE` in words, and says that the amount over waits for the server.
 
-## CR-048. The quote link's token, and what an accepted or replaced quote says (description fix, additive)
+## CR-047. The quote link's token, and what an accepted or replaced quote says (description fix, additive)
 
 - **Raised by:** frontend, the quote acceptance page: "the link carries its own long random token, never a quote number or ID. Show clear states for an expired quote and for one replaced by a newer revision" (owner, 2026-11-17).
 - **Contract read first (2.5.0):** `viewQuoteByLink`, `acceptQuoteByLink` and `declineQuoteByLink` take `token` as a bare string. `issueQuoteVersion` says it "sends the acceptance link"; nothing says what the token is, how long it lives, or whether a newer version's link replaces it. `PublicQuote.status` has `EXPIRED` and `SUPERSEDED`, but an `ACCEPTED` quote does not say who accepted it or when, and a `SUPERSEDED` one does not say a newer version was sent.
@@ -781,9 +782,10 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 
 **Until this lands:** nothing is switched. The page shows the status the API gives: an expired quote says when it expired and how to ask for a new one; a replaced one says the farm sent a newer version and this link can no longer be used. A refused acceptance reads the quote again and shows its state in words.
 
-## CR-049. Who quotes, holds, releases and approves: the seed for quotes and wholesale, and a second person on a release and a limit change (seed, behaviour)
+## CR-048. Who quotes, holds, releases and approves: the seed for quotes and wholesale, and a second person on a release and a limit change (seed, behaviour)
 
-- **Raised by:** frontend, F10j, on the owner's decision (2026-11-18): "Sales builds, revises, sends and converts quotes, and never approves an override. The Accountant may put an account on hold. Releasing a hold, approving an over-limit override and changing a credit limit are Owner or Manager only, never the person who asked."
+- **Raised by:** frontend, F10i, on the owner's decision (2026-11-18): "Sales builds, revises, sends and converts quotes, and never approves an override. The Accountant may put an account on hold. Releasing a hold, approving an over-limit override and changing a credit limit are Owner or Manager only, never the person who asked."
+- **Approved by the owner (2026-11-18):** a second Owner or Manager on every hold release and every credit-limit change (items 2 and 3 below). Raised as CR-049 while this session was briefly numbered F10j; the same request.
 - **Contract read first (2.5.0):** no seeded role holds any `quo.*` or `whl.*` permission. `holdBusinessAccount` and `releaseBusinessAccount` both take `whl.account.hold`, so whoever may put a hold on may also release it. `updateBusinessAccount` (`whl.account.manage`) needs approval only for "raising a credit limit above the configured amount" (202 `CREDIT_OVERRIDE`), so a limit change below that amount is one person's.
 
 **Request:**
@@ -797,17 +799,17 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
    | `whl.account.hold` (put on hold)                                                                               | yes   | yes     | no    | yes        |
    | `whl.account.release` (new: release a hold)                                                                    | yes   | yes     | no    | no         |
    | `whl.account.manage` (open an account, change its terms)                                                       | yes   | yes     | no    | no         |
-   | `whl.credit.override` (approve a credit override, CR-047)                                                      | yes   | yes     | no    | no         |
+   | `whl.credit.override` (approve a credit override, CR-046)                                                      | yes   | yes     | no    | no         |
 
 2. **Releasing a hold** takes `whl.account.release` (not `whl.account.hold`), and answers 202 `ApprovalPending` of a kind such as `ACCOUNT_RELEASE`, approved by a holder of `whl.account.release` who did not ask (422 `MAKER_CANNOT_CHECK`).
 3. **Every change to a credit limit**, up or down, answers 202 `CREDIT_OVERRIDE` (or a new `CREDIT_LIMIT_CHANGE`), approved by an Owner or Manager who did not ask; the other terms may change at once.
-4. **A credit override** (CR-047) is approved only by a holder of `whl.credit.override`, never by the person who asked; Sales may ask (it holds `ord.order.confirm`) and never approve.
+4. **A credit override** (CR-046) is approved only by a holder of `whl.credit.override`, never by the person who asked; Sales may ask (it holds `ord.order.confirm`) and never approve.
 
 **Until this lands:** the test fake gives these roles as above (A-F10-10), with `whl.account.manage` standing in for the release permission: the console offers "Release from hold" only to a holder of both `whl.account.hold` and `whl.account.manage`, so the Accountant who may put a hold on never sees it. The account screen already shows a 202 from a limit change or a release as waiting for an Owner or Manager other than the person who asked, with the approval. No switch: the shapes are the contract's.
 
-## CR-050. The shop's request for quote takes a quantity and its unit (additive)
+## CR-049. The shop's request for quote takes a quantity and its unit (additive)
 
-- **Raised by:** frontend, F10j, the request-for-quote form: "how many crates". The owner (2026-11-18): the count as text is fine until the backend adds a quantity and unit field.
+- **Raised by:** frontend, F10i, the request-for-quote form: "how many crates". The owner (2026-11-18): the count as text is fine until the backend adds a quantity and unit field.
 - **Contract read first (2.5.0):** `PublicQuoteRequest` has `requirements` (free text, 2,000 characters), `productId` and `stockUnitId`, and no quantity; `Rfq` answers none either.
 
 **Request:** `PublicQuoteRequest.quantity: Quantity` and `PublicQuoteRequest.uom: string` (pattern `^[A-Z]{2,10}$`, `CRATE` or `UNIT` for eggs), both optional and sent together; `RfqCreate` takes the same two, and `Rfq` answers them (null when not given), so the quote builder can start the line from them.

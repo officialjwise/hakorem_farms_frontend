@@ -22,7 +22,7 @@ const NOT_SEEDED: Readonly<Record<string, string>> = {
   // Wholesale statements.
   'whl.statement.read': 'wholesale',
   'whl.statement.create': 'wholesale',
-  // Quotes, wholesale accounts and the ageing (B10, CR-047 item 5; A-F10-10).
+  // Quotes, wholesale accounts and the ageing (B10, CR-046 item 5; A-F10-10).
   'quo.rfq.read': 'B10',
   'quo.rfq.update': 'B10',
   'quo.quote.read': 'B10',

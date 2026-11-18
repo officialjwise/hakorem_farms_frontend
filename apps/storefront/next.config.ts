@@ -15,7 +15,7 @@ const config: NextConfig = {
   experimental: { optimizePackageImports: ['@hakorem/ui'] },
   poweredByHeader: false,
   // A quote's private link (/q/<token>): the token is the customer's acceptance key, so the page is never
-  // indexed and the link is never sent on as a referrer to anything it opens (CR-048).
+  // indexed and the link is never sent on as a referrer to anything it opens (CR-047).
   async headers() {
     return [
       {

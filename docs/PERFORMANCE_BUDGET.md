@@ -86,22 +86,22 @@ The home and search pages fell the same way (`/` 176 KB without photographs). A 
 
 A-F0-06 can now be judged on a page under budget: the provisional 120 kB script sub-budget holds on the listing with 2 kB to spare.
 
-### Per route, checked in CI (F10j, 2026-11-18)
+### Per route, checked in CI (F10i, 2026-11-18)
 
-The owner's decision (2026-11-18): the two quote pages are accepted at their size, under **their own budget of 170 kB**, checked in CI; the **120 kB** target stays for listing pages.
+The owner's decision (2026-11-18): the two quote pages are accepted at their size, under **their own budget of 170 kB**, checked in CI; the **120 kB** target stays for listing pages. And (2026-11-18, on F10i): the listing pages do not fail CI at 120 kB yet; they are **ratcheted**, so CI fails above today's 121.7 kB and they cannot grow. The next storefront session trims them under 120 kB and then sets the limit to 120.
 
 `pnpm budget:storefront` (`apps/storefront/scripts/check-budget.ts`) runs after `next build` in CI. It measures what `next build` reports as a route's first-load JavaScript: the page entry's files in `.next/app-build-manifest.json`, the 103 kB every page shares included, gzipped, in kilobytes of 1,000 bytes. The root layout's own chunks are printed beside it and not counted, as `next build` does not count them either.
 
-| Route                                          | First-load script | Budget | Enforced in CI |
-| ---------------------------------------------- | ----------------- | ------ | -------------- |
-| `/quote`, the request-for-quote form           | 157.1 kB          | 170 kB | yes            |
-| `/q/[token]`, the quote by its link            | 169.3 kB          | 170 kB | yes            |
-| `/`, `/c/[slug]`, `/search`, the listing pages | 121.7 kB          | 120 kB | no: a target   |
-| `/p/[slug]`                                    | 152.6 kB          | none   | no             |
-| `/checkout`                                    | 202.8 kB          | none   | no             |
+| Route                                          | First-load script | Budget                                             | Enforced in CI      |
+| ---------------------------------------------- | ----------------- | -------------------------------------------------- | ------------------- |
+| `/quote`, the request-for-quote form           | 157.1 kB          | 170 kB                                             | yes                 |
+| `/q/[token]`, the quote by its link            | 169.3 kB          | 170 kB                                             | yes                 |
+| `/`, `/c/[slug]`, `/search`, the listing pages | 121.7 kB          | 121.7 kB (121,746 bytes), a ratchet; target 120 kB | yes, at the ratchet |
+| `/p/[slug]`                                    | 152.6 kB          | none                                               | no                  |
+| `/checkout`                                    | 202.8 kB          | none                                               | no                  |
 
 - **The quote link page has 0.7 kB left.** Anything added to it, or to what it shares, needs the budget first.
-- **The listing pages are 1.7 kB over their target, and were before F10j**: `main` at `678f8c9` measured 121 kB in `next build`'s own table, against 118 kB in F8. The check prints them against 120 kB without failing; whether CI should fail on them now is the owner's call. F13's Lighthouse run enforces the page budgets against staging either way.
+- **The listing pages are 1.7 kB over their 120 kB target, and were before F10i**: `main` at `678f8c9` measured 121 kB in `next build`'s own table, against 118 kB in F8. The ceiling is their exact size on the merged branch, 121,746 bytes gzipped (`LISTING_CEILING` in the script), so any growth fails CI. **Next storefront session:** trim them under 120 kB (what every page shares is the likeliest place: the copy-button and request-reference code in `packages/ui`), lower the ceiling as they shrink, then set it to 120,000 and drop the ratchet.
 
 ## Console
 
@@ -136,7 +136,7 @@ How the measurement got here:
 - **The back office reads higher, 266.1 kB.** It now counts the namespaces it loads at boot (about 8 kB). The shared code is also split into smaller chunks, which compress slightly less well.
 
 - **F9: the till grew from 190.8 kB to 240.2 kB** (`pnpm budget:console`, 2026-11-16), 9.8 kB under its budget. The sale screen now sells: the offline store, queue and sync, the cart arithmetic and hash, the `pos` words, and the sale's own dialogs (an item's weight and price, payment, hold and recall), which bring Radix Select and the money and weight inputs into the initial load. They load with the document on purpose: the sale must complete with the network off even if the connection drops a second after the till starts, before anything could be fetched on demand. The till's other screens (setup, shift, the queue, returns) load on demand, 68.1 kB in 26 chunks, and are fetched once the till is ready (ADR 0043). The next till feature that adds to the sale screen should look here first: the headroom is small.
-- **F10i: the till fell from 247.1 kB to 241.8 kB** (`pnpm budget:console`, 2026-11-18), with the same build switches as CI. The refusal words (`refusals`, 12 kB of sentences, out of `common`) and the shift screens' words (`posShift`, out of `pos`) are namespaces of their own, fetched with the till's other screens once the sale screen is up (`TILL_NAMESPACES` in `apps/console/src/pos/routes.tsx`). A refusal that arrives before then waits for its words. The back office loads `refusals` at boot, 279.8 kB to 281.0 kB. The shift screens on 2.5.0 then added 0.3 kB to the till's queue, which must load with it (a fresh cash movement sent alone, a refused open let go): **242.1 kB**, 7.9 kB under budget. The shift screens themselves load on demand.
+- **F10j: the till fell from 247.1 kB to 241.8 kB** (`pnpm budget:console`, 2026-11-18), with the same build switches as CI. The refusal words (`refusals`, 12 kB of sentences, out of `common`) and the shift screens' words (`posShift`, out of `pos`) are namespaces of their own, fetched with the till's other screens once the sale screen is up (`TILL_NAMESPACES` in `apps/console/src/pos/routes.tsx`). A refusal that arrives before then waits for its words. The back office loads `refusals` at boot, 279.8 kB to 281.0 kB. The shift screens on 2.5.0 then added 0.3 kB to the till's queue, which must load with it (a fresh cash movement sent alone, a refused open let go): **242.1 kB**, 7.9 kB under budget. The shift screens themselves load on demand.
 
 Not counted: the service worker and the icons.
 

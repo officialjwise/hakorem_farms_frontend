@@ -10,11 +10,11 @@
  * leaves them out of its figure too.
  *
  * Budgets:
- * - the two quote pages, 170 kB, enforced (owner, 2026-11-18, F10j): they carry the data layer for the
+ * - the two quote pages, 170 kB, enforced (owner, 2026-11-18, F10i): they carry the data layer for the
  *   form's write and for accepting or declining a quote;
- * - the listing pages, 120 kB, the target A-F0-06 set and the owner kept (2026-11-18). Reported against
- *   the target, not enforced here: they measured 121.7 kB before F10j, and Lighthouse enforces the page
- *   budgets against staging in F13. The owner decides whether CI should fail on them now.
+ * - the listing pages, a ratchet (owner, 2026-11-18, F10i): CI fails above today's 121.7 kB (121,746
+ *   bytes, measured on the merged branch), so they cannot grow. Their target stays 120 kB (A-F0-06); the next
+ *   storefront session trims them under it and then sets the ceiling to 120.
  *
  * Every other route is reported, not budgeted.
  */
@@ -26,21 +26,25 @@ interface RouteBudget {
   route: string;
   /** The page entry in the app build manifest. */
   entry: string;
-  kilobytes: number | null;
-  enforced: boolean;
+  /** The most it may weigh, in bytes, gzipped; CI fails above it. Null: not budgeted. */
+  ceiling: number | null;
+  /** Where it should be, in kilobytes, when that is below the ceiling (a ratchet). */
+  target?: number;
 }
 
-const QUOTE_PAGES = 170;
-const LISTING_PAGES = 120;
+const QUOTE_PAGES = 170_000;
+/** The ratchet: today's listing pages, to the byte. Lower it as they shrink; set it to 120_000 under 120 kB. */
+const LISTING_CEILING = 121_746;
+const LISTING_TARGET = 120;
 
 const ROUTES: RouteBudget[] = [
-  { route: '/quote', entry: '/quote/page', kilobytes: QUOTE_PAGES, enforced: true },
-  { route: '/q/[token]', entry: '/q/[token]/page', kilobytes: QUOTE_PAGES, enforced: true },
-  { route: '/', entry: '/page', kilobytes: LISTING_PAGES, enforced: false },
-  { route: '/c/[slug]', entry: '/c/[slug]/page', kilobytes: LISTING_PAGES, enforced: false },
-  { route: '/search', entry: '/search/page', kilobytes: LISTING_PAGES, enforced: false },
-  { route: '/p/[slug]', entry: '/p/[slug]/page', kilobytes: null, enforced: false },
-  { route: '/checkout', entry: '/checkout/page', kilobytes: null, enforced: false },
+  { route: '/quote', entry: '/quote/page', ceiling: QUOTE_PAGES },
+  { route: '/q/[token]', entry: '/q/[token]/page', ceiling: QUOTE_PAGES },
+  { route: '/', entry: '/page', ceiling: LISTING_CEILING, target: LISTING_TARGET },
+  { route: '/c/[slug]', entry: '/c/[slug]/page', ceiling: LISTING_CEILING, target: LISTING_TARGET },
+  { route: '/search', entry: '/search/page', ceiling: LISTING_CEILING, target: LISTING_TARGET },
+  { route: '/p/[slug]', entry: '/p/[slug]/page', ceiling: null },
+  { route: '/checkout', entry: '/checkout/page', ceiling: null },
 ];
 
 const next = join(import.meta.dirname, '..', '.next');
@@ -81,24 +85,26 @@ const layoutOnly = (entry: string) => {
 const over: string[] = [];
 for (const route of ROUTES) {
   const bytes = scripts(route.entry).reduce((total, file) => total + size(file), 0);
-  const budget = route.kilobytes;
+  const { ceiling, target } = route;
   const verdict =
-    budget === null
+    ceiling === null
       ? 'not budgeted'
-      : bytes <= budget * 1000
-        ? `of ${budget} kB`
-        : `OVER ${budget} kB${route.enforced ? '' : ' (target, not enforced)'}`;
+      : bytes > ceiling
+        ? `OVER ${kb(ceiling)} kB`
+        : `of ${kb(ceiling)} kB` +
+          (target === undefined
+            ? ''
+            : ` (ratchet; target ${target} kB, ${kb(bytes - target * 1000)} kB to cut)`);
   console.log(
     `${route.route.padEnd(12)} first-load script ${kb(bytes).padStart(6)} kB ${verdict}` +
       `   (+${kb(layoutOnly(route.entry))} kB the root layout's own chunks)`,
   );
-  if (budget !== null && route.enforced && bytes > budget * 1000) {
-    over.push(`${route.route}: ${kb(bytes)} kB of ${budget} kB`);
-  }
+  if (ceiling !== null && bytes > ceiling)
+    over.push(`${route.route}: ${bytes} bytes, over ${ceiling}`);
 }
 
 if (over.length > 0) {
   console.error(`\nThe storefront is over its budget: ${over.join('; ')}.`);
   process.exit(1);
 }
-console.log('\nThe storefront is within its enforced budgets.');
+console.log('\nThe storefront is within its budgets.');

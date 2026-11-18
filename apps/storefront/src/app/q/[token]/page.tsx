@@ -28,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * server made for this version, and that token is the only thing this page sends: never the quote's number
  * or id, and it is never logged here. A server read, so the quote shows on a slow phone before any script;
  * the answer is the one island. Every state says in words what it means; a wrong token says only that the
- * link is not valid (CR-048).
+ * link is not valid (CR-047).
  */
 export default async function QuoteByLinkPage({ params }: Props) {
   const { token } = await params;
