@@ -40,7 +40,8 @@ describe('ErrorState', () => {
     );
     expect(screen.getByText('965f d37e')).toBeInTheDocument();
     expect(screen.getByRole('alert')).not.toHaveTextContent('019a7b1d');
-    await user.click(screen.getByRole('button', { name: 'Copy the full reference' }));
+    // The copy button loads with the first reference shown (LazyCopyId); the reference is there before it.
+    await user.click(await screen.findByRole('button', { name: 'Copy the full reference' }));
     expect(writeText).toHaveBeenCalledWith('019a7b1d-f4de-751c-aa55-5aa0965fd37e');
     Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });
   });

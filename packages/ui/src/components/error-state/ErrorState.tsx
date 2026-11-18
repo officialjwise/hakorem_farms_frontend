@@ -2,7 +2,8 @@ import { TriangleAlert } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { cn } from '../../lib/cn';
 import { formatReference } from '../../format/format';
-import { CopyId, type CopyLabels } from '../copy-id/CopyId';
+import type { CopyLabels } from '../copy-id/CopyId';
+import { LazyCopyId } from '../copy-id/LazyCopyId';
 import type { BadgeIcon } from '../status-badge/StatusBadge';
 
 /** Rejects an empty string literal at compile time. Dynamic blank strings are rejected at render. */
@@ -74,7 +75,7 @@ export function ErrorState<L extends string>({
       ) : (
         <p className="text-xs text-fg-muted">
           {referenceLabel}{' '}
-          <CopyId
+          <LazyCopyId
             value={reference}
             shown={formatReference(reference)}
             copyLabel={referenceCopy.copy}

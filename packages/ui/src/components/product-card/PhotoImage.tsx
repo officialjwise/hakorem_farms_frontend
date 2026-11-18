@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { cn } from '../../lib/cn';
 
 /** One width of a product photograph, as the contract's ImageVariant gives it: WebP, with a JPEG fallback. */
 export interface PhotoVariant {
@@ -24,7 +23,6 @@ export interface PhotoImageProps {
   sizes: string;
   /** Only the largest photograph above the fold loads eagerly; every other one waits until it is near. */
   eager?: boolean;
-  className?: string;
 }
 
 /**
@@ -32,8 +30,11 @@ export interface PhotoImageProps {
  * nothing shifts. A client leaf for one reason: a photograph that fails to load (a missing file, a dropped
  * connection) is removed, so the tile under it shows instead of a broken image. One that failed before
  * hydration is caught on mount.
+ *
+ * Its classes are fixed and take no `className`: `cn` would bring tailwind-merge and the token list into
+ * every storefront listing page's first load (12 kB gzipped), for one leaf that has nothing to merge.
  */
-export function PhotoImage({ photo, sizes, eager = false, className }: PhotoImageProps) {
+export function PhotoImage({ photo, sizes, eager = false }: PhotoImageProps) {
   const [failed, setFailed] = useState(false);
   const image = useRef<HTMLImageElement>(null);
   useEffect(() => {
@@ -62,7 +63,7 @@ export function PhotoImage({ photo, sizes, eager = false, className }: PhotoImag
         fetchPriority={eager ? 'high' : 'auto'}
         decoding="async"
         onError={() => setFailed(true)}
-        className={cn('absolute inset-0 size-full object-cover', className)}
+        className="absolute inset-0 size-full object-cover"
       />
     </picture>
   );
