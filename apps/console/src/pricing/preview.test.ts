@@ -15,6 +15,7 @@ function entry(over: Partial<PriceListEntry> & { id: string; productId?: string 
     minQty: '0.000',
     minQtyBase: '0.000',
     uom: 'HEAD',
+    baseUom: 'HEAD',
     currency: 'GHS',
     ...rest,
   };
