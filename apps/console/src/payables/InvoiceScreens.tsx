@@ -660,15 +660,13 @@ function LineDisagreement({ line }: { line: InvoiceLine }) {
       {line.matchReasons.map((reason) => (
         <li key={reason}>{t(`reasons.${reason}`, { defaultValue: reason })}</li>
       ))}
-      {over || under ? (
+      {/* The variance is in the product's base unit, so it waits for the product: never another unit. */}
+      {(over || under) && baseUom !== null ? (
         <li>
           <QuantityDisplay
             quantity={under ? variance.slice(1) : variance}
-            // Until the product is read the figure stands alone: never in the line's unit.
-            unit={
-              baseUom === null ? '' : units.after(baseUom, under ? variance.slice(1) : variance)
-            }
-            places={baseUom === null ? 3 : units.places(baseUom)}
+            unit={units.after(baseUom, under ? variance.slice(1) : variance)}
+            places={units.places(baseUom)}
           />{' '}
           {t(over ? 'match.qtyOver' : 'match.qtyUnder')}
         </li>

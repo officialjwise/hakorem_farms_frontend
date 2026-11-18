@@ -48,7 +48,14 @@ export function seedEggs(api: FakeApi): void {
     const page = body as { data: S['Product'][] };
     return { ...page, data: page.data.map(asSeededEggs) };
   });
-  api.rewrite('getProduct', (body) => asSeededEggs(body as S['Product']));
+  // Prism answers every product id with the same example: the eggs' own id gets the eggs.
+  api.rewrite('getProduct', (body, path) =>
+    asSeededEggs(
+      path.endsWith(`/${EGGS_ID}`)
+        ? { ...(body as S['Product']), id: EGGS_ID }
+        : (body as S['Product']),
+    ),
+  );
   // A crate of 30 eggs, the conversion the seed holds (2.1.0: "a conversion of 30").
   api.rewrite('listUomConversions', (body) => {
     const page = body as { data: S['UomConversion'][] };
