@@ -255,18 +255,20 @@ Every screen is in `docs/screenshots/F10j/`, at 360 and 1280 px (`pnpm screensho
 
 ## Gates, each run on its own
 
-| Check                                                               | Exit | Count                                                                                |
-| ------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------ |
-| `format:check`, `lint`, `typecheck`                                 | 0    |                                                                                      |
-| `tokens:check`, `fonts:check`, `icons:check`, `sync-contract:check` | 0    |                                                                                      |
-| `test:unit`                                                         | 0    | console 299, data 33 (was 31), api-client 30, ui 900, storefront 39 (was 34), i18n 6 |
-| `test:integration`                                                  | 0    | console 257 (was 249), storefront 20 (was 15)                                        |
-| `test:a11y`                                                         | n/r  | not run: `packages/ui` is unchanged; every new screen's spec runs axe                |
-| `budget:console`                                                    | 0    | till 247.3 of 250 kB (was 247.1); back office 280.9 of 300 kB (was 279.8)            |
-| `budget:storefront` (new)                                           | 0    | `/quote` 157.1 and `/q/[token]` 169.3 of 170 kB; listings 121.7 against 120 (target) |
-| `test:e2e`, full run                                                | 0    | 310 of 310 in 5.1 minutes (was 286: 14 console and 10 storefront quote tests)        |
+| Check                                                               | Exit | Count                                                                                                                        |
+| ------------------------------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `format:check`, `lint`, `typecheck`                                 | 0    |                                                                                                                              |
+| `tokens:check`, `fonts:check`, `icons:check`, `sync-contract:check` | 0    |                                                                                                                              |
+| `test:unit`                                                         | 0    | console 310 (with F10i's), data 33, api-client 30, ui 900, storefront 39 (was 34), i18n 6                                    |
+| `test:integration`                                                  | 0    | console 257, storefront 20 (was 15)                                                                                          |
+| `test:a11y`                                                         | n/r  | not run: `packages/ui` is unchanged; every new screen's spec runs axe                                                        |
+| `budget:console`                                                    | 0    | till 242.3 of 250 kB; back office 282.3 of 300 kB                                                                            |
+| `budget:storefront` (new)                                           | 0    | `/quote` 157.1 and `/q/[token]` 169.3 of 170 kB; listings 121.7 against 120 (target)                                         |
+| `test:e2e`, full run, after the merge with PR #29                   | 0    | 316 of 316 in 5.6 minutes (14 console and 10 storefront quote tests among them); the run before the fix had 1 failure, below |
 
 **The till** is at 242.3 kB after the merge: F10i loaded its refusal and shift words on demand (247.1 to 242.1 kB), and this session's `wholesale` loader in the shared namespace table adds 0.2 kB.
+
+**One failure, fixed, not this session's code.** The first full run on the merged branch had 315 of 316: `users.spec.ts` (the owner adds a role at a branch) pressed Enter on the branch list straight after typing, and under the suite's load Enter came before type-ahead had focused an option, so nothing was chosen. The role step a few lines above already waits for the focused option; the branch step now does too (`0b2311d`). 15 of 15 under four workers, then 316 of 316.
 
 ## For the owner
 
