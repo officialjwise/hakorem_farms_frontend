@@ -549,7 +549,7 @@ type CrackedOutcome = { kind: 'posted'; number: string } | { kind: 'waiting' };
  * Eggs found broken or cracked while picking: written off from the pick location with the reason, in the
  * product's own unit (eggs), valued by the server from the stock's cost. A write-off over the threshold
  * waits for a second person. The pick itself still needs the full quantity, or the customer's agreement
- * to less (CR-053 asks for the breakage to be named on the pick).
+ * to less (CR-054 asks for the breakage to be named on the pick).
  */
 function CrackedDialog({
   line,
@@ -734,7 +734,7 @@ function CrackedDialog({
  * A line that cannot be picked in full: offer the customer a substitute, or a smaller quantity of the
  * same product. The server moves the order to wait for the customer and tells them; nothing is
  * substituted until their answer is recorded on the order's page. The quantity is in the line's unit
- * (CR-053 asks the contract to name it).
+ * (CR-054 asks the contract to name it).
  */
 function SubstituteDialog({
   line,

@@ -20,7 +20,7 @@ const NOT_SEEDED: Readonly<Record<string, string>> = {
   'whl.account.manage': 'B10',
   'whl.account.hold': 'B10',
   'whl.ageing.read': 'B10',
-  // Orders, fulfilment and delivery (B11, CR-055; A-F11-01).
+  // Orders, fulfilment and delivery (B11, CR-056; A-F11-01).
   'ord.fulfilment.read': 'B11',
   'ord.fulfilment.pick': 'B11',
   'ord.fulfilment.dispatch': 'B11',
@@ -35,7 +35,7 @@ const NOT_SEEDED: Readonly<Record<string, string>> = {
 };
 
 /**
- * Permissions the seed grants other roles but not yet this one, which its B11 work needs (CR-055): the
+ * Permissions the seed grants other roles but not yet this one, which its B11 work needs (CR-056): the
  * Driver's proof photograph and failure reasons, and the Storekeeper's read of the order it picks. When
  * the seed grants one to the role, its line fails: delete it.
  */

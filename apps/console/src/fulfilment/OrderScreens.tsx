@@ -529,7 +529,7 @@ function ConsentCard({ order: o, onDone }: { order: Order; onDone: (accepted: bo
 
 /**
  * The order's pick list. The contract has no way to ask for one order's fulfilments, so the open ones are
- * read and this order's is found among them (CR-052 asks for `orderId`). Starting one names the location
+ * read and this order's is found among them (CR-053 asks for `orderId`). Starting one names the location
  * the goods are picked from.
  */
 function PickListCard({ order: o }: { order: Order }) {

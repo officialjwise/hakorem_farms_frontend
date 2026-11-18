@@ -500,7 +500,7 @@ const ACCOUNTANT_PERMISSIONS = [
 ];
 
 /**
- * F11, orders and delivery (B11 seeds none of it yet; CR-055 asks): the Storekeeper picks and reads the
+ * F11, orders and delivery (B11 seeds none of it yet; CR-056 asks): the Storekeeper picks and reads the
  * order it picks; the Manager and the Owner also take the customer's answer, dispatch, and plan and start
  * the runs; the Driver reads and works their own run, uploads the proof's photograph and reads the
  * failure reasons. A-F11-01.
@@ -523,7 +523,7 @@ const DRIVER_PERMISSIONS = [
   'iam.session.read',
   'iam.session.revoke',
   'mdm.product.read',
-  // Not seeded for the Driver yet (CR-055).
+  // Not seeded for the Driver yet (CR-056).
   'del.delivery.read.assigned',
   'del.delivery.update.assigned',
   'del.proof.create',
