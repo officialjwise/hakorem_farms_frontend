@@ -135,7 +135,15 @@ export function version1(status: S['QuoteVersion']['status']): S['QuoteVersion']
         72000,
         '360.000',
       ),
-      line('019a7f30-4d5e-7f6a-8b7c-000000000012', 2, 'Eggs, big, single', '30.000', 'EGG', 6600, '30.000'),
+      line(
+        '019a7f30-4d5e-7f6a-8b7c-000000000012',
+        2,
+        'Eggs, big, single',
+        '30.000',
+        'EGG',
+        6600,
+        '30.000',
+      ),
     ],
     acceptance: null,
     documentId: null,
@@ -166,7 +174,15 @@ export function version2(status: S['QuoteVersion']['status']): S['QuoteVersion']
         60000,
         '300.000',
       ),
-      line('019a7f30-4d5e-7f6a-8b7c-000000000022', 2, 'Eggs, big, single', '30.000', 'EGG', 6600, '30.000'),
+      line(
+        '019a7f30-4d5e-7f6a-8b7c-000000000022',
+        2,
+        'Eggs, big, single',
+        '30.000',
+        'EGG',
+        6600,
+        '30.000',
+      ),
     ],
     acceptance:
       status === 'ACCEPTED'
