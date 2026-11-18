@@ -131,8 +131,8 @@ Two minor versions:
 | `test:integration`                           | 0    | console 257, storefront 20; the first run failed 3, each this session's, fixed in `test(integration)`        |
 | `budget:console`                             | 0    | till 242.2 of 250 kB (was 241.9); back office 284.1 of 300 kB (was 282.3: the refusal words, loaded at boot) |
 | `budget:storefront`                          | 0    | listing pages 108.5 of 120 kB; `/q/[token]` 169.3 of 170 kB; `/quote` 157.2 of 170 kB                        |
-| `test:e2e`, full run                         | E2E  | E2ECOUNT                                                                                                     |
-| `test:a11y`                                  | A11Y | A11YCOUNT                                                                                                    |
+| `test:e2e`, full run                         | 0    | 321 of 321 in 7.4 minutes; 3 are new here (F10k reported 294)                                                |
+| `test:a11y`                                  | 0    | 322 stories in Chromium with axe, 65 files                                                                   |
 | `screenshots`                                | n/r  | not run: no screenshots until F13                                                                            |
 
 ## For the owner
