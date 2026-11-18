@@ -84,7 +84,10 @@ export function lineProblems(
     const found: string[] = [];
     if (line.product === null) found.push('product');
     if (toQuantity(line.qty) === null) found.push('qty');
-    if (kind === 'receipt' && line.valuePesewas === null) found.push('value');
+    // CR-040 (2.9.0): a line against an order line may leave its value to the server, from the order.
+    if (kind === 'receipt' && line.valuePesewas === null && line.purchaseOrderLineId === null) {
+      found.push('value');
+    }
     if (kind === 'receipt' && line.rejected.trim() !== '' && toQuantity(line.rejected) === null) {
       found.push('rejected');
     }
@@ -99,8 +102,9 @@ export function lineProblems(
 }
 
 /**
- * A line as `GoodsReceiptLineInput` takes it: the unit only when it is not the base unit, and the
- * rejection with its reason only when something was turned away.
+ * A line as `GoodsReceiptLineInput` takes it: the unit only when it is not the base unit, the rejection
+ * with its reason only when something was turned away, and the value unless a line against an order line
+ * leaves it to the server (CR-040, 2.9.0), which values it at the order's price and says so in its answer.
  */
 export function receiptLineInput(line: DraftLine) {
   const rejected = rejectsSome(line) ? toQuantity(line.rejected) : null;
@@ -117,7 +121,9 @@ export function receiptLineInput(line: DraftLine) {
           rejectionReasonCode: line.rejectionReasonCode,
           ...(note === '' ? {} : { rejectionNote: note }),
         }),
-    valuePesewas: line.valuePesewas ?? 0,
+    ...(line.valuePesewas === null && line.purchaseOrderLineId !== null
+      ? {}
+      : { valuePesewas: line.valuePesewas ?? 0 }),
   };
 }
 
@@ -390,8 +396,8 @@ export function LinesEditor({
               {kind === 'receipt' ? (
                 <Field
                   label={t('lines.value', { number })}
-                  hint={t('lines.valueHint')}
-                  required
+                  hint={fromOrder ? t('lines.valueFromOrderHint') : t('lines.valueHint')}
+                  required={!fromOrder}
                   requiredLabel={required}
                   error={wrong.includes('value') ? required : undefined}
                 >

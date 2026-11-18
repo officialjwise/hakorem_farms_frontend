@@ -49,6 +49,19 @@ describe('a goods receipt line in crates (2.2.0) with goods rejected at the door
     });
   });
 
+  it('leaves the value of a line against an order line to the server, and asks for it otherwise (CR-040)', () => {
+    const fromOrder = emptyLine({
+      product: EGGS,
+      uom: 'CRATE',
+      qty: '18',
+      purchaseOrderLineId: '019a7ab5-0c1e-7d3a-9b2f-4e6a8c1d2f30',
+    });
+    const byHand = emptyLine({ product: EGGS, qty: '300' });
+    expect(lineProblems([fromOrder, byHand], 'receipt')).toEqual({ [byHand.key]: ['value'] });
+    expect(receiptLineInput(fromOrder)).not.toHaveProperty('valuePesewas');
+    expect(receiptLineInput({ ...fromOrder, valuePesewas: 0 })).toMatchObject({ valuePesewas: 0 });
+  });
+
   it('asks for the reason, and for a note when the reason needs one', () => {
     const noReason = emptyLine({ product: EGGS, qty: '18', rejected: '2', valuePesewas: 1 });
     const noNote = emptyLine({
