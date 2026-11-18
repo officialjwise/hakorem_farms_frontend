@@ -237,7 +237,7 @@ function Selling({
         setChoice({ kind: 'unit', product, units });
         return;
       }
-      // A crate or a single egg (CR-038, requested): the cashier says which, each at its own price.
+      // A crate or a single egg (CR-038): the cashier says which, each at its own price.
       const choices = unitChoices(product);
       if (choices.length > 1) {
         setChoice({ kind: 'sellingUnit', product, units: choices });

@@ -2,14 +2,14 @@ import { ListChecks } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { components } from '@hakorem/api-client';
 import { Button, Dialog, MoneyDisplay, WeightDisplay } from '@hakorem/ui';
-import type { SellingUnit } from '../../requested/sellingUnits';
+import type { SellingUnit } from './catalogue';
 
 type OfflineProduct = components['schemas']['OfflineProduct'];
 type OfflineStockUnit = components['schemas']['OfflineStockUnit'];
 
 export type Choice =
   | { kind: 'unit'; product: OfflineProduct; units: OfflineStockUnit[] }
-  /** CR-038, requested: which unit a product is sold in, a crate or a single egg, each at its own price. */
+  /** CR-038: which unit a product is sold in, a crate or a single egg, each at its own price. */
   | { kind: 'sellingUnit'; product: OfflineProduct; units: SellingUnit[] };
 
 /** Which animal or lot of a product is being sold: a goat by its tag, never "a goat". */

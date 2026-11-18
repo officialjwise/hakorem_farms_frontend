@@ -5,13 +5,26 @@
  */
 import type { components } from '@hakorem/api-client';
 import { newRecordId } from '../../lib/clientId';
-import { sellingUnits, type SellingUnit } from '../../requested/sellingUnits';
 import type { CartLine } from '../offline/cart';
 import { pendingCount } from '../offline/sync';
 import type { OfflinePack, TillSnapshot } from '../offline/types';
 
 type OfflineProduct = components['schemas']['OfflineProduct'];
 type OfflineStockUnit = components['schemas']['OfflineStockUnit'];
+
+/** `OfflineSellingUnit` (CR-038, 2.11.0): one unit the product is sold by at this register, with its own band. */
+export type SellingUnit = components['schemas']['OfflineSellingUnit'];
+
+/**
+ * The units this product is sold by, each with the band the pack gives it, when there is more than one.
+ * Empty when the product has one unit (the pack then sends one entry) or the pack says nothing: the till
+ * sells it in `saleUom` at `priceBand`, which are its first unit's. A unit's price is the pack's own, never
+ * one worked out from another unit's.
+ */
+function sellingUnits(product: OfflineProduct): SellingUnit[] {
+  const units = product.sellingUnits ?? [];
+  return units.length > 1 ? units : [];
+}
 
 /** What the search box found: animals and lots by their tag, and products by name or SKU. */
 export interface FindResults {
@@ -76,7 +89,7 @@ export function tiles(
 }
 
 /**
- * The units a cashier chooses between for this product (CR-038, requested): a crate and a single egg, each
+ * The units a cashier chooses between for this product (CR-038): a crate and a single egg, each
  * with the pack's own band. Empty when the product is sold in one unit.
  */
 export function unitChoices(product: OfflineProduct): SellingUnit[] {

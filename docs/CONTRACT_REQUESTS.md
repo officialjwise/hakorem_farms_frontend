@@ -2,59 +2,59 @@
 
 Things the frontend needs that `contract/openapi.yaml` does not yet offer, or must offer in a specific shape. The backend track reads this file at the start of each session and either implements each request or explains in its report why not. Each entry names the screen that needs it.
 
-| Id     | Date       | Status                    |
-| ------ | ---------- | ------------------------- |
-| CR-001 | 2026-11-13 | Closed                    |
-| CR-002 | 2026-11-13 | Closed                    |
-| CR-003 | 2026-11-14 | Answered (1.7.0, 1.16.0)  |
-| CR-004 | 2026-11-14 | Answered (1.2.0, 1.11.0)  |
-| CR-005 | 2026-11-14 | Answered (1.53.0)         |
-| CR-006 | 2026-11-14 | Answered (1.2.0, 1.4.0)   |
-| CR-007 | 2026-11-14 | Answered (1.3.0)          |
-| CR-008 | 2026-11-14 | Answered (1.3.0)          |
-| CR-009 | 2026-11-15 | Open                      |
-| CR-010 | 2026-11-15 | Open                      |
-| CR-011 | 2026-11-15 | Open                      |
-| CR-012 | 2026-11-15 | Open                      |
-| CR-013 | 2026-11-15 | Open                      |
-| CR-014 | 2026-11-15 | Open                      |
-| CR-015 | 2026-11-15 | Open                      |
-| CR-016 | 2026-11-15 | Closed (2.0.0)            |
-| CR-017 | 2026-11-15 | Open                      |
-| CR-018 | 2026-11-15 | Open                      |
-| CR-019 | 2026-11-15 | Open                      |
-| CR-020 | 2026-11-15 | Open                      |
-| CR-021 | 2026-11-15 | Answered (1.26.0)         |
-| CR-022 | 2026-11-15 | Closed                    |
-| CR-023 | 2026-11-15 | Answered (1.53.0), built  |
-| CR-024 | 2026-11-15 | Closed                    |
-| CR-025 | 2026-11-15 | Answered (1.31.0), built  |
-| CR-026 | 2026-11-15 | Answered (1.40.0)         |
-| CR-027 | 2026-11-16 | Answered (1.53.0)         |
-| CR-028 | 2026-11-16 | Answered (1.54.0)         |
-| CR-029 | 2026-11-16 | Answered (1.46.0), built  |
-| CR-030 | 2026-11-16 | Answered (1.43.0)         |
-| CR-031 | 2026-11-16 | Planned shape (1.45.0)    |
-| CR-032 | 2026-11-16 | Open, amended F10d        |
-| CR-033 | 2026-11-16 | Open, amended F10e        |
-| CR-034 | 2026-11-17 | Answered (2.0.0), built   |
-| CR-035 | 2026-11-17 | Answered (2.3.0), built   |
-| CR-036 | 2026-11-17 | Answered (2.4.0), built   |
-| CR-037 | 2026-11-17 | Answered (2.4.0)          |
-| CR-038 | 2026-11-17 | Open, built behind switch |
-| CR-039 | 2026-11-17 | Open                      |
-| CR-040 | 2026-11-17 | Answered (2.9.0), built   |
-| CR-041 | 2026-11-17 | Open                      |
-| CR-042 | 2026-11-17 | Answered (2.9.0), built   |
-| CR-043 | 2026-11-17 | Answered (2.9.0), built   |
-| CR-044 | 2026-11-17 | Answered (2.9.0), built   |
-| CR-045 | 2026-11-18 | Open                      |
-| CR-046 | 2026-11-18 | Open                      |
-| CR-047 | 2026-11-18 | Open                      |
-| CR-048 | 2026-11-18 | Open                      |
-| CR-049 | 2026-11-18 | Open                      |
-| CR-050 | 2026-11-18 | Part 2 answered (2.6.0)   |
-| CR-051 | 2026-11-18 | Open                      |
+| Id     | Date       | Status                   |
+| ------ | ---------- | ------------------------ |
+| CR-001 | 2026-11-13 | Closed                   |
+| CR-002 | 2026-11-13 | Closed                   |
+| CR-003 | 2026-11-14 | Answered (1.7.0, 1.16.0) |
+| CR-004 | 2026-11-14 | Answered (1.2.0, 1.11.0) |
+| CR-005 | 2026-11-14 | Answered (1.53.0)        |
+| CR-006 | 2026-11-14 | Answered (1.2.0, 1.4.0)  |
+| CR-007 | 2026-11-14 | Answered (1.3.0)         |
+| CR-008 | 2026-11-14 | Answered (1.3.0)         |
+| CR-009 | 2026-11-15 | Open                     |
+| CR-010 | 2026-11-15 | Open                     |
+| CR-011 | 2026-11-15 | Open                     |
+| CR-012 | 2026-11-15 | Open                     |
+| CR-013 | 2026-11-15 | Open                     |
+| CR-014 | 2026-11-15 | Open                     |
+| CR-015 | 2026-11-15 | Open                     |
+| CR-016 | 2026-11-15 | Closed (2.0.0)           |
+| CR-017 | 2026-11-15 | Open                     |
+| CR-018 | 2026-11-15 | Open                     |
+| CR-019 | 2026-11-15 | Open                     |
+| CR-020 | 2026-11-15 | Open                     |
+| CR-021 | 2026-11-15 | Answered (1.26.0)        |
+| CR-022 | 2026-11-15 | Closed                   |
+| CR-023 | 2026-11-15 | Answered (1.53.0), built |
+| CR-024 | 2026-11-15 | Closed                   |
+| CR-025 | 2026-11-15 | Answered (1.31.0), built |
+| CR-026 | 2026-11-15 | Answered (1.40.0)        |
+| CR-027 | 2026-11-16 | Answered (1.53.0)        |
+| CR-028 | 2026-11-16 | Answered (1.54.0)        |
+| CR-029 | 2026-11-16 | Answered (1.46.0), built |
+| CR-030 | 2026-11-16 | Answered (1.43.0)        |
+| CR-031 | 2026-11-16 | Planned shape (1.45.0)   |
+| CR-032 | 2026-11-16 | Open, amended F10d       |
+| CR-033 | 2026-11-16 | Open, amended F10e       |
+| CR-034 | 2026-11-17 | Answered (2.0.0), built  |
+| CR-035 | 2026-11-17 | Answered (2.3.0), built  |
+| CR-036 | 2026-11-17 | Answered (2.4.0), built  |
+| CR-037 | 2026-11-17 | Answered (2.4.0)         |
+| CR-038 | 2026-11-17 | Answered (2.11.0), built |
+| CR-039 | 2026-11-17 | Open                     |
+| CR-040 | 2026-11-17 | Answered (2.9.0), built  |
+| CR-041 | 2026-11-17 | Open                     |
+| CR-042 | 2026-11-17 | Answered (2.9.0), built  |
+| CR-043 | 2026-11-17 | Answered (2.9.0), built  |
+| CR-044 | 2026-11-17 | Answered (2.9.0), built  |
+| CR-045 | 2026-11-18 | Open                     |
+| CR-046 | 2026-11-18 | Open                     |
+| CR-047 | 2026-11-18 | Open                     |
+| CR-048 | 2026-11-18 | Open                     |
+| CR-049 | 2026-11-18 | Open                     |
+| CR-050 | 2026-11-18 | Part 2 answered (2.6.0)  |
+| CR-051 | 2026-11-18 | Open                     |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -641,6 +641,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 
 **Until this lands:** the till is built against this shape behind `HK_REQUESTED_CONTRACT=CR-038` (ADR 0046): `apps/console/src/requested/sellingUnits.ts`, answered in the e2e suite by a rewrite of the pack. With the switch off, a product is sold in its `saleUom` alone, as before.
 
+**Answered in 2.11.0 (F10l):** `OfflineSellingUnit`, `OfflineProduct.sellingUnits` and `CounterSaleLine.uom` in exactly this shape, with `getOfflinePack` in code. A line that names no unit is the product's first unit, the one its `priceBand` is. The switch and `requested/sellingUnits.ts` are deleted; the till reads the generated types (`pos/sale/catalogue.ts`).
+
 ## CR-039. The shop sells a product in more than one unit, each with its own price (additive)
 
 - **Raised by:** frontend, the egg session, part b: the crate and the single egg in the shop.
@@ -848,3 +850,5 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 **Request:** `OfflinePack.uoms`: `{ code, name, singularName, pluralName, displayDecimals }[]`, the units the pack's products are sold or counted in, as `Uom` gives them. Additive; a planned operation, so B9b can add it with `getOfflinePack`.
 
 **Until this lands:** the till says the unit's code in lower case after a quantity ("6 egg"), which is wrong for a plural. Nothing is built on it.
+
+**Still open after 2.11.0 (F10l):** `getOfflinePack` moved into code without `uoms`.

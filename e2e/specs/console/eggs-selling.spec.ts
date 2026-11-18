@@ -6,7 +6,7 @@ import { installTillServer, openTillShift, type SentSale } from '../../support/t
 
 /**
  * The egg session, part b: a crate and a single egg as two units of one product at the till (ADR 0049),
- * built against CR-038 behind its switch (ADR 0046), at 360 px with the network off. Each unit is priced
+ * on CR-038 (2.11.0), at 360 px with the network off. Each unit is priced
  * from the pack's own band for it: a crate at GH₵60.00, a single egg at GH₵2.20, never the crate price
  * divided by 30. The sale line names its unit; the server converts to eggs and re-prices at sync.
  */

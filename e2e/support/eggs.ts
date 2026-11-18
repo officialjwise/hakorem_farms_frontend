@@ -166,7 +166,7 @@ export function eggEntries(base: S['PriceListEntry']): S['PriceListEntry'][] {
 }
 
 /**
- * CR-038, requested (ADR 0046): the till's pack with the big eggs sold by the crate and by the egg, each
+ * CR-038 (2.11.0): the till's pack with the big eggs sold by the crate and by the egg, each
  * with its own band. The crate's band is the pack example's own; the single egg's is the seed's egg price
  * (2.1.0: "their prices are a crate's and a single egg's").
  */
