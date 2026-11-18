@@ -78,6 +78,7 @@ function line(
   quantity: string,
   uom: 'CRATE' | 'EGG',
   lineNetPesewas: number,
+  baseQuantity: string,
 ): S['QuoteLine'] {
   return {
     id,
@@ -90,6 +91,7 @@ function line(
     reservationId: null,
     quantity,
     uom,
+    baseQuantity,
     priceBasis: 'PER_UNIT',
     resolvedUnitPricePesewas: PRICES[uom],
     unitPricePesewas: PRICES[uom],
@@ -119,6 +121,10 @@ export function version1(status: S['QuoteVersion']['status']): S['QuoteVersion']
     changeNote: null,
     issuedAt: status === 'DRAFT' ? null : '2026-11-17T10:30:00Z',
     issuedBy: status === 'DRAFT' ? null : SALESPERSON,
+    createdBy: SALESPERSON,
+    createdAt: '2026-11-17T10:20:00Z',
+    version: 1,
+    acceptanceLinkToken: null,
     lines: [
       line(
         '019a7f30-4d5e-7f6a-8b7c-000000000011',
@@ -127,8 +133,17 @@ export function version1(status: S['QuoteVersion']['status']): S['QuoteVersion']
         '12.000',
         'CRATE',
         72000,
+        '360.000',
       ),
-      line('019a7f30-4d5e-7f6a-8b7c-000000000012', 2, 'Eggs, big, single', '30.000', 'EGG', 6600),
+      line(
+        '019a7f30-4d5e-7f6a-8b7c-000000000012',
+        2,
+        'Eggs, big, single',
+        '30.000',
+        'EGG',
+        6600,
+        '30.000',
+      ),
     ],
     acceptance: null,
     documentId: null,
@@ -146,6 +161,7 @@ export function version2(status: S['QuoteVersion']['status']): S['QuoteVersion']
     netPesewas: 66600,
     grossPesewas: 66600,
     changeNote: 'Ten crates, not twelve',
+    createdAt: '2026-11-17T10:50:00Z',
     issuedAt: status === 'DRAFT' ? null : '2026-11-17T11:00:00Z',
     issuedBy: status === 'DRAFT' ? null : SALESPERSON,
     lines: [
@@ -156,8 +172,17 @@ export function version2(status: S['QuoteVersion']['status']): S['QuoteVersion']
         '10.000',
         'CRATE',
         60000,
+        '300.000',
       ),
-      line('019a7f30-4d5e-7f6a-8b7c-000000000022', 2, 'Eggs, big, single', '30.000', 'EGG', 6600),
+      line(
+        '019a7f30-4d5e-7f6a-8b7c-000000000022',
+        2,
+        'Eggs, big, single',
+        '30.000',
+        'EGG',
+        6600,
+        '30.000',
+      ),
     ],
     acceptance:
       status === 'ACCEPTED'

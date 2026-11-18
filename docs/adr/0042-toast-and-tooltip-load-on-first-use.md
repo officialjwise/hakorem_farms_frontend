@@ -30,3 +30,7 @@ Option 2.
 - **The first toast waits for one chunk.** On a dead connection that chunk is not there until F13's service worker precaches every on-demand chunk (DEPLOYMENT.md, section 2), which already covers the till's screens. A toast is never the only record of a failure (ADR 0006), so a late one hides nothing.
 - **Moving between tooltips** no longer skips the delay: each opens after 300 ms. Only the narrow back-office sidebar uses tooltips today.
 - **A new storefront page** that imports `@hakorem/ui` gets only what it uses, with no rule to remember. A new package the storefront imports by its index needs the same line.
+
+## Amendment (F10l, 2026-11-18): ErrorState's copy button
+
+The same rule for one more leaf, nothing else reopened. `ErrorState` loads `CopyId` (and the `Button` and `cn` it brings) the first time it shows a reference, through `LazyCopyId`; until it arrives, the reference's eight characters are shown without the button. A storefront listing page renders `ErrorState` for its error state, so the static import put 2.8 kB of copy-button code in every listing's first load, `Button` and `cn` twice. The console waits for one small chunk on its first error with a reference; the error's words and reference are on screen before it.

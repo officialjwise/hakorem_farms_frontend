@@ -1,8 +1,7 @@
 import { clsx, type ClassValue } from 'clsx';
 import { extendTailwindMerge } from 'tailwind-merge';
-import manifest from '../tokens/generated/token-manifest.json';
-
-const colorNames = Object.keys(manifest.tokens);
+// The names alone, not the manifest: this runs in the browser (render.ts, renderColorNames).
+import colorNames from '../tokens/generated/color-names.json';
 
 /**
  * tailwind-merge taught the HaKorem token utilities, so `cn('h-control-md', 'h-control-lg')`

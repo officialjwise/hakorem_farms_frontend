@@ -117,7 +117,10 @@ describe('a screen against the Prism mock, in its four states', () => {
     // The last eight characters, grouped; the button copies the whole reference (ADR 0051).
     expect(alert).toHaveTextContent('Quote this reference to support: 89c1 0fed');
     expect(alert).not.toHaveTextContent('019a7b1e-32bc-78e3-8e1c-970f89c10fed');
-    expect(screen.getByRole('button', { name: 'Copy the full reference' })).toBeInTheDocument();
+    // The copy button loads with the first reference shown (LazyCopyId, ADR 0042).
+    expect(
+      await screen.findByRole('button', { name: 'Copy the full reference' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
   });
 

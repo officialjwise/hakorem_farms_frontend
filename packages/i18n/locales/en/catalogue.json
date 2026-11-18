@@ -500,7 +500,7 @@
     "removeConfirm": "Drop the line",
     "removed": "{{name}} dropped from the draft",
     "perUnit": "per {{unit}}",
-    "minQtyBoth": "from {{qty}} ({{base}} in the base unit)",
+    "minQtyBoth": "from {{qty}} ({{base}})",
     "add": "Add a price",
     "addTitle": "Add a price to the draft",
     "addBody": "A crate and a single egg are two prices of their own. Amounts in cedis; the server checks the floor, list and ceiling against each other.",
@@ -541,6 +541,19 @@
     "done": "{{name}} pays {{list}} from {{from}}.",
     "openEnded": "Until another list is given to them.",
     "endsOn": "Until {{until}}, then their tier's prices."
+  },
+  "holders": {
+    "title": "Who pays these prices",
+    "loading": "Loading the buyers on this list",
+    "none": "No buyer holds this list",
+    "noneBody": "Give it to a buyer below, and they are priced from it first.",
+    "error": "The buyers on this list could not be loaded",
+    "denied": "You cannot see who holds price lists",
+    "buyer": "Buyer",
+    "from": "From",
+    "until": "Until",
+    "openEnded": "Until another list is given to them",
+    "pages": "Pages of buyers"
   },
   "newBuyerList": {
     "open": "New price list for a buyer",

@@ -136,8 +136,17 @@ export function renderManifest(): string {
   return `${JSON.stringify(manifest, null, 2)}\n`;
 }
 
+/**
+ * The colour token names alone, for `cn`: it runs in the browser, and the manifest's roles and scopes
+ * would weigh 3 kB gzipped on every storefront page that renders a client component.
+ */
+export function renderColorNames(): string {
+  return `${JSON.stringify(Object.keys(colors), null, 2)}\n`;
+}
+
 export const GENERATED_FILES = {
   'src/styles/generated/tokens.css': renderTokensCss,
   'src/styles/generated/color-utilities.css': renderColorUtilitiesCss,
   'src/tokens/generated/token-manifest.json': renderManifest,
+  'src/tokens/generated/color-names.json': renderColorNames,
 } as const;

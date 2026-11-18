@@ -29,9 +29,9 @@
     "budget:console": "pnpm --filter @hakorem/console budget",
     "budget:storefront": "pnpm --filter @hakorem/storefront budget",
     "icons:check": "pnpm --filter @hakorem/console icons:check",
-    "test:e2e": "HK_API_BASE_URL=/mock HK_REQUESTED_CONTRACT=CR-032,CR-033,CR-038,CR-045,CR-046,CR-050 pnpm build:console && HK_API_BASE_URL=http://127.0.0.1:4011 pnpm build:storefront && pnpm --filter @hakorem/e2e test",
-    "screenshots": "HK_API_BASE_URL=/mock HK_REQUESTED_CONTRACT=CR-032,CR-033,CR-038,CR-045,CR-046,CR-050 pnpm build:console && HK_API_BASE_URL=http://127.0.0.1:4011 pnpm build:storefront && pnpm --filter @hakorem/e2e screenshots",
-    "test:e2e:quarantine": "HK_API_BASE_URL=/mock HK_REQUESTED_CONTRACT=CR-032,CR-033,CR-038,CR-045,CR-046,CR-050 pnpm build:console && HK_API_BASE_URL=http://127.0.0.1:4011 pnpm build:storefront && pnpm --filter @hakorem/e2e test:quarantine",
+    "test:e2e": "HK_API_BASE_URL=/mock HK_REQUESTED_CONTRACT=CR-032,CR-033,CR-046,CR-050 pnpm build:console && HK_API_BASE_URL=http://127.0.0.1:4011 pnpm build:storefront && pnpm --filter @hakorem/e2e test",
+    "screenshots": "HK_API_BASE_URL=/mock HK_REQUESTED_CONTRACT=CR-032,CR-033,CR-046,CR-050 pnpm build:console && HK_API_BASE_URL=http://127.0.0.1:4011 pnpm build:storefront && pnpm --filter @hakorem/e2e screenshots",
+    "test:e2e:quarantine": "HK_API_BASE_URL=/mock HK_REQUESTED_CONTRACT=CR-032,CR-033,CR-046,CR-050 pnpm build:console && HK_API_BASE_URL=http://127.0.0.1:4011 pnpm build:storefront && pnpm --filter @hakorem/e2e test:quarantine",
     "sync-contract": "./scripts/sync-contract.sh",
     "sync-contract:check": "./scripts/sync-contract.sh --check",
     "sync-contract:github": "./scripts/sync-contract.sh --github"

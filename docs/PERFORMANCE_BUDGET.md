@@ -92,16 +92,20 @@ The owner's decision (2026-11-18): the two quote pages are accepted at their siz
 
 `pnpm budget:storefront` (`apps/storefront/scripts/check-budget.ts`) runs after `next build` in CI. It measures what `next build` reports as a route's first-load JavaScript: the page entry's files in `.next/app-build-manifest.json`, the 103 kB every page shares included, gzipped, in kilobytes of 1,000 bytes. The root layout's own chunks are printed beside it and not counted, as `next build` does not count them either.
 
-| Route                                          | First-load script | Budget                                             | Enforced in CI      |
-| ---------------------------------------------- | ----------------- | -------------------------------------------------- | ------------------- |
-| `/quote`, the request-for-quote form           | 157.1 kB          | 170 kB                                             | yes                 |
-| `/q/[token]`, the quote by its link            | 169.3 kB          | 170 kB                                             | yes                 |
-| `/`, `/c/[slug]`, `/search`, the listing pages | 121.7 kB          | 121.7 kB (121,746 bytes), a ratchet; target 120 kB | yes, at the ratchet |
-| `/p/[slug]`                                    | 152.6 kB          | none                                               | no                  |
-| `/checkout`                                    | 202.8 kB          | none                                               | no                  |
+| Route                                          | First-load script | Budget | Enforced in CI |
+| ---------------------------------------------- | ----------------- | ------ | -------------- |
+| `/quote`, the request-for-quote form           | 157.2 kB          | 170 kB | yes            |
+| `/q/[token]`, the quote by its link            | 169.3 kB          | 170 kB | yes            |
+| `/`, `/c/[slug]`, `/search`, the listing pages | 108.5 kB          | 120 kB | yes            |
+| `/p/[slug]`                                    | 152.1 kB          | none   | no             |
+| `/checkout`                                    | 202.8 kB          | none   | no             |
 
 - **The quote link page has 0.7 kB left.** Anything added to it, or to what it shares, needs the budget first.
-- **The listing pages are 1.7 kB over their 120 kB target, and were before F10i**: `main` at `678f8c9` measured 121 kB in `next build`'s own table, against 118 kB in F8. The ceiling is their exact size on the merged branch, 121,746 bytes gzipped (`LISTING_CEILING` in the script), so any growth fails CI. **Next storefront session:** trim them under 120 kB (what every page shares is the likeliest place: the copy-button and request-reference code in `packages/ui`), lower the ceiling as they shrink, then set it to 120,000 and drop the ratchet.
+- **The listing pages are under 120 kB, enforced from F10l** (was a ratchet at 121.7 kB). Three changes in `packages/ui`:
+  - `ErrorState` loads its copy button (`CopyId`) when it first shows a reference (`LazyCopyId`, as the toaster in ADR 0042). A listing page renders `ErrorState` for its error state, so the static import put `CopyId`, `Button` and `cn` in every listing's first load, and `Button` and `cn` a second time beside the layout's copies.
+  - `cn` reads the colour names from `color-names.json`, not the whole token manifest.
+  - `PhotoImage` takes no `className`, so it needs no `cn`.
+- **What moved, and what went.** A listing page's first load, its layout's own chunks included, fell from 126.9 kB to 124.3 kB: 2.6 kB is gone. The budgeted figure fell further, from 121.7 kB to 108.5 kB, because tailwind-merge (8.7 kB), the icons' base and Radix Slot are now counted under the layout, which needs them for the header's basket button; the layout's own chunks rose from 5.2 kB to 15.8 kB. This budget counts the page entry, as `next build` does, so the layout is printed beside it and not budgeted. Whether the 120 kB should cover the layout too is the owner's.
 
 ## Console
 

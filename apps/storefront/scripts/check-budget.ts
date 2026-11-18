@@ -12,9 +12,8 @@
  * Budgets:
  * - the two quote pages, 170 kB, enforced (owner, 2026-11-18, F10i): they carry the data layer for the
  *   form's write and for accepting or declining a quote;
- * - the listing pages, a ratchet (owner, 2026-11-18, F10i): CI fails above today's 121.7 kB (121,746
- *   bytes, measured on the merged branch), so they cannot grow. Their target stays 120 kB (A-F0-06); the next
- *   storefront session trims them under it and then sets the ceiling to 120.
+ * - the listing pages, 120 kB, enforced (owner, 2026-11-18; A-F0-06). F10l trimmed them from 121.7 kB to
+ *   108.5 kB and set the limit; until then it was a ratchet at 121.7 kB.
  *
  * Every other route is reported, not budgeted.
  */
@@ -33,16 +32,14 @@ interface RouteBudget {
 }
 
 const QUOTE_PAGES = 170_000;
-/** The ratchet: today's listing pages, to the byte. Lower it as they shrink; set it to 120_000 under 120 kB. */
-const LISTING_CEILING = 121_746;
-const LISTING_TARGET = 120;
+const LISTING_PAGES = 120_000;
 
 const ROUTES: RouteBudget[] = [
   { route: '/quote', entry: '/quote/page', ceiling: QUOTE_PAGES },
   { route: '/q/[token]', entry: '/q/[token]/page', ceiling: QUOTE_PAGES },
-  { route: '/', entry: '/page', ceiling: LISTING_CEILING, target: LISTING_TARGET },
-  { route: '/c/[slug]', entry: '/c/[slug]/page', ceiling: LISTING_CEILING, target: LISTING_TARGET },
-  { route: '/search', entry: '/search/page', ceiling: LISTING_CEILING, target: LISTING_TARGET },
+  { route: '/', entry: '/page', ceiling: LISTING_PAGES },
+  { route: '/c/[slug]', entry: '/c/[slug]/page', ceiling: LISTING_PAGES },
+  { route: '/search', entry: '/search/page', ceiling: LISTING_PAGES },
   { route: '/p/[slug]', entry: '/p/[slug]/page', ceiling: null },
   { route: '/checkout', entry: '/checkout/page', ceiling: null },
 ];

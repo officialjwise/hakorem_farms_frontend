@@ -32,6 +32,13 @@ export const TOKENS = {
   declined: 'Yh2kW9pRc4NxT7vLm1ZsB8fQj3GdA6UeKoEi5MnXtVr',
 } as const;
 
+/** Links the server has closed (2.12.0): 422 `QUOTE_LINK_CLOSED`, the reason in `details[0].code`. */
+export const CLOSED_TOKENS = {
+  EXPIRED: 'Kp4rT8wQz1XnV6cLm3YsB9hFj2GdA7UeNoRi5MkEtWy',
+  REPLACED: 'Wx3nB7kQr2ZtV9mLc4YfH1sPj8GaD6UeNoRi5XkEtQp',
+  WITHDRAWN: 'Qz8vN1kXc4TfL7mWb2RyH9sDj3PaGe6UoKiV5nBxRtE',
+} as const;
+
 /** A token the server never issued: the page must say only that the link is not valid. */
 export const UNKNOWN_TOKEN = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 
@@ -96,6 +103,23 @@ function answer(req: IncomingMessage): { status: number; body: unknown } | null 
   if (req.method !== 'GET' || match === null) return null;
   const quote = QUOTES[decodeURIComponent(match[1] ?? '')];
   if (quote !== undefined) return { status: 200, body: quote };
+  const closed = Object.entries(CLOSED_TOKENS).find(
+    ([, token]) => token === decodeURIComponent(match[1] ?? ''),
+  );
+  if (closed !== undefined) {
+    // Nothing of the quote: only why the link closed (ADR-0087).
+    return {
+      status: 422,
+      body: {
+        error: {
+          code: 'QUOTE_LINK_CLOSED',
+          message: 'This quote link is closed.',
+          correlationId: '019a7b40-0000-7000-8000-000000000422',
+          details: [{ field: null, code: closed[0], message: 'The link is closed.' }],
+        },
+      },
+    };
+  }
   return {
     status: 404,
     body: {

@@ -15,12 +15,25 @@ import {
   Field,
   Input,
   MutationFailure,
+  Pagination,
+  QueryBoundary,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableHeader,
+  TableLoadingRows,
+  TableRow,
+  TableRowHeader,
   formatDateTime,
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiMutation, useApiQuery } from '../data/api';
+import { When } from '../iam/presentation';
 import { useIntentKey } from '../lib/queries';
 import { useStateLabels } from '../lib/states';
+import { useCursorPages } from '../lib/useCursorPages';
 
 type S = components['schemas'];
 
@@ -82,12 +95,14 @@ function BuyerPicker({
  * Giving a buyer this list's prices (`assignCustomerPriceList`): the pricing engine reads a buyer's own
  * list first, so a hotel on it pays its crate price and its quantity breaks. A buyer has one list at a
  * time, and the new window replaces what it meets; the screen says so before it is sent. The answer stays
- * on screen in words. The contract has no read of who holds a list (CR-041), so only this answer is shown.
+ * on screen in words, and the list of who holds it (`listPriceListAssignments`, CR-041) is read again.
  */
 export function AssignToBuyer({ list }: { list: S['PriceList'] }) {
   const { t } = useTranslation(['catalogue', 'common']);
   const auth = useAuth();
-  const assign = useApiMutation('assignCustomerPriceList');
+  const assign = useApiMutation('assignCustomerPriceList', {
+    invalidates: ['listPriceListAssignments', 'getCustomerPriceList'],
+  });
   const keyFor = useIntentKey();
   const [customer, setCustomer] = useState<S['Customer'] | null>(null);
   const [from, setFrom] = useState(today());
@@ -293,5 +308,96 @@ export function NewBuyerPriceList() {
         </form>
       </CardBody>
     </Card>
+  );
+}
+
+/**
+ * Who holds this list, each buyer with the window they are on it (`listPriceListAssignments`, CR-041): the
+ * people a price change here reaches. A list made for one buyer only.
+ */
+export function ListHolders({ list }: { list: S['PriceList'] }) {
+  const { t } = useTranslation(['catalogue', 'common']);
+  const pages = useCursorPages();
+  const holders = useApiQuery(
+    'listPriceListAssignments',
+    { path: { id: list.id }, query: pages.cursor === undefined ? {} : { cursor: pages.cursor } },
+    { enabled: list.kind === 'CUSTOMER' },
+  );
+  const labels = useStateLabels({
+    loading: t('holders.loading'),
+    emptyTitle: t('holders.none'),
+    emptyDescription: t('holders.noneBody'),
+    errorTitle: t('holders.error'),
+    deniedTitle: t('holders.denied'),
+  });
+  if (list.kind !== 'CUSTOMER') return null;
+  const header = (
+    <TableHeader>
+      <TableRow>
+        <TableHead>{t('holders.buyer')}</TableHead>
+        <TableHead>{t('holders.from')}</TableHead>
+        <TableHead>{t('holders.until')}</TableHead>
+      </TableRow>
+    </TableHeader>
+  );
+  return (
+    <section aria-labelledby="holders-title" className="grid gap-3">
+      <h2 id="holders-title" className="text-xl font-semibold">
+        {t('holders.title')}
+      </h2>
+      <p className="text-control-sm text-fg-muted">{t('common:time.zone')}</p>
+      <QueryBoundary
+        query={holders}
+        labels={labels}
+        isEmpty={(page) => page.data.length === 0}
+        loadingFallback={
+          <TableContainer aria-label={t('holders.title')}>
+            <Table>
+              {header}
+              <TableBody>
+                <TableLoadingRows columns={3} label={labels.loading} />
+              </TableBody>
+            </Table>
+          </TableContainer>
+        }
+      >
+        {(page) => (
+          <div className="grid gap-3">
+            <TableContainer aria-label={t('holders.title')}>
+              <Table>
+                {header}
+                <TableBody>
+                  {page.data.map((holder) => (
+                    <TableRow key={holder.id}>
+                      <TableRowHeader>{holder.customer.name}</TableRowHeader>
+                      <TableCell label={t('holders.from')}>
+                        <When instant={holder.validFrom} />
+                      </TableCell>
+                      <TableCell label={t('holders.until')}>
+                        <When instant={holder.validTo} empty={t('holders.openEnded')} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            {pages.hasPrevious || page.page.hasMore ? (
+              <Pagination
+                label={t('holders.pages')}
+                hasPrevious={pages.hasPrevious}
+                hasNext={page.page.hasMore && page.page.nextCursor !== null}
+                onPrevious={pages.previous}
+                onNext={() => {
+                  if (page.page.nextCursor !== null) pages.next(page.page.nextCursor);
+                }}
+                previousLabel={t('common:pagination.previous')}
+                nextLabel={t('common:pagination.next')}
+                summary={t('common:pagination.page', { page: pages.page })}
+              />
+            ) : null}
+          </div>
+        )}
+      </QueryBoundary>
+    </section>
   );
 }

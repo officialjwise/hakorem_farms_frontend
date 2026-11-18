@@ -41,20 +41,21 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-035 | 2026-11-17 | Answered (2.3.0), built   |
 | CR-036 | 2026-11-17 | Answered (2.4.0), built   |
 | CR-037 | 2026-11-17 | Answered (2.4.0)          |
-| CR-038 | 2026-11-17 | Open, built behind switch |
+| CR-038 | 2026-11-17 | Answered in 2.11.0, built |
 | CR-039 | 2026-11-17 | Open                      |
 | CR-040 | 2026-11-17 | Answered (2.9.0), built   |
-| CR-041 | 2026-11-17 | Open                      |
+| CR-041 | 2026-11-17 | Answered (2.12.0), built  |
 | CR-042 | 2026-11-17 | Answered (2.9.0), built   |
 | CR-043 | 2026-11-17 | Answered (2.9.0), built   |
 | CR-044 | 2026-11-17 | Answered (2.9.0), built   |
-| CR-045 | 2026-11-18 | Open                      |
+| CR-045 | 2026-11-18 | Answered (2.12.0), built  |
 | CR-046 | 2026-11-18 | Open                      |
-| CR-047 | 2026-11-18 | Open                      |
+| CR-047 | 2026-11-18 | Part answered (2.12.0)    |
 | CR-048 | 2026-11-18 | Open                      |
-| CR-049 | 2026-11-18 | Open                      |
+| CR-049 | 2026-11-18 | Answered (2.12.0)         |
 | CR-050 | 2026-11-18 | Part 2 answered (2.6.0)   |
 | CR-051 | 2026-11-18 | Open                      |
+| CR-052 | 2026-11-18 | Open                      |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -641,6 +642,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 
 **Until this lands:** the till is built against this shape behind `HK_REQUESTED_CONTRACT=CR-038` (ADR 0046): `apps/console/src/requested/sellingUnits.ts`, answered in the e2e suite by a rewrite of the pack. With the switch off, a product is sold in its `saleUom` alone, as before.
 
+**Answered in 2.11.0 (F10l):** `OfflineSellingUnit`, `OfflineProduct.sellingUnits` and `CounterSaleLine.uom` in exactly this shape, with `getOfflinePack` in code. A line that names no unit is the product's first unit, the one its `priceBand` is. The switch and `requested/sellingUnits.ts` are deleted; the till reads the generated types (`pos/sale/catalogue.ts`).
+
 ## CR-039. The shop sells a product in more than one unit, each with its own price (additive)
 
 - **Raised by:** frontend, the egg session, part b: the crate and the single egg in the shop.
@@ -676,6 +679,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 2. **`PriceListEntry.baseUom`** (string): the unit `minQtyBase` is in.
 
 **Until this lands:** the price list screen shows the assignment just made, from its answer; the break's base figure is shown bare.
+
+**Answered in 2.12.0 (F10l):** both reads and `baseUom`, as asked. A buyer's list shows who pays its prices, with their windows, read again after an assignment; a break reads "from 10 crates (300 eggs)". `getCustomerPriceList` is in the client and not yet on a screen.
 
 ## CR-042. A supplier's balance: what is owed, claimed, in payment and paid (additive)
 
@@ -752,6 +757,8 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 
 **Until this lands:** the quote builder sends `uom` only in a build switched on for CR-045 (`HK_REQUESTED_CONTRACT`, ADR 0046), from `apps/console/src/requested/quoteLineUnit.ts`. Each line's price comes from `resolvePrices` for that unit and customer, and is sent as `unitPricePesewas`; the person may agree another, and the API's price stays beside it. With the switch off, a line is in the product's sale unit and the screen says that a line by the single egg waits for the server.
 
+**Answered in 2.12.0 (F10l):** `QuoteLineInput.uom`, the product's base unit when left out, and `QuoteLine.baseQuantity`. The switch and `requested/quoteLineUnit.ts` are deleted: every line sends its unit, and the notice that a line by the single egg waits is gone.
+
 ## CR-046. A credit order past the limit or the terms is refused with the amount over, and an override is asked for with a reason (behaviour, additive)
 
 - **Raised by:** frontend, the credit control session: "a sale that would take a customer past their limit, or a customer past their terms, is refused by the server; show the refusal in words, with the amount over. An override needs an Owner or Manager, a reason, and is never approved by the person asking. Show who approved it" (owner, 2026-11-17).
@@ -806,6 +813,8 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 
 **Until this lands:** nothing is switched. The page shows the status the API gives: an expired quote says when it expired and how to ask for a new one; a replaced one says the farm sent a newer version and this link can no longer be used. A refused acceptance reads the quote again and shows its state in words.
 
+**Part answered in 2.12.0 (F10l):** items 1 and 3. The token is `quo_` and 256 random bits, kept as its hash, answered once by `issueQuoteVersion` (`QuoteVersion.acceptanceLinkToken`), and a closed link is 422 `QUOTE_LINK_CLOSED` with `EXPIRED`, `REPLACED` or `WITHDRAWN` and nothing of the quote (ADR-0087). The link page says each in words. Item 2 is open: `PublicQuote` still has no `acceptedName`, `decidedAt` or `supersededAt`.
+
 ## CR-048. Who quotes, holds, releases and approves: the seed for quotes and wholesale, and a second person on a release and a limit change (seed, behaviour)
 
 - **Raised by:** frontend, F10i, on the owner's decision (2026-11-18): "Sales builds, revises, sends and converts quotes, and never approves an override. The Accountant may put an account on hold. Releasing a hold, approving an over-limit override and changing a credit limit are Owner or Manager only, never the person who asked."
@@ -840,6 +849,8 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 
 **Until this lands:** the form writes the number into `requirements` as "Crates wanted: N" (A-F10-11), and the request's page shows the buyer's words.
 
+**Answered in 2.12.0 (F10l), not built:** `PublicQuoteRequest.quantity` and `uom`, but only with `productId`. The shop's form names no product, so the count stays in `requirements` (A-F10-11) until the form asks which product.
+
 ## CR-051. The offline pack names its units, for one and for more (additive)
 
 - **Raised by:** frontend F10k, the till's sale screen, after 2.9.0 gave every unit `singularName` and `pluralName` ("540 eggs", "1 crate").
@@ -848,3 +859,14 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 **Request:** `OfflinePack.uoms`: `{ code, name, singularName, pluralName, displayDecimals }[]`, the units the pack's products are sold or counted in, as `Uom` gives them. Additive; a planned operation, so B9b can add it with `getOfflinePack`.
 
 **Until this lands:** the till says the unit's code in lower case after a quantity ("6 egg"), which is wrong for a plural. Nothing is built on it.
+
+**Still open after 2.11.0 (F10l):** `getOfflinePack` moved into code without `uoms`.
+
+## CR-052. The till sells a live animal priced by grade or weight (additive)
+
+- **Raised by:** frontend F10l, the till's sale screen, after 2.11.0 moved `getOfflinePack` into code.
+- **Contract read first (2.12.0):** `getOfflinePack` says "a product priced by grade or weight (a live animal) has no single band (`priceBand` null)", and its example gives the goat no band and a `sellingUnits` entry with no band. `OfflineStockUnit` carries `gradeId` and `lastWeightKg` but no price. The till totals offline from the pack's band (BUILD_PROMPT's one exception) and keeps an agreed price inside the floor and ceiling, so with no band it cannot sell the animal at all: the sale screen says "Goat has no price on this till". Selling a live animal at the counter is in the mission ("sell live animals by weight").
+
+**Request:** the band each sellable animal is sold at, resolved as the server would at the counter (the register's lists, a buyer with no account, its grade and its weight band from `lastWeightKg`): `OfflineStockUnit.priceBand: PriceBand | null` and `OfflineStockUnit.priceListEntryId: uuid | null`, null when the animal has no price at this register. A product priced per kilogram keeps its own band, and the scale gives the weight. Say in `syncOfflineSales` how an animal re-weighed at the sale is priced if its weight moved it to another band.
+
+**Until this lands:** a till with the real pack refuses a goat in words and sells everything else. The e2e pack gives the goat the per-head band of 2.10.0's example (`goatPricedPerHead` in `e2e/support/till.ts`), so the till's own tests still run with an animal.

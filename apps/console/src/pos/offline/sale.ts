@@ -13,7 +13,6 @@ import {
   type CartLine,
   type OtherTender,
 } from './cart';
-import { withSoldUnit } from '../../requested/sellingUnits';
 import { payloadHash, type Json } from './payloadHash';
 import type { DeviceRecord, OfflineSale, ReceiptContent, SaleEntry, ShiftRecord } from './types';
 
@@ -29,7 +28,12 @@ export function provisionalRef(registerCode: string, shiftSeq: number, counter: 
 
 /** The contract's line: optional fields left out, never sent as null. */
 export function toCounterSaleLine(line: CartLine): CounterSaleLine {
-  return withSoldUnit(lineWithoutUnit(line), line.soldInUom);
+  const sale = lineWithoutUnit(line);
+  // CR-038 (2.11.0): the unit chosen at the till. Left out, the server sells the product's first unit,
+  // which is the one its `priceBand` is.
+  return line.soldInUom === null || line.soldInUom === undefined
+    ? sale
+    : { ...sale, uom: line.soldInUom };
 }
 
 function lineWithoutUnit(line: CartLine): CounterSaleLine {

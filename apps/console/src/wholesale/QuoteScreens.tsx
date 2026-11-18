@@ -656,6 +656,13 @@ function VersionView({ version: v, current }: { version: Version; current: boole
                 ? []
                 : ([[t('fields.changeNote'), v.changeNote]] satisfies [string, ReactNode][])),
               [
+                t('fields.made'),
+                t('version.issuedBy', {
+                  who: v.createdBy.displayName,
+                  when: formatDateTime(v.createdAt),
+                }),
+              ],
+              [
                 t('fields.issued'),
                 v.issuedAt === null || v.issuedBy === null
                   ? t('version.notIssued')
@@ -1069,7 +1076,8 @@ function EditDraft({
     const input = {
       path: { id: v.id },
       body: {
-        version: q.version,
+        // The draft version's own lock (2.12.0), not the quote's.
+        version: v.version,
         validUntil: dayEnd(validUntil),
         ...(fee === null ? {} : { deliveryFeePesewas: fee }),
         lines: lines.map(toLineInput),
@@ -1201,6 +1209,7 @@ function AcceptanceDialog({
   const { t } = useTranslation(['wholesale', 'common']);
   const [method, setMethod] = useState<S['QuoteAcceptanceRecord']['method']>('PHONE_CONFIRMED');
   const [name, setName] = useState('');
+  const [note, setNote] = useState('');
   const [checked, setChecked] = useState(false);
   return (
     <ConfirmDialog
@@ -1215,7 +1224,9 @@ function AcceptanceDialog({
       failedTitle={t('actions.failed')}
       onConfirm={() => {
         setChecked(true);
-        if (name.trim() !== '') onRecord({ method, acceptedName: name.trim() });
+        if (name.trim() !== '' && note.trim() !== '') {
+          onRecord({ method, acceptedName: name.trim(), note: note.trim() });
+        }
       }}
     >
       {children}
@@ -1236,6 +1247,16 @@ function AcceptanceDialog({
         error={checked && name.trim() === '' ? t('common:field.required') : undefined}
       >
         <Input value={name} maxLength={120} onChange={(event) => setName(event.target.value)} />
+      </Field>
+      {/* The evidence of the acceptance, which the server requires (2.12.0, NOTE_REQUIRED). */}
+      <Field
+        label={t('fields.acceptanceNote')}
+        hint={t('fields.acceptanceNoteHint')}
+        required
+        requiredLabel={t('common:field.required')}
+        error={checked && note.trim() === '' ? t('common:field.required') : undefined}
+      >
+        <Textarea value={note} maxLength={1000} onChange={(event) => setNote(event.target.value)} />
       </Field>
     </ConfirmDialog>
   );

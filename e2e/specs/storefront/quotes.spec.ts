@@ -2,7 +2,7 @@ import type { Page, Route } from '@playwright/test';
 import { expect, test } from '../../support/test';
 import { expectNoAxeViolations, expectNoHorizontalScroll } from '../../support/helpers';
 import { refusePhotos, throttle3G } from '../../support/shop';
-import { TOKENS, UNKNOWN_TOKEN } from '../../support/shopApi';
+import { CLOSED_TOKENS, TOKENS, UNKNOWN_TOKEN } from '../../support/shopApi';
 
 /**
  * F10i: a buyer asks for a quote from the shop, and a customer accepts a quote from the link the farm sent
@@ -159,6 +159,30 @@ test.describe('a quote from its link', () => {
     await expect(page.getByRole('link', { name: 'Ask for a new quote' })).toBeVisible();
     await expectNoHorizontalScroll(page);
     await expectNoAxeViolations(page);
+  });
+
+  test('a closed link says why it closed, shows nothing of the quote, and offers a new request', async ({
+    page,
+  }) => {
+    const said = {
+      EXPIRED: 'This quote has expired',
+      REPLACED: 'This quote was replaced by a newer version',
+      WITHDRAWN: 'The farm withdrew this quote',
+    } as const;
+    for (const [reason, token] of Object.entries(CLOSED_TOKENS)) {
+      await page.goto(`/q/${token}`);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+        said[reason as keyof typeof said],
+      );
+      await expect(page.getByText(/QUO-|GH₵/)).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Accept this quote' })).toHaveCount(0);
+      await expect(page.getByRole('link', { name: 'Ask for a new quote' })).toHaveAttribute(
+        'href',
+        '/quote',
+      );
+      await expectNoHorizontalScroll(page);
+      await expectNoAxeViolations(page);
+    }
   });
 
   test('a wrong link says only that it is not valid', async ({ page }) => {

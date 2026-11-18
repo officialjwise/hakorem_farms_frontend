@@ -11,7 +11,8 @@ import type { components } from '@hakorem/api-client';
 /**
  * The egg session, part c: bulk buyer prices (ADR 0049; contract 2.1.0). A price list holds a crate's
  * price and a single egg's price as two entries, a quantity break is counted in crates ("from 10 crates"),
- * and a list is given to a buyer. Every price is the API's or typed by the owner; nothing is derived.
+ * and a list is given to a buyer, with who holds it (CR-041). Every price is the API's or typed by the owner;
+ * nothing is derived.
  */
 
 type S = components['schemas'];
@@ -39,14 +40,14 @@ test.describe('bulk buyer prices for eggs', () => {
     const rows = preview.getByRole('row').filter({ hasText: 'Eggs, big' });
     await expect(rows).toHaveCount(3);
     await expect(rows.nth(0)).toContainText('per crate');
-    await expect(rows.nth(1)).toContainText('from 10 crates (300 in the base unit)');
+    await expect(rows.nth(1)).toContainText('from 10 crates (300 eggs)');
     await expect(rows.nth(1)).toContainText('GH₵55.00');
     await expect(rows.nth(2)).toContainText('per egg');
     await expect(rows.nth(2)).toContainText('GH₵2.20');
     // A crate and a single egg are told apart on their buttons too.
     await expect(
       page.getByRole('button', {
-        name: 'Change the prices of Eggs, big, per crate, from 10 crates (300 in the base unit)',
+        name: 'Change the prices of Eggs, big, per crate, from 10 crates (300 eggs)',
       }),
     ).toBeVisible();
     await expectNoHorizontalScroll(page);
@@ -114,6 +115,11 @@ test.describe('bulk buyer prices for eggs', () => {
     });
 
     await page.waitForURL(/\/price-lists\/[0-9a-f-]{36}$/);
+    // Who holds the list, from listPriceListAssignments (CR-041, 2.12.0): the example's hotel, open-ended.
+    const holders = page.getByRole('region', { name: 'Who pays these prices' });
+    await expect(
+      holders.getByRole('row').filter({ hasText: 'Royal Palm Hotel Ltd' }),
+    ).toContainText('Until another list is given to them');
     const card = page.getByRole('heading', { name: 'Give these prices to a buyer' });
     await expect(card).toBeVisible();
     await page.getByRole('combobox', { name: /^Buyer/ }).fill('Asan');

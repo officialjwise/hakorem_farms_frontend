@@ -39,8 +39,8 @@ import { expect, test } from '../../support/test';
 
 /**
  * Quotes, wholesale and credit control (F10i, contract 2.5.0): Asantewaa Chop Bar buys big eggs by the
- * crate and the single egg. A quote is built with lines priced by the API for the buyer (the unit behind
- * CR-045), revised into a new version with the old one kept readable, sent, accepted and made an order
+ * crate and the single egg. A quote is built with lines priced by the API for the buyer (each line naming
+ * its unit, CR-045 in 2.12.0), revised into a new version with the old one kept readable, sent, accepted and made an order
  * with every link kept. Confirming the credit order is refused by the server with the amount over the
  * limit (CR-046), an override is asked for with a reason, the person who asked cannot approve it, and a
  * Manager does; the account shows who approved it. The suite runs at 360 px. Every amount shown is the
@@ -67,8 +67,7 @@ test.describe('a quote for crates and single eggs', () => {
     seedEggs(api);
     api.rewrite('listCustomers', (body) => pageOf(body, [chopBar(first<S['Customer']>(body))]));
     api.respond('resolvePrices', (request) => eggPrices(request as S['PriceResolveRequest']));
-    // Prism refuses the requested unit (QuoteLineInput takes no uom yet): the fake answers as a server
-    // with CR-045 would.
+    // The server's draft, with its own line totals (Prism answers its example, not these lines).
     api.respond('createQuote', () => eggQuote({} as S['Quote'], 'DRAFT', version1('DRAFT'), 1));
     api.rewrite('getQuote', (body) => eggQuote(body as S['Quote'], 'DRAFT', version1('DRAFT'), 1));
     api.rewrite('listQuoteVersions', (body) => pageOf(body, [version1('DRAFT')]));
@@ -234,6 +233,63 @@ test.describe('a quote for crates and single eggs', () => {
     expect((await sent).postDataJSON()).toEqual({ channels: ['WHATSAPP', 'SMS'] });
     await expect(page.getByText(`${QUOTE_NO} was sent to the customer`)).toBeVisible();
     await expectNoAxeViolations(page);
+  });
+
+  test('a draft is saved at its own version, the lock 2.12.0 names', async ({ page, api }) => {
+    api.rewrite('getQuote', (body) =>
+      eggQuote(body as S['Quote'], 'ISSUED', { ...version2('DRAFT'), version: 4 }, 2),
+    );
+    api.rewrite('listQuoteVersions', (body) =>
+      pageOf(body, [{ ...version2('DRAFT'), version: 4 }, version1('SUPERSEDED')]),
+    );
+    api.rewrite('updateQuoteVersion', () => ({ ...version2('DRAFT'), version: 5 }));
+    await signInWithTotp(page, USERS.owner, `/quotes/${QUOTE_ID}`);
+    // Each version says who made it and when.
+    await expect(page.getByText('Made', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Edit the draft' }).click();
+    const sent = page.waitForRequest(
+      (r) =>
+        r.method() === 'PUT' && new URL(r.url()).pathname === `/mock/quote-versions/${VERSION_2}`,
+    );
+    await page.getByRole('button', { name: 'Save the version' }).click();
+    // The version's lock (4), never the quote's (3).
+    expect((await sent).postDataJSON()).toMatchObject({ version: 4 });
+    await expectNoAxeViolations(page);
+  });
+
+  test('accepted by phone, the acceptance needs what the buyer said, and sends it', async ({
+    page,
+    api,
+  }) => {
+    api.rewrite('getQuote', (body) =>
+      eggQuote(body as S['Quote'], 'ISSUED', version2('ISSUED'), 2),
+    );
+    api.rewrite('listQuoteVersions', (body) =>
+      pageOf(body, [version2('ISSUED'), version1('SUPERSEDED')]),
+    );
+    api.rewrite('recordQuoteAcceptance', (body) => ({
+      ...eggQuote(body as S['Quote'], 'ACCEPTED', version2('ACCEPTED'), 2),
+    }));
+    await signInWithTotp(page, USERS.owner, `/quotes/${QUOTE_ID}`);
+    await page.getByRole('button', { name: 'Record an acceptance' }).click();
+    const dialog = page.getByRole('dialog', { name: /^Record that / });
+    await dialog.getByRole('textbox', { name: /The name they gave/ }).fill('Akosua Asantewaa');
+    await dialog.getByRole('button', { name: 'Record an acceptance' }).click();
+    // No note, no call: the server would refuse it (NOTE_REQUIRED).
+    await expect(dialog.getByText('Required').first()).toBeVisible();
+    expect(api.log.some((e) => e.operationId === 'recordQuoteAcceptance')).toBe(false);
+    await expectNoAxeViolations(page);
+    await dialog
+      .getByRole('textbox', { name: /What they said, and where/ })
+      .fill('Called from 024 451 2876 at 10:40 and said yes to version 2');
+    const sent = page.waitForRequest(posted(`/quotes/${QUOTE_ID}/record-acceptance`));
+    await dialog.getByRole('button', { name: 'Record an acceptance' }).click();
+    expect((await sent).postDataJSON()).toEqual({
+      method: 'PHONE_CONFIRMED',
+      acceptedName: 'Akosua Asantewaa',
+      note: 'Called from 024 451 2876 at 10:40 and said yes to version 2',
+    });
+    await expectNoHorizontalScroll(page);
   });
 
   test('below the margin floor, sending waits for someone else to approve it', async ({

@@ -28,8 +28,8 @@ export interface CartLine {
   /** The unit the line is sold and priced in: the product's `saleUom`, or the selling unit chosen. */
   saleUom: string;
   /**
-   * CR-038, requested (ADR 0046): the selling unit chosen at the till, a crate or a single egg, sent on the
-   * sale line. Absent or null is the product's `saleUom`, and nothing is sent. Optional, so a cart held
+   * CR-038 (2.11.0): the selling unit chosen at the till, a crate or a single egg, sent on the sale line
+   * as `CounterSaleLine.uom`. Absent or null is the product's `saleUom`, and nothing is sent. Optional, so a cart held
    * before it existed still reads.
    */
   soldInUom?: string | null;
