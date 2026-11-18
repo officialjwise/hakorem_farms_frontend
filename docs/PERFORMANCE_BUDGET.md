@@ -86,7 +86,7 @@ The home and search pages fell the same way (`/` 176 KB without photographs). A 
 
 A-F0-06 can now be judged on a page under budget: the provisional 120 kB script sub-budget holds on the listing with 2 kB to spare.
 
-### Per route, checked in CI (F10i, 2026-11-18)
+### Per route, checked in CI (F10j, 2026-11-18)
 
 The owner's decision (2026-11-18): the two quote pages are accepted at their size, under **their own budget of 170 kB**, checked in CI; the **120 kB** target stays for listing pages.
 
@@ -101,7 +101,7 @@ The owner's decision (2026-11-18): the two quote pages are accepted at their siz
 | `/checkout`                                    | 202.8 kB          | none   | no             |
 
 - **The quote link page has 0.7 kB left.** Anything added to it, or to what it shares, needs the budget first.
-- **The listing pages are 1.7 kB over their target, and were before F10i**: `main` at `678f8c9` measured 121 kB in `next build`'s own table, against 118 kB in F8. The check prints them against 120 kB without failing; whether CI should fail on them now is the owner's call. F13's Lighthouse run enforces the page budgets against staging either way.
+- **The listing pages are 1.7 kB over their target, and were before F10j**: `main` at `678f8c9` measured 121 kB in `next build`'s own table, against 118 kB in F8. The check prints them against 120 kB without failing; whether CI should fail on them now is the owner's call. F13's Lighthouse run enforces the page budgets against staging either way.
 
 ## Console
 

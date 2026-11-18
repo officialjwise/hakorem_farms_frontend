@@ -631,7 +631,7 @@ function AccountActions({ account: a }: { account: Account }) {
             </Button>
           ) : null}
           {/* The owner (2026-11-18): an Owner or Manager releases a hold, never the Accountant who may put one
-              on. Until the seed splits the permission (CR-048), releasing takes the hold and the terms'. */}
+              on. Until the seed splits the permission (CR-049), releasing takes the hold and the terms'. */}
           {auth.can('whl.account.hold') &&
           auth.can('whl.account.manage') &&
           a.status === 'ON_HOLD' ? (
@@ -682,7 +682,7 @@ function AccountActions({ account: a }: { account: Account }) {
             const answer: unknown = await release.mutateAsync(input, {
               idempotencyKey: keyFor(input),
             });
-            // CR-048: a release may wait for an Owner or Manager other than the one who asked.
+            // CR-049: a release may wait for an Owner or Manager other than the one who asked.
             setOutcome(
               isApprovalPending(answer)
                 ? { approvalId: answer.approvalRequestId, waiting: 'release' }

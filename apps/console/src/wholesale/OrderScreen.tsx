@@ -49,7 +49,7 @@ import { useUnits } from '../stock/units';
 type S = components['schemas'];
 type Order = S['SalesOrder'];
 
-/** Whether a refusal is one of credit control's (CR-046), or the contract's "not built yet" (A-224). */
+/** Whether a refusal is one of credit control's (CR-047), or the contract's "not built yet" (A-224). */
 function creditRefusal(code: string | undefined): boolean {
   return code !== undefined && (CREDIT_REFUSALS as readonly string[]).includes(code);
 }
@@ -58,7 +58,7 @@ function creditRefusal(code: string | undefined): boolean {
  * An order made from a quote: its lines at the quote's prices, the API's estimate, the quote it came from
  * and its invoice. Confirming a credit order is where credit control happens: the server refuses an order
  * that would take the buyer past their limit or their terms, and this page says so in words, with the
- * amount over from the server's own credit check (CR-046). An override is asked for here with a reason,
+ * amount over from the server's own credit check (CR-047). An override is asked for here with a reason,
  * and approved in the approvals inbox by an Owner or Manager who did not ask.
  */
 export function OrderScreen() {
@@ -233,7 +233,7 @@ export function useCreditWords(): (check: OrderCreditCheck) => string {
   };
 }
 
-/** The credit check of a credit order, from the server (CR-046), or words that it waits for the server. */
+/** The credit check of a credit order, from the server (CR-047), or words that it waits for the server. */
 function CreditCheckCard({ order }: { order: Order }) {
   const { t } = useTranslation(['wholesale', 'common']);
   const check = useOrderCreditCheck(order.id);

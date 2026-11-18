@@ -145,7 +145,7 @@ export class FakeApi {
   respondRequested(
     operation: RequestedOperation,
     answer: (request: unknown, path: string) => unknown,
-    /** The answer's status: 200, or 202 for a write that waits for a second person (CR-046's override). */
+    /** The answer's status: 200, or 202 for a write that waits for a second person (CR-047's override). */
     status = 200,
   ): void {
     if (operation.operationId in operationManifest) {

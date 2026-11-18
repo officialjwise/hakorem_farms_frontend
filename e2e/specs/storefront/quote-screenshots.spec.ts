@@ -4,9 +4,9 @@ import { refusePhotos } from '../../support/shop';
 import { TOKENS, UNKNOWN_TOKEN } from '../../support/shopApi';
 
 /**
- * F10i's storefront screens for the owner: asking for a quote, and a quote by its link in each state. 360 px
+ * F10j's storefront screens for the owner: asking for a quote, and a quote by its link in each state. 360 px
  * at 2x, as a phone shows it, and 1280 px at 1x. Tagged `@screenshots`: `pnpm screenshots` writes
- * `docs/screenshots/F10i/<screen>-<width>.png`. The browser's writes are answered here as the API would.
+ * `docs/screenshots/F10j/<screen>-<width>.png`. The browser's writes are answered here as the API would.
  */
 interface Shot {
   name: string;
@@ -108,7 +108,7 @@ const VIEWS = [
 for (const shot of SHOTS) {
   for (const view of VIEWS) {
     const file = `${shot.name}-${view.width}`;
-    test(`@screenshots F10i ${file}`, async ({ browser }) => {
+    test(`@screenshots F10j ${file}`, async ({ browser }) => {
       const context = await browser.newContext({
         viewport: { width: view.width, height: view.height },
         deviceScaleFactor: view.scale,
@@ -120,7 +120,7 @@ for (const shot of SHOTS) {
       await page.goto(shot.path);
       await expect(page.getByText(shot.ready).first()).toBeVisible();
       await shot.act?.(page);
-      await page.screenshot({ path: `../docs/screenshots/F10i/${file}.png`, fullPage: true });
+      await page.screenshot({ path: `../docs/screenshots/F10j/${file}.png`, fullPage: true });
       await context.close();
     });
   }

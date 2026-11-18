@@ -23,7 +23,7 @@ type PublicQuote = components['schemas']['PublicQuote'];
 export const SHOP_API_PORT = 4011;
 const PRISM = { host: '127.0.0.1', port: 4010 };
 
-/** Long random tokens, as the server makes them (CR-047): nothing in them names the quote. */
+/** Long random tokens, as the server makes them (CR-048): nothing in them names the quote. */
 export const TOKENS = {
   issued: 'Zq7vN2kXc9TfL4mWb8RyH1sDj6PaGe3UoQiV5nBxKtE',
   expired: 'r4HwY8eLq2NvC7ZkT1mXs9GbJ3fPaU6oDiRn5WgQyEc',

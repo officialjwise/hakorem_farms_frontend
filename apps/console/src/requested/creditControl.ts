@@ -1,8 +1,8 @@
 /**
- * CR-046, credit control on an order, as `docs/CONTRACT_REQUESTS.md` asks for it (ADR 0046, ADR 0052,
+ * CR-047, credit control on an order, as `docs/CONTRACT_REQUESTS.md` asks for it (ADR 0046, ADR 0052,
  * ADR 0053): the server's credit check of an order with the amount over, and an override asked for with a
  * reason. Not in the contract yet: these types are the request's, used only in a build switched on for
- * CR-046, and this file goes when the contract carries `getOrderCreditCheck`. Every figure is the server's.
+ * CR-047, and this file goes when the contract carries `getOrderCreditCheck`. Every figure is the server's.
  */
 import type { components, RequestedOperation } from '@hakorem/api-client';
 import { createRequestedMutation, createRequestedQuery } from '@hakorem/data';
@@ -13,7 +13,7 @@ type Schemas = components['schemas'];
 
 /** `getOrderCreditCheck`: the order's credit check as `confirmOrder` would judge it now. */
 export const GET_ORDER_CREDIT_CHECK: RequestedOperation = {
-  request: 'CR-046',
+  request: 'CR-047',
   operationId: 'getOrderCreditCheck',
   method: 'get',
   path: '/orders/{id}/credit-check',
@@ -27,7 +27,7 @@ export const GET_ORDER_CREDIT_CHECK: RequestedOperation = {
 
 /** `requestCreditOverride`: ask for a credit override, with a reason; 202 `ApprovalPending`. */
 export const REQUEST_CREDIT_OVERRIDE: RequestedOperation = {
-  request: 'CR-046',
+  request: 'CR-047',
   operationId: 'requestCreditOverride',
   method: 'post',
   path: '/orders/{id}/credit-override',
@@ -39,7 +39,7 @@ export const REQUEST_CREDIT_OVERRIDE: RequestedOperation = {
   device: false,
 };
 
-/** The refusal codes `confirmOrder` answers for a credit order it will not confirm (CR-046). */
+/** The refusal codes `confirmOrder` answers for a credit order it will not confirm (CR-047). */
 export const CREDIT_REFUSALS = [
   'CREDIT_LIMIT_EXCEEDED',
   'CREDIT_TERMS_EXCEEDED',
@@ -76,7 +76,7 @@ export interface OrderCreditCheck {
   currency: Schemas['Currency'];
 }
 
-/** `CreditOverride` with the fields CR-046 adds, read only in a build switched on for it. */
+/** `CreditOverride` with the fields CR-047 adds, read only in a build switched on for it. */
 export type CreditOverrideWithReason = Schemas['CreditOverride'] & {
   reason?: string;
   requestedBy?: Schemas['PrincipalRef'];
@@ -87,12 +87,12 @@ export type CreditOverrideWithReason = Schemas['CreditOverride'] & {
 const useRequestedQuery = createRequestedQuery(consoleApi);
 const useRequestedMutation = createRequestedMutation(consoleApi);
 
-/** Whether this build reads the credit check and can ask for an override (CR-046's switch). */
+/** Whether this build reads the credit check and can ask for an override (CR-047's switch). */
 export function creditControlOn(): boolean {
-  return requestedOn('CR-046');
+  return requestedOn('CR-047');
 }
 
-/** The order's credit check in a build switched on for CR-046; with it off nothing is asked. */
+/** The order's credit check in a build switched on for CR-047; with it off nothing is asked. */
 export function useOrderCreditCheck(orderId: string, enabled = true) {
   return useRequestedQuery<OrderCreditCheck>(
     GET_ORDER_CREDIT_CHECK,

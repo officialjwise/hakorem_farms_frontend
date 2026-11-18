@@ -314,7 +314,7 @@ describe('useRequestedQuery (ADR 0052)', () => {
 
 describe('useRequestedMutation (ADR 0053)', () => {
   const override = {
-    request: 'CR-046',
+    request: 'CR-047',
     operationId: 'requestCreditOverride',
     method: 'post',
     path: '/orders/{id}/credit-override',

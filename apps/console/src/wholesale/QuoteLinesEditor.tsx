@@ -33,7 +33,7 @@ export interface LinePrice {
 export interface DraftQuoteLine {
   key: string;
   product: ProductRef | null;
-  /** The unit it is sold in: a crate or a single egg (CR-045); empty for the product's sale unit. */
+  /** The unit it is sold in: a crate or a single egg (CR-046); empty for the product's sale unit. */
   uom: string;
   qty: string;
   description: string;
@@ -83,7 +83,7 @@ export function lineProblems(
   return problems;
 }
 
-/** The line as the contract takes it (`QuoteLineInput`), with its unit only where CR-045 is switched on. */
+/** The line as the contract takes it (`QuoteLineInput`), with its unit only where CR-046 is switched on. */
 export function toLineInput(line: DraftQuoteLine): S['QuoteLineInput'] {
   const input: S['QuoteLineInput'] = {
     ...(line.product === null ? {} : { productId: line.product.id }),
@@ -98,7 +98,7 @@ export function toLineInput(line: DraftQuoteLine): S['QuoteLineInput'] {
 const BASES = ['PER_UNIT', 'PER_HEAD', 'PER_KG'] as const satisfies readonly S['PriceBasis'][];
 
 /**
- * The lines of a quote: a product, the unit it is sold in (a crate or a single egg, CR-045), how many, and
+ * The lines of a quote: a product, the unit it is sold in (a crate or a single egg, CR-046), how many, and
  * the price. "Get the API's prices" asks `resolvePrices` for every line at once, for this buyer, and each
  * line takes the price the API gives for its own unit; a single egg's price is never worked out from a
  * crate's. The person may agree another price; the API's stays beside it, and a price below the margin

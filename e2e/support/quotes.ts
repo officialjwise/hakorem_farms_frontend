@@ -1,8 +1,8 @@
 /**
- * The quotes and credit session's fixtures (F10i, contract 2.5.0): Asantewaa Chop Bar asks for 10 crates
+ * The quotes and credit session's fixtures (F10j, contract 2.5.0): Asantewaa Chop Bar asks for 10 crates
  * of big eggs and 30 single eggs. The API prices a crate at GH₵60.00 and a single egg at GH₵2.20, each by
  * its own entry; the quote's totals, the order's estimate, the account's figures, the ageing and the credit
- * check (CR-046, requested) are all the server's answers, stated as the server would give them. The
+ * check (CR-047, requested) are all the server's answers, stated as the server would give them. The
  * screens never work one out.
  */
 import type { components } from '@hakorem/api-client';
@@ -267,7 +267,7 @@ export function eggOrder(
 }
 
 /**
- * CR-046's credit check of the order: GH₵4,620.00 owed before it, GH₵666.00 more, against a GH₵5,000.00
+ * CR-047's credit check of the order: GH₵4,620.00 owed before it, GH₵666.00 more, against a GH₵5,000.00
  * limit, so GH₵286.00 over (the server's figure). `override` adds the request for an override.
  */
 export function overLimit(override: OrderCreditCheck['override'] = null): OrderCreditCheck {

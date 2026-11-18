@@ -1132,9 +1132,9 @@ for (const shot of PAYABLE_SHOTS) {
 }
 
 /**
- * Quotes, wholesale and credit control (F10i): the egg quote built and priced by the API, its versions,
+ * Quotes, wholesale and credit control (F10j): the egg quote built and priced by the API, its versions,
  * the order made from it with the server's credit refusal and the override, the buyer's account and the
- * ageing. The credit check is CR-046's requested shape.
+ * ageing. The credit check is CR-047's requested shape.
  */
 const pageWith = <T>(body: unknown, rows: T[]) => ({ ...(body as object), data: rows });
 const WHOLESALE_SHOTS: Shot[] = [
@@ -1281,7 +1281,7 @@ const WHOLESALE_SHOTS: Shot[] = [
 
 for (const shot of WHOLESALE_SHOTS) {
   for (const width of WIDTHS) {
-    test(`@screenshots F10i ${shot.name} at ${width}`, async ({ page, api }) => {
+    test(`@screenshots F10j ${shot.name} at ${width}`, async ({ page, api }) => {
       shot.prepare?.(api);
       await page.emulateMedia({ colorScheme: 'light' });
       await page.setViewportSize({ width, height: width === 360 ? 800 : 900 });
@@ -1290,7 +1290,7 @@ for (const shot of WHOLESALE_SHOTS) {
       await expect(page.getByText(/^Loading/)).toHaveCount(0);
       await shot.act?.(page);
       await page.screenshot({
-        path: `../docs/screenshots/F10i/${shot.name}-${width}.png`,
+        path: `../docs/screenshots/F10j/${shot.name}-${width}.png`,
         fullPage: true,
         scale: 'css',
       });

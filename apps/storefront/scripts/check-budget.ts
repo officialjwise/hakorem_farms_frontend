@@ -10,10 +10,10 @@
  * leaves them out of its figure too.
  *
  * Budgets:
- * - the two quote pages, 170 kB, enforced (owner, 2026-11-18, F10i): they carry the data layer for the
+ * - the two quote pages, 170 kB, enforced (owner, 2026-11-18, F10j): they carry the data layer for the
  *   form's write and for accepting or declining a quote;
  * - the listing pages, 120 kB, the target A-F0-06 set and the owner kept (2026-11-18). Reported against
- *   the target, not enforced here: they measured 121.7 kB before F10i, and Lighthouse enforces the page
+ *   the target, not enforced here: they measured 121.7 kB before F10j, and Lighthouse enforces the page
  *   budgets against staging in F13. The owner decides whether CI should fail on them now.
  *
  * Every other route is reported, not budgeted.
