@@ -234,15 +234,15 @@ Every screen is in `docs/screenshots/F10h/`, at 360 and 1280 px (`pnpm screensho
 
 ## Gates, each run on its own
 
-| Check                                                               | Exit    | Count                                                                                |
-| ------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------ |
-| `format:check`, `lint`, `typecheck`                                 | 0       |                                                                                      |
-| `tokens:check`, `fonts:check`, `icons:check`, `sync-contract:check` | 0       |                                                                                      |
-| `test:unit`                                                         | 0       | console 297, data 33 (was 31), api-client 30, ui 900, storefront 39 (was 34), i18n 6 |
-| `test:integration`                                                  | 0       | console 257 (was 249), storefront 20 (was 15)                                        |
-| `test:a11y`                                                         | n/r     | not run: `packages/ui` is unchanged; every new screen's spec runs axe                |
-| `budget:console`                                                    | 0       | till 247.3 of 250 kB (was 247.1); back office 280.9 of 300 kB (was 279.8)            |
-| `test:e2e`, full run                                                | running | the result is added in the next commit                                               |
+| Check                                                               | Exit | Count                                                                                |
+| ------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------ |
+| `format:check`, `lint`, `typecheck`                                 | 0    |                                                                                      |
+| `tokens:check`, `fonts:check`, `icons:check`, `sync-contract:check` | 0    |                                                                                      |
+| `test:unit`                                                         | 0    | console 297, data 33 (was 31), api-client 30, ui 900, storefront 39 (was 34), i18n 6 |
+| `test:integration`                                                  | 0    | console 257 (was 249), storefront 20 (was 15)                                        |
+| `test:a11y`                                                         | n/r  | not run: `packages/ui` is unchanged; every new screen's spec runs axe                |
+| `budget:console`                                                    | 0    | till 247.3 of 250 kB (was 247.1); back office 280.9 of 300 kB (was 279.8)            |
+| `test:e2e`, full run                                                | 0    | 307 of 307 in 4.9 minutes (was 286: 11 console and 10 storefront quote tests)        |
 
 **The till grew by 0.2 kB** without being touched. The shared namespace table (`packages/i18n`) carries one more loader, for `wholesale`. It has 2.7 kB left; the F10g opening message's item 2 (load the till's refusal words on demand) is now more pressing.
 
