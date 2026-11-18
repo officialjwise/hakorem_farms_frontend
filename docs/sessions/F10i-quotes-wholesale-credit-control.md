@@ -260,7 +260,7 @@ Every screen is in `docs/screenshots/F10i/`, at 360 and 1280 px (`pnpm screensho
 | `test:a11y`                                                         | n/r  | not run: `packages/ui` is unchanged; every new screen's spec runs axe                |
 | `budget:console`                                                    | 0    | till 247.3 of 250 kB (was 247.1); back office 280.9 of 300 kB (was 279.8)            |
 | `budget:storefront` (new)                                           | 0    | `/quote` 157.1 and `/q/[token]` 169.3 of 170 kB; listings 121.7 against 120 (target) |
-| `test:e2e`, full run                                                | run  | rerun after the owner's decisions; the count is added in the next commit             |
+| `test:e2e`, full run                                                | 0    | 310 of 310 in 5.1 minutes (was 286: 14 console and 10 storefront quote tests)        |
 
 **The till grew by 0.2 kB** without being touched. The shared namespace table (`packages/i18n`) carries one more loader, for `wholesale`. It has 2.7 kB left; the F10g opening message's item 2 (load the till's refusal words on demand) is now more pressing.
 
