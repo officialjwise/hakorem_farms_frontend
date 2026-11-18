@@ -60,12 +60,15 @@ export function PayDialog({
   lines,
   pack,
   online,
+  shiftId,
   onClose,
   onDone,
 }: {
   lines: CartLine[];
   pack: OfflinePack;
   online: boolean;
+  /** The open shift as the server holds it, which a mobile money charge counts in (2.6.0); null before. */
+  shiftId: string | null;
   onClose: () => void;
   onDone: (entry: SaleEntry) => void;
 }) {
@@ -164,6 +167,7 @@ export function PayDialog({
             ) : momo !== null && auth.can('pay.payment.initiate') ? (
               <MobileMoney
                 method={momo}
+                shiftId={shiftId}
                 remaining={split.cashAppliedPesewas}
                 onCleared={(tender) => setCleared((current) => [...current, tender])}
               />
@@ -271,14 +275,17 @@ const PHONE = /^\+[1-9][0-9]{7,14}$/;
 
 /**
  * A mobile money tender: the request goes to the customer's phone (`initiateMobileMoneyCharge`), and it
- * counts only when the provider has cleared it (`checkPaymentStatus`). A refusal stays here in words.
+ * counts only when the provider has cleared it (`checkPaymentStatus`). It names the till's shift once the
+ * server holds it, so the charge shows on the shift's X and Z reports (2.6.0). A refusal stays here in words.
  */
 function MobileMoney({
   method,
+  shiftId,
   remaining,
   onCleared,
 }: {
   method: PaymentMethodRef;
+  shiftId: string | null;
   remaining: number;
   onCleared: (tender: ClearedTender) => void;
 }) {
@@ -358,6 +365,7 @@ function MobileMoney({
                       amountPesewas: amount,
                       payerPhone: phone.replace(/\s+/g, ''),
                       network,
+                      ...(shiftId === null ? {} : { shiftId }),
                     },
                   },
                   { idempotencyKey: paymentId },

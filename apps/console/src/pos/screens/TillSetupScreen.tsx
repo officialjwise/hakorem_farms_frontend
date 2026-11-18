@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { Button, Field, Input, QueryBoundary, Select, formatDateTime } from '@hakorem/ui';
+import { shownFailure, useStepUp } from '../../auth/StepUp';
 import { useApiAllPages, useApiMutation } from '../../data/api';
 import { uniqueById, useIntentKey } from '../../lib/queries';
 import { useStateLabels } from '../../lib/states';
@@ -59,6 +60,8 @@ function Enrol() {
     invalidates: ['listRegisterDevices', 'listRegisters'],
   });
   const keyFor = useIntentKey();
+  // 2.6.0: enrolling a device asks for a fresh step-up; the same write is sent again with the same key.
+  const stepUp = useStepUp();
   const [registerId, setRegisterId] = useState('');
   const [label, setLabel] = useState('');
   const [confirming, setConfirming] = useState(false);
@@ -136,16 +139,19 @@ function Enrol() {
               confirmLabel={t('setup.enrol')}
               pendingLabel={t('setup.enrolling')}
               pending={enrol.isPending}
-              error={enrol.error}
+              error={shownFailure(enrol.error)}
               failedTitle={t('setup.failed')}
               onConfirm={() => {
                 const body = { deviceLabel: label.trim() };
-                enrol
-                  .mutateAsync(
-                    { path: { id: chosen.id }, body },
-                    { idempotencyKey: keyFor({ register: chosen.id, ...body }) },
+                void stepUp
+                  .run(() =>
+                    enrol.mutateAsync(
+                      { path: { id: chosen.id }, body },
+                      { idempotencyKey: keyFor({ register: chosen.id, ...body }) },
+                    ),
                   )
                   .then(async (answer) => {
+                    if (answer === null) return;
                     await getTill().enrol({
                       deviceId: answer.device.id,
                       deviceLabel: answer.device.deviceLabel,
@@ -162,6 +168,7 @@ function Enrol() {
               }}
             />
           ) : null}
+          {stepUp.dialog}
         </form>
       )}
     </QueryBoundary>

@@ -7,7 +7,7 @@
 import { createHash } from 'node:crypto';
 import { expect, type Page } from '@playwright/test';
 import type { FakeApi } from './fakeApi';
-import { signIn, signInWithTotp, USERS } from './helpers';
+import { confirmStepUp, signIn, signInWithTotp, USERS } from './helpers';
 import { LIST_SHIFT_WITNESSES } from '../../apps/console/src/requested/shiftWitnesses';
 import { MOMO_METHOD_ID, PEOPLE, RECEIPT_LINK_TEMPLATE } from './requested';
 
@@ -345,6 +345,8 @@ export async function enrolTill(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Set up this device' }).click();
   const confirm = page.getByRole('dialog', { name: 'Make this device a till?' });
   await confirm.getByRole('button', { name: 'Make this device a till' }).click();
+  // 2.6.0: enrolling a device asks for a fresh step-up, then sends the same write again.
+  await confirmStepUp(page);
   await expect(page.getByRole('heading', { name: 'This device is a till' })).toBeVisible();
   await page.getByRole('button', { name: 'Sign out' }).click();
   await page
