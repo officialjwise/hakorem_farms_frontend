@@ -11,7 +11,7 @@ const PRODUCTS = 100;
 
 /**
  * The public routes: the home page, the whole shop, each category the API lists, and the catalogue's
- * products. Checkout and anything behind a session never appear. If the catalogue cannot be read, the
+ * products. Checkout, a quote's private link and anything behind a session never appear. If the catalogue cannot be read, the
  * sitemap still lists the home page and the shop, never an invented URL.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -22,6 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     { url: `${SITE_URL}/`, changeFrequency: 'daily', priority: 1 },
     { url: `${SITE_URL}/search`, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${SITE_URL}/quote`, changeFrequency: 'monthly', priority: 0.5 },
     ...(categories.ok ? categories.data.data : []).map((category) => ({
       url: `${SITE_URL}/c/${categorySlug(category.code)}`,
       changeFrequency: 'daily' as const,

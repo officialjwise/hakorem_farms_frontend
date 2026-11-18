@@ -253,6 +253,53 @@ const OWNER_PAYABLE_PERMISSIONS = [
   'pur.supplier_payment.pay',
 ];
 
+/**
+ * F10i: quotes, requests for quote, wholesale accounts, the ageing and an order's credit check. The seed
+ * grants no quo.* or whl.* permission yet (B10, CR-046 item 5); the Owner and the Manager hold all of
+ * them here (A-F10-10). The order, price and proforma permissions are the seed's own.
+ */
+const WHOLESALE_PERMISSIONS = [
+  'quo.rfq.read',
+  'quo.rfq.update',
+  'quo.quote.read',
+  'quo.quote.create',
+  'quo.quote.issue',
+  'quo.quote.convert',
+  'whl.account.read',
+  'whl.account.manage',
+  'whl.account.hold',
+  'whl.ageing.read',
+  'mdm.customer.read',
+  'mdm.price.resolve',
+  'mdm.price_list.read',
+  'ord.order.read',
+  'ord.order.confirm',
+  'bil.proforma.create',
+];
+
+/**
+ * F10i, the owner (2026-11-18): Sales builds, revises, sends and converts quotes, and never approves a
+ * credit override. What the seed gives the role (the customer, price, order and proforma permissions), and
+ * the quote permissions not seeded yet (A-F10-10, CR-048). No hold, no terms, no approvals.
+ */
+const SALES_PERMISSIONS = [
+  'mdm.customer.read',
+  'mdm.product.read',
+  'mdm.price.resolve',
+  'mdm.price_list.read',
+  'ord.order.read',
+  'ord.order.confirm',
+  'bil.proforma.create',
+  'quo.rfq.read',
+  'quo.rfq.update',
+  'quo.quote.read',
+  'quo.quote.create',
+  'quo.quote.issue',
+  'quo.quote.convert',
+  'whl.account.read',
+  'whl.ageing.read',
+];
+
 /** What the owner holds for the F5b screens: the dashboard, branches and locations, and the new lists. */
 const OWNER_F5B_PERMISSIONS = [
   'rpt.dashboard.owner',
@@ -415,6 +462,7 @@ const MANAGER_PERMISSIONS = [
   'pur.supplier_payment.read',
   'pur.supplier_payment.create',
   'pur.supplier_payment.approve',
+  ...WHOLESALE_PERMISSIONS,
   ...MANAGER_TILL_PERMISSIONS,
 ];
 
@@ -443,6 +491,12 @@ const ACCOUNTANT_PERMISSIONS = [
   'pur.supplier_payment.pay',
   'mdm.supplier.read',
   'iam.approval.read',
+  // F10i, the owner (2026-11-18): the Accountant may put a wholesale account on hold, and never releases
+  // one or changes a credit limit (A-F10-10, CR-048).
+  'whl.account.read',
+  'whl.account.hold',
+  'whl.ageing.read',
+  'mdm.customer.read',
 ];
 
 /** Keyed by lower-case email. Permission codes are the contract's `x-permission` values. */
@@ -467,6 +521,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
       ...OWNER_F8_PERMISSIONS,
       ...OWNER_EGG_PERMISSIONS,
       ...OWNER_PAYABLE_PERMISSIONS,
+      ...WHOLESALE_PERMISSIONS,
       ...MANAGER_TILL_PERMISSIONS,
     ],
     moreBranches: SELLING_POINTS,
@@ -517,6 +572,28 @@ export const FAKE_USERS: Record<string, FakeUser> = {
     password: 'Mango-Season-2026!',
     totp: false,
     mustEnrolTotp: true,
+    mustChangePassword: false,
+    roleCode: 'ACCOUNTANT',
+    roleName: 'Accountant',
+    permissions: ACCOUNTANT_PERMISSIONS,
+  },
+  // F10i: the salesperson the contract's quote examples name.
+  'kojo.antwi@hakoremfarms.com': {
+    id: '019a7a86-e9e0-7c6e-81a7-cfc0641d489e',
+    displayName: 'Kojo Antwi',
+    password: 'Mango-Season-2026!',
+    totp: false,
+    mustChangePassword: false,
+    roleCode: 'SALES',
+    roleName: 'Sales',
+    permissions: SALES_PERMISSIONS,
+  },
+  // F10i: an Accountant who has set up TOTP, so a spec can act as one past sign-in.
+  'esi.boateng@hakoremfarms.com': {
+    id: '019a7a86-c4d9-7e25-9f73-3e0b6d2a1f58',
+    displayName: 'Esi Boateng',
+    password: 'Mango-Season-2026!',
+    totp: true,
     mustChangePassword: false,
     roleCode: 'ACCOUNTANT',
     roleName: 'Accountant',

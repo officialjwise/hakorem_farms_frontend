@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { operationManifest } from '@hakorem/api-client';
 import { LIST_SHIFT_WITNESSES } from './shiftWitnesses';
+import { GET_ORDER_CREDIT_CHECK, REQUEST_CREDIT_OVERRIDE } from './creditControl';
 import { LIST_TILL_PIN_VERIFIERS, REPORT_TILL_PIN_EVENTS } from './tillPin';
 import {
   assertSwitchesAllowed,
@@ -66,5 +67,7 @@ describe("the owner's conditions on ADR 0046", () => {
     expect(LIST_TILL_PIN_VERIFIERS.operationId in operationManifest).toBe(false);
     expect(REPORT_TILL_PIN_EVENTS.operationId in operationManifest).toBe(false);
     expect(LIST_SHIFT_WITNESSES.operationId in operationManifest).toBe(false);
+    expect(GET_ORDER_CREDIT_CHECK.operationId in operationManifest).toBe(false);
+    expect(REQUEST_CREDIT_OVERRIDE.operationId in operationManifest).toBe(false);
   });
 });

@@ -18,6 +18,26 @@ import {
   wrongInvoice,
 } from '../../support/payables';
 import type { components } from '@hakorem/api-client';
+import { GET_ORDER_CREDIT_CHECK } from '../../../apps/console/src/requested/creditControl';
+import {
+  CUSTOMER,
+  ORDER_ID as QUOTE_ORDER_ID,
+  OVERRIDE_APPROVAL_ID,
+  QUOTE_ID,
+  QUOTE_NO,
+  VERSION_1,
+  chopBar,
+  chopBarAccount,
+  chopBarAgeing,
+  eggOrder as quoteOrder,
+  eggPrices as quotePrices,
+  eggQuote,
+  overLimit,
+  overrideApproval,
+  overrideState,
+  version1,
+  version2,
+} from '../../support/quotes';
 import {
   eggEntries,
   eggOrder,
@@ -1265,6 +1285,173 @@ for (const shot of PAYABLE_SHOTS) {
       await shot.act?.(page);
       await page.screenshot({
         path: `../docs/screenshots/F10g/${shot.name}-${width}.png`,
+        fullPage: true,
+        scale: 'css',
+      });
+    });
+  }
+}
+
+/**
+ * Quotes, wholesale and credit control (F10i): the egg quote built and priced by the API, its versions,
+ * the order made from it with the server's credit refusal and the override, the buyer's account and the
+ * ageing. The credit check is CR-046's requested shape.
+ */
+const pageWith = <T>(body: unknown, rows: T[]) => ({ ...(body as object), data: rows });
+const WHOLESALE_SHOTS: Shot[] = [
+  {
+    name: 'quotes',
+    path: '/quotes',
+    ready: QUOTE_NO,
+    prepare: (api) =>
+      api.rewrite('listQuotes', (body) =>
+        pageWith(body, [
+          eggQuote(firstRow<SS['Quote']>(body), 'ISSUED', version2('ISSUED'), 2),
+          ...(body as { data: SS['Quote'][] }).data.slice(1),
+        ]),
+      ),
+  },
+  {
+    name: 'quote-new-priced',
+    path: '/quotes/new',
+    ready: 'Save the draft',
+    prepare: (api) => {
+      seedEggs(api);
+      api.rewrite('listCustomers', (body) =>
+        pageWith(body, [chopBar(firstRow<SS['Customer']>(body))]),
+      );
+      api.respond('resolvePrices', (request) => quotePrices(request as SS['PriceResolveRequest']));
+    },
+    act: async (page) => {
+      await page.getByRole('combobox', { name: /^Customer/ }).fill('Asantewaa');
+      await page.getByRole('option', { name: /^Asantewaa Chop Bar/ }).click();
+      await page.getByLabel(/^Valid until/).fill('2026-11-24');
+      const line1 = page.getByRole('heading', { name: 'Line 1' }).locator('..').locator('..');
+      await line1.getByRole('combobox', { name: /^Product/ }).fill('Eggs');
+      await page.getByRole('option', { name: /^Eggs, big/ }).click();
+      await line1.getByRole('combobox', { name: /^Sold by/ }).click();
+      await page.getByRole('option', { name: /^Crate/ }).click();
+      await line1.getByLabel(/^How many, in crate/).fill('10');
+      await page.getByRole('button', { name: 'Add a line' }).click();
+      const line2 = page.getByRole('heading', { name: 'Line 2' }).locator('..').locator('..');
+      await line2.getByRole('combobox', { name: /^Product/ }).fill('Eggs');
+      await page.getByRole('option', { name: /^Eggs, big/ }).click();
+      await line2.getByLabel(/^How many, in unit/).fill('30');
+      await page.getByRole('button', { name: "Get the API's prices" }).click();
+      await expect(line2.getByTestId('api-price')).toContainText('2.20');
+    },
+  },
+  {
+    name: 'quote-versions',
+    path: `/quotes/${QUOTE_ID}`,
+    ready: 'Version 2, in force',
+    prepare: (api) => {
+      api.rewrite('getQuote', (body) =>
+        eggQuote(body as SS['Quote'], 'ISSUED', version2('ISSUED'), 2),
+      );
+      api.rewrite('listQuoteVersions', (body) =>
+        pageWith(body, [version2('ISSUED'), version1('SUPERSEDED')]),
+      );
+    },
+  },
+  {
+    name: 'quote-older-version',
+    path: `/quotes/${QUOTE_ID}?version=${VERSION_1}`,
+    ready: 'An earlier version, as it was',
+    prepare: (api) => {
+      api.rewrite('getQuote', (body) =>
+        eggQuote(body as SS['Quote'], 'ISSUED', version2('ISSUED'), 2),
+      );
+      api.rewrite('listQuoteVersions', (body) =>
+        pageWith(body, [version2('ISSUED'), version1('SUPERSEDED')]),
+      );
+    },
+  },
+  {
+    name: 'quote-accepted',
+    path: `/quotes/${QUOTE_ID}`,
+    ready: 'Make it an order',
+    prepare: (api) => {
+      api.rewrite('getQuote', (body) =>
+        eggQuote(body as SS['Quote'], 'ACCEPTED', version2('ACCEPTED'), 2),
+      );
+      api.rewrite('listQuoteVersions', (body) =>
+        pageWith(body, [version2('ACCEPTED'), version1('SUPERSEDED')]),
+      );
+    },
+  },
+  {
+    name: 'order-credit-refused',
+    path: `/orders/${QUOTE_ORDER_ID}`,
+    ready: 'Over the limit by',
+    prepare: (api) => {
+      api.rewrite('getOrder', (body) => quoteOrder(body as SS['SalesOrder'], 'PLACED'));
+      api.respondRequested(GET_ORDER_CREDIT_CHECK, () => overLimit());
+      api.refuse('confirmOrder', 422, 'CREDIT_LIMIT_EXCEEDED', 'Over the credit limit.');
+    },
+    act: async (page) => {
+      await page.getByRole('button', { name: 'Confirm the order' }).click();
+      await page
+        .getByRole('dialog', { name: /^Confirm order/ })
+        .getByRole('button', { name: 'Confirm the order' })
+        .click();
+      await expect(page.getByText('The server refused to confirm this order')).toBeVisible();
+    },
+  },
+  {
+    name: 'order-override-approved',
+    path: `/orders/${QUOTE_ORDER_ID}`,
+    ready: 'Override approved by Kwabena Owusu',
+    prepare: (api) => {
+      api.rewrite('getOrder', (body) => quoteOrder(body as SS['SalesOrder'], 'PLACED'));
+      api.respondRequested(GET_ORDER_CREDIT_CHECK, () => overLimit(overrideState('APPROVED')));
+    },
+  },
+  {
+    name: 'override-approval',
+    path: `/approvals/${OVERRIDE_APPROVAL_ID}`,
+    ready: 'Credit override for Asantewaa Chop Bar',
+    prepare: (api) =>
+      api.rewrite('getApproval', (body) => overrideApproval(body as Record<string, unknown>)),
+  },
+  {
+    name: 'business-accounts',
+    path: '/business-accounts',
+    ready: 'Asantewaa Chop Bar',
+    prepare: (api) =>
+      api.rewrite('listBusinessAccounts', (body) =>
+        pageWith(body, [
+          chopBarAccount(firstRow<SS['BusinessAccount']>(body)),
+          ...(body as { data: SS['BusinessAccount'][] }).data.slice(1),
+        ]),
+      ),
+  },
+  {
+    name: 'business-account',
+    path: `/business-accounts/${CUSTOMER.id}`,
+    ready: 'How late',
+    prepare: (api) => {
+      api.rewrite('getBusinessAccount', (body) => chopBarAccount(body as SS['BusinessAccount']));
+      api.rewrite('getAgeingReport', (body) => chopBarAgeing(body as SS['AgeingReport']));
+    },
+  },
+  { name: 'ageing', path: '/ageing', ready: 'Royal Palm Hotel Ltd' },
+  { name: 'rfqs', path: '/rfqs', ready: 'RFQ-2026-DDW-000154' },
+  { name: 'rfq', path: `/rfqs/${ID}`, ready: 'What they asked for' },
+];
+
+for (const shot of WHOLESALE_SHOTS) {
+  for (const width of WIDTHS) {
+    test(`@screenshots F10i ${shot.name} at ${width}`, async ({ page, api }) => {
+      shot.prepare?.(api);
+      await page.emulateMedia({ colorScheme: 'light' });
+      await page.setViewportSize({ width, height: width === 360 ? 800 : 900 });
+      await signInWithTotp(page, USERS.owner, shot.path);
+      await expect(page.getByText(shot.ready).first()).toBeVisible();
+      await expect(page.getByText(/^Loading/)).toHaveCount(0);
+      await shot.act?.(page);
+      await page.screenshot({
+        path: `../docs/screenshots/F10i/${shot.name}-${width}.png`,
         fullPage: true,
         scale: 'css',
       });

@@ -54,12 +54,14 @@ jobs:
         env:
           HK_API_BASE_URL: /mock
           # The contract requests the e2e fake answers in their requested shape (ADR 0046).
-          HK_REQUESTED_CONTRACT: CR-032,CR-033,CR-038,CR-050
+          HK_REQUESTED_CONTRACT: CR-032,CR-033,CR-038,CR-045,CR-046,CR-050
       - name: Console bundle budget, per document (ADR 0030, PERFORMANCE_BUDGET.md)
         run: pnpm budget:console
-      - name: Build the storefront (Next.js), against the Prism mock the e2e suite starts
+      - name: Build the storefront (Next.js), against the e2e suite's shop API in front of Prism (ADR 0054)
         run: pnpm build:storefront
         env:
-          HK_API_BASE_URL: http://127.0.0.1:4010
+          HK_API_BASE_URL: http://127.0.0.1:4011
+      - name: Storefront script budget, per route (PERFORMANCE_BUDGET.md)
+        run: pnpm budget:storefront
       - name: End to end at 360 px, with axe (Playwright)
         run: pnpm --filter @hakorem/e2e test

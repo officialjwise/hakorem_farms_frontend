@@ -80,6 +80,8 @@ test.describe('users', () => {
     await add.getByRole('combobox', { name: /^branch/i }).focus();
     await page.keyboard.press('Enter');
     await page.keyboard.type('HaKorem');
+    // As for the role: Enter only once type-ahead has focused the branch, or under load it chooses nothing.
+    await expect(page.getByRole('option', { name: 'HaKorem Farms, Dodowa (DDW)' })).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(add.getByRole('combobox', { name: /^branch/i })).toHaveText(
       'HaKorem Farms, Dodowa (DDW)',

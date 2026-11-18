@@ -1,6 +1,7 @@
 import { ApiError, NetworkError } from '@hakorem/api-client';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import {
+  createRequestedMutation,
   createRequestedQuery,
   MAX_ALL_PAGES,
   PAGE_CAP_EXCEEDED,
@@ -308,5 +309,53 @@ describe('useRequestedQuery (ADR 0052)', () => {
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error?.status).toBe(403);
     expect(requests).toHaveLength(1);
+  });
+});
+
+describe('useRequestedMutation (ADR 0053)', () => {
+  const override = {
+    request: 'CR-046',
+    operationId: 'requestCreditOverride',
+    method: 'post',
+    path: '/orders/{id}/credit-override',
+    permission: 'ord.order.confirm',
+    idempotent: true,
+    csrf: 'required',
+    public: false,
+    body: 'json',
+    device: false,
+  } as const;
+  const check = { ...override, operationId: 'getOrderCreditCheck', method: 'get' } as const;
+
+  it('sends the body with an idempotency key and refetches the requested read it names', async () => {
+    const { api, wrapper, queryClient, requests } = testData(() =>
+      json({ status: 'PENDING_APPROVAL' }, 202),
+    );
+    const useRequestedMutation = createRequestedMutation(api);
+    queryClient.setQueryData(['requested', 'getOrderCreditCheck', { path: { id: 'o1' } }], {});
+    queryClient.setQueryData(['requested', 'getSupplierBalance', { path: { id: 's1' } }], {});
+    const { result } = renderHook(
+      () => useRequestedMutation(override, { invalidates: [check.operationId] }),
+      { wrapper },
+    );
+    await act(() =>
+      result.current.mutateAsync({ path: { id: 'o1' }, body: { reason: 'Pays on Friday' } }),
+    );
+    expect(requests[0]?.url).toBe('http://api.test/v1/orders/o1/credit-override');
+    expect(requests[0]?.headers.get('Idempotency-Key')).toMatch(UUID);
+    expect(await requests[0]?.json()).toEqual({ reason: 'Pays on Friday' });
+    const stale = (key: readonly unknown[]) => queryClient.getQueryState(key)?.isInvalidated;
+    expect(stale(['requested', 'getOrderCreditCheck', { path: { id: 'o1' } }])).toBe(true);
+    expect(stale(['requested', 'getSupplierBalance', { path: { id: 's1' } }])).toBe(false);
+  });
+
+  it('keeps the refusal as the normalised ApiError', async () => {
+    const { api, wrapper } = testData(() => json(envelope('MAKER_CANNOT_CHECK'), 422));
+    const useRequestedMutation = createRequestedMutation(api);
+    const { result } = renderHook(() => useRequestedMutation(override), { wrapper });
+    await act(() =>
+      result.current.mutateAsync({ path: { id: 'o1' }, body: { reason: 'x' } }).catch(() => {}),
+    );
+    await waitFor(() => expect(result.current.error?.code).toBe('MAKER_CANNOT_CHECK'));
   });
 });

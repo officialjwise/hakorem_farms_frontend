@@ -275,3 +275,70 @@ export function createRequestedQuery(api: Pick<ApiClient, 'callRequested'>) {
     });
   };
 }
+
+/** The input of a requested write: its path, query and body, as `callRequested` takes them. */
+export interface RequestedWriteInput extends RequestedInput {
+  body?: unknown;
+}
+
+export interface RequestedMutationOptions {
+  /**
+   * Reads to refetch after the write succeeds: generated operation ids, and requested operation ids,
+   * which match a requested read's key (`['requested', operationId, input]`, ADR 0053).
+   */
+  invalidates?: readonly string[];
+}
+
+export interface RequestedMutation<Data> {
+  mutateAsync: (input: RequestedWriteInput, intent?: CallIntent) => Promise<Data>;
+  isPending: boolean;
+  isError: boolean;
+  error: ApiError | null;
+  data: Data | undefined;
+  reset: () => void;
+}
+
+/**
+ * A write a contract request asks for and the contract does not list yet (ADR 0046, ADR 0053): the twin of
+ * `createRequestedQuery`. It is `useApiMutation` through `callRequested`: the same idempotency key on every
+ * automatic retry, the same normalised `ApiError`, and invalidation by operation id. Only a module in the
+ * console's `requested/` builds it, and only a screen switched on for the request calls it. Built apart from
+ * `createApiHooks`, so the till does not carry it.
+ */
+export function createRequestedMutation(api: Pick<ApiClient, 'callRequested'>) {
+  return function useRequestedMutation<Data>(
+    operation: RequestedOperation,
+    options: RequestedMutationOptions = {},
+  ): RequestedMutation<Data> {
+    const queryClient = useQueryClient();
+    const mutation = useMutation<
+      Data,
+      ApiError,
+      { input: RequestedWriteInput; idempotencyKey: string }
+    >({
+      mutationFn: ({ input, idempotencyKey }) =>
+        api.callRequested(operation, input, { idempotencyKey }) as Promise<Data>,
+      onSuccess: async () => {
+        const names = new Set<string>(options.invalidates ?? []);
+        await queryClient.invalidateQueries({
+          predicate: (query) => {
+            const [first, second] = query.queryKey;
+            return first === 'requested' ? names.has(String(second)) : names.has(String(first));
+          },
+        });
+      },
+    });
+    return {
+      mutateAsync: (input, intent) =>
+        mutation.mutateAsync({
+          input,
+          idempotencyKey: intent?.idempotencyKey ?? newIdempotencyKey(),
+        }),
+      isPending: mutation.isPending,
+      isError: mutation.isError,
+      error: mutation.error,
+      data: mutation.data,
+      reset: mutation.reset,
+    };
+  };
+}

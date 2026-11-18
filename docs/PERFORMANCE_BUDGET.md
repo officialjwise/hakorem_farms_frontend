@@ -86,6 +86,23 @@ The home and search pages fell the same way (`/` 176 KB without photographs). A 
 
 A-F0-06 can now be judged on a page under budget: the provisional 120 kB script sub-budget holds on the listing with 2 kB to spare.
 
+### Per route, checked in CI (F10i, 2026-11-18)
+
+The owner's decision (2026-11-18): the two quote pages are accepted at their size, under **their own budget of 170 kB**, checked in CI; the **120 kB** target stays for listing pages. And (2026-11-18, on F10i): the listing pages do not fail CI at 120 kB yet; they are **ratcheted**, so CI fails above today's 121.7 kB and they cannot grow. The next storefront session trims them under 120 kB and then sets the limit to 120.
+
+`pnpm budget:storefront` (`apps/storefront/scripts/check-budget.ts`) runs after `next build` in CI. It measures what `next build` reports as a route's first-load JavaScript: the page entry's files in `.next/app-build-manifest.json`, the 103 kB every page shares included, gzipped, in kilobytes of 1,000 bytes. The root layout's own chunks are printed beside it and not counted, as `next build` does not count them either.
+
+| Route                                          | First-load script | Budget                                             | Enforced in CI      |
+| ---------------------------------------------- | ----------------- | -------------------------------------------------- | ------------------- |
+| `/quote`, the request-for-quote form           | 157.1 kB          | 170 kB                                             | yes                 |
+| `/q/[token]`, the quote by its link            | 169.3 kB          | 170 kB                                             | yes                 |
+| `/`, `/c/[slug]`, `/search`, the listing pages | 121.7 kB          | 121.7 kB (121,746 bytes), a ratchet; target 120 kB | yes, at the ratchet |
+| `/p/[slug]`                                    | 152.6 kB          | none                                               | no                  |
+| `/checkout`                                    | 202.8 kB          | none                                               | no                  |
+
+- **The quote link page has 0.7 kB left.** Anything added to it, or to what it shares, needs the budget first.
+- **The listing pages are 1.7 kB over their 120 kB target, and were before F10i**: `main` at `678f8c9` measured 121 kB in `next build`'s own table, against 118 kB in F8. The ceiling is their exact size on the merged branch, 121,746 bytes gzipped (`LISTING_CEILING` in the script), so any growth fails CI. **Next storefront session:** trim them under 120 kB (what every page shares is the likeliest place: the copy-button and request-reference code in `packages/ui`), lower the ceiling as they shrink, then set it to 120,000 and drop the ratchet.
+
 ## Console
 
 Set on 2026-11-14 when the till and the back office became two documents (ADR 0030). The numbers were confirmed by the owner the same day (A-F3-17, resolved), and changing one is an owner decision. Vite's 500 kB chunk warning is the bundler's default, not this budget, and it is switched off.

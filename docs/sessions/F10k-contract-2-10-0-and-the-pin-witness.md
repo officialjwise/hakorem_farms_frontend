@@ -54,7 +54,7 @@ Five minor versions. Two are LOUD:
 | Online with CR-050's read, a supervisor signed in | The PIN, required. The hint names who is signed in.                                                                                                                 |
 | The same, and the till holds no supervisor's PIN  | Nothing is recorded. "This drop needs a supervisor's PIN", with why.                                                                                                |
 | Online with the read, nobody signed in            | No PIN. "This drop is recorded unwitnessed": 2.6.0 takes it.                                                                                                        |
-| Offline, or a build without the read              | A PIN if a supervisor is there. Without one, the drop is sent unwitnessed, and the confirmation says the server refuses it if a supervisor is signed in (A-F10-10). |
+| Offline, or a build without the read              | A PIN if a supervisor is there. Without one, the drop is sent unwitnessed, and the confirmation says the server refuses it if a supervisor is signed in (A-F10-13). |
 
 - **The cashier's own PIN never witnesses their drop**, even if they hold the approval.
 - **The rule is `pos/shift/witness.ts`**, a pure function with its own tests; the form only renders it.
@@ -104,7 +104,7 @@ F10j keeps its sign-off shot. Its old drop shots stay as the record of F10j.
 ## Decisions recorded
 
 - A-F10-06 is resolved: its price half was wrong.
-- A-F10-10: what the till does when it cannot see who is signed in.
+- A-F10-13 (A-F10-10 in its commits; the quotes session took 10 to 12): what the till does when it cannot see who is signed in.
 - A-F10-01: CR-042 is off the build list.
 
 ## Gates, each run on its own

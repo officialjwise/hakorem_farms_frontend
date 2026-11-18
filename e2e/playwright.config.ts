@@ -43,6 +43,14 @@ export default defineConfig({
       timeout: 90_000,
     },
     {
+      // The storefront's API (ADR 0054): quotes by their link from fixtures keyed by token, everything else
+      // passed to Prism. The storefront's e2e build talks to it (HK_API_BASE_URL=http://127.0.0.1:4011).
+      command: 'node support/shopApi.ts',
+      url: 'http://127.0.0.1:4011/health',
+      reuseExistingServer: !CI,
+      timeout: 90_000,
+    },
+    {
       command: 'pnpm exec vite preview --port 4173 --strictPort',
       cwd: '../apps/console',
       url: 'http://localhost:4173',

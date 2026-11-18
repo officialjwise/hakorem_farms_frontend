@@ -30,11 +30,17 @@ const cr033Read: Lacks<Manifest, 'getPublicReceipt', 'CR-033'> = true;
 const cr038Pack: Lacks<Schemas['OfflineProduct'], 'sellingUnits', 'CR-038'> = true;
 const cr038Line: Lacks<Schemas['CounterSaleLine'], 'uom', 'CR-038'> = true;
 const cr050Read: Lacks<Manifest, 'listShiftWitnesses', 'CR-050'> = true;
+const cr045Line: Lacks<Schemas['QuoteLineInput'], 'uom', 'CR-045'> = true;
+const cr046Check: Lacks<Manifest, 'getOrderCreditCheck', 'CR-046'> = true;
+const cr046Override: Lacks<Manifest, 'requestCreditOverride', 'CR-046'> = true;
+const cr046Reason: Lacks<Schemas['CreditOverride'], 'reason', 'CR-046'> = true;
 
 /** One entry per switch, so a new switch without a check fails `switch.test.ts`. */
 export const LANDED_CHECKS: Record<ContractRequest, readonly boolean[]> = {
   'CR-032': [cr032, cr032Events],
   'CR-033': [cr033Pack, cr033Result, cr033Read],
   'CR-038': [cr038Pack, cr038Line],
+  'CR-045': [cr045Line],
+  'CR-046': [cr046Check, cr046Override, cr046Reason],
   'CR-050': [cr050Read],
 };
