@@ -248,7 +248,7 @@ const OWNER_PAYABLE_PERMISSIONS = [
 ];
 
 /**
- * F10h: quotes, requests for quote, wholesale accounts, the ageing and an order's credit check. The seed
+ * F10i: quotes, requests for quote, wholesale accounts, the ageing and an order's credit check. The seed
  * grants no quo.* or whl.* permission yet (B10, CR-046 item 5); the Owner and the Manager hold all of
  * them here (A-F10-07). The order, price and proforma permissions are the seed's own.
  */

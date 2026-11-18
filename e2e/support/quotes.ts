@@ -1,5 +1,5 @@
 /**
- * The quotes and credit session's fixtures (F10h, contract 2.5.0): Asantewaa Chop Bar asks for 10 crates
+ * The quotes and credit session's fixtures (F10i, contract 2.5.0): Asantewaa Chop Bar asks for 10 crates
  * of big eggs and 30 single eggs. The API prices a crate at GH₵60.00 and a single egg at GH₵2.20, each by
  * its own entry; the quote's totals, the order's estimate, the account's figures, the ageing and the credit
  * check (CR-046, requested) are all the server's answers, stated as the server would give them. The

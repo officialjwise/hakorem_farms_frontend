@@ -1,6 +1,6 @@
-# F10h: quotes, wholesale accounts and credit control
+# F10i: quotes, wholesale accounts and credit control
 
-- **Session:** F10 continued, on branch `claude/determined-goodall-33snvl`, from `main` at `4df43d7` (F10g merged as PR #26).
+- **Session:** F10 continued, on branch `claude/determined-goodall-33snvl`, from `main` at `4df43d7` (F10g merged as PR #26), rebased onto `678f8c9` (F10h merged as PR #27) before merging.
 - **Date:** 2026-11-17
 - **Scope:** the F10 row of `docs/BUILD_PROMPT.md`, in the owner's order:
   1. quotes in the console: built, revised, sent, converted;
@@ -8,12 +8,12 @@
   3. accepting a quote from a phone (the gate);
   4. wholesale accounts;
   5. credit control: ageing, the refusal with the amount over, the override.
-- **Parallel work:** the supplier invoice session (F10g) had merged before this one started, so there was nothing to rebase onto. Nothing of it was touched: no supplier, purchase order, supplier invoice or payment screen, and not the till.
-- **How it was built:** the storefront half (items 2 and 3, ADR 0054) was built in a separate worktree on a branch and merged in (`6f34379`). The only conflict was `package.json`'s three e2e lines, which carry both the console's switches and the storefront's API address.
+- **Parallel work:** the other session (F10h) merged first. It synced the same contract 2.5.0 and built nothing else, so the rebase met only a comment in `fakeRoles.test.ts` and `package.json`'s e2e lines. Its report took the name F10h, so this one is F10i (screenshots in `docs/screenshots/F10i/`, tag `F10i`). No supplier, purchase order, supplier invoice or payment screen was touched, and not the till.
+- **How it was built:** the storefront half (items 2 and 3, ADR 0054) was built in a separate worktree on a branch and merged in; the rebase made the history linear. The only conflict was `package.json`'s three e2e lines, which carry both the console's switches and the storefront's API address.
 
 ## The contract: 2.5.0, additive, and B10 not in it yet
 
-`pnpm sync-contract:github` brought backend `bef5f1c`, contract **2.5.0** (B9b):
+`pnpm sync-contract:github` brought backend `bef5f1c`, contract **2.5.0** (B9b), byte for byte the sync F10h merged first:
 
 - Twelve till operations moved from planned into code, with their planned shapes.
 - The seed now grants their `pos.*` permissions. `fakeRoles.test.ts` drops the seven it listed as not seeded.
@@ -177,7 +177,7 @@
 
 ## Every screen at 360 px
 
-Every screen is in `docs/screenshots/F10h/`, at 360 and 1280 px (`pnpm screenshots`, tag `F10h`).
+Every screen is in `docs/screenshots/F10i/`, at 360 and 1280 px (`pnpm screenshots`, tag `F10i`).
 
 | Screen                                               | File                              |
 | ---------------------------------------------------- | --------------------------------- |
@@ -257,7 +257,7 @@ Every screen is in `docs/screenshots/F10h/`, at 360 and 1280 px (`pnpm screensho
 ## Opening message for the next session
 
 ```text
-Read CLAUDE.md, docs/SHARED_BRIEF.md and docs/sessions/F10h-quotes-wholesale-credit-control.md.
+Read CLAUDE.md, docs/SHARED_BRIEF.md and docs/sessions/F10i-quotes-wholesale-credit-control.md.
 Read ADR 0046, 0052, 0053 and 0054.
 
 1. pnpm sync-contract:github and read .contract-upstream/CONTRACT_CHANGELOG.md after 2.5.0.

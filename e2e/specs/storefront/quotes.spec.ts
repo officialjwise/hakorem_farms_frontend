@@ -5,7 +5,7 @@ import { refusePhotos, throttle3G } from '../../support/shop';
 import { TOKENS, UNKNOWN_TOKEN } from '../../support/shopApi';
 
 /**
- * F10h: a buyer asks for a quote from the shop, and a customer accepts a quote from the link the farm sent
+ * F10i: a buyer asks for a quote from the shop, and a customer accepts a quote from the link the farm sent
  * (the F10 gate). The page reads the quote on the storefront's server from the shop API's fixtures, one per
  * token (ADR 0054); the browser's writes are routed here, so what was sent is checked.
  */

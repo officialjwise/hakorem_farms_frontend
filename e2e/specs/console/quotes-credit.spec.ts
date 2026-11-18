@@ -38,7 +38,7 @@ import {
 import { expect, test } from '../../support/test';
 
 /**
- * Quotes, wholesale and credit control (F10h, contract 2.5.0): Asantewaa Chop Bar buys big eggs by the
+ * Quotes, wholesale and credit control (F10i, contract 2.5.0): Asantewaa Chop Bar buys big eggs by the
  * crate and the single egg. A quote is built with lines priced by the API for the buyer (the unit behind
  * CR-045), revised into a new version with the old one kept readable, sent, accepted and made an order
  * with every link kept. Confirming the credit order is refused by the server with the amount over the

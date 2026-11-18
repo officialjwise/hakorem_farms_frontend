@@ -657,7 +657,7 @@ export const protectedRoutes: RouteObject[] = [
             handle: back('ord.order.read', 'orders'),
           },
           {
-            // F10h: an order made from a quote, where a credit order's credit is checked.
+            // F10i: an order made from a quote, where a credit order's credit is checked.
             path: ':id',
             element: lazyScreen(() =>
               import('../wholesale/OrderScreen').then((m) => m.OrderScreen),
@@ -666,7 +666,7 @@ export const protectedRoutes: RouteObject[] = [
           },
         ],
       },
-      // F10h: quotes, requests for quote, wholesale accounts and ageing, loaded on demand (ADR 0032).
+      // F10i: quotes, requests for quote, wholesale accounts and ageing, loaded on demand (ADR 0032).
       {
         path: 'quotes',
         handle: back('quo.quote.read', 'quotes'),

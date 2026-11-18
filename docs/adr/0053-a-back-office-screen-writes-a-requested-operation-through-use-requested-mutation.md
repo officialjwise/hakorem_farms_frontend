@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-11-17
-- Session: F10h
+- Session: F10i
 - Extends: ADR 0046, ADR 0052
 
 ## Context
