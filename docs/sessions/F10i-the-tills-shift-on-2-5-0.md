@@ -66,13 +66,13 @@ F9 built the shift screens against the planned shapes and sent every cash moveme
 
 ### The witness, as the owner decided
 
-| The till is…                    | The witness                                                                         |
-| ------------------------------- | ----------------------------------------------------------------------------------- |
-| Online, a supervisor signed in  | The cashier must choose one of the supervisors signed in at the branch (CR-045)     |
-| Online, no supervisor signed in | None. "This drop is recorded unwitnessed": the drop goes ahead, marked unwitnessed  |
-| Offline, a supervisor's PIN     | The supervisor enters their PIN on the till (CR-032)                                |
-| Offline, no PIN                 | None, and the screen says so                                                        |
-| Built with CR-045 off           | A PIN if the till holds one; otherwise none, with words saying the till cannot see  |
+| The till is…                    | The witness                                                                        |
+| ------------------------------- | ---------------------------------------------------------------------------------- |
+| Online, a supervisor signed in  | The cashier must choose one of the supervisors signed in at the branch (CR-045)    |
+| Online, no supervisor signed in | None. "This drop is recorded unwitnessed": the drop goes ahead, marked unwitnessed |
+| Offline, a supervisor's PIN     | The supervisor enters their PIN on the till (CR-032)                               |
+| Offline, no PIN                 | None, and the screen says so                                                       |
+| Built with CR-045 off           | A PIN if the till holds one; otherwise none, with words saying the till cannot see |
 
 An unwitnessed drop says so in four places:
 
@@ -153,17 +153,17 @@ An unwitnessed drop says so in four places:
 
 ## Gates, each run on its own
 
-| Check                                                     | Exit | Count                                                                                          |
-| --------------------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------- |
-| `format:check`, `lint`                                    | 0    |                                                                                                |
-| `typecheck` (every package)                               | 0    |                                                                                                |
-| `sync-contract:check`                                     | 0    |                                                                                                |
-| `test:unit`                                               | 0    | console 298 (was 287), data 31, api-client 30, ui 900, storefront 34, i18n 6, lint-tokens 41   |
-| `test:integration`                                        | 0    | console 249, storefront 15                                                                     |
-| `budget:console`                                          | 0    | till 242.1 of 250 kB (was 247.1); back office 281.1 of 300 kB (was 279.8)                      |
-| `test:e2e`, full run                                      | E2E_EXIT | E2E_COUNT                                                                                  |
-| `screenshots` (F10i, and F10 `cash-drop-witness`)         | 0    | 14 of 14                                                                                       |
-| `tokens:check`, `fonts:check`, `icons:check`, `test:a11y` | n/r  | not run: no token, font, icon or `packages/ui` change                                          |
+| Check                                                     | Exit | Count                                                                                        |
+| --------------------------------------------------------- | ---- | -------------------------------------------------------------------------------------------- |
+| `format:check`, `lint`                                    | 0    |                                                                                              |
+| `typecheck` (every package)                               | 0    |                                                                                              |
+| `sync-contract:check`                                     | 0    |                                                                                              |
+| `test:unit`                                               | 0    | console 298 (was 287), data 31, api-client 30, ui 900, storefront 34, i18n 6, lint-tokens 41 |
+| `test:integration`                                        | 0    | console 249, storefront 15                                                                   |
+| `budget:console`                                          | 0    | till 242.1 of 250 kB (was 247.1); back office 281.1 of 300 kB (was 279.8)                    |
+| `test:e2e`, full run                                      | 0    | 292 of 292 in 5.4 minutes (was 286: the 6 new shift tests)                                   |
+| `screenshots` (F10i, and F10 `cash-drop-witness`)         | 0    | 14 of 14                                                                                     |
+| `tokens:check`, `fonts:check`, `icons:check`, `test:a11y` | n/r  | not run: no token, font, icon or `packages/ui` change                                        |
 
 ## For the owner
 
