@@ -107,6 +107,16 @@ The owner's decision (2026-11-18): the two quote pages are accepted at their siz
   - `PhotoImage` takes no `className`, so it needs no `cn`.
 - **What moved, and what went.** A listing page's first load, its layout's own chunks included, fell from 126.9 kB to 124.3 kB: 2.6 kB is gone. The budgeted figure fell further, from 121.7 kB to 108.5 kB, because tailwind-merge (8.7 kB), the icons' base and Radix Slot are now counted under the layout, which needs them for the header's basket button; the layout's own chunks rose from 5.2 kB to 15.8 kB. This budget counts the page entry, as `next build` does, so the layout is printed beside it and not budgeted. Whether the 120 kB should cover the layout too is the owner's.
 
+### The whole first load, from F10m (2026-11-18)
+
+The owner's decision (2026-11-18, on F10l): **the 120 kB limit covers the whole first load, the layout's scripts included.** `pnpm budget:storefront` now counts every file of the route's page entry and of the root layout, each once, and prints the page's share (`next build`'s figure) beside it. Counted that way the quote link page is over its 170 kB as well, so both are held at exactly the bytes of F10m's first build until they are under their limits, and CI fails above them:
+
+| Route                                          | Whole first load     | Limit  | In CI                |
+| ---------------------------------------------- | -------------------- | ------ | -------------------- |
+| `/`, `/c/[slug]`, `/search`, the listing pages | 124,315 B (124.3 kB) | 120 kB | ratchet at 124,315 B |
+| `/q/[token]`, the quote by its link            | 174,360 B (174.4 kB) | 170 kB | ratchet at 174,360 B |
+| `/quote`, the request-for-quote form           | 166,901 B (166.9 kB) | 170 kB | yes                  |
+
 ## Console
 
 Set on 2026-11-14 when the till and the back office became two documents (ADR 0030). The numbers were confirmed by the owner the same day (A-F3-17, resolved), and changing one is an owner decision. Vite's 500 kB chunk warning is the bundler's default, not this budget, and it is switched off.
