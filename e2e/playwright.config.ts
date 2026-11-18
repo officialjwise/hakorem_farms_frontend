@@ -7,9 +7,16 @@ const CI = process.env.CI !== undefined;
  * production build through `vite preview`, so the service worker and the minified bundle are what is tested,
  * and the storefront from `next start`. Build both first: `pnpm test:e2e` does, with the console's
  * HK_API_BASE_URL set to /mock (ADR 0026).
+ *
+ * The screenshot specs are not part of this run: no screenshots until F13 (CLAUDE.md). They run only from
+ * `playwright.screenshots.config.ts`, through `pnpm screenshots`. The 360 px checks every spec makes (no
+ * sideways scroll, axe) stay here.
  */
+export const SCREENSHOT_SPECS = '**/*screenshots.spec.ts';
+
 export default defineConfig({
   testDir: './specs',
+  testIgnore: SCREENSHOT_SPECS,
   fullyParallel: true,
   forbidOnly: CI,
   retries: CI ? 1 : 0,
