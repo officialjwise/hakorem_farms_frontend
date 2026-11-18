@@ -89,7 +89,7 @@
 - **A refused acceptance** keeps its words on the page and reads the quote again, so the expired or replaced state shows.
 - **CR-047** asks what the token is (long, random, stored as a hash), what an accepted or replaced quote says, and which code an expired or replaced acceptance is refused with.
 
-**Script size** (`next build` first-load JS): `/quote` 157 kB and `/q/[token]` 169 kB, against 121 kB for the listing page (unchanged). Both are over the 120 kB sub-budget that was set for the listing. The difference is the data layer, which the form's write and the accept and decline need. The quote itself is readable before any script runs.
+**Script size** (`next build` first-load JS): `/quote` 157.1 kB and `/q/[token]` 169.3 kB. The difference from a listing is the data layer, which the form's write and the accept and decline need; the quote itself is readable before any script runs. **The owner accepted them at that size (2026-11-18), under their own budget of 170 kB, checked in CI** by the new `pnpm budget:storefront` (see "The owner's decisions" below). The quote link page has 0.7 kB left.
 
 **ADR 0054** decides the item carried from F10e: the storefront's e2e builds against a small shop API on 127.0.0.1:4011.
 
@@ -110,8 +110,8 @@
 - **How late:** their own ageing row, bucket by bucket.
 - **On hold** is said in words with the reason; no credit left is said too.
 - **Actions:**
-  - change the terms; a raised limit that waits for approval says so, with the approval;
-  - put on hold or release, each with a reason;
+  - change the terms (Owner or Manager); a limit change that waits for another Owner or Manager says so, with the approval;
+  - put on hold (Owner, Manager or Accountant) or release (Owner or Manager), each with a reason; a release that waits for another person says so too;
   - quote this buyer.
 - **Credit overrides:** every approved override, with its order and **who approved it**. With CR-046 on, also who asked and why.
 
@@ -154,7 +154,7 @@
 9. The request form: an empty send is stopped in words; a filled one sends what was typed and shows its number.
 10. Too many requests are said in words, with the reference.
 
-**`e2e/specs/console/quotes-credit.spec.ts`**, 11 tests at 360 px with axe:
+**`e2e/specs/console/quotes-credit.spec.ts`**, 14 tests at 360 px with axe:
 
 1. A quote for 12 crates and 30 eggs, each priced by the API for its own unit. The `resolvePrices` and `createQuote` bodies are checked: pesewas, and `uom` per CR-045. The server's GH₵786.00 shows.
 2. Revised to 10 crates: version 1 stays readable as it was (GH₵786.00), and version 2 is in force (GH₵666.00).
@@ -167,6 +167,9 @@
 9. The account: limit, terms, price list, what is owed and how late; put on hold with a reason (body checked).
 10. The ageing, in the API's buckets.
 11. A cashier is denied the quotes in words, naming `quo.quote.read`.
+12. Sales edits and sends a quote, sees no way to change terms, hold or release, and is denied the override's approval in words.
+13. The Accountant puts an account on hold (with a reason) and is offered neither Release nor a change of terms.
+14. A Manager is offered Release and a change of terms on a held account.
 
 **Other tests:**
 
@@ -217,7 +220,21 @@ Every screen is in `docs/screenshots/F10i/`, at 360 and 1280 px (`pnpm screensho
   - `CreditOverride.reason`, `requestedBy` and `overLimitPesewas`;
   - the seed's `quo.*` and `whl.*` grants.
 - **CR-047, new:** the quote link's token (long, random, hashed, never derived), what an accepted or replaced quote says, and which refusal an expired or replaced acceptance gets. No switch.
+- **CR-048, new (the owner's decision):** the seed for quotes and wholesale (Sales quotes; the Accountant may hold; the Owner and the Manager release, change terms and approve overrides), a separate `whl.account.release`, and a second Owner or Manager on every release and every credit limit change. No switch.
+- **CR-049, new:** `PublicQuoteRequest.quantity` and `uom` (and on `Rfq`), so the shop's crates are a field, not words.
 - The e2e, screenshot and CI builds are now `CR-032,CR-033,CR-038,CR-042,CR-045,CR-046`: `package.json`, `ci.yml`, `CLAUDE.md`, `DEPLOYMENT.md` and A-F10-01 say so.
+
+## The owner's decisions (2026-11-18)
+
+1. **Roles.** Sales builds, revises, sends and converts quotes, and never approves an override. The Accountant may put an account on hold. Releasing a hold, approving an over-limit override and changing a credit limit are Owner or Manager only, never the person who asked.
+   - The test roles are set that way: a Sales user (Kojo Antwi) and an Accountant who has set up TOTP (Esi Boateng) are added to the fake, and the Accountant gains `whl.account.hold`.
+   - The console offers Release only to a holder of `whl.account.hold` and `whl.account.manage` until the seed has its own release permission.
+   - The backend's seed and the second person on a release and a limit change are **CR-048**.
+2. **The shop form's crate count as text** is fine until the backend adds a quantity and unit field (**CR-049**; A-F10-08 accepted).
+3. **The two quote pages** are accepted at their size under their own budget of **170 kB**, checked in CI like the others; the 120 kB listing target stays for listing pages.
+   - `pnpm budget:storefront` (`apps/storefront/scripts/check-budget.ts`) runs in CI after the storefront's build and fails over an enforced budget. It measures what `next build` reports as first-load script, the figure the 170 kB was set against.
+   - **One thing for the owner:** the listing pages measure **121.7 kB, 1.7 kB over their 120 kB target, and were already over on `main` before this session** (121 kB in `next build`'s table at `678f8c9`, against 118 kB in F8). The check prints them against the target without failing, so this merge is not blocked by a gap it did not open. Say if CI should fail on them now; the cut would come from what every page shares (the copy-button and request-reference code in `packages/ui` is the likeliest).
+   - The table is in `docs/PERFORMANCE_BUDGET.md`, "Per route, checked in CI".
 
 ## Decisions recorded
 
@@ -228,8 +245,8 @@ Every screen is in `docs/screenshots/F10i/`, at 360 and 1280 px (`pnpm screensho
 ## Assumptions
 
 - **A-F10-01** now covers CR-045 and CR-046.
-- **A-F10-07, new:** the fake's Owner and Manager hold the `quo.*` and `whl.*` grants until the seed does.
-- **A-F10-08, new:** the shop form's crates go into `requirements`.
+- **A-F10-07, new:** the fake gives the `quo.*` and `whl.*` grants by the owner's decision until the seed does (CR-048).
+- **A-F10-08, new, accepted by the owner:** the shop form's crates go into `requirements` until CR-049.
 - **A-F10-09, new:** until CR-047, the quote page says only the API's status, and a refused acceptance reads the quote again.
 
 ## Gates, each run on its own
@@ -238,21 +255,21 @@ Every screen is in `docs/screenshots/F10i/`, at 360 and 1280 px (`pnpm screensho
 | ------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------ |
 | `format:check`, `lint`, `typecheck`                                 | 0    |                                                                                      |
 | `tokens:check`, `fonts:check`, `icons:check`, `sync-contract:check` | 0    |                                                                                      |
-| `test:unit`                                                         | 0    | console 297, data 33 (was 31), api-client 30, ui 900, storefront 39 (was 34), i18n 6 |
+| `test:unit`                                                         | 0    | console 299, data 33 (was 31), api-client 30, ui 900, storefront 39 (was 34), i18n 6 |
 | `test:integration`                                                  | 0    | console 257 (was 249), storefront 20 (was 15)                                        |
 | `test:a11y`                                                         | n/r  | not run: `packages/ui` is unchanged; every new screen's spec runs axe                |
 | `budget:console`                                                    | 0    | till 247.3 of 250 kB (was 247.1); back office 280.9 of 300 kB (was 279.8)            |
-| `test:e2e`, full run                                                | 0    | 307 of 307 in 4.9 minutes (was 286: 11 console and 10 storefront quote tests)        |
+| `budget:storefront` (new)                                           | 0    | `/quote` 157.1 and `/q/[token]` 169.3 of 170 kB; listings 121.7 against 120 (target) |
+| `test:e2e`, full run                                                | run  | rerun after the owner's decisions; the count is added in the next commit             |
 
 **The till grew by 0.2 kB** without being touched. The shared namespace table (`packages/i18n`) carries one more loader, for `wholesale`. It has 2.7 kB left; the F10g opening message's item 2 (load the till's refusal words on demand) is now more pressing.
 
 ## For the owner
 
-1. **Who holds the quote and wholesale permissions** is the backend seed's to set (CR-046 item 5). Here the Owner and the Manager hold them all. Say if the Sales role should quote and convert, and the Accountant hold and release accounts.
+1. **The listing pages are 1.7 kB over their 120 kB target** (from before this session). Say whether CI should fail on them now.
 2. **Credit control is built to your words, not the contract's.** Today the contract confirms an over-limit order with a 202 approval and no amount and no reason. The screens follow CR-046 behind a switch, and show the contract's 202 in words with the switch off.
-3. **The shop form's number of crates** travels in the request's words until the contract has a field for it.
-4. **The two quote pages carry the data layer** (157 and 169 kB of script). The quote reads before any script runs; only accepting, declining and sending the form need it.
-5. **"Unit" or "egg":** still "Unit" in the console until the backend's unit names land.
+3. **The quote link page has 0.7 kB left** under its 170 kB.
+4. **"Unit" or "egg":** still "Unit" in the console until the backend's unit names land.
 
 ## Opening message for the next session
 
@@ -267,6 +284,9 @@ Read ADR 0046, 0052, 0053 and 0054.
    - If CR-045 landed, landed.ts fails: delete requested/quoteLineUnit.ts and its id; send QuoteLineInput.uom.
    - If CR-046 landed: delete requested/creditControl.ts and its id; call getOrderCreditCheck and
      requestCreditOverride with the generated client, and read CreditOverride.reason and requestedBy.
+   - If CR-048 landed (the seed and whl.account.release): match fakeAuthServer to the seed, offer Release
+     to holders of whl.account.release, and show a release or a limit change waiting for its second person.
+   - If CR-049 landed: the shop form sends quantity and uom; drop "Crates wanted" from the words (A-F10-08).
    - If CR-047 was answered: show who accepted and when, and which refusal an expired or replaced
      acceptance gets.
    - If units carry plural names: "540 eggs", "10 crates" in stock/units.ts and the e2e expectations.
