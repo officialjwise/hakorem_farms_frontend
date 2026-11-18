@@ -1,10 +1,11 @@
 import { Search, Sprout } from 'lucide-react';
 import Link from 'next/link';
-import { buttonVariants, Input } from '@hakorem/ui';
+import { buttonVariants } from '@hakorem/ui';
 import { getT, getWords } from '../i18n/server';
 import { getShopCategories } from '../lib/api';
 import { categorySlug } from '../lib/shop';
 import { CartButton } from './cart/CartButton';
+import { SEARCH_INPUT_CLASSES } from './plainClasses';
 
 /**
  * The public header (ADR 0040): a deep pine band, rendered as a dark island like the console's sidebar,
@@ -73,7 +74,8 @@ export async function SiteHeader({ query = '' }: { query?: string }) {
           <label htmlFor="site-search" className="sr-only">
             {t('header.search.label')}
           </label>
-          <Input
+          {/* A plain input in Input's look: Input is a client component, and the box needs no script. */}
+          <input
             id="site-search"
             type="search"
             name="q"
@@ -81,7 +83,7 @@ export async function SiteHeader({ query = '' }: { query?: string }) {
             autoComplete="off"
             enterKeyHint="search"
             placeholder={t('header.search.example')}
-            className="min-w-0 flex-1"
+            className={SEARCH_INPUT_CLASSES}
           />
           {/* A plain submit in Button's styles: a server component passes no handler, and none is needed. */}
           <button type="submit" className={buttonVariants({ variant: 'primary' })}>

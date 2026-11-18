@@ -3,9 +3,9 @@
 import { ShoppingBasket } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
-import { Button } from '@hakorem/ui';
 import { useCartId } from '../../lib/cartId';
 import { word, type Words } from '../../lib/words';
+import { CART_BUTTON_CLASSES } from '../plainClasses';
 
 /**
  * The drawer's code (the dialog, the lines and their steppers) loads on the first tap, and the count's (the
@@ -31,8 +31,10 @@ export function CartButton({ words }: { words: Words }) {
   }, [open]);
   return (
     <>
-      <Button
+      <button
         ref={button}
+        type="button"
+        className={CART_BUTTON_CLASSES}
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => {
@@ -40,11 +42,13 @@ export function CartButton({ words }: { words: Words }) {
           setOpen(true);
         }}
       >
-        <ShoppingBasket aria-hidden="true" />
-        {/* On a phone the word is for a screen reader only, so the wordmark keeps its room. */}
-        <span className="sr-only sm:not-sr-only">{word(words, 'cart.open')}</span>
-        {id === null ? null : <CartCount words={words} />}
-      </Button>
+        <span className="inline-flex items-center gap-[inherit]">
+          <ShoppingBasket aria-hidden="true" />
+          {/* On a phone the word is for a screen reader only, so the wordmark keeps its room. */}
+          <span className="sr-only sm:not-sr-only">{word(words, 'cart.open')}</span>
+          {id === null ? null : <CartCount words={words} />}
+        </span>
+      </button>
       {loaded ? <CartSheet open={open} onOpenChange={setOpen} words={words} /> : null}
     </>
   );

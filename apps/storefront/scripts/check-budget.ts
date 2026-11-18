@@ -13,10 +13,12 @@
  * Budgets:
  * - the two quote pages, 170 kB (owner, 2026-11-18, F10i): they carry the data layer for the form's write
  *   and for accepting or declining a quote;
- * - the listing pages, 120 kB for the whole first load (owner, 2026-11-18; A-F0-06).
+ * - the listing pages, 120 kB for the whole first load, enforced (owner, 2026-11-18; A-F0-06). Counted
+ *   whole they loaded 124,315 bytes on F10m's first build; the header's basket button and search box in
+ *   plain classes, without `Button` and `Input`, took them to 112,145.
  *
- * Counted whole, the listing pages loaded 124,315 bytes and the quote link page 174,360 on F10m's first
- * build: each is held at exactly that until it is under its limit (a ratchet), so it cannot grow.
+ * The quote link page, counted whole, is over its 170 kB: it is held at exactly its bytes (a ratchet), so
+ * it cannot grow, until it is under (174,360 on F10m's first build, 173,369 after the header's change).
  *
  * Every other route is reported, not budgeted.
  */
@@ -35,11 +37,10 @@ interface RouteBudget {
 }
 
 const QUOTE_PAGES = 170_000;
-/** The quote link page's whole first load on F10m's first build, until it is under 170 kB. */
-const QUOTE_LINK_RATCHET = 174_360;
-/** The listing pages' whole first load on F10m's first build, until they are under 120 kB. */
-const LISTING_RATCHET = 124_315;
-const listing = { ceiling: LISTING_RATCHET, target: 120 };
+/** The quote link page's whole first load, exactly, until it is under 170 kB. */
+const QUOTE_LINK_RATCHET = 173_369;
+const LISTING_PAGES = 120_000;
+const listing = { ceiling: LISTING_PAGES };
 
 const ROUTES: RouteBudget[] = [
   { route: '/quote', entry: '/quote/page', ceiling: QUOTE_PAGES },
