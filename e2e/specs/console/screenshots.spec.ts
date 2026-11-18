@@ -690,7 +690,8 @@ const TEN_SHOTS: TenShot[] = [
     name: 'till-locked',
     act: async (page) => {
       await page.getByRole('button', { name: 'Lock the till' }).click();
-      await page.getByLabel(/^PIN/).fill('1111');
+      // The cashier's PIN is the first; a supervisor's sign-out has its own beneath.
+      await page.getByLabel(/^PIN/).first().fill('1111');
       await page.getByRole('button', { name: 'Open the till' }).click();
       await expect(page.getByText(/^Wrong PIN\. 2 more wrong tries/)).toBeVisible();
     },
@@ -1102,7 +1103,7 @@ const EGG_TILL_SHOTS: { name: string; act: (page: Page) => Promise<void> }[] = [
           .getByRole('button', { name: unit })
           .click();
       }
-      await page.getByRole('button', { name: 'Change Eggs, big, by the unit' }).click();
+      await page.getByRole('button', { name: 'Change Eggs, big, by the egg' }).click();
       const line = page.getByRole('dialog', { name: 'Change Eggs, big' });
       await line.getByRole('textbox', { name: /^Quantity/ }).fill('6');
       await line.getByRole('button', { name: 'Save the item' }).click();
