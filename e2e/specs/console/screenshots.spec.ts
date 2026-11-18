@@ -784,25 +784,30 @@ for (const shot of TEN_SHOTS) {
 }
 
 /**
- * F10j, the till's shift on contract 2.5.0 (CR-050 as requested): a drop witnessed by a supervisor signed in
- * at the branch, a drop plainly unwitnessed when none is (dark and compact too), a refused drop, and the
- * shift signed off with its Z report. Each opens the cashier's shift first, as F09 does.
+ * The till's shift: F10j's sign-off with its Z report, and F10k's drop witnesses (owner, 2026-11-18): the
+ * supervisor's PIN asked for while one is signed in at the branch, the drop it witnessed, the drop that
+ * cannot be recorded with no supervisor's PIN on the till, a drop plainly unwitnessed when nobody is signed
+ * in (dark and compact too), and a refused drop. Each opens the cashier's shift first, as F09 does.
  */
 interface ShiftShot {
+  phase: 'F10j' | 'F10k';
   name: string;
   theme?: 'light' | 'dark';
   density?: 'compact';
   witnesses?: { id: string; displayName: string }[];
+  /** The till holds the cashier's and the manager's PINs (CR-032). */
+  pins?: boolean;
   refuseDrop?: boolean;
   act: (page: Page) => Promise<void>;
 }
 
-async function dropReady(page: Page, choose: boolean) {
+async function dropReady(page: Page, pin: boolean) {
   await page.getByRole('link', { name: 'Shift', exact: true }).click();
   await page.getByRole('textbox', { name: /^Amount/ }).fill('500');
-  if (choose) {
-    await page.getByRole('combobox', { name: /^Supervisor who takes the cash/ }).click();
-    await page.getByRole('option', { name: PEOPLE.manager.name }).click();
+  if (pin) {
+    await page.getByLabel(/^PIN/).fill(PEOPLE.manager.pin);
+    await page.getByRole('button', { name: 'Approve with this PIN' }).click();
+    await expect(page.locator('[data-slot="cash-witness"]')).toBeVisible();
   }
 }
 
@@ -815,9 +820,19 @@ async function recordDrop(page: Page) {
 }
 
 const SHIFT_SHOTS: ShiftShot[] = [
-  { name: 'drop-witness-signed-in', act: async (page) => dropReady(page, true) },
   {
-    name: 'drop-witnessed-recorded',
+    phase: 'F10k',
+    name: 'drop-pin-required',
+    pins: true,
+    act: async (page) => {
+      await dropReady(page, false);
+      await expect(page.locator('[data-slot="cash-witness-hint"]')).toBeVisible();
+    },
+  },
+  {
+    phase: 'F10k',
+    name: 'drop-pin-witnessed',
+    pins: true,
     act: async (page) => {
       await dropReady(page, true);
       await recordDrop(page);
@@ -825,6 +840,16 @@ const SHIFT_SHOTS: ShiftShot[] = [
     },
   },
   {
+    phase: 'F10k',
+    name: 'drop-no-pin-here',
+    act: async (page) => {
+      await dropReady(page, false);
+      await page.getByRole('button', { name: 'Record it' }).click();
+      await expect(page.locator('[data-slot="cash-witness-needed"]')).toBeVisible();
+    },
+  },
+  {
+    phase: 'F10k',
     name: 'drop-unwitnessed',
     witnesses: [],
     act: async (page) => {
@@ -834,6 +859,7 @@ const SHIFT_SHOTS: ShiftShot[] = [
     },
   },
   {
+    phase: 'F10k',
     name: 'drop-unwitnessed-dark-compact',
     witnesses: [],
     theme: 'dark',
@@ -845,7 +871,9 @@ const SHIFT_SHOTS: ShiftShot[] = [
     },
   },
   {
+    phase: 'F10k',
     name: 'drop-refused',
+    pins: true,
     refuseDrop: true,
     act: async (page) => {
       await dropReady(page, true);
@@ -854,6 +882,7 @@ const SHIFT_SHOTS: ShiftShot[] = [
     },
   },
   {
+    phase: 'F10j',
     name: 'shift-signed-off',
     act: async (page) => {
       await page.getByRole('link', { name: 'Shift', exact: true }).click();
@@ -885,10 +914,11 @@ const SHIFT_SHOTS: ShiftShot[] = [
 
 for (const shot of SHIFT_SHOTS) {
   for (const width of WIDTHS) {
-    test(`@screenshots F10j ${shot.name} at ${width}`, async ({ page, api }) => {
+    test(`@screenshots ${shot.phase} ${shot.name} at ${width}`, async ({ page, api }) => {
       installTillServer(api, (sale) => sale.tenders.reduce((sum, t) => sum + t.amountPesewas, 0), {
         ...(shot.witnesses === undefined ? {} : { witnesses: shot.witnesses }),
       });
+      if (shot.pins === true) installTillPins(api);
       if (shot.refuseDrop === true) {
         api.refuse('recordCashMovement', 422, 'CASH_MOVEMENT_INVALID', 'Not recorded.');
       }
@@ -903,7 +933,7 @@ for (const shot of SHIFT_SHOTS) {
       }
       await shot.act(page);
       await page.screenshot({
-        path: `../docs/screenshots/F10j/${shot.name}-${width}.png`,
+        path: `../docs/screenshots/${shot.phase}/${shot.name}-${width}.png`,
         fullPage: true,
         scale: 'css',
       });

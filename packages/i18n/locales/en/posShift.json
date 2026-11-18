@@ -46,21 +46,23 @@
     "noteRequired": "This reason needs a note.",
     "noteError": "Write the note.",
     "witness": "Witness to the cash drop",
-    "witnessHint": "The supervisor who takes the cash enters their PIN on this till.",
+    "witnessRequired": "A supervisor is signed in at the branch ({{names}}), so the drop needs a witness: the supervisor who takes the cash enters their PIN on this till.",
+    "witnessOptional": "The till cannot see who is signed in at the branch. If a supervisor takes the cash, they enter their PIN on this till. Without a PIN the drop is sent unwitnessed, and the server takes it only if no supervisor is signed in.",
+    "witnessOptionalOffline": "The till is offline, so it cannot see who is signed in at the branch. If a supervisor takes the cash, they enter their PIN on this till. Without a PIN the drop is kept unwitnessed, and the server takes it only if no supervisor is signed in when it arrives.",
     "witnessError": "The supervisor who takes the cash enters their PIN first.",
     "witnessed": "Witnessed by {{name}}",
-    "signedIn": "Supervisor who takes the cash",
-    "signedInHint": "Supervisors signed in at this branch now.",
-    "signedInPlaceholder": "Choose a supervisor",
-    "signedInError": "Choose the supervisor who takes the cash.",
+    "noPinHere": {
+      "title": "This drop needs a supervisor’s PIN",
+      "body": "A supervisor is signed in at the branch ({{names}}), so the drop needs their witness, and a witness is their PIN on this till. This till holds no supervisor’s PIN yet: a supervisor signs in on it while it is online first."
+    },
     "witnessesLoading": "Looking for supervisors signed in at the branch",
     "witnessesFailed": "The till could not see who is signed in at the branch. Look again before recording the drop.",
     "witnessesRetry": "Look again",
     "unwitnessed": {
       "title": "This drop is recorded unwitnessed",
       "noneSignedIn": "No supervisor is signed in at the branch. The drop goes ahead, marked unwitnessed for the owner’s exception report.",
-      "cannotSee": "The till cannot see yet which supervisors are signed in at the branch, so the drop is sent without a witness and marked unwitnessed.",
-      "offline": "The till is offline and holds no supervisor’s PIN, so the drop is kept without a witness and marked unwitnessed."
+      "cannotSee": "The till cannot see who is signed in at the branch and holds no supervisor’s PIN, so the drop is sent without a witness. The server records it unwitnessed if no supervisor is signed in, and refuses it if one is.",
+      "offline": "The till is offline and holds no supervisor’s PIN, so the drop is kept without a witness. The server records it unwitnessed if no supervisor is signed in when it arrives, and refuses it if one is."
     },
     "unwitnessedShort": "Unwitnessed",
     "review": "Record it",
@@ -73,7 +75,8 @@
     "kept": "{{kind}} kept on this till. It is sent when the till reconnects.",
     "recorded": "{{kind}} recorded.",
     "recordedUnwitnessed": "{{kind}} recorded, unwitnessed.",
-    "failed": "The {{kind}} was not recorded"
+    "failed": "The {{kind}} was not recorded",
+    "serverDecides": "The till cannot see who is signed in at the branch: if a supervisor is, the server refuses it, and the refusal stays here."
   },
   "report": {
     "titleX": "X report: the shift so far",
@@ -94,6 +97,8 @@
       "PAY_OUT": "Pay-outs",
       "PAY_IN": "Pay-ins"
     },
+    "unwitnessed_one": "{{count}} drop unwitnessed",
+    "unwitnessed_other": "{{count}} drops unwitnessed",
     "voids_one": "{{count}} void",
     "voids_other": "{{count}} voids",
     "overrides_one": "{{count}} price override",

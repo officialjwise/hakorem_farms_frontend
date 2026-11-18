@@ -257,6 +257,11 @@ function ReportBody({ report }: { report: ShiftReport }) {
           pesewas={row.amountPesewas}
         />
       ))}
+      {/* 2.6.0: drops taken while no supervisor was signed in, which reach the exception report. */}
+      <Pair
+        term={t('report.unwitnessed', { count: report.unwitnessedDropsCount })}
+        pesewas={report.unwitnessedDropsPesewas}
+      />
       <Pair term={t('report.voids', { count: report.voidsCount })} pesewas={report.voidsPesewas} />
       <Pair
         term={t('report.overrides', { count: report.overridesCount })}
