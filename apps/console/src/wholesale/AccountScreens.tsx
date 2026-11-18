@@ -524,7 +524,7 @@ function CustomerAgeing({ customerId }: { customerId: string }) {
   );
 }
 
-type Outcome = 'saved' | 'held' | 'released' | { approvalId: string };
+type Outcome = 'saved' | 'held' | 'released' | { approvalId: string; waiting: 'limit' | 'release' };
 
 /** Change the terms, put the account on hold, or release it; each with its own permission. */
 function AccountActions({ account: a }: { account: Account }) {
@@ -570,7 +570,11 @@ function AccountActions({ account: a }: { account: Account }) {
       .mutateAsync(input, { idempotencyKey: keyFor(input) })
       .then((answer) => {
         setOpen(null);
-        setOutcome(isApprovalPending(answer) ? { approvalId: answer.approvalRequestId } : 'saved');
+        setOutcome(
+          isApprovalPending(answer)
+            ? { approvalId: answer.approvalRequestId, waiting: 'limit' }
+            : 'saved',
+        );
       })
       .catch(() => undefined);
   };
@@ -579,7 +583,14 @@ function AccountActions({ account: a }: { account: Account }) {
       {outcome === null ? null : typeof outcome === 'string' ? (
         <Alert severity="good" title={t(`account.outcome.${outcome}`, { name: a.customer.name })} />
       ) : (
-        <Alert severity="warning" title={t('account.outcome.limitWaiting')}>
+        <Alert
+          severity="warning"
+          title={t(
+            outcome.waiting === 'limit'
+              ? 'account.outcome.limitWaiting'
+              : 'account.outcome.releaseWaiting',
+          )}
+        >
           <Link to={`/approvals/${outcome.approvalId}`} className="text-accent-text underline">
             {t('outcome.openApproval')}
           </Link>
@@ -619,7 +630,11 @@ function AccountActions({ account: a }: { account: Account }) {
               {t('account.hold')}
             </Button>
           ) : null}
-          {auth.can('whl.account.hold') && a.status === 'ON_HOLD' ? (
+          {/* The owner (2026-11-18): an Owner or Manager releases a hold, never the Accountant who may put one
+              on. Until the seed splits the permission (CR-048), releasing takes the hold and the terms'. */}
+          {auth.can('whl.account.hold') &&
+          auth.can('whl.account.manage') &&
+          a.status === 'ON_HOLD' ? (
             <Button variant="secondary" onClick={() => setOpen('release')}>
               {t('account.release')}
             </Button>
@@ -664,8 +679,15 @@ function AccountActions({ account: a }: { account: Account }) {
           failureLabels={failure}
           onConfirm={async (reason) => {
             const input = { path: { customerId: a.customer.id }, body: { reason } };
-            await release.mutateAsync(input, { idempotencyKey: keyFor(input) });
-            setOutcome('released');
+            const answer: unknown = await release.mutateAsync(input, {
+              idempotencyKey: keyFor(input),
+            });
+            // CR-048: a release may wait for an Owner or Manager other than the one who asked.
+            setOutcome(
+              isApprovalPending(answer)
+                ? { approvalId: answer.approvalRequestId, waiting: 'release' }
+                : 'released',
+            );
             setOpen(null);
           }}
         />

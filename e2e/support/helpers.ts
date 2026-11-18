@@ -12,6 +12,13 @@ export const USERS = {
   temp: { identifier: 'new.staff@hakoremfarms.com', password: 'Temp-8841-Farm' },
   /** Accountant: must use TOTP and has not set it up, so the first sign-in enrols (CR-006). */
   accountant: { identifier: 'akua.sarpong@hakoremfarms.com', password: 'Mango-Season-2026!' },
+  /** Accountant with TOTP set up (F10i): signs in with the code. */
+  accountantEnrolled: {
+    identifier: 'esi.boateng@hakoremfarms.com',
+    password: 'Mango-Season-2026!',
+  },
+  /** Sales (F10i): quotes, no TOTP. */
+  sales: { identifier: 'kojo.antwi@hakoremfarms.com', password: 'Mango-Season-2026!' },
 } as const;
 
 export const TOTP_CODE = '481205';

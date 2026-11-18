@@ -768,3 +768,36 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 3. Say which refusal `acceptQuoteByLink` answers for an expired version and for a superseded one (409 `CONFLICT` or 422 with a code), so the page can say which.
 
 **Until this lands:** nothing is switched. The page shows the status the API gives: an expired quote says when it expired and how to ask for a new one; a replaced one says the farm sent a newer version and this link can no longer be used. A refused acceptance reads the quote again and shows its state in words.
+
+## CR-048. Who quotes, holds, releases and approves: the seed for quotes and wholesale, and a second person on a release and a limit change (seed, behaviour)
+
+- **Raised by:** frontend, F10i, on the owner's decision (2026-11-18): "Sales builds, revises, sends and converts quotes, and never approves an override. The Accountant may put an account on hold. Releasing a hold, approving an over-limit override and changing a credit limit are Owner or Manager only, never the person who asked."
+- **Contract read first (2.5.0):** no seeded role holds any `quo.*` or `whl.*` permission. `holdBusinessAccount` and `releaseBusinessAccount` both take `whl.account.hold`, so whoever may put a hold on may also release it. `updateBusinessAccount` (`whl.account.manage`) needs approval only for "raising a credit limit above the configured amount" (202 `CREDIT_OVERRIDE`), so a limit change below that amount is one person's.
+
+**Request:**
+
+1. **The seed** (CR-023, `components.x-seeded-roles`):
+
+   | Permission                                                                                                     | Owner | Manager | Sales | Accountant |
+   | -------------------------------------------------------------------------------------------------------------- | ----- | ------- | ----- | ---------- |
+   | `quo.rfq.read`, `quo.rfq.update`, `quo.quote.read`, `quo.quote.create`, `quo.quote.issue`, `quo.quote.convert` | yes   | yes     | yes   | no         |
+   | `whl.account.read`, `whl.ageing.read`                                                                          | yes   | yes     | yes   | yes        |
+   | `whl.account.hold` (put on hold)                                                                               | yes   | yes     | no    | yes        |
+   | `whl.account.release` (new: release a hold)                                                                    | yes   | yes     | no    | no         |
+   | `whl.account.manage` (open an account, change its terms)                                                       | yes   | yes     | no    | no         |
+   | `whl.credit.override` (approve a credit override, CR-046)                                                      | yes   | yes     | no    | no         |
+
+2. **Releasing a hold** takes `whl.account.release` (not `whl.account.hold`), and answers 202 `ApprovalPending` of a kind such as `ACCOUNT_RELEASE`, approved by a holder of `whl.account.release` who did not ask (422 `MAKER_CANNOT_CHECK`).
+3. **Every change to a credit limit**, up or down, answers 202 `CREDIT_OVERRIDE` (or a new `CREDIT_LIMIT_CHANGE`), approved by an Owner or Manager who did not ask; the other terms may change at once.
+4. **A credit override** (CR-046) is approved only by a holder of `whl.credit.override`, never by the person who asked; Sales may ask (it holds `ord.order.confirm`) and never approve.
+
+**Until this lands:** the test fake gives these roles as above (A-F10-07), with `whl.account.manage` standing in for the release permission: the console offers "Release from hold" only to a holder of both `whl.account.hold` and `whl.account.manage`, so the Accountant who may put a hold on never sees it. The account screen already shows a 202 from a limit change or a release as waiting for an Owner or Manager other than the person who asked, with the approval. No switch: the shapes are the contract's.
+
+## CR-049. The shop's request for quote takes a quantity and its unit (additive)
+
+- **Raised by:** frontend, F10i, the request-for-quote form: "how many crates". The owner (2026-11-18): the count as text is fine until the backend adds a quantity and unit field.
+- **Contract read first (2.5.0):** `PublicQuoteRequest` has `requirements` (free text, 2,000 characters), `productId` and `stockUnitId`, and no quantity; `Rfq` answers none either.
+
+**Request:** `PublicQuoteRequest.quantity: Quantity` and `PublicQuoteRequest.uom: string` (pattern `^[A-Z]{2,10}$`, `CRATE` or `UNIT` for eggs), both optional and sent together; `RfqCreate` takes the same two, and `Rfq` answers them (null when not given), so the quote builder can start the line from them.
+
+**Until this lands:** the form writes the number into `requirements` as "Crates wanted: N" (A-F10-08), and the request's page shows the buyer's words.

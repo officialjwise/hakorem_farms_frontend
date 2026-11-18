@@ -445,7 +445,7 @@
     "nothingOwed": "Nothing owed",
     "edit": "Change the terms",
     "save": "Save the terms",
-    "limitApproval": "A limit raised past the farm's set amount waits for approval by someone other than you.",
+    "limitApproval": "A change to the credit limit is approved by an Owner or Manager other than you.",
     "hold": "Put on hold",
     "holdTitle": "Put {{name}} on hold?",
     "holdBody": "No credit order is confirmed for them until the account is released. Say why.",
@@ -457,7 +457,8 @@
       "saved": "The terms for {{name}} were saved",
       "held": "{{name}} is on hold",
       "released": "{{name}} is released from hold",
-      "limitWaiting": "The new limit waits for approval by someone other than you"
+      "limitWaiting": "The new limit waits for an Owner or Manager other than you",
+      "releaseWaiting": "The release waits for an Owner or Manager other than you"
     }
   },
   "ageing": {

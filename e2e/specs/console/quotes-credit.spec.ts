@@ -498,3 +498,72 @@ test.describe('wholesale accounts and the ageing', () => {
     await expect(page.getByText(/quo\.quote\.read/).first()).toBeVisible();
   });
 });
+
+test.describe('who may do what (the owner, 2026-11-18)', () => {
+  const onHold = (body: unknown) => ({
+    ...chopBarAccount(body as S['BusinessAccount']),
+    status: 'ON_HOLD' as const,
+    holdReason: 'Cheque returned unpaid',
+    heldAt: '2026-11-17T09:00:00Z',
+  });
+
+  test('Sales builds, sends and converts quotes, and neither approves an override nor changes credit', async ({
+    page,
+    api,
+  }) => {
+    api.rewrite('getQuote', (body) => eggQuote(body as S['Quote'], 'DRAFT', version2('DRAFT'), 2));
+    api.rewrite('listQuoteVersions', (body) =>
+      pageOf(body, [version2('DRAFT'), version1('SUPERSEDED')]),
+    );
+    api.rewrite('getBusinessAccount', onHold);
+    api.rewrite('getAgeingReport', (body) => chopBarAgeing(body as S['AgeingReport']));
+    await signIn(page, USERS.sales, `/quotes/${QUOTE_ID}`);
+    await expect(page.getByRole('heading', { name: QUOTE_NO })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Edit the draft' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Send to the customer' })).toBeVisible();
+
+    await page.goto(`/business-accounts/${CUSTOMER.id}`);
+    await expect(page.getByRole('heading', { name: 'How late' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Change the terms' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Put on hold' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Release from hold' })).toHaveCount(0);
+
+    // An override is never Sales' to approve: the approval is denied in words.
+    await page.goto(`/approvals/${OVERRIDE_APPROVAL_ID}`);
+    await expect(page.getByText(/iam\.approval\.read/).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Approve' })).toHaveCount(0);
+    await expectNoAxeViolations(page);
+  });
+
+  test('the Accountant may put an account on hold, and neither releases it nor changes the limit', async ({
+    page,
+    api,
+  }) => {
+    const held = () => api.log.some((e) => e.operationId === 'holdBusinessAccount');
+    api.rewrite('getBusinessAccount', (body) =>
+      held() ? onHold(body) : chopBarAccount(body as S['BusinessAccount']),
+    );
+    api.rewrite('holdBusinessAccount', onHold);
+    api.rewrite('getAgeingReport', (body) => chopBarAgeing(body as S['AgeingReport']));
+    await signInWithTotp(page, USERS.accountantEnrolled, `/business-accounts/${CUSTOMER.id}`);
+    await expect(page.getByRole('heading', { name: CUSTOMER.name })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Change the terms' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Put on hold' }).click();
+    const hold = page.getByRole('dialog', { name: `Put ${CUSTOMER.name} on hold?` });
+    await hold.getByRole('textbox').fill('Cheque returned unpaid');
+    await hold.getByRole('button', { name: 'Put on hold' }).click();
+    await expect(page.getByText(`${CUSTOMER.name} is on hold`)).toBeVisible();
+    await expect(page.getByText(/^On hold since/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Release from hold' })).toHaveCount(0);
+    await expectNoAxeViolations(page);
+  });
+
+  test('an Owner or Manager releases a hold', async ({ page, api }) => {
+    api.rewrite('getBusinessAccount', onHold);
+    api.rewrite('getAgeingReport', (body) => chopBarAgeing(body as S['AgeingReport']));
+    await signInWithTotp(page, USERS.manager, `/business-accounts/${CUSTOMER.id}`);
+    await expect(page.getByText(/^On hold since/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Release from hold' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Change the terms' })).toBeVisible();
+  });
+});
