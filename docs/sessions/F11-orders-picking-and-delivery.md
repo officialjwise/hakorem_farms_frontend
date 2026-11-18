@@ -1,6 +1,6 @@
 # F11: online orders, picking, dispatch and delivery
 
-- **Session:** F11, on branch `claude/brave-thompson-24mg8d`, from `main` at `b2c8fef`, rebased onto `a0059c7` (PR #32, no screenshots until F13).
+- **Session:** F11, on branch `claude/brave-thompson-24mg8d`, from `main` at `b2c8fef`, rebased onto `aad2c91` (PR #32, no screenshots until F13; PR #33, F10l's contract 2.12.0).
 - **Date:** 2026-11-18
 - **Ran beside:** the till's session, F10l. Its lane covers the 2.12.0 sync, CR-038 and CR-045. It took CR-052, so this session's requests are CR-053 to CR-057.
 - **Not touched:** the till, quotes, wholesale and credit screens. `/orders/:id` stays F10i's page (A-F11-04).
@@ -79,10 +79,9 @@ Not built. CR-039 is not in 2.10.0 nor in 2.12.0: `ProductDetail` has no `sellin
 
 ## The contract
 
-- **This session builds on 2.10.0, as committed.** Backend main (`7ef2851`) is at 2.12.0.
-  - Syncing it lands CR-038 (the till) and CR-045 (quotes). `landed.ts` and the quote fixtures then fail, and making them pass means changing till and quote code.
-  - The order and delivery shapes are identical in both versions.
-  - The till's session was told. It has taken the 2.12.0 sync on `claude/awesome-hamilton-se5jqq` (A-F11-09).
+- **Built on 2.10.0, merged on 2.12.0.** At the start, backend main (`7ef2851`) was at 2.12.0.
+  - Syncing it landed CR-038 (the till) and CR-045 (quotes), whose landing work is outside this lane, so the session built on the committed 2.10.0 and told the till's session.
+  - F10l took the sync (PR #33). This branch was rebased onto it, and every check below ran again on 2.12.0. The order and delivery shapes are identical in both versions (A-F11-09, closed).
 - **Every F11 operation is still planned (B11).** Nothing moved from the mock to the real API this session.
 
 ## Contract requests added
@@ -112,16 +111,16 @@ Not built. CR-039 is not in 2.10.0 nor in 2.12.0: `ProductDetail` has no `sellin
 
 ## Gates, each run on its own
 
-| Check                                                     | Exit | Count                                                                                                        |
-| --------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------ |
-| `format:check`, `lint`                                    | 0    |                                                                                                              |
-| `typecheck` (every package)                               | 0    |                                                                                                              |
-| `sync-contract:check`                                     | 0    | backend `5815c06`, 2.10.0 (unchanged)                                                                        |
-| `test:unit`                                               | 0    | console 343, data 33, api-client 30, ui 900, storefront 39, i18n 6                                           |
-| `test:integration`                                        | 0    | console 257 before the driver's file, then 3 more (`driver/offline/sync.integration.test.ts`); storefront 20 |
-| `budget:console`                                          | 0    | till 243.4 of 250 kB; back office 284.9 of 300 kB. The driver's chunk (10.3 kB gzipped) loads on demand      |
-| `test:e2e`, full run                                      | 0    | 325 of 325 in 7.6 minutes, first run; the F11 specs are 7 of them (the gate also passed 5 of 5 alone)        |
-| `tokens:check`, `fonts:check`, `icons:check`, `test:a11y` | n/r  | not run: no token, font, icon or `packages/ui` change                                                        |
+| Check                                                     | Exit | Count                                                                                                                                          |
+| --------------------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `format:check`, `lint`                                    | 0    |                                                                                                                                                |
+| `typecheck` (every package)                               | 0    |                                                                                                                                                |
+| `sync-contract:check`                                     | 0    | backend `7ef2851`, 2.12.0 (from main, PR #33)                                                                                                  |
+| `test:unit`                                               | 0    | console 337 (F10l removed the quote seed tripwires), data 33, api-client 30, ui 901, storefront 39, i18n 6                                     |
+| `test:integration`                                        | 0    | console 260, with the driver's 3 (`driver/offline/sync.integration.test.ts`); storefront 20                                                    |
+| `budget:console`                                          | 0    | till 243.5 of 250 kB; back office 285.7 of 300 kB. The driver's chunk (10.3 kB gzipped) loads on demand                                        |
+| `test:e2e`, full run                                      | 0    | 328 of 328 in 7.5 minutes on 2.12.0, first run (325 of 325 before the rebase); the F11 specs are 7 of them (the gate also passed 5 of 5 alone) |
+| `tokens:check`, `fonts:check`, `icons:check`, `test:a11y` | n/r  | not run: no token, font, icon or `packages/ui` change                                                                                          |
 
 **Fixed while getting here:**
 
