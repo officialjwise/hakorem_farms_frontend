@@ -47,6 +47,10 @@ export const STEP_UP_OPERATIONS: ReadonlySet<string> = new Set([
   'createGrant',
   'revokeGrant',
   'approveShiftClose',
+  // 2.6.0: the till's devices and a shift closed without its cashier (x-requires-step-up).
+  'enrolDevice',
+  'revokeDevice',
+  'forceCloseShift',
 ]);
 
 /** The code the fake accepts for any user with TOTP. It is the contract's own example code. */
