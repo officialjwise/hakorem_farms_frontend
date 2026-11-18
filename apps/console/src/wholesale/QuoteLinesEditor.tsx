@@ -18,7 +18,6 @@ import { useStateLabels } from '../lib/states';
 import { newRecordId } from '../lib/clientId';
 import { ProductPicker, type ProductRef } from '../stock/LinesEditor';
 import { toQuantity, useLineUnits, useUnits } from '../stock/units';
-import { quoteLineUnitOn, withQuoteLineUnit } from '../requested/quoteLineUnit';
 
 type S = components['schemas'];
 
@@ -83,7 +82,7 @@ export function lineProblems(
   return problems;
 }
 
-/** The line as the contract takes it (`QuoteLineInput`), with its unit only where CR-045 is switched on. */
+/** The line as the contract takes it (`QuoteLineInput`), with its unit (CR-045, 2.12.0). */
 export function toLineInput(line: DraftQuoteLine): S['QuoteLineInput'] {
   const input: S['QuoteLineInput'] = {
     ...(line.product === null ? {} : { productId: line.product.id }),
@@ -92,7 +91,7 @@ export function toLineInput(line: DraftQuoteLine): S['QuoteLineInput'] {
     priceBasis: line.priceBasis === '' ? 'PER_UNIT' : line.priceBasis,
     unitPricePesewas: line.unitPricePesewas ?? 0,
   };
-  return line.uom === '' ? input : withQuoteLineUnit(input, line.uom);
+  return line.uom === '' ? input : { ...input, uom: line.uom };
 }
 
 const BASES = ['PER_UNIT', 'PER_HEAD', 'PER_KG'] as const satisfies readonly S['PriceBasis'][];
@@ -141,7 +140,7 @@ export function QuoteLinesEditor({
         lineRef: line.key,
         productId: line.product?.id ?? '',
         quantity: toQuantity(line.qty) ?? '',
-        ...(line.uom === '' || !quoteLineUnitOn() ? {} : { uom: line.uom }),
+        ...(line.uom === '' ? {} : { uom: line.uom }),
       })),
     };
     resolve
@@ -179,11 +178,6 @@ export function QuoteLinesEditor({
         {t('lines.title')}
       </h2>
       <p className="text-control-sm text-fg-muted">{t('lines.hint')}</p>
-      {quoteLineUnitOn() ? null : (
-        <Alert severity="info" title={t('lines.unitWaits')}>
-          {t('lines.unitWaitsBody')}
-        </Alert>
-      )}
       {lines.map((line, index) => (
         <QuoteLineCard
           key={line.key}
@@ -271,7 +265,7 @@ function QuoteLineCard({
           onChange={(product) =>
             onChange({
               product,
-              uom: quoteLineUnitOn() && product !== null ? product.baseUom : '',
+              uom: product !== null ? product.baseUom : '',
               price: null,
               unitPricePesewas: null,
               priceBasis: '',
@@ -279,7 +273,7 @@ function QuoteLineCard({
             })
           }
         />
-        {quoteLineUnitOn() && line.product !== null ? (
+        {line.product !== null ? (
           <Field label={t('lines.unit')} hint={t('lines.unitHint')}>
             <Select
               value={line.uom === '' ? line.product.baseUom : line.uom}

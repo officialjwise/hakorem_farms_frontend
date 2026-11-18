@@ -39,8 +39,8 @@ import { expect, test } from '../../support/test';
 
 /**
  * Quotes, wholesale and credit control (F10i, contract 2.5.0): Asantewaa Chop Bar buys big eggs by the
- * crate and the single egg. A quote is built with lines priced by the API for the buyer (the unit behind
- * CR-045), revised into a new version with the old one kept readable, sent, accepted and made an order
+ * crate and the single egg. A quote is built with lines priced by the API for the buyer (each line naming
+ * its unit, CR-045 in 2.12.0), revised into a new version with the old one kept readable, sent, accepted and made an order
  * with every link kept. Confirming the credit order is refused by the server with the amount over the
  * limit (CR-046), an override is asked for with a reason, the person who asked cannot approve it, and a
  * Manager does; the account shows who approved it. The suite runs at 360 px. Every amount shown is the
@@ -67,8 +67,7 @@ test.describe('a quote for crates and single eggs', () => {
     seedEggs(api);
     api.rewrite('listCustomers', (body) => pageOf(body, [chopBar(first<S['Customer']>(body))]));
     api.respond('resolvePrices', (request) => eggPrices(request as S['PriceResolveRequest']));
-    // Prism refuses the requested unit (QuoteLineInput takes no uom yet): the fake answers as a server
-    // with CR-045 would.
+    // The server's draft, with its own line totals (Prism answers its example, not these lines).
     api.respond('createQuote', () => eggQuote({} as S['Quote'], 'DRAFT', version1('DRAFT'), 1));
     api.rewrite('getQuote', (body) => eggQuote(body as S['Quote'], 'DRAFT', version1('DRAFT'), 1));
     api.rewrite('listQuoteVersions', (body) => pageOf(body, [version1('DRAFT')]));

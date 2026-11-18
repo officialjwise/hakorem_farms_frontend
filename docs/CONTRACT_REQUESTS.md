@@ -754,6 +754,8 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 
 **Until this lands:** the quote builder sends `uom` only in a build switched on for CR-045 (`HK_REQUESTED_CONTRACT`, ADR 0046), from `apps/console/src/requested/quoteLineUnit.ts`. Each line's price comes from `resolvePrices` for that unit and customer, and is sent as `unitPricePesewas`; the person may agree another, and the API's price stays beside it. With the switch off, a line is in the product's sale unit and the screen says that a line by the single egg waits for the server.
 
+**Answered in 2.12.0 (F10l):** `QuoteLineInput.uom`, the product's base unit when left out, and `QuoteLine.baseQuantity`. The switch and `requested/quoteLineUnit.ts` are deleted: every line sends its unit, and the notice that a line by the single egg waits is gone.
+
 ## CR-046. A credit order past the limit or the terms is refused with the amount over, and an override is asked for with a reason (behaviour, additive)
 
 - **Raised by:** frontend, the credit control session: "a sale that would take a customer past their limit, or a customer past their terms, is refused by the server; show the refusal in words, with the amount over. An override needs an Owner or Manager, a reason, and is never approved by the person asking. Show who approved it" (owner, 2026-11-17).

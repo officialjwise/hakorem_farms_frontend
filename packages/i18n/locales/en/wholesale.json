@@ -214,8 +214,6 @@
   "lines": {
     "title": "Lines",
     "hint": "Crates and single eggs are separate lines, each at its own price: a single egg is never priced from a crate.",
-    "unitWaits": "Lines by the single egg wait for the server",
-    "unitWaitsBody": "This build cannot say a line's unit yet (CR-045), so each line is in the product's sale unit.",
     "line": "Line {{number}}",
     "remove": "Remove line {{number}}",
     "product": "Product",
