@@ -55,6 +55,7 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-049 | 2026-11-18 | Open                      |
 | CR-050 | 2026-11-18 | Part 2 answered (2.6.0)   |
 | CR-051 | 2026-11-18 | Open                      |
+| CR-052 | 2026-11-18 | Open                      |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -856,3 +857,12 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 **Until this lands:** the till says the unit's code in lower case after a quantity ("6 egg"), which is wrong for a plural. Nothing is built on it.
 
 **Still open after 2.11.0 (F10l):** `getOfflinePack` moved into code without `uoms`.
+
+## CR-052. The till sells a live animal priced by grade or weight (additive)
+
+- **Raised by:** frontend F10l, the till's sale screen, after 2.11.0 moved `getOfflinePack` into code.
+- **Contract read first (2.12.0):** `getOfflinePack` says "a product priced by grade or weight (a live animal) has no single band (`priceBand` null)", and its example gives the goat no band and a `sellingUnits` entry with no band. `OfflineStockUnit` carries `gradeId` and `lastWeightKg` but no price. The till totals offline from the pack's band (BUILD_PROMPT's one exception) and keeps an agreed price inside the floor and ceiling, so with no band it cannot sell the animal at all: the sale screen says "Goat has no price on this till". Selling a live animal at the counter is in the mission ("sell live animals by weight").
+
+**Request:** the band each sellable animal is sold at, resolved as the server would at the counter (the register's lists, a buyer with no account, its grade and its weight band from `lastWeightKg`): `OfflineStockUnit.priceBand: PriceBand | null` and `OfflineStockUnit.priceListEntryId: uuid | null`, null when the animal has no price at this register. A product priced per kilogram keeps its own band, and the scale gives the weight. Say in `syncOfflineSales` how an animal re-weighed at the sale is priced if its weight moved it to another band.
+
+**Until this lands:** a till with the real pack refuses a goat in words and sells everything else. The e2e pack gives the goat the per-head band of 2.10.0's example (`goatPricedPerHead` in `e2e/support/till.ts`), so the till's own tests still run with an animal.
