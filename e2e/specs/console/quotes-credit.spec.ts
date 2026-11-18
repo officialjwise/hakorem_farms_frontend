@@ -93,8 +93,8 @@ test.describe('a quote for crates and single eggs', () => {
     await line2.getByRole('combobox', { name: /^Product/ }).fill('Eggs');
     await page.getByRole('option', { name: /^Eggs, big/ }).click();
     await line2.getByRole('combobox', { name: /^Sold by/ }).click();
-    await page.getByRole('option', { name: 'Unit', exact: true }).click();
-    await line2.getByLabel(/^How many, in unit/).fill('30');
+    await page.getByRole('option', { name: 'Egg', exact: true }).click();
+    await line2.getByLabel(/^How many, in eggs/).fill('30');
     await line2.getByLabel(/^Line words/).fill('Eggs, big, single');
 
     // Saving before the API has priced the lines is stopped in words.
@@ -107,12 +107,12 @@ test.describe('a quote for crates and single eggs', () => {
     expect(pricing).toMatchObject({ channel: 'QUOTE', customerId: CUSTOMER.id });
     expect(pricing.lines.map((l) => [l.productId, l.quantity, l.uom])).toEqual([
       [EGGS_ID, '12.000', 'CRATE'],
-      [EGGS_ID, '30.000', 'UNIT'],
+      [EGGS_ID, '30.000', 'EGG'],
     ]);
     // Each line shows the API's price for its own unit: a single egg is not a thirtieth of a crate.
     await expect(line1.getByTestId('api-price')).toContainText('per crate');
     await expect(line1.getByTestId('api-price')).toContainText('60.00');
-    await expect(line2.getByTestId('api-price')).toContainText('per unit');
+    await expect(line2.getByTestId('api-price')).toContainText('per egg');
     await expect(line2.getByTestId('api-price')).toContainText('2.20');
     await expect(line2.getByTestId('api-price')).toContainText(PRICE_LIST.name);
     await expectNoHorizontalScroll(page);
@@ -145,15 +145,15 @@ test.describe('a quote for crates and single eggs', () => {
         quantity: '30.000',
         priceBasis: 'PER_UNIT',
         unitPricePesewas: 220,
-        uom: 'UNIT',
+        uom: 'EGG',
       },
     ]);
 
     // The quote, as the server totals it.
     await expect(page.getByRole('heading', { name: QUOTE_NO })).toBeVisible();
     const lines = page.getByRole('region', { name: "The version's lines" });
-    await expect(lines).toContainText('12 Crate');
-    await expect(lines).toContainText('30 Unit');
+    await expect(lines).toContainText('12 crates');
+    await expect(lines).toContainText('30 eggs');
     await expect(lines).toContainText('720.00');
     await expect(page.getByText('786.00').first()).toBeVisible();
     await expectNoHorizontalScroll(page);
@@ -199,7 +199,7 @@ test.describe('a quote for crates and single eggs', () => {
     await expect(page).toHaveURL(new RegExp(`version=${VERSION_1}`));
     await expect(page.getByText('An earlier version, as it was')).toBeVisible();
     await expect(page.getByRole('region', { name: "The version's lines" })).toContainText(
-      '12 Crate',
+      '12 crates',
     );
     await expect(page.getByText('786.00').first()).toBeVisible();
     await expect(page.getByRole('button', { name: 'Edit the draft' })).toHaveCount(0);
@@ -296,8 +296,8 @@ test.describe('a quote for crates and single eggs', () => {
     );
     const lines = page.getByRole('region', { name: "The order's lines" });
     await expect(lines.getByText("At the quote's price")).toHaveCount(2);
-    await expect(lines).toContainText('10 Crate');
-    await expect(lines).toContainText('30 Unit');
+    await expect(lines).toContainText('10 crates');
+    await expect(lines).toContainText('30 eggs');
     await expectNoHorizontalScroll(page);
     await expectNoAxeViolations(page);
   });

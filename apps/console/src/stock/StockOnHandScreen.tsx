@@ -102,7 +102,7 @@ export function StockOnHandScreen() {
         <span className="grid justify-items-end">
           <QuantityDisplay
             quantity={line.onHandQty}
-            unit={units.name(line.uom)}
+            unit={units.after(line.uom, line.onHandQty)}
             // The line carries its unit's precision (CR-003, contract 1.16.0).
             places={asPlaces(line.uomDisplayDecimals)}
           />
@@ -117,7 +117,7 @@ export function StockOnHandScreen() {
       cell: (line) => (
         <QuantityDisplay
           quantity={line.availableQty}
-          unit={units.name(line.uom)}
+          unit={units.after(line.uom, line.availableQty)}
           places={asPlaces(line.uomDisplayDecimals)}
         />
       ),

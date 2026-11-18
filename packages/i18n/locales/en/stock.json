@@ -189,6 +189,7 @@
     "qtyInvalid_other": "Enter a quantity with at most {{count}} decimal places.",
     "value": "Cost of the accepted quantity, GHS, line {{number}}",
     "valueHint": "From the supplier's invoice or delivery note.",
+    "valueFromOrderHint": "Leave it empty to value the accepted quantity at the order's price. The server works it out and shows it on the receipt.",
     "remove": "Remove line {{number}}",
     "add": "Add a line",
     "atCost": "at cost",

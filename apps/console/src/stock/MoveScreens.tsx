@@ -713,7 +713,7 @@ export function AdjustmentScreen() {
         const qty = (line: S['StockAdjustmentLine']) => (
           <QuantityDisplay
             quantity={line.qty}
-            unit={units.name(line.uom)}
+            unit={units.after(line.uom, line.qty)}
             places={units.places(line.uom)}
           />
         );
@@ -822,7 +822,11 @@ export function TransferScreen() {
           value === null ? (
             NOT_APPLICABLE
           ) : (
-            <QuantityDisplay quantity={value} unit={units.name(uom)} places={units.places(uom)} />
+            <QuantityDisplay
+              quantity={value}
+              unit={units.after(uom, value)}
+              places={units.places(uom)}
+            />
           );
         const summary = (
           <ul className="grid list-disc gap-1 ps-5">
@@ -937,7 +941,11 @@ export function ReceiptScreen() {
       query={receipt}
       render={(r: S['GoodsReceipt']) => {
         const qty = (value: string, uom: string) => (
-          <QuantityDisplay quantity={value} unit={units.name(uom)} places={units.places(uom)} />
+          <QuantityDisplay
+            quantity={value}
+            unit={units.after(uom, value)}
+            places={units.places(uom)}
+          />
         );
         // A line entered in crates shows the crates, and the eggs the server booked beneath (2.2.0).
         const counted = (value: string, base: string, l: S['GoodsReceiptLine']) =>

@@ -3,11 +3,12 @@
  * Not in the contract yet: the types are the request's, read only in a build switched on for CR-050, and this
  * file goes when the contract carries `listShiftWitnesses`.
  *
- * The owner's rule (2026-11-17, the backend's A-273 (d)): a supervisor witnesses a drop when one is signed in
- * at the branch; with none, the drop goes ahead marked unwitnessed. 2.5.0 refuses a drop without a
- * `witnessId` (`WITNESS_REQUIRED`) and gives the till no way to see who is signed in, so both halves are
- * asked for. Only the shift screen imports this module, and it loads on demand, so the till's first load
- * never carries it.
+ * The owner's rule (2026-11-18, the backend's A-273 (d)): while a supervisor is signed in at the branch, a
+ * drop needs a witness, and the witness is that supervisor's PIN on the till (`pos/shift/witness.ts`); with
+ * none signed in, the drop goes ahead marked unwitnessed. 2.6.0 takes the unwitnessed drop; the till still
+ * has no way to see who is signed in, which this read asks for. The till uses it only to know whether a
+ * witness is needed: naming one of these people is not a witness. Only the shift screen imports this
+ * module, and it loads on demand, so the till's first load never carries it.
  */
 import type { components, RequestedOperation } from '@hakorem/api-client';
 import { createRequestedQuery } from '@hakorem/data';
@@ -50,9 +51,9 @@ export function shiftWitnessesOn(): boolean {
 }
 
 /**
- * The supervisors who can witness a drop on this shift now, in a build switched on for CR-050. With the
- * switch off nothing is asked: the drop is sent without a witness and the server decides (2.5.0 refuses it in
- * words; the backend's next part takes it, marked unwitnessed).
+ * The supervisors signed in at the shift's branch now, in a build switched on for CR-050. With the switch off
+ * nothing is asked: a supervisor's PIN is taken if one is there, and otherwise the drop is sent unwitnessed
+ * and the server decides (2.6.0: it takes it while nobody is signed in, and refuses it in words otherwise).
  */
 export function useShiftWitnesses(shiftId: string, enabled: boolean) {
   return useRequestedQuery<ShiftWitnessList>(

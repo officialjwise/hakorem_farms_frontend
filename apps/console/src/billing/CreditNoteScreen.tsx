@@ -253,7 +253,7 @@ function CreditNoteForm({ document }: { document: BillingDocument }) {
                     <p className="text-control-sm text-fg-muted">
                       <QuantityDisplay
                         quantity={line.quantity}
-                        unit={units.name(line.uom)}
+                        unit={units.after(line.uom, line.quantity)}
                         places={units.places(line.uom)}
                       />{' '}
                       · <MoneyDisplay pesewas={line.lineGrossPesewas} />
@@ -370,7 +370,7 @@ function CreditNoteForm({ document }: { document: BillingDocument }) {
                   {entry.mode === 'quantity' ? (
                     <QuantityDisplay
                       quantity={toQuantity(entry.quantity) ?? '0.000'}
-                      unit={units.name(line.uom)}
+                      unit={units.after(line.uom, toQuantity(entry.quantity) ?? '0.000')}
                       places={units.places(line.uom)}
                     />
                   ) : (

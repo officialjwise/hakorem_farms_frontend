@@ -265,7 +265,7 @@ function CountLines({ take }: { take: StockTake }) {
                           ? t('count.notCounted')
                           : t('count.countedSoFar', {
                               qty: formatQuantity(line.countedQty, { places }),
-                              unit,
+                              unit: units.after(line.uom, line.countedQty),
                             })
                       }
                       error={
@@ -379,7 +379,7 @@ function ReviewLines({ take }: { take: StockTake }) {
     value === null ? (
       NOT_APPLICABLE
     ) : (
-      <QuantityDisplay quantity={value} unit={units.name(uom)} places={units.places(uom)} />
+      <QuantityDisplay quantity={value} unit={units.after(uom, value)} places={units.places(uom)} />
     );
   const header = (
     <TableHeader>

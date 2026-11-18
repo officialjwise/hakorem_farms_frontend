@@ -47,6 +47,10 @@ export const STEP_UP_OPERATIONS: ReadonlySet<string> = new Set([
   'createGrant',
   'revokeGrant',
   'approveShiftClose',
+  // 2.6.0: the till's devices and a shift closed without its cashier (x-requires-step-up).
+  'enrolDevice',
+  'revokeDevice',
+  'forceCloseShift',
 ]);
 
 /** The code the fake accepts for any user with TOTP. It is the contract's own example code. */
@@ -449,9 +453,11 @@ const MANAGER_PERMISSIONS = [
   'bil.credit_note.approve',
   'doc.document.read',
   // F10g, as seeded: the Manager reads supplier invoices, approves a variance and a payment, and prepares
-  // one; never approves an invoice or records a payment as paid.
+  // one; never records a payment as paid. From 2.9.0 the seed lets the Manager approve supplier invoices
+  // and credit notes too (the owner's decision in F10g).
   'mdm.supplier.read',
   'pur.supplier_invoice.read',
+  'pur.supplier_invoice.approve',
   'pur.supplier_invoice.variance_approve',
   'pur.supplier_payment.read',
   'pur.supplier_payment.create',

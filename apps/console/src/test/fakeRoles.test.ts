@@ -8,20 +8,12 @@ import { FAKE_USERS } from './fakeAuthServer';
  * them to the role named here. When the seed grants one, its line below fails: delete it and match the seed.
  */
 const NOT_SEEDED: Readonly<Record<string, string>> = {
-  // The till's devices and a forced close (B9b continued): 2.5.0 seeded the rest. The owner set who holds
-  // them (F9, A-F9-01).
-  'pos.device.read': 'B9b',
-  'pos.device.enrol': 'B9b',
-  'pos.shift.force_close': 'B9b',
   // The audit log: `listAuditEvents` says "readable by Owner and Accountant only"; no role is seeded with it.
   'aud.audit.read': 'the audit log',
   // Reports and the exception list.
   'rpt.exceptions.read': 'reporting',
   'rpt.report.read': 'reporting',
   'rpt.report.export': 'reporting',
-  // Wholesale statements.
-  'whl.statement.read': 'wholesale',
-  'whl.statement.create': 'wholesale',
   // Quotes, wholesale accounts and the ageing (B10, CR-046 item 5; A-F10-10).
   'quo.rfq.read': 'B10',
   'quo.rfq.update': 'B10',
@@ -70,17 +62,4 @@ describe('the test fake holds the seeded roles (CR-023)', () => {
       expect(named.has(permission)).toBe(true);
     },
   );
-
-  /**
-   * The backend is letting a Manager approve supplier credit notes (owner, 2026-11-18). Until the seed says
-   * so, the Manager holds no `pur.supplier_invoice.approve`. When it does, this fails: give the fake Manager
-   * the grant (fakeAuthServer.ts), check the payables e2e's approver, and delete this test.
-   */
-  it('the Manager does not approve supplier invoices or credit notes yet', () => {
-    const manager = seededRoles.find((r) => r.code === 'MANAGER');
-    expect(manager?.permissions).not.toContain('pur.supplier_invoice.approve');
-    expect(FAKE_USERS['kwabena.owusu@hakoremfarms.com']?.permissions).not.toContain(
-      'pur.supplier_invoice.approve',
-    );
-  });
 });

@@ -700,7 +700,7 @@ function VersionView({ version: v, current }: { version: Version; current: boole
                 <TableCell numeric label={t('columns.qty')}>
                   <QuantityDisplay
                     quantity={line.quantity}
-                    unit={units.name(line.uom)}
+                    unit={units.after(line.uom, line.quantity)}
                     places={units.places(line.uom)}
                   />
                 </TableCell>
@@ -712,7 +712,7 @@ function VersionView({ version: v, current }: { version: Version; current: boole
                   )}
                 </TableCell>
                 <TableCell numeric label={t('columns.agreedPrice')}>
-                  {`${t('lines.per', { unit: units.name(line.uom).toLowerCase() })} `}
+                  {`${t('lines.per', { unit: units.one(line.uom) })} `}
                   <MoneyDisplay pesewas={line.unitPricePesewas} />
                 </TableCell>
                 <TableCell numeric label={t('columns.lineNet')}>

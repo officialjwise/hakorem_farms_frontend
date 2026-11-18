@@ -51,10 +51,10 @@ test.describe('buying eggs by the crate', () => {
     await page.getByRole('option', { name: 'Eggs, big (EGG-0003)' }).click();
     // The crate is the product's own conversion, as the API holds it: 30 eggs.
     await page.getByRole('combobox', { name: 'Counted in, line 1' }).click();
-    await page.getByRole('option', { name: 'Crate (30 Unit)' }).click();
-    await page.getByLabel(/^Ordered, in Crate, line 1/).fill('20');
+    await page.getByRole('option', { name: 'Crate (30 eggs)' }).click();
+    await page.getByLabel(/^Ordered, in crates, line 1/).fill('20');
     // No price: the server takes the last price paid to this supplier for a crate (2.3.0).
-    await expect(page.getByLabel('Price per Crate, GHS, line 1')).toHaveValue('');
+    await expect(page.getByLabel('Price per crate, GHS, line 1')).toHaveValue('');
     await expectNoHorizontalScroll(page);
     await expectNoAxeViolations(page);
 
@@ -74,7 +74,7 @@ test.describe('buying eggs by the crate', () => {
     const lines = page.getByRole('region', { name: 'Ordered lines' });
     await expect(lines).toContainText('Eggs, big');
     await expect(lines).toContainText('600');
-    await expect(lines).toContainText('per Crate');
+    await expect(lines).toContainText('per crate');
     await expect(lines).toContainText('47.50');
     await expect(page.getByText('950.00').first()).toBeVisible();
     await expectNoHorizontalScroll(page);
@@ -101,14 +101,14 @@ test.describe('buying eggs by the crate', () => {
     await page.getByRole('link', { name: 'Receive a delivery' }).click();
     await expect(page.getByRole('heading', { name: 'New goods receipt' })).toBeVisible();
     // The order fills the supplier, the place and the line: its product and unit are the order's.
-    await expect(page.getByText('Eggs, big, ordered in Crate')).toBeVisible();
+    await expect(page.getByText('Eggs, big, ordered in crates')).toBeVisible();
     await expect(page.getByRole('combobox', { name: /^Supplier/ })).toContainText(SUPPLIER.name);
     await expect(page.getByRole('combobox', { name: /^Purchase order/ })).toContainText(
       'PO-2026-DDW-000052',
     );
     await expect(page.getByRole('combobox', { name: /^Received at/ })).toContainText(STORE.name);
-    await page.getByLabel(/^Accepted, in Crate, line 1/).fill('18');
-    await page.getByLabel(/^Rejected at the door, in Crate, line 1/).fill('2');
+    await page.getByLabel(/^Accepted, in crates, line 1/).fill('18');
+    await page.getByLabel(/^Rejected at the door, in crates, line 1/).fill('2');
     await page.getByLabel(/^Cost of the accepted quantity, GHS, line 1/).fill('855.00');
 
     // A rejection without its reason is not sent: the server would refuse it (REJECTION_REASON_REQUIRED).

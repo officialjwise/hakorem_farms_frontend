@@ -156,12 +156,12 @@ export function SupplierClaimScreen() {
                     <TableCell numeric label={t('columns.rejected')}>
                       <QuantityDisplay
                         quantity={line.qtyRejectedBase}
-                        unit={units.name(line.baseUom)}
+                        unit={units.after(line.baseUom, line.qtyRejectedBase)}
                         places={units.places(line.baseUom)}
                       />
                     </TableCell>
                     <TableCell numeric label={t('columns.orderPrice')}>
-                      {t('enter.per', { unit: units.name(line.orderUom) })}{' '}
+                      {t('enter.per', { unit: units.one(line.orderUom) })}{' '}
                       <MoneyDisplay pesewas={line.orderUnitPricePesewas} />
                     </TableCell>
                     <TableCell numeric label={t('columns.claimed')}>

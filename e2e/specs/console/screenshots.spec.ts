@@ -710,7 +710,8 @@ const TEN_SHOTS: TenShot[] = [
     name: 'till-locked',
     act: async (page) => {
       await page.getByRole('button', { name: 'Lock the till' }).click();
-      await page.getByLabel(/^PIN/).fill('1111');
+      // The cashier's PIN is the first; a supervisor's sign-out has its own beneath.
+      await page.getByLabel(/^PIN/).first().fill('1111');
       await page.getByRole('button', { name: 'Open the till' }).click();
       await expect(page.getByText(/^Wrong PIN\. 2 more wrong tries/)).toBeVisible();
     },
@@ -804,25 +805,30 @@ for (const shot of TEN_SHOTS) {
 }
 
 /**
- * F10j, the till's shift on contract 2.5.0 (CR-050 as requested): a drop witnessed by a supervisor signed in
- * at the branch, a drop plainly unwitnessed when none is (dark and compact too), a refused drop, and the
- * shift signed off with its Z report. Each opens the cashier's shift first, as F09 does.
+ * The till's shift: F10j's sign-off with its Z report, and F10k's drop witnesses (owner, 2026-11-18): the
+ * supervisor's PIN asked for while one is signed in at the branch, the drop it witnessed, the drop that
+ * cannot be recorded with no supervisor's PIN on the till, a drop plainly unwitnessed when nobody is signed
+ * in (dark and compact too), and a refused drop. Each opens the cashier's shift first, as F09 does.
  */
 interface ShiftShot {
+  phase: 'F10j' | 'F10k';
   name: string;
   theme?: 'light' | 'dark';
   density?: 'compact';
   witnesses?: { id: string; displayName: string }[];
+  /** The till holds the cashier's and the manager's PINs (CR-032). */
+  pins?: boolean;
   refuseDrop?: boolean;
   act: (page: Page) => Promise<void>;
 }
 
-async function dropReady(page: Page, choose: boolean) {
+async function dropReady(page: Page, pin: boolean) {
   await page.getByRole('link', { name: 'Shift', exact: true }).click();
   await page.getByRole('textbox', { name: /^Amount/ }).fill('500');
-  if (choose) {
-    await page.getByRole('combobox', { name: /^Supervisor who takes the cash/ }).click();
-    await page.getByRole('option', { name: PEOPLE.manager.name }).click();
+  if (pin) {
+    await page.getByLabel(/^PIN/).fill(PEOPLE.manager.pin);
+    await page.getByRole('button', { name: 'Approve with this PIN' }).click();
+    await expect(page.locator('[data-slot="cash-witness"]')).toBeVisible();
   }
 }
 
@@ -835,9 +841,19 @@ async function recordDrop(page: Page) {
 }
 
 const SHIFT_SHOTS: ShiftShot[] = [
-  { name: 'drop-witness-signed-in', act: async (page) => dropReady(page, true) },
   {
-    name: 'drop-witnessed-recorded',
+    phase: 'F10k',
+    name: 'drop-pin-required',
+    pins: true,
+    act: async (page) => {
+      await dropReady(page, false);
+      await expect(page.locator('[data-slot="cash-witness-hint"]')).toBeVisible();
+    },
+  },
+  {
+    phase: 'F10k',
+    name: 'drop-pin-witnessed',
+    pins: true,
     act: async (page) => {
       await dropReady(page, true);
       await recordDrop(page);
@@ -845,6 +861,16 @@ const SHIFT_SHOTS: ShiftShot[] = [
     },
   },
   {
+    phase: 'F10k',
+    name: 'drop-no-pin-here',
+    act: async (page) => {
+      await dropReady(page, false);
+      await page.getByRole('button', { name: 'Record it' }).click();
+      await expect(page.locator('[data-slot="cash-witness-needed"]')).toBeVisible();
+    },
+  },
+  {
+    phase: 'F10k',
     name: 'drop-unwitnessed',
     witnesses: [],
     act: async (page) => {
@@ -854,6 +880,7 @@ const SHIFT_SHOTS: ShiftShot[] = [
     },
   },
   {
+    phase: 'F10k',
     name: 'drop-unwitnessed-dark-compact',
     witnesses: [],
     theme: 'dark',
@@ -865,7 +892,9 @@ const SHIFT_SHOTS: ShiftShot[] = [
     },
   },
   {
+    phase: 'F10k',
     name: 'drop-refused',
+    pins: true,
     refuseDrop: true,
     act: async (page) => {
       await dropReady(page, true);
@@ -874,6 +903,7 @@ const SHIFT_SHOTS: ShiftShot[] = [
     },
   },
   {
+    phase: 'F10j',
     name: 'shift-signed-off',
     act: async (page) => {
       await page.getByRole('link', { name: 'Shift', exact: true }).click();
@@ -905,10 +935,11 @@ const SHIFT_SHOTS: ShiftShot[] = [
 
 for (const shot of SHIFT_SHOTS) {
   for (const width of WIDTHS) {
-    test(`@screenshots F10j ${shot.name} at ${width}`, async ({ page, api }) => {
+    test(`@screenshots ${shot.phase} ${shot.name} at ${width}`, async ({ page, api }) => {
       installTillServer(api, (sale) => sale.tenders.reduce((sum, t) => sum + t.amountPesewas, 0), {
         ...(shot.witnesses === undefined ? {} : { witnesses: shot.witnesses }),
       });
+      if (shot.pins === true) installTillPins(api);
       if (shot.refuseDrop === true) {
         api.refuse('recordCashMovement', 422, 'CASH_MOVEMENT_INVALID', 'Not recorded.');
       }
@@ -923,7 +954,7 @@ for (const shot of SHIFT_SHOTS) {
       }
       await shot.act(page);
       await page.screenshot({
-        path: `../docs/screenshots/F10j/${shot.name}-${width}.png`,
+        path: `../docs/screenshots/${shot.phase}/${shot.name}-${width}.png`,
         fullPage: true,
         scale: 'css',
       });
@@ -956,8 +987,8 @@ const EGG_SHOTS: Shot[] = [
       await page.getByRole('combobox', { name: /^Product 1/ }).fill('Eggs');
       await page.getByRole('option', { name: 'Eggs, big (EGG-0003)' }).click();
       await page.getByRole('combobox', { name: 'Counted in, line 1' }).click();
-      await page.getByRole('option', { name: 'Crate (30 Unit)' }).click();
-      await page.getByLabel(/^Ordered, in Crate, line 1/).fill('20');
+      await page.getByRole('option', { name: 'Crate (30 eggs)' }).click();
+      await page.getByLabel(/^Ordered, in crates, line 1/).fill('20');
     },
   },
   {
@@ -972,7 +1003,7 @@ const EGG_SHOTS: Shot[] = [
   {
     name: 'goods-receipt-from-order',
     path: `/goods-receipts/new?purchaseOrder=${ORDER_ID}`,
-    ready: 'ordered in Crate',
+    ready: 'ordered in crates',
     prepare: (api) => {
       seedEggs(api);
       api.rewrite('getPurchaseOrder', (body) =>
@@ -980,8 +1011,8 @@ const EGG_SHOTS: Shot[] = [
       );
     },
     act: async (page) => {
-      await page.getByLabel(/^Accepted, in Crate, line 1/).fill('18');
-      await page.getByLabel(/^Rejected at the door, in Crate, line 1/).fill('2');
+      await page.getByLabel(/^Accepted, in crates, line 1/).fill('18');
+      await page.getByLabel(/^Rejected at the door, in crates, line 1/).fill('2');
       await page.getByRole('combobox', { name: /^Why it was rejected, line 1/ }).click();
       await page.getByRole('option', { name: 'Cracked on arrival' }).click();
       await page.getByLabel(/^Cost of the accepted quantity, GHS, line 1/).fill('855.00');
@@ -1010,13 +1041,13 @@ const EGG_SHOTS: Shot[] = [
   {
     name: 'price-list-egg-prices',
     path: `/price-list-versions/${EGG_DRAFT}`,
-    ready: 'from 10 Crate',
+    ready: 'from 10 crates',
     prepare: eggPrices,
   },
   {
     name: 'price-list-add-price',
     path: `/price-list-versions/${EGG_DRAFT}`,
-    ready: 'from 10 Crate',
+    ready: 'from 10 crates',
     prepare: eggPrices,
     act: async (page) => {
       await page.getByRole('button', { name: 'Add a price' }).click();
@@ -1025,7 +1056,7 @@ const EGG_SHOTS: Shot[] = [
       await page.getByRole('option', { name: 'Eggs, big (EGG-0003)' }).click();
       await dialog.getByRole('combobox', { name: 'Sold by' }).click();
       await page.getByRole('option', { name: 'Crate' }).click();
-      await dialog.getByLabel('From how many, in Crate').fill('50');
+      await dialog.getByLabel('From how many, in crates').fill('50');
     },
   },
   {
@@ -1085,14 +1116,14 @@ const EGG_TILL_SHOTS: { name: string; act: (page: Page) => Promise<void> }[] = [
   {
     name: 'till-crate-and-eggs',
     act: async (page) => {
-      for (const unit of [/^By the crate/, /^By the unit/]) {
+      for (const unit of [/^By the crate/, /^By the egg/]) {
         await page.getByRole('button', { name: 'Eggs, big', exact: true }).click();
         await page
           .getByRole('dialog', { name: 'Sell Eggs, big by which unit?' })
           .getByRole('button', { name: unit })
           .click();
       }
-      await page.getByRole('button', { name: 'Change Eggs, big, by the unit' }).click();
+      await page.getByRole('button', { name: 'Change Eggs, big, by the egg' }).click();
       const line = page.getByRole('dialog', { name: 'Change Eggs, big' });
       await line.getByRole('textbox', { name: /^Quantity/ }).fill('6');
       await line.getByRole('button', { name: 'Save the item' }).click();
@@ -1148,8 +1179,8 @@ const PAYABLE_SHOTS: Shot[] = [
       await page.getByRole('combobox', { name: /^Goods receipt/ }).click();
       await page.getByRole('option', { name: 'GRN-2026-DDW-000081' }).click();
       await page.getByLabel(/^Supplier's invoice number/).fill('AWT-0471');
-      await page.getByLabel(/^Invoiced, in Crate, line 1/).fill('21');
-      await page.getByLabel(/^Price per Crate, GHS, line 1/).fill('48.00');
+      await page.getByLabel(/^Invoiced, in crates, line 1/).fill('21');
+      await page.getByLabel(/^Price per crate, GHS, line 1/).fill('48.00');
     },
   },
   {
@@ -1305,7 +1336,7 @@ const WHOLESALE_SHOTS: Shot[] = [
       const line2 = page.getByRole('heading', { name: 'Line 2' }).locator('..').locator('..');
       await line2.getByRole('combobox', { name: /^Product/ }).fill('Eggs');
       await page.getByRole('option', { name: /^Eggs, big/ }).click();
-      await line2.getByLabel(/^How many, in unit/).fill('30');
+      await line2.getByLabel(/^How many, in eggs/).fill('30');
       await page.getByRole('button', { name: "Get the API's prices" }).click();
       await expect(line2.getByTestId('api-price')).toContainText('2.20');
     },

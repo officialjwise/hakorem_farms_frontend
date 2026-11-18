@@ -84,7 +84,10 @@ export function lineProblems(
     const found: string[] = [];
     if (line.product === null) found.push('product');
     if (toQuantity(line.qty) === null) found.push('qty');
-    if (kind === 'receipt' && line.valuePesewas === null) found.push('value');
+    // CR-040 (2.9.0): a line against an order line may leave its value to the server, from the order.
+    if (kind === 'receipt' && line.valuePesewas === null && line.purchaseOrderLineId === null) {
+      found.push('value');
+    }
     if (kind === 'receipt' && line.rejected.trim() !== '' && toQuantity(line.rejected) === null) {
       found.push('rejected');
     }
@@ -99,8 +102,9 @@ export function lineProblems(
 }
 
 /**
- * A line as `GoodsReceiptLineInput` takes it: the unit only when it is not the base unit, and the
- * rejection with its reason only when something was turned away.
+ * A line as `GoodsReceiptLineInput` takes it: the unit only when it is not the base unit, the rejection
+ * with its reason only when something was turned away, and the value unless a line against an order line
+ * leaves it to the server (CR-040, 2.9.0), which values it at the order's price and says so in its answer.
  */
 export function receiptLineInput(line: DraftLine) {
   const rejected = rejectsSome(line) ? toQuantity(line.rejected) : null;
@@ -117,7 +121,9 @@ export function receiptLineInput(line: DraftLine) {
           rejectionReasonCode: line.rejectionReasonCode,
           ...(note === '' ? {} : { rejectionNote: note }),
         }),
-    valuePesewas: line.valuePesewas ?? 0,
+    ...(line.valuePesewas === null && line.purchaseOrderLineId !== null
+      ? {}
+      : { valuePesewas: line.valuePesewas ?? 0 }),
   };
 }
 
@@ -158,7 +164,7 @@ function UnitField({
               : t('lines.unitOf', {
                   unit: names.name(unit.code),
                   factor: unit.factor.replace(/\.?0+$/, ''),
-                  base: names.name(base),
+                  base: names.after(base, unit.factor),
                 }),
         }))}
       />
@@ -248,8 +254,12 @@ export function LinesEditor({
           const number = index + 1;
           const wrong = problems[line.key] ?? [];
           const places = line.product === null ? 3 : units.places(lineUom(line));
-          const unit = line.product === null ? '' : units.name(lineUom(line));
+          const unit = line.product === null ? '' : units.many(lineUom(line));
+          const perUnit = line.product === null ? '' : units.one(lineUom(line));
           const fromOrder = line.purchaseOrderLineId !== null;
+          // CR-040 (2.9.0): a line against an order line may leave its value to the server.
+          const valueRequired: { required?: false } | { required: true; requiredLabel: string } =
+            fromOrder ? {} : { required: true, requiredLabel: required };
           const reason = rejectionReasons.find((r) => r.code === line.rejectionReasonCode);
           return (
             <li key={line.key} className="grid gap-2 rounded-md border border-border p-3">
@@ -315,7 +325,7 @@ export function LinesEditor({
                   label={
                     unit === ''
                       ? t('lines.price', { number })
-                      : t('lines.priceIn', { number, unit })
+                      : t('lines.priceIn', { number, unit: perUnit })
                   }
                   hint={t('lines.priceHint')}
                 >
@@ -389,9 +399,8 @@ export function LinesEditor({
               {kind === 'receipt' ? (
                 <Field
                   label={t('lines.value', { number })}
-                  hint={t('lines.valueHint')}
-                  required
-                  requiredLabel={required}
+                  hint={fromOrder ? t('lines.valueFromOrderHint') : t('lines.valueHint')}
+                  {...valueRequired}
                   error={wrong.includes('value') ? required : undefined}
                 >
                   <MoneyInput
@@ -445,7 +454,7 @@ export function LinesSummary({ kind, lines }: { kind: LineKind; lines: DraftLine
             ) : (
               <QuantityDisplay
                 quantity={quantity}
-                unit={units.name(uom)}
+                unit={units.after(uom, quantity)}
                 places={units.places(uom)}
               />
             )}
@@ -455,7 +464,7 @@ export function LinesSummary({ kind, lines }: { kind: LineKind; lines: DraftLine
                 {t('lines.rejectedSummary')}{' '}
                 <QuantityDisplay
                   quantity={rejected}
-                  unit={units.name(uom)}
+                  unit={units.after(uom, rejected)}
                   places={units.places(uom)}
                 />
               </>

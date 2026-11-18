@@ -37,13 +37,12 @@ import {
   TableRow,
   TableRowHeader,
   type QueryLike,
-  type QuantityPlaces,
   Alert,
   formatQuantity,
 } from '@hakorem/ui';
 import { PageHeader } from '../lib/ScreenHeader';
 import { ProductPicker, type ProductRef } from '../stock/LinesEditor';
-import { toQuantity, useLineUnits, useUnits } from '../stock/units';
+import { toQuantity, useLineUnits, useUnits, type UnitWords } from '../stock/units';
 import { useAuth } from '../auth/AuthProvider';
 import { When } from '../iam/presentation';
 import { PAGE_CAP_EXCEEDED, useApiAllPages, useApiMutation, useApiQuery } from '../data/api';
@@ -258,10 +257,10 @@ function ChangeBadge({ kind }: { kind: ChangeKind }) {
 export function entryWords(
   entry: PriceListEntry,
   t: (key: string, options?: Record<string, unknown>) => string,
-  units: { name: (code: string) => string; places: (code: string) => QuantityPlaces },
+  units: UnitWords,
 ): string[] {
   const qty = (value: string, code: string) =>
-    `${formatQuantity(value, { places: units.places(code) })} ${units.name(code)}`;
+    `${formatQuantity(value, { places: units.places(code) })} ${units.after(code, value)}`;
   return [
     entry.grade?.name,
     entry.weightBand === null
@@ -284,9 +283,9 @@ export function entryWords(
   ].filter((part): part is string => part !== undefined);
 }
 
-/** A selling unit as a word after "per": "crate", "unit". */
-function unitWord(code: string, units: { name: (code: string) => string }): string {
-  return units.name(code).toLowerCase();
+/** A selling unit as a word after "per": "crate", "egg" (2.9.0, the unit's `singularName`). */
+function unitWord(code: string, units: Pick<UnitWords, 'one'>): string {
+  return units.one(code);
 }
 
 /**
@@ -296,7 +295,7 @@ function unitWord(code: string, units: { name: (code: string) => string }): stri
 function basisWords(
   entry: PriceListEntry,
   t: (key: string, options?: Record<string, unknown>) => string,
-  units: { name: (code: string) => string },
+  units: Pick<UnitWords, 'one'>,
 ): string {
   return entry.basis === 'PER_KG' || entry.uom === 'UNIT' || entry.uom === 'HEAD'
     ? t(`basis.${entry.basis}`)
@@ -307,7 +306,7 @@ function basisWords(
 function entryName(
   entry: PriceListEntry,
   t: (key: string, options?: Record<string, unknown>) => string,
-  units: { name: (code: string) => string; places: (code: string) => QuantityPlaces },
+  units: UnitWords,
 ): string {
   return [entry.product.name, ...entryWords(entry, t, units)].join(', ');
 }
@@ -721,7 +720,8 @@ function AddEntryDialog({
       <MoneyInput value={value} onValueChange={set} />
     </Field>
   );
-  const per = unit === '' ? '' : names.name(unit);
+  const per = unit === '' ? '' : names.one(unit);
+  const counted = unit === '' ? '' : names.many(unit);
   return (
     <Dialog
       open
@@ -770,8 +770,8 @@ function AddEntryDialog({
         {money(t('entry.fields.floorIn', { unit: per }), floor, setFloor)}
         {money(t('entry.fields.ceilingIn', { unit: per }), ceiling, setCeiling)}
         <Field
-          label={t('entry.fields.minQtyIn', { unit: per })}
-          hint={t('entry.minQtyHint', { unit: per })}
+          label={t('entry.fields.minQtyIn', { unit: counted })}
+          hint={t('entry.minQtyHint', { unit: counted })}
           error={
             checked && breakQty === null
               ? t('stock:lines.qtyInvalid', { count: names.places(unit) })

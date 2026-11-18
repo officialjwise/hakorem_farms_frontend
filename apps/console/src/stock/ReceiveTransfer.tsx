@@ -107,7 +107,11 @@ export function ReceiveTransfer({ transfer }: { transfer: Transfer }) {
       [lineId]: { ...(now[lineId] ?? { received: '', reason: '' }), ...change },
     }));
   const amount = (value: string, line: Line) => (
-    <QuantityDisplay quantity={value} unit={units.name(line.uom)} places={units.places(line.uom)} />
+    <QuantityDisplay
+      quantity={value}
+      unit={units.after(line.uom, value)}
+      places={units.places(line.uom)}
+    />
   );
 
   if (outcome !== null) {
@@ -173,7 +177,7 @@ export function ReceiveTransfer({ transfer }: { transfer: Transfer }) {
                     name: line.product.name,
                     tag: line.stockUnit?.identifier ?? '',
                   })
-                : t('receive.received', { name: line.product.name, unit: units.name(line.uom) });
+                : t('receive.received', { name: line.product.name, unit: units.many(line.uom) });
               return (
                 <li key={line.id} className="grid gap-2 rounded-md border border-border p-3">
                   <p className="flex flex-wrap items-center gap-2">
@@ -233,7 +237,7 @@ export function ReceiveTransfer({ transfer }: { transfer: Transfer }) {
                             gap: formatQuantity(gapBetween(sent, state.quantity), {
                               places: units.places(line.uom),
                             }),
-                            unit: units.name(line.uom),
+                            unit: units.after(line.uom, gapBetween(sent, state.quantity)),
                           })
                         : t('receive.gapMore', {
                             gap: formatQuantity(
@@ -243,7 +247,13 @@ export function ReceiveTransfer({ transfer }: { transfer: Transfer }) {
                               ),
                               { places: units.places(line.uom) },
                             ),
-                            unit: units.name(line.uom),
+                            unit: units.after(
+                              line.uom,
+                              gapBetween(
+                                sent,
+                                toQuantity(arrivals[line.id]?.received ?? '') ?? sent,
+                              ),
+                            ),
                           })}
                     </p>
                   ) : null}

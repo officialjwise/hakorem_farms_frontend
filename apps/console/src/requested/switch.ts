@@ -16,7 +16,6 @@ export const CONTRACT_REQUESTS = [
   'CR-032',
   'CR-033',
   'CR-038',
-  'CR-042',
   'CR-045',
   'CR-046',
   'CR-050',

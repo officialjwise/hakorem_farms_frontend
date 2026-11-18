@@ -31,7 +31,7 @@ export function asSeededEggs<T extends { id: string; baseUom: string; name: stri
   product: T,
 ): T {
   return product.id === EGGS_ID
-    ? { ...product, name: EGGS_REF.name, baseUom: 'UNIT', saleUom: 'CRATE' }
+    ? { ...product, name: EGGS_REF.name, baseUom: 'EGG', saleUom: 'CRATE' }
     : product;
 }
 
@@ -48,7 +48,14 @@ export function seedEggs(api: FakeApi): void {
     const page = body as { data: S['Product'][] };
     return { ...page, data: page.data.map(asSeededEggs) };
   });
-  api.rewrite('getProduct', (body) => asSeededEggs(body as S['Product']));
+  // Prism answers every product id with the same example: the eggs' own id gets the eggs.
+  api.rewrite('getProduct', (body, path) =>
+    asSeededEggs(
+      path.endsWith(`/${EGGS_ID}`)
+        ? { ...(body as S['Product']), id: EGGS_ID }
+        : (body as S['Product']),
+    ),
+  );
   // A crate of 30 eggs, the conversion the seed holds (2.1.0: "a conversion of 30").
   api.rewrite('listUomConversions', (body) => {
     const page = body as { data: S['UomConversion'][] };
@@ -63,7 +70,7 @@ export function seedEggs(api: FakeApi): void {
           id: '019a7f10-4c55-7a10-9e21-3b4c5d6e7f80',
           product: EGGS_REF,
           fromUom: 'CRATE',
-          toUom: 'UNIT',
+          toUom: 'EGG',
           numerator: 30,
           denominator: 1,
           factor: '30.000',
@@ -99,7 +106,7 @@ export function eggOrder(base: S['PurchaseOrder'], status: S['PurchaseOrder']['s
         product: EGGS_REF,
         qtyOrdered: '20.000',
         uom: 'CRATE',
-        baseUom: 'UNIT',
+        baseUom: 'EGG',
         qtyOrderedBase: '600.000',
         qtyReceived: '0.000',
         qtyInvoiced: '0.000',
@@ -148,7 +155,7 @@ export function eggEntries(base: S['PriceListEntry']): S['PriceListEntry'][] {
     {
       ...egg,
       id: '019a7aa6-4c55-7c20-8a31-0b2c3d4e5f63',
-      uom: 'UNIT',
+      uom: 'EGG',
       minQty: '0.000',
       minQtyBase: '0.000',
       listPricePesewas: 220,
@@ -178,7 +185,7 @@ export function eggsByTheEgg(products: Record<string, unknown>[]): Record<string
           quoteOnly: false,
         },
         {
-          uom: 'UNIT',
+          uom: 'EGG',
           priceListEntryId: '019a7aa6-4c55-7c20-8a31-0b2c3d4e5f63',
           priceBand: {
             listPricePesewas: 220,
@@ -210,7 +217,7 @@ export function eggReceipt(receipt: S['GoodsReceipt']): S['GoodsReceipt'] {
         product: EGGS_REF,
         purchaseOrderLineId: ORDER_LINE_ID,
         uom: 'CRATE',
-        baseUom: 'UNIT',
+        baseUom: 'EGG',
         qtyReceived: '18.000',
         qtyRejected: '2.000',
         qtyReceivedBase: '540.000',

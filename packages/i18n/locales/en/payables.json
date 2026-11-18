@@ -183,10 +183,12 @@
     "mismatchBody": "It cannot be paid until it matches. Correct the invoice with the supplier, receive the rest of the goods, or, for a price or levy only, ask to pay it as invoiced.",
     "lineLabel": "Line {{n}}",
     "lineTitle": "Line {{n}}, {{product}}",
-    "qtyOver": "more than was received.",
-    "qtyUnder": "less than was received.",
-    "priceOver": "over the order's price on this line.",
-    "priceUnder": "under the order's price on this line."
+    "qtyOver": "more than is left to invoice of what was received.",
+    "qtyUnder": "less than is left to invoice of what was received.",
+    "priceOver": "per {{unit}} over the order's price;",
+    "priceUnder": "per {{unit}} under the order's price;",
+    "priceLineOver": "over on this line.",
+    "priceLineUnder": "under on this line."
   },
   "actions": {
     "working": "Sending",
@@ -209,7 +211,9 @@
     "cancel": "Cancel the invoice",
     "cancelTitle": "Cancel {{name}}?",
     "cancelBody": "Only an invoice entered in error is cancelled. Its number may be entered again.",
-    "waitingTitle": "A request waits for approval"
+    "waitingTitle": "A request waits for approval",
+    "yoursTitle": "Someone else approves this invoice",
+    "yoursBody": "You entered it, so another person with the right to approve invoices approves it for payment."
   },
   "outcome": {
     "approved": "{{name}} is approved for payment",
@@ -372,8 +376,6 @@
     "paid": "Paid",
     "inPayment": "In payment, not yet paid",
     "awaitingApproval": "Entered, not yet approved",
-    "asOf": "Worked out by the server",
-    "waits": "The balance waits for the server",
-    "waitsBody": "The server does not give a supplier's balance yet. Each invoice, claim and payment below shows its own amounts."
+    "asOf": "Worked out by the server"
   }
 }

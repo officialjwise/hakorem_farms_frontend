@@ -47,10 +47,19 @@ export function asPlaces(decimals: number | undefined): QuantityPlaces {
   return decimals === 0 || decimals === 1 || decimals === 2 ? decimals : 3;
 }
 
+/** Whether a quantity is exactly one ("1", "1.000"), which takes a unit's singular name. */
+export function isExactlyOne(quantity: string): boolean {
+  return /^0*1(\.0*)?$/.test(quantity.trim());
+}
+
 /**
- * Display precision and name per unit code, from the unit list. The precision is the unit's own
+ * Display precision and names per unit code, from the unit list. The precision is the unit's own
  * `displayDecimals` (CR-003, contract 1.7.0); a stock line that carries `uomDisplayDecimals` uses that
  * instead. An unknown code shows three places, so a stray fraction is never hidden.
+ *
+ * - `name` is the unit's title, for a heading or a column ("Egg", "Crate").
+ * - `after` is the name a sentence puts after a quantity (2.9.0, `singularName` and `pluralName`): "1 egg",
+ *   "540 eggs", "from 10 crates". Anything but exactly one takes the plural. An unknown code shows itself.
  */
 export function useUnits() {
   // Seeded and short (ADR 0028): `reference`.
@@ -63,8 +72,20 @@ export function useUnits() {
   return {
     places: (code: string): QuantityPlaces => asPlaces(byCode.get(code)?.displayDecimals),
     name: (code: string): string => byCode.get(code)?.name ?? code,
+    /** For one of it, after "per" or "a": "per crate". */
+    one: (code: string): string => byCode.get(code)?.singularName ?? code,
+    /** For more than one, with no number: "in crates". */
+    many: (code: string): string => byCode.get(code)?.pluralName ?? code,
+    after: (code: string, quantity: string): string => {
+      const unit = byCode.get(code);
+      if (unit === undefined) return code;
+      return isExactlyOne(quantity) ? unit.singularName : unit.pluralName;
+    },
   };
 }
+
+/** The unit words a sentence needs: its precision, its name for one, and its name after a quantity. */
+export type UnitWords = Pick<ReturnType<typeof useUnits>, 'places' | 'one' | 'after'>;
 
 /** One unit a line can be counted in: the product's base unit, or a unit it converts from. */
 export interface LineUnit {

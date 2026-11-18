@@ -128,7 +128,7 @@ function ClaimView({ claim, reasonName }: { claim: Claim; reasonName: (code: str
             {line.product.name}, {reasonName(line.rejectionReasonCode)}:{' '}
             <QuantityDisplay
               quantity={line.qtyRejectedBase}
-              unit={units.name(line.baseUom)}
+              unit={units.after(line.baseUom, line.qtyRejectedBase)}
               places={units.places(line.baseUom)}
             />
             , <MoneyDisplay pesewas={line.claimedValuePesewas} />
@@ -196,7 +196,7 @@ function RaiseClaim({
               {line.product.name}, {reasonName(line.rejectionReasonCode ?? '')}:{' '}
               <QuantityDisplay
                 quantity={line.qtyRejected}
-                unit={units.name(line.uom)}
+                unit={units.after(line.uom, line.qtyRejected)}
                 places={units.places(line.uom)}
               />
             </li>

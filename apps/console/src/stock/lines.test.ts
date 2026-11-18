@@ -5,7 +5,7 @@ const EGGS = {
   id: '019a7a8d-ae28-7631-8b69-6be302d5e4c0',
   sku: 'EGG-0003',
   name: 'Eggs, big',
-  baseUom: 'UNIT',
+  baseUom: 'EGG',
 };
 const REASONS = [
   { code: 'CRACKED', requiresNote: false },
@@ -47,6 +47,19 @@ describe('a goods receipt line in crates (2.2.0) with goods rejected at the door
       qtyReceived: '300.000',
       valuePesewas: 1,
     });
+  });
+
+  it('leaves the value of a line against an order line to the server, and asks for it otherwise (CR-040)', () => {
+    const fromOrder = emptyLine({
+      product: EGGS,
+      uom: 'CRATE',
+      qty: '18',
+      purchaseOrderLineId: '019a7ab5-0c1e-7d3a-9b2f-4e6a8c1d2f30',
+    });
+    const byHand = emptyLine({ product: EGGS, qty: '300' });
+    expect(lineProblems([fromOrder, byHand], 'receipt')).toEqual({ [byHand.key]: ['value'] });
+    expect(receiptLineInput(fromOrder)).not.toHaveProperty('valuePesewas');
+    expect(receiptLineInput({ ...fromOrder, valuePesewas: 0 })).toMatchObject({ valuePesewas: 0 });
   });
 
   it('asks for the reason, and for a note when the reason needs one', () => {

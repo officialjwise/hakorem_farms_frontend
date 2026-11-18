@@ -83,8 +83,8 @@ test.describe('entering a supplier invoice and the three-way match', () => {
     await expect(line).toContainText('540');
     await expect(line).toContainText('Turned away');
     // What the supplier's paper says: 21 crates at GH₵48.00.
-    await page.getByLabel(/^Invoiced, in Crate, line 1/).fill('21');
-    await page.getByLabel(/^Price per Crate, GHS, line 1/).fill('48.00');
+    await page.getByLabel(/^Invoiced, in crates, line 1/).fill('21');
+    await page.getByLabel(/^Price per crate, GHS, line 1/).fill('48.00');
     await page.getByRole('combobox', { name: /^Tax category, line 1/ }).click();
     await page.getByRole('option', { name: FARM_INPUTS.name }).click();
     await expectNoHorizontalScroll(page);
@@ -124,11 +124,15 @@ test.describe('entering a supplier invoice and the three-way match', () => {
     await expect(result).toBeVisible();
     const disagreement = result.getByRole('region', { name: 'Line 1' });
     await expect(disagreement).toContainText('It charges for more than was received.');
-    await expect(disagreement).toContainText('1 Crate more than was received.');
+    await expect(disagreement).toContainText(
+      '30 eggs more than is left to invoice of what was received.',
+    );
     await expect(disagreement).toContainText(
       "Its price is more than 1 percent away from the order's price.",
     );
-    await expect(disagreement).toContainText("GH₵10.50 over the order's price on this line.");
+    await expect(disagreement).toContainText(
+      "GH₵0.50 per crate over the order's price; GH₵10.50 over on this line.",
+    );
     // Goods not received cannot be paid on a variance, and a mismatch cannot be approved.
     await expect(page.getByRole('button', { name: 'Ask to pay it as invoiced' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Approve for payment' })).toHaveCount(0);
@@ -374,7 +378,7 @@ test.describe('settling the claim for the cracked crates', () => {
     // Each rejected line with the value the server put on it: 60 eggs, a tenth of the delivery.
     const lines = page.getByRole('region', { name: 'What was turned away' });
     await expect(lines).toContainText('60');
-    await expect(lines).toContainText('per Crate');
+    await expect(lines).toContainText('per crate');
     await expect(lines).toContainText('95.00');
     await expectNoHorizontalScroll(page);
     await expectNoAxeViolations(page);

@@ -174,7 +174,7 @@ export function OrderScreen() {
                     <TableCell numeric label={t('columns.qty')}>
                       <QuantityDisplay
                         quantity={line.qtyOrdered}
-                        unit={units.name(line.uom)}
+                        unit={units.after(line.uom, line.qtyOrdered)}
                         places={units.places(line.uom)}
                       />
                     </TableCell>

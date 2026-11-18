@@ -26,33 +26,25 @@ import {
   type PinApprovalRecord,
   type ShiftRecord,
 } from '../offline/types';
-import { approvers } from '../pin/pin';
 import { PinApprovalField } from '../pin/PinCheck';
 import { MOVEMENT_KINDS, reasonsFor, type MovementKind } from './reasons';
-
-/** Who witnesses a drop, by the owner's rule (2026-11-17) and what this till can know. */
-type WitnessSource =
-  /** Online with CR-050: the supervisors signed in at the branch, from the server. */
-  | 'signed-in'
-  /** A supervisor's PIN on this till (CR-032), offline or where the till cannot see who is signed in. */
-  | 'pin'
-  /** Nobody the till can name: the drop goes ahead marked unwitnessed. */
-  | 'offline'
-  | 'cannot-see';
-
-/** A named witness: chosen from those signed in, or proved by a PIN on this till. */
-interface Witness {
-  id: string;
-  name: string;
-  pin: PinApprovalRecord | null;
-}
+import {
+  asksForPin,
+  mayRecord,
+  serverDecides,
+  witnessApprovers,
+  witnessRule,
+  type WitnessRule,
+} from './witness';
 
 /**
  * A cash drop, pay-out or pay-in on the cashier's own open shift (2.5.0, FR-POS-016). Every kind takes a
- * reason from those that fit it (`reasons.ts`). A drop's witness is a supervisor signed in at the branch
- * when one is; when none is, the drop goes ahead and says plainly that it is unwitnessed (owner,
- * 2026-11-17). It is made on the till and sent at once (`recordCashMovement`), so it is kept offline too;
- * what the server said stays on screen until the next one.
+ * reason from those that fit it (`reasons.ts`). A drop's witness is the supervisor who takes the cash,
+ * entering their PIN on this till, checked here by the till PIN's rules; naming a supervisor is not a
+ * witness. When no supervisor is signed in at the branch, the drop goes ahead and says plainly that it is
+ * unwitnessed (owner, 2026-11-18; `witness.ts`). It is made on the till and sent at once
+ * (`recordCashMovement`), so it is kept offline too; what the server said stays on screen until the next
+ * one.
  */
 export function CashMovementForm({
   shift,
@@ -69,7 +61,6 @@ export function CashMovementForm({
   const [amount, setAmount] = useState<number | null>(null);
   const [chosenReason, setReason] = useState('');
   const [note, setNote] = useState('');
-  const [chosenWitness, setChosenWitness] = useState('');
   const [pinWitness, setPinWitness] = useState<PinApprovalRecord | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [tried, setTried] = useState(false);
@@ -93,30 +84,18 @@ export function CashMovementForm({
   const isDrop = kind === 'CASH_DROP';
   const localAuth = requestedOn('CR-032') ? (snapshot?.localAuth ?? null) : null;
   const pinApprovers =
-    localAuth === null ? [] : approvers(localAuth.verifiers, 'CASH_DROP_WITNESS');
-  const source: WitnessSource =
-    online && shift.confirmed && shiftWitnessesOn()
-      ? 'signed-in'
-      : pinApprovers.length > 0
-        ? 'pin'
-        : online
-          ? 'cannot-see'
-          : 'offline';
-  const signedIn = useShiftWitnesses(shift.id, isDrop && source === 'signed-in');
-  const supervisors = signedIn.data?.data ?? [];
-  const supervisor = supervisors.find((person) => person.id === chosenWitness);
-  const named: Witness | null = !isDrop
-    ? null
-    : source === 'pin' && pinWitness !== null
-      ? { id: pinWitness.principalId, name: pinWitness.displayName, pin: pinWitness }
-      : source === 'signed-in' && supervisor !== undefined
-        ? { id: supervisor.id, name: supervisor.displayName, pin: null }
-        : null;
-  // A witness must be named whenever the till can see one; otherwise the drop is unwitnessed.
-  const witnessNeeded =
-    isDrop && (source === 'pin' || (source === 'signed-in' && supervisors.length > 0));
-  const witnessUnknown = isDrop && source === 'signed-in' && signedIn.data === undefined;
-  const unwitnessed = isDrop && !witnessNeeded && !witnessUnknown;
+    localAuth === null ? [] : witnessApprovers(localAuth.verifiers, shift.cashierId);
+  const canAsk = online && shift.confirmed && shiftWitnessesOn();
+  const signedIn = useShiftWitnesses(shift.id, isDrop && canAsk);
+  const rule = witnessRule({
+    online,
+    canAsk,
+    signedIn: signedIn.isError ? 'failed' : signedIn.data?.data,
+    approvers: pinApprovers,
+  });
+  // The only witness is a PIN checked on this till, and only where the rule asks for one.
+  const witness = isDrop && asksForPin(rule) ? pinWitness : null;
+  const unwitnessed = isDrop && witness === null;
 
   const kindLabel = t(`pos:queue.cash.${kind}`);
   const ready =
@@ -124,8 +103,7 @@ export function CashMovementForm({
     amount > 0 &&
     reason !== '' &&
     (!needsNote || note.trim() !== '') &&
-    (!witnessNeeded || named !== null) &&
-    !witnessUnknown;
+    (!isDrop || mayRecord(rule, witness !== null));
 
   const sent = sentId === null ? null : (snapshot?.entries.find((e) => e.id === sentId) ?? null);
 
@@ -178,18 +156,15 @@ export function CashMovementForm({
       </Field>
       {isDrop ? (
         <WitnessPart
-          source={source}
-          query={signedIn}
-          supervisors={supervisors}
-          chosen={chosenWitness}
-          onChoose={setChosenWitness}
+          rule={rule}
+          onRetry={() => void signedIn.refetch()}
           pin={{
             approvers: pinApprovers,
             localAuth,
-            record: pinWitness,
+            record: witness,
             onApproved: setPinWitness,
           }}
-          error={tried && witnessNeeded && named === null}
+          error={tried && !mayRecord(rule, witness !== null)}
         />
       ) : null}
       <Button
@@ -223,15 +198,14 @@ export function CashMovementForm({
                 amountPesewas: amount,
                 reasonCode: reason,
                 ...(note.trim() !== '' ? { note: note.trim() } : {}),
-                ...(named !== null ? { witnessId: named.id } : {}),
+                ...(witness !== null ? { witnessId: witness.principalId } : {}),
               },
-              named?.pin ? [named.pin] : [],
+              witness !== null ? [witness] : [],
             )
             .then((entry) => {
               setSentId(entry.id);
               setConfirming(false);
               setPinWitness(null);
-              setChosenWitness('');
               setAmount(null);
               setReason('');
               setNote('');
@@ -244,8 +218,9 @@ export function CashMovementForm({
           <MoneyDisplay pesewas={amount ?? 0} />
         </p>
         <p>{reasons.find((r) => r.code === reason)?.description}</p>
-        {named !== null ? <p>{t('cash.witnessed', { name: named.name })}</p> : null}
+        {witness !== null ? <p>{t('cash.witnessed', { name: witness.displayName })}</p> : null}
         {unwitnessed ? <UnwitnessedBadge /> : null}
+        {unwitnessed && serverDecides(rule) ? <p>{t('cash.serverDecides')}</p> : null}
       </ConfirmDialog>
     </section>
   );
@@ -256,22 +231,21 @@ function UnwitnessedBadge() {
   return <StatusBadge tone="warning" icon={EyeOff} label={t('cash.unwitnessedShort')} />;
 }
 
+/** The names of the supervisors signed in at the branch, as the server gave them. */
+function names(people: { displayName: string }[]): string {
+  return people.map((person) => person.displayName).join(', ');
+}
+
 function WitnessPart({
-  source,
-  query,
-  supervisors,
-  chosen,
-  onChoose,
+  rule,
+  onRetry,
   pin,
   error,
 }: {
-  source: WitnessSource;
-  query: ReturnType<typeof useShiftWitnesses>;
-  supervisors: { id: string; displayName: string }[];
-  chosen: string;
-  onChoose: (id: string) => void;
+  rule: WitnessRule;
+  onRetry: () => void;
   pin: {
-    approvers: ReturnType<typeof approvers>;
+    approvers: ReturnType<typeof witnessApprovers>;
     localAuth: LocalAuth | null;
     record: PinApprovalRecord | null;
     onApproved: (record: PinApprovalRecord) => void;
@@ -279,70 +253,78 @@ function WitnessPart({
   error: boolean;
 }) {
   const { t } = useTranslation('posShift');
-  if (source === 'pin' && pin.localAuth !== null) {
-    return pin.record !== null ? (
-      <p className="flex items-center gap-2" data-slot="cash-witness">
-        <KeyRound aria-hidden="true" className="size-icon-md" />
-        {t('cash.witnessed', { name: pin.record.displayName })}
-      </p>
-    ) : (
-      <div className="grid gap-2">
-        <p className="text-sm text-fg-muted">{t('cash.witnessHint')}</p>
-        <PinApprovalField
-          approval="CASH_DROP_WITNESS"
-          approvers={pin.approvers}
-          policy={pin.localAuth.policy}
-          label={t('cash.witness')}
-          onApproved={pin.onApproved}
-        />
-        {error ? <p className="text-sm text-critical-fg">{t('cash.witnessError')}</p> : null}
-      </div>
-    );
-  }
-  if (source === 'signed-in') {
-    if (query.isError) {
+  switch (rule.kind) {
+    case 'checking':
+      return <Skeleton label={t('cash.witnessesLoading')} shape="line" />;
+    case 'read-failed':
       return (
         <Alert
           severity="critical"
           title={t('cash.witnessesFailed')}
           actions={
-            <Button variant="secondary" onClick={() => void query.refetch()}>
+            <Button variant="secondary" onClick={onRetry}>
               <RotateCw aria-hidden="true" />
               {t('cash.witnessesRetry')}
             </Button>
           }
         />
       );
-    }
-    if (query.data === undefined) {
-      return <Skeleton label={t('cash.witnessesLoading')} shape="line" />;
-    }
-    if (supervisors.length > 0) {
+    case 'no-pin-here':
       return (
-        <Field
-          label={t('cash.signedIn')}
-          hint={t('cash.signedInHint')}
-          error={error ? t('cash.signedInError') : undefined}
-        >
-          <Select
-            value={chosen}
-            onValueChange={onChoose}
-            placeholder={t('cash.signedInPlaceholder')}
-            options={supervisors.map((person) => ({ value: person.id, label: person.displayName }))}
+        <div data-slot="cash-witness-needed">
+          <Alert severity="critical" title={t('cash.noPinHere.title')}>
+            {t('cash.noPinHere.body', { names: names(rule.signedIn) })}
+          </Alert>
+        </div>
+      );
+    case 'none-signed-in':
+    case 'unwitnessed-unknown': {
+      const why =
+        rule.kind === 'none-signed-in'
+          ? 'noneSignedIn'
+          : rule.why === 'offline'
+            ? 'offline'
+            : 'cannotSee';
+      return (
+        <div data-slot="cash-unwitnessed">
+          <Alert severity="warning" title={t('cash.unwitnessed.title')}>
+            {t(`cash.unwitnessed.${why}`)}
+          </Alert>
+        </div>
+      );
+    }
+    case 'pin-required':
+    case 'pin-optional': {
+      if (pin.localAuth === null) return null;
+      if (pin.record !== null) {
+        return (
+          <p className="flex items-center gap-2" data-slot="cash-witness">
+            <KeyRound aria-hidden="true" className="size-icon-md" />
+            {t('cash.witnessed', { name: pin.record.displayName })}
+          </p>
+        );
+      }
+      const hint =
+        rule.kind === 'pin-required'
+          ? t('cash.witnessRequired', { names: names(rule.signedIn) })
+          : t(rule.why === 'offline' ? 'cash.witnessOptionalOffline' : 'cash.witnessOptional');
+      return (
+        <div className="grid gap-2">
+          <p className="text-sm text-fg-muted" data-slot="cash-witness-hint">
+            {hint}
+          </p>
+          <PinApprovalField
+            approval="CASH_DROP_WITNESS"
+            approvers={pin.approvers}
+            policy={pin.localAuth.policy}
+            label={t('cash.witness')}
+            onApproved={pin.onApproved}
           />
-        </Field>
+          {error ? <p className="text-sm text-critical-fg">{t('cash.witnessError')}</p> : null}
+        </div>
       );
     }
   }
-  const why =
-    source === 'signed-in' ? 'noneSignedIn' : source === 'offline' ? 'offline' : 'cannotSee';
-  return (
-    <div data-slot="cash-unwitnessed">
-      <Alert severity="warning" title={t('cash.unwitnessed.title')}>
-        {t(`cash.unwitnessed.${why}`)}
-      </Alert>
-    </div>
-  );
 }
 
 /** What became of the last movement recorded here, in words, until the next one. */

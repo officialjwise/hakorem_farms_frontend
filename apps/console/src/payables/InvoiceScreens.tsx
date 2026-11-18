@@ -380,7 +380,7 @@ export function SupplierInvoiceNewScreen() {
       .catch(() => undefined);
   };
   const qty = (value: string, uom: string) => (
-    <QuantityDisplay quantity={value} unit={units.name(uom)} places={units.places(uom)} />
+    <QuantityDisplay quantity={value} unit={units.after(uom, value)} places={units.places(uom)} />
   );
   return (
     <article aria-labelledby="invoice-new-title" className="grid gap-4">
@@ -516,7 +516,8 @@ export function SupplierInvoiceNewScreen() {
                       if (ordered === undefined) return null;
                       const typed = draftOf(line.id);
                       const n = index + 1;
-                      const unit = units.name(ordered.uom);
+                      const unit = units.one(ordered.uom);
+                      const inUnits = units.many(ordered.uom);
                       return (
                         <Card key={line.id}>
                           <CardBody className="grid gap-3">
@@ -557,7 +558,7 @@ export function SupplierInvoiceNewScreen() {
                             {typed.include ? (
                               <>
                                 <Field
-                                  label={t('enter.qty', { unit, n })}
+                                  label={t('enter.qty', { unit: inUnits, n })}
                                   required
                                   requiredLabel={required}
                                   error={
@@ -633,27 +634,39 @@ export function SupplierInvoiceNewScreen() {
 
 /**
  * One line's disagreement, in words, from the API's match: which rules it broke, how far its quantity is
- * from what was received, and how far its price is from the order's. Nothing here is worked out.
+ * from what is left to invoice, and how far its price is from the order's. Nothing here is worked out
+ * (CR-044, 2.9.0):
+ *
+ * - `qtyVariance` is in the product's base unit ("30 eggs more"), which the line does not name, so the
+ *   product is read for it;
+ * - `priceVariancePesewas` is per unit of the line's `uom` ("GH₵0.50 per crate"), and
+ *   `priceVarianceLinePesewas` the line's whole difference ("GH₵10.50 on this line").
  */
 function LineDisagreement({ line }: { line: InvoiceLine }) {
   const { t } = useTranslation('payables');
   const units = useUnits();
-  const unit = line.uom === null ? '' : units.name(line.uom);
-  const places = line.uom === null ? 3 : units.places(line.uom);
   const variance = line.qtyVariance;
   const over = variance !== null && !variance.startsWith('-') && variance !== '0.000';
   const under = variance !== null && variance.startsWith('-');
+  const product = useApiQuery(
+    'getProduct',
+    { path: { id: line.product?.id ?? '' } },
+    { enabled: (over || under) && line.product !== null },
+  );
+  const baseUom = product.data?.baseUom ?? null;
+  const priceUnder = line.priceVarianceDirection === 'UNDER';
   return (
     <ul className="grid list-disc gap-1 ps-5">
       {line.matchReasons.map((reason) => (
         <li key={reason}>{t(`reasons.${reason}`, { defaultValue: reason })}</li>
       ))}
-      {over || under ? (
+      {/* The variance is in the product's base unit, so it waits for the product: never another unit. */}
+      {(over || under) && baseUom !== null ? (
         <li>
           <QuantityDisplay
             quantity={under ? variance.slice(1) : variance}
-            unit={unit}
-            places={places}
+            unit={units.after(baseUom, under ? variance.slice(1) : variance)}
+            places={units.places(baseUom)}
           />{' '}
           {t(over ? 'match.qtyOver' : 'match.qtyUnder')}
         </li>
@@ -661,7 +674,16 @@ function LineDisagreement({ line }: { line: InvoiceLine }) {
       {line.priceVariancePesewas === null || line.priceVariancePesewas === 0 ? null : (
         <li>
           <MoneyDisplay pesewas={line.priceVariancePesewas} />{' '}
-          {t(line.priceVarianceDirection === 'UNDER' ? 'match.priceUnder' : 'match.priceOver')}
+          {t(priceUnder ? 'match.priceUnder' : 'match.priceOver', {
+            unit: line.uom === null ? '' : units.one(line.uom),
+          })}
+          {line.priceVarianceLinePesewas === null ? null : (
+            <>
+              {' '}
+              <MoneyDisplay pesewas={line.priceVarianceLinePesewas} />{' '}
+              {t(priceUnder ? 'match.priceLineUnder' : 'match.priceLineOver')}
+            </>
+          )}
         </li>
       )}
     </ul>
@@ -848,7 +870,7 @@ export function SupplierInvoiceScreen() {
                     <TableCell numeric label={t('columns.qty')}>
                       <QuantityDisplay
                         quantity={line.qty}
-                        unit={line.uom === null ? '' : units.name(line.uom)}
+                        unit={line.uom === null ? '' : units.after(line.uom, line.qty)}
                         places={line.uom === null ? 3 : units.places(line.uom)}
                       />
                     </TableCell>
@@ -859,7 +881,7 @@ export function SupplierInvoiceScreen() {
                         <>
                           {line.uom === null
                             ? null
-                            : `${t('enter.per', { unit: units.name(line.uom) })} `}
+                            : `${t('enter.per', { unit: units.one(line.uom) })} `}
                           <MoneyDisplay pesewas={line.unitPricePesewas} />
                         </>
                       )}
@@ -979,8 +1001,11 @@ function InvoiceActions({ invoice: i }: { invoice: Invoice }) {
     (i.status === 'DRAFT' || i.status === 'MISMATCH') &&
     !waiting &&
     auth.can('pur.supplier_invoice.match');
-  const canApprove =
+  // CR-043 (2.9.0): whoever entered an invoice never approves it for payment.
+  const mine = i.createdBy.id === auth.session?.principal.id;
+  const approvable =
     i.kind === 'INVOICE' && i.status === 'MATCHED' && auth.can('pur.supplier_invoice.approve');
+  const canApprove = approvable && !mine;
   const canVariance =
     i.kind === 'INVOICE' &&
     i.status === 'MISMATCH' &&
@@ -1015,6 +1040,11 @@ function InvoiceActions({ invoice: i }: { invoice: Invoice }) {
           >
             {t('outcome.openApproval')}
           </Link>
+        </Alert>
+      ) : null}
+      {approvable && mine && outcome === null ? (
+        <Alert severity="info" title={t('actions.yoursTitle')}>
+          {t('actions.yoursBody')}
         </Alert>
       ) : null}
       {/* A failed write stays on the page until the next attempt, not only in its dialog. */}

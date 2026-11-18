@@ -137,7 +137,7 @@ test('receiving a transfer shows how many fewer arrived while you type', async (
   const arrived = form.getByLabel(/^Goat meat, 15 kg pack: quantity that arrived/);
   await arrived.fill('29.750');
   // 30.150 kg sent (the contract example), 29.750 typed: the gap, exact to the gram, as input feedback.
-  await expect(form.getByText('0.400 Kilogram fewer than sent')).toBeVisible();
+  await expect(form.getByText('0.400 kilograms fewer than sent')).toBeVisible();
   await arrived.fill('31');
   await expect(form.getByText(/more than sent$/)).toBeVisible();
   await expectNoAxeViolations(page);

@@ -7,15 +7,17 @@ import {
   signInWithTotp,
   USERS,
 } from '../../support/helpers';
-import { PEOPLE } from '../../support/requested';
+import { PEOPLE, installTillPins } from '../../support/requested';
 import { expect, test } from '../../support/test';
 import { enrolTill, installTillServer, openTillShift, type SentSale } from '../../support/till';
 
 /**
- * F10j, the till's shift on contract 2.5.0 at 360 px: a cash drop witnessed by a supervisor signed in at the
- * branch, or plainly unwitnessed when none is (owner, 2026-11-17; CR-050 as requested); a pay-out's reason
- * and note; a refused drop and a refused open, each left on screen in words; and the whole close: blind
- * count, the API's over or short, and a supervisor's sign-off with a fresh step-up, then the Z report.
+ * The till's shift at 360 px (F10j, contract 2.5.0; the witness from F10k): a cash drop witnessed by the
+ * supervisor who takes the cash entering their PIN on the till, needed while a supervisor is signed in at
+ * the branch, or plainly unwitnessed when none is (owner, 2026-11-18; CR-050's read as requested); a
+ * pay-out's reason and note; a refused drop and a refused open, each left on screen in words; and the whole
+ * close: blind count, the API's over or short, and a supervisor's sign-off with a fresh step-up, then the Z
+ * report.
  */
 
 const serverTotal = (sale: SentSale) => sale.tenders.reduce((sum, t) => sum + t.amountPesewas, 0);
@@ -25,22 +27,41 @@ async function toShift(page: Page) {
   await expect(page.getByRole('heading', { name: 'Shift SH-2026-DDW-T1-0312' })).toBeVisible();
 }
 
-test('a cash drop names a supervisor signed in at the branch as its witness', async ({
+test("with a supervisor signed in, a drop's witness is that supervisor's PIN on the till", async ({
   page,
   api,
 }) => {
   const server = installTillServer(api, serverTotal);
+  installTillPins(api);
   await openTillShift(page);
   await toShift(page);
   await page.getByRole('textbox', { name: /^Amount/ }).fill('500');
+  await expect(page.locator('[data-slot="cash-witness-hint"]')).toHaveText(
+    `A supervisor is signed in at the branch (${PEOPLE.manager.name}), so the drop needs a witness: the supervisor who takes the cash enters their PIN on this till.`,
+  );
+  // Naming a supervisor is not a witness: there is no list to choose from, and no PIN, no drop.
+  await expect(page.getByRole('combobox', { name: /^Supervisor who takes the cash/ })).toHaveCount(
+    0,
+  );
   await page.getByRole('button', { name: 'Record it' }).click();
-  await expect(page.getByText('Choose the supervisor who takes the cash.')).toBeVisible();
-  await page.getByRole('combobox', { name: /^Supervisor who takes the cash/ }).click();
-  await page.getByRole('option', { name: PEOPLE.manager.name }).click();
+  await expect(
+    page.getByText('The supervisor who takes the cash enters their PIN first.'),
+  ).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  // A wrong PIN is not a witness either.
+  await page.getByLabel(/^PIN/).fill('111111');
+  await page.getByRole('button', { name: 'Approve with this PIN' }).click();
+  await expect(page.locator('[data-slot="cash-witness"]')).toHaveCount(0);
+  await page.getByLabel(/^PIN/).fill(PEOPLE.manager.pin);
+  await page.getByRole('button', { name: 'Approve with this PIN' }).click();
+  await expect(page.locator('[data-slot="cash-witness"]')).toHaveText(
+    `Witnessed by ${PEOPLE.manager.name}`,
+  );
   await page.getByRole('button', { name: 'Record it' }).click();
   const confirm = page.getByRole('dialog', { name: 'Record this Cash drop?' });
   await expect(confirm).toContainText(formatMoney(50000));
   await expect(confirm).toContainText(`Witnessed by ${PEOPLE.manager.name}`);
+  await expect(confirm).not.toContainText('Unwitnessed');
   const sent = page.waitForRequest(
     (r) => r.method() === 'POST' && r.url().endsWith('/cash-movements'),
   );
@@ -64,17 +85,43 @@ test('a cash drop names a supervisor signed in at the branch as its witness', as
   await expectNoHorizontalScroll(page);
 });
 
+test("with a supervisor signed in and no supervisor's PIN on the till, the drop is not recorded", async ({
+  page,
+  api,
+}) => {
+  const server = installTillServer(api, serverTotal);
+  await openTillShift(page);
+  await toShift(page);
+  await page.getByRole('textbox', { name: /^Amount/ }).fill('500');
+  const needed = page.locator('[data-slot="cash-witness-needed"]');
+  await expect(needed).toContainText('This drop needs a supervisor’s PIN');
+  await expect(needed).toContainText(
+    `A supervisor is signed in at the branch (${PEOPLE.manager.name})`,
+  );
+  await page.getByRole('button', { name: 'Record it' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  expect(server.movements).toHaveLength(0);
+  // A pay-out needs no witness, so the till still records one.
+  await page.getByRole('combobox', { name: /^What it is/ }).click();
+  await page.getByRole('option', { name: 'Pay-in' }).click();
+  await expect(needed).toHaveCount(0);
+  await expectNoAxeViolations(page);
+});
+
 test('with no supervisor signed in, the drop goes ahead and says plainly it is unwitnessed', async ({
   page,
   api,
 }) => {
   installTillServer(api, serverTotal, { witnesses: [] });
+  // The till holds the manager's PIN, and still asks for none: nobody is signed in to witness.
+  installTillPins(api);
   await openTillShift(page);
   await toShift(page);
   await page.getByRole('textbox', { name: /^Amount/ }).fill('300');
   const notice = page.locator('[data-slot="cash-unwitnessed"]');
   await expect(notice).toContainText('This drop is recorded unwitnessed');
   await expect(notice).toContainText('No supervisor is signed in at the branch.');
+  await expect(page.getByLabel(/^PIN/)).toHaveCount(0);
   await page.getByRole('button', { name: 'Record it' }).click();
   const confirm = page.getByRole('dialog', { name: 'Record this Cash drop?' });
   await expect(confirm).toContainText('Unwitnessed');
@@ -134,13 +181,11 @@ test('a drop the server refuses stays on screen in words, with its reference', a
   page,
   api,
 }) => {
-  installTillServer(api, serverTotal);
+  installTillServer(api, serverTotal, { witnesses: [] });
   api.refuse('recordCashMovement', 422, 'CASH_MOVEMENT_INVALID', 'Not recorded.');
   await openTillShift(page);
   await toShift(page);
   await page.getByRole('textbox', { name: /^Amount/ }).fill('500');
-  await page.getByRole('combobox', { name: /^Supervisor who takes the cash/ }).click();
-  await page.getByRole('option', { name: PEOPLE.manager.name }).click();
   await page.getByRole('button', { name: 'Record it' }).click();
   await page
     .getByRole('dialog', { name: 'Record this Cash drop?' })
@@ -219,4 +264,31 @@ test('the close: a blind count, the API’s short, then a supervisor signs it of
   ]);
   await expectNoAxeViolations(page);
   await expectNoHorizontalScroll(page);
+});
+
+test("online mobile money names the till's shift, so the charge counts on its reports (2.6.0)", async ({
+  page,
+  api,
+}) => {
+  installTillServer(api, serverTotal);
+  const opened = page.waitForRequest((r) => r.method() === 'POST' && r.url().endsWith('/shifts'));
+  await openTillShift(page);
+  const shiftId = ((await opened).postDataJSON() as { id: string }).id;
+  await page.getByRole('button', { name: 'Tomatoes, crate' }).click();
+  await page
+    .getByRole('region', { name: 'This sale' })
+    .getByRole('button', { name: 'Take payment' })
+    .click();
+  const pay = page.getByRole('dialog', { name: 'Take payment' });
+  await pay.getByRole('textbox', { name: /^Mobile money amount/ }).fill('200');
+  await pay.getByRole('textbox', { name: /^Customer's mobile money number/ }).fill('+233245550142');
+  const charge = page.waitForRequest(
+    (r) => r.method() === 'POST' && r.url().endsWith('/payments/mobile-money'),
+  );
+  await pay.getByRole('button', { name: 'Send the payment request' }).click();
+  expect((await charge).postDataJSON()).toMatchObject({
+    amountPesewas: 20000,
+    payerPhone: '+233245550142',
+    shiftId,
+  });
 });

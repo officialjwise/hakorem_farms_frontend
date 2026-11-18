@@ -325,7 +325,12 @@
       "invoiced": "Invoiced",
       "paid": "Paid",
       "credited": "Credited",
+      "otherCharges": "Refunds, reversals and other charges",
+      "otherCredits": "Other credits",
       "closing": "Closing balance",
+      "openingCredit": "Opening balance in the customer's favour",
+      "closingCredit": "Closing balance in the customer's favour",
+      "inCredit": "in the customer's favour",
       "lines": "Movements",
       "linesTable": "The statement's movements",
       "noLines": "Nothing moved in this period.",
@@ -342,7 +347,10 @@
         "INVOICE": "Invoice",
         "PAYMENT": "Payment",
         "CREDIT_NOTE": "Credit note",
-        "DEBIT_NOTE": "Debit note"
+        "DEBIT_NOTE": "Debit note",
+        "REFUND": "Refund",
+        "PAYMENT_REVERSAL": "Payment reversed",
+        "ADJUSTMENT": "Adjustment"
       }
     },
     "create": {

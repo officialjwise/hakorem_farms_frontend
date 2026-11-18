@@ -386,7 +386,7 @@ export function PurchaseOrderScreen() {
     );
   }
   const qty = (value: string, uom: string) => (
-    <QuantityDisplay quantity={value} unit={units.name(uom)} places={units.places(uom)} />
+    <QuantityDisplay quantity={value} unit={units.after(uom, value)} places={units.places(uom)} />
   );
   return (
     <QueryBoundary
@@ -466,7 +466,7 @@ export function PurchaseOrderScreen() {
                       </span>
                     </TableCell>
                     <TableCell numeric label={t('columns.unitPrice')}>
-                      {t('detail.per', { unit: units.name(line.uom) })}{' '}
+                      {t('detail.per', { unit: units.one(line.uom) })}{' '}
                       <MoneyDisplay pesewas={line.unitPricePesewas} />
                     </TableCell>
                     <TableCell numeric label={t('columns.lineNet')}>
@@ -550,7 +550,7 @@ function OrderActions({ order: o, can }: { order: Order; can: (permission: strin
           {line.product.name},{' '}
           <QuantityDisplay
             quantity={line.qtyOrdered}
-            unit={units.name(line.uom)}
+            unit={units.after(line.uom, line.qtyOrdered)}
             places={units.places(line.uom)}
           />
           , <MoneyDisplay pesewas={line.lineNetPesewas} />

@@ -464,6 +464,7 @@ function Selling({
           lines={lines}
           pack={pack}
           online={online}
+          shiftId={shift !== null && shift.confirmed ? shift.id : null}
           onClose={() => setPaying(false)}
           onDone={(entry) => {
             setPaying(false);

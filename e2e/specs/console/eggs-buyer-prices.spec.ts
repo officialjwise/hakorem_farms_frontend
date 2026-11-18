@@ -39,14 +39,14 @@ test.describe('bulk buyer prices for eggs', () => {
     const rows = preview.getByRole('row').filter({ hasText: 'Eggs, big' });
     await expect(rows).toHaveCount(3);
     await expect(rows.nth(0)).toContainText('per crate');
-    await expect(rows.nth(1)).toContainText('from 10 Crate (300 in the base unit)');
+    await expect(rows.nth(1)).toContainText('from 10 crates (300 in the base unit)');
     await expect(rows.nth(1)).toContainText('GH₵55.00');
-    await expect(rows.nth(2)).toContainText('per unit');
+    await expect(rows.nth(2)).toContainText('per egg');
     await expect(rows.nth(2)).toContainText('GH₵2.20');
     // A crate and a single egg are told apart on their buttons too.
     await expect(
       page.getByRole('button', {
-        name: 'Change the prices of Eggs, big, per crate, from 10 Crate (300 in the base unit)',
+        name: 'Change the prices of Eggs, big, per crate, from 10 crates (300 in the base unit)',
       }),
     ).toBeVisible();
     await expectNoHorizontalScroll(page);
@@ -58,10 +58,10 @@ test.describe('bulk buyer prices for eggs', () => {
     await page.getByRole('option', { name: 'Eggs, big (EGG-0003)' }).click();
     await dialog.getByRole('combobox', { name: 'Sold by' }).click();
     await page.getByRole('option', { name: 'Crate' }).click();
-    await dialog.getByLabel(/^List price per Crate, GHS/).fill('52.00');
-    await dialog.getByLabel(/^Floor price per Crate, GHS/).fill('50.00');
-    await dialog.getByLabel(/^Ceiling price per Crate, GHS/).fill('58.00');
-    await dialog.getByLabel('From how many, in Crate').fill('50');
+    await dialog.getByLabel(/^List price per crate, GHS/).fill('52.00');
+    await dialog.getByLabel(/^Floor price per crate, GHS/).fill('50.00');
+    await dialog.getByLabel(/^Ceiling price per crate, GHS/).fill('58.00');
+    await dialog.getByLabel('From how many, in crates').fill('50');
     await expectNoAxeViolations(page);
 
     const sent = page.waitForRequest(
@@ -73,7 +73,7 @@ test.describe('bulk buyer prices for eggs', () => {
     expect(body.entries.map((e) => [e.uom, e.minQty, e.listPricePesewas])).toEqual([
       ['CRATE', '0.000', 6000],
       ['CRATE', '10.000', 5500],
-      ['UNIT', '0.000', 220],
+      ['EGG', '0.000', 220],
       ['CRATE', '50.000', 5200],
     ]);
     expect(body.entries[3]).toMatchObject({ productId: EGGS_ID, basis: 'PER_UNIT' });

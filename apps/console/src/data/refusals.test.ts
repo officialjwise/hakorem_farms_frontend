@@ -13,12 +13,17 @@ const contract = readFileSync(
   'utf8',
 );
 
-/** Every code an operation lists in `x-error-codes`: the contract's documented refusals. */
+/**
+ * Every code the contract documents: each one an operation lists in `x-error-codes`, and each one a
+ * description names with its status ("422 `DEVICE_INVALID`"). From 2.6.0 some new codes are only in the
+ * descriptions, so both are read.
+ */
 function documentedCodes(): string[] {
   const found = new Set<string>();
   for (const block of contract.matchAll(/x-error-codes:\n((?:\s+- [A-Z_]+\n)+)/g)) {
     for (const line of (block[1] ?? '').matchAll(/- ([A-Z_]+)/g)) found.add(line[1] ?? '');
   }
+  for (const named of contract.matchAll(/\b4\d\d `([A-Z][A-Z_]+)`/g)) found.add(named[1] ?? '');
   return [...found].sort();
 }
 

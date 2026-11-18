@@ -104,7 +104,7 @@ describe('receiving a transfer: what arrived, line by line', () => {
     await user.click(within(form).getByRole('button', { name: 'Check and receive' }));
     const dialog = await screen.findByRole('dialog', { name: 'Receive this transfer?' });
     expect(dialog).toHaveTextContent('1 line is short');
-    expect(dialog).toHaveTextContent('Sent 20 Crate, arrived 18 Crate');
+    expect(dialog).toHaveTextContent('Sent 20 crates, arrived 18 crates');
     await user.click(within(dialog).getByRole('button', { name: 'Receive' }));
     expect(await screen.findByRole('status')).toHaveTextContent('1 line was short');
   });

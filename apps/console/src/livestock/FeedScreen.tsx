@@ -138,7 +138,7 @@ function FeedGiven({ canRecord }: { canRecord: boolean }) {
           <span className="text-control-sm text-fg-muted">
             <QuantityDisplay
               quantity={row.qty}
-              unit={units.name(row.uom)}
+              unit={units.after(row.uom, row.qty)}
               places={units.places(row.uom)}
             />
           </span>
@@ -280,7 +280,7 @@ function FeedDetail({ id, onClose }: { id: string; onClose: () => void }) {
             <p>
               {t('feedDetail.summary', {
                 qty: formatQuantity(row.qty, { places: units.places(row.uom) }),
-                uom: units.name(row.uom),
+                uom: units.after(row.uom, row.qty),
                 feed: row.feedProduct.name,
                 pen: row.location.name,
                 date: row.consumedOn,
@@ -405,7 +405,7 @@ export function RecordFeedDialog({
             label: feed.name,
             before: store?.name ?? t('feedRecord.defaultStore'),
             after: t('feedRecord.toPen', {
-              qty: `${formatQuantity(quantity, { places: units.places(feed.baseUom) })} ${units.name(feed.baseUom)}`,
+              qty: `${formatQuantity(quantity, { places: units.places(feed.baseUom) })} ${units.after(feed.baseUom, quantity)}`,
               pen: pen?.name ?? '',
             }),
           },
@@ -585,7 +585,7 @@ function Rations({ canManage }: { canManage: boolean }) {
         <>
           <QuantityDisplay
             quantity={ration.qtyPerHeadPerDay}
-            unit={units.name(ration.uom)}
+            unit={units.after(ration.uom, ration.qtyPerHeadPerDay)}
             places={units.places(ration.uom)}
           />
         </>
