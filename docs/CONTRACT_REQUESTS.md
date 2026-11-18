@@ -56,6 +56,11 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-050 | 2026-11-18 | Part 2 answered (2.6.0)   |
 | CR-051 | 2026-11-18 | Open                      |
 | CR-052 | 2026-11-18 | Open                      |
+| CR-053 | 2026-11-18 | Open                      |
+| CR-054 | 2026-11-18 | Open                      |
+| CR-055 | 2026-11-18 | Open                      |
+| CR-056 | 2026-11-18 | Open                      |
+| CR-057 | 2026-11-18 | Open                      |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -870,3 +875,99 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 **Request:** the band each sellable animal is sold at, resolved as the server would at the counter (the register's lists, a buyer with no account, its grade and its weight band from `lastWeightKg`): `OfflineStockUnit.priceBand: PriceBand | null` and `OfflineStockUnit.priceListEntryId: uuid | null`, null when the animal has no price at this register. A product priced per kilogram keeps its own band, and the scale gives the weight. Say in `syncOfflineSales` how an animal re-weighed at the sale is priced if its weight moved it to another band.
 
 **Until this lands:** a till with the real pack refuses a goat in words and sells everything else. The e2e pack gives the goat the per-head band of 2.10.0's example (`goatPricedPerHead` in `e2e/support/till.ts`), so the till's own tests still run with an animal.
+## CR-053. An order names its pick lists and the answer it waits for (additive)
+
+- **Raised by:** frontend F11, the order's picking and delivery page (`/orders/:id/fulfilment`).
+- **Contract read first (2.10.0; the same in 2.12.0):**
+  - `listFulfilments` filters by `status`, `pickLocationId` and `date`, not by order, and `SalesOrder` names its `delivery` but not its fulfilments. The page reads every open pick list (`useApiAllPages`, ADR 0028) and finds the order's among them.
+  - An order `AWAITING_CUSTOMER` does not say what it waits for: a substitute proposed with `proposeSubstitution`, or a weighed total over `maximumTotalPesewas`. The person recording `recordCustomerConsent` has to choose `kind` themselves.
+
+**Request:**
+
+1. `listFulfilments` takes `orderId`, and `SalesOrder.fulfilments: DocumentRef[]`.
+2. `SalesOrder.pendingConsent`: null, or `{ kind: 'SUBSTITUTION' | 'HIGHER_TOTAL', lineId, proposed: { productId, productName, quantity, uom } | null, weighedTotalPesewas: Pesewas | null, askedAt }`. The page can then show what the customer was asked, and send the right `kind`.
+
+**Until this lands:** the page reads the open pick lists and matches `order.id`. The consent form asks which of the two the customer was asked (A-F11-05).
+
+## CR-054. Picking eggs: cracked eggs on the pick, a short pick with the customer's agreement, and a substitute's unit (additive, description)
+
+- **Raised by:** frontend F11, the pick list (`/fulfilments/:id`). The owner: "Eggs found cracked while picking are recorded with a reason, and the order is short-picked or substituted only with the customer's agreement, as the server allows."
+- **Contract read first (2.10.0):**
+  - `PickInput` has `qty`, `weightKg`, a stock unit and a pack barcode, but nothing for what was found broken.
+  - `recordPicks` says nothing of a pick below `qtyToPick`.
+  - `ConsentRecord.kind` is `HIGHER_TOTAL` or `SUBSTITUTION`: there is no consent to receive less.
+  - `SubstitutionCreate` has `productId` and `quantity`, but no unit. An egg order line is in crates or in single eggs (2.1.0).
+
+**Request:**
+
+1. **Breakage on the pick.** `PickInput.damaged`: optional, `{ qty: Quantity, reasonCode: string }`, in the line's unit, a `STOCK_ADJUSTMENT` reason (`BREAKAGE`). The server writes the broken units off from the pick location in the same transaction as the pick, and the fulfilment's line names it. Until then the console writes them off with `createStockAdjustment` and `submitStockAdjustment` (`BREAKAGE`, `LOSS`, at the pick location, in the product's base unit), unlinked to the pick.
+2. **A short pick only with agreement.** Either confirm that a short pick is a `proposeSubstitution` of the same product with a smaller `quantity`, answered by `recordCustomerConsent` `SUBSTITUTION`, or add `ConsentRecord.kind` `SHORT_PICK` and a way to propose one. Either way, say what `recordPicks` does with a quantity below `qtyToPick` while no agreement is recorded: refuse it (422), or back-order the rest.
+3. **`SubstitutionCreate.uom`**: optional, the unit `quantity` is in (a crate or an egg), the line's unit when left out, refused (`UNIT_NOT_SOLD`) in a unit the product is not sold by.
+
+**Until this lands:**
+
+- the pick list refuses a quantity below or above `qtyToPick`;
+- a short line is offered to the customer as a substitution of the same product in a smaller quantity, in the line's unit;
+- cracked eggs are written off as in item 1 (A-F11-06, A-F11-07).
+
+## CR-055. A part delivery: what was delivered, and why the rest came back (additive)
+
+- **Raised by:** frontend F11, the driver's stop (`/driver/stops/:id`). The owner: "recording a refused or part-delivered order with a reason".
+- **Contract read first (2.10.0):**
+  - `ProofOfDeliveryCreate` closes the whole delivery.
+  - `DeliveryFailure` fails the whole delivery (`REATTEMPT` or `RETURN_TO_STOCK`).
+  - `Delivery.contents` carries no order line id, so a line cannot be named.
+  - A customer who keeps 10 of 12 crates cannot be recorded.
+
+**Request:**
+
+1. `Delivery.contents[].orderLineId`.
+2. `ProofOfDeliveryCreate.lines`: optional, `{ orderLineId, deliveredQty: Quantity }[]`. Absent means everything was delivered.
+3. `ProofOfDeliveryCreate.returnedReasonCode`: a `DELIVERY_FAILURE` reason, required when a line is short.
+
+The server returns the rest to stock (or keeps it on the van for a reattempt, as `nextAction`), invoices what was delivered, and fixes the cash due again. The same in `DriverProofSync`, so it is accepted from the offline queue.
+
+**Until this lands:**
+
+- a refused order is a failed attempt with its reason, `RETURN_TO_STOCK`;
+- the stop says in words that a part delivery cannot be recorded yet;
+- the driver delivers all of it, or records it as not delivered, and tells the office (A-F11-08).
+
+## CR-056. The B11 seed: the Driver, the Storekeeper's picking, and a list of drivers (seed, additive)
+
+- **Raised by:** frontend F11, every screen of this phase.
+- **Contract read first (2.10.0 `x-seeded-roles`):**
+  - No role holds any `del.*` permission but `del.slot.*`.
+  - No role holds `ord.fulfilment.*` or `ord.order.update`.
+  - The seeded Driver holds only `iam.session.read`, `iam.session.revoke` and `mdm.product.read`. It could not read its run, record a proof, upload the proof's photograph (`platform.file.upload`) or read the failure reasons (`mdm.reason_code.read`).
+  - Choosing a driver at dispatch means `listUsers` (`iam.user.read`) and filtering for a `DRIVER` grant.
+
+**Request:**
+
+1. **Driver:** `del.delivery.read.assigned`, `del.delivery.update.assigned`, `del.proof.create`, `platform.file.upload` (purpose `PROOF_OF_DELIVERY` at least) and `mdm.reason_code.read`.
+2. **Storekeeper:** `ord.fulfilment.read`, `ord.fulfilment.pick`, and `ord.order.read` for the order it picks.
+3. **Manager and Owner:** `ord.fulfilment.*`, `ord.order.update`, `del.delivery.read`, `del.delivery.assign`, `del.route.read` and `del.route.manage`.
+4. **A list of drivers** that dispatch can read without `iam.user.read`: `listUsers?roleCode=DRIVER` under `del.route.manage`, or a `listDrivers`.
+
+**Until this lands:** the test fake grants exactly this (A-F11-01; `fakeRoles.test.ts` fails line by line as the seed catches up). A console against the real API shows each screen's permission-denied state.
+
+## CR-057. A driver's cash is handed in at a till shift; and three answers the driver's phone needs (additive, description)
+
+- **Raised by:** frontend F11, the driver's cash screen (`/driver/cash`) and the queue. The owner: "The cash is handed in at a till shift, never typed in as loose cash."
+- **Contract read first (2.10.0):**
+  - `DriverCashReconciliationCreate` takes a driver, a date and `declaredPesewas`, but no till shift. Since 2.6.0 cash moves into or out of a till only through its open shift, so a driver's hand-in would be cash outside every drawer.
+  - `getMyRoute` lists no 404, so the contract does not say what a driver with no run that day gets.
+  - `syncDriverEvents` answers a resend `DUPLICATE` with `reason`. It does not say whether that carries the first answer's exception ("cash collected differs") when the first answer was lost.
+
+**Request:**
+
+1. `DriverCashReconciliationCreate.shiftId`: the open till shift the cash is counted into. Its cashier is `receivedBy`, never the driver. The cash lands in that shift's drawer, so the X and Z reports and the blind close see it. The hand-in itself is a till screen, for the till's session.
+2. `getMyRoute` with no run that day: say whether it answers 404 or a route with no stops.
+3. `DriverSyncItem` for a `DUPLICATE`: answer the first result's `outcome` and `reason` (in a `firstOutcome` field if `outcome` must stay `DUPLICATE`), as the operations' "a resubmission with the same id returns the first result" says.
+
+**Until this lands:**
+
+- the driver's screen shows the server's `expectedPesewas`, and the collections not sent yet one by one, and says the cash is handed in at a till shift;
+- nothing is built for the hand-in (the till is another session's);
+- the phone treats a 404 and an empty route alike ("No run for you today");
+- after a lost answer, the phone's own words say when cash differs from what was due.
