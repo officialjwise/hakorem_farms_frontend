@@ -57,8 +57,8 @@ function useStatementName(): (statement: Pick<Statement, 'statementNo'>) => stri
 
 /**
  * FR-WHL: customer statements, newest first: what each customer was invoiced, paid and credited over a
- * period, and the balance carried forward, all as the API states them. Planned in the contract (B08
- * continued 2d), so this screen reads the mock until it lands.
+ * period, and the balance carried forward, all as the API states them (in code from 2.7.0). A balance in
+ * the customer's favour is its own figure beside a balance of zero, and is said in words.
  */
 export function StatementsScreen() {
   const { t } = useTranslation(['billing', 'common']);
@@ -224,6 +224,11 @@ export function StatementView({ statement }: { statement: Statement }) {
             <Fact term={t('statements.one.opening')}>
               <MoneyDisplay pesewas={statement.openingPesewas} />
             </Fact>
+            {statement.openingCreditPesewas === 0 ? null : (
+              <Fact term={t('statements.one.openingCredit')}>
+                <MoneyDisplay pesewas={statement.openingCreditPesewas} />
+              </Fact>
+            )}
             <Fact term={t('statements.one.invoiced')}>
               <MoneyDisplay pesewas={statement.invoicedPesewas} />
             </Fact>
@@ -233,9 +238,20 @@ export function StatementView({ statement }: { statement: Statement }) {
             <Fact term={t('statements.one.credited')}>
               <MoneyDisplay pesewas={statement.creditedPesewas} />
             </Fact>
+            <Fact term={t('statements.one.otherCharges')}>
+              <MoneyDisplay pesewas={statement.otherChargesPesewas} />
+            </Fact>
+            <Fact term={t('statements.one.otherCredits')}>
+              <MoneyDisplay pesewas={statement.otherCreditsPesewas} />
+            </Fact>
             <Fact term={t('statements.one.closing')}>
               <MoneyDisplay pesewas={statement.closingPesewas} strong />
             </Fact>
+            {statement.closingCreditPesewas === 0 ? null : (
+              <Fact term={t('statements.one.closingCredit')}>
+                <MoneyDisplay pesewas={statement.closingCreditPesewas} strong />
+              </Fact>
+            )}
           </dl>
         </CardBody>
       </Card>
@@ -274,6 +290,9 @@ export function StatementView({ statement }: { statement: Statement }) {
                     </TableCell>
                     <TableCell numeric label={c('balance')}>
                       <MoneyDisplay pesewas={line.balancePesewas} strong />
+                      {line.balanceSide === 'C' && line.balancePesewas !== 0 ? (
+                        <> {t('statements.one.inCredit')}</>
+                      ) : null}
                     </TableCell>
                   </TableRow>
                 ))}
