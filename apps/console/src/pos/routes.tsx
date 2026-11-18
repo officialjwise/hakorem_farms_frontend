@@ -1,3 +1,5 @@
+import type { Namespace } from '@hakorem/i18n';
+import type { i18n } from 'i18next';
 import type { RouteObject } from 'react-router';
 import { appRoutes } from '../app/appRoutes';
 import { lazyScreen } from '../app/LazyScreen';
@@ -18,7 +20,8 @@ const till = (permission: string, crumb: RouteHandle['crumb']): RouteHandle => (
 /**
  * The till's screens that load on demand. `preloadTillScreens` fetches them all once the till is ready, so
  * a till that loses its network afterwards still opens every one (ADR 0043); a reload with no network is
- * the service worker's (F13, DEPLOYMENT.md section 2).
+ * the service worker's (F13, DEPLOYMENT.md section 2). The words they need that the sale screen does not,
+ * the shift screens' and the refusals', are namespaces fetched with them (`TILL_NAMESPACES`).
  */
 const SCREENS = {
   setup: () => import('./screens/TillSetupScreen').then((m) => m.TillSetupScreen),
@@ -28,10 +31,14 @@ const SCREENS = {
   returns: () => import('./screens/ReturnsScreen').then((m) => m.ReturnsScreen),
 };
 
-export function preloadTillScreens(): Promise<unknown> {
-  return Promise.allSettled(
-    [...Object.values(SCREENS), ...Object.values(TILL_PARTS)].map((load) => load()),
-  );
+/** Catalogue namespaces the till fetches after its first screen, never in its first load. */
+export const TILL_NAMESPACES = ['posShift', 'refusals'] as const satisfies readonly Namespace[];
+
+export function preloadTillScreens(i18n?: Pick<i18n, 'loadNamespaces'>): Promise<unknown> {
+  return Promise.allSettled([
+    ...[...Object.values(SCREENS), ...Object.values(TILL_PARTS)].map((load) => load()),
+    ...(i18n === undefined ? [] : [i18n.loadNamespaces([...TILL_NAMESPACES])]),
+  ]);
 }
 
 /**

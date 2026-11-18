@@ -15,7 +15,7 @@ import { getTill, useTill } from '../offline/till';
  * Permission: `pos.shift.open` (the route's).
  */
 export function ShiftOpenScreen() {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posShift', 'pos']);
   const auth = useAuth();
   const navigate = useNavigate();
   const online = useOnlineStatus();
@@ -27,15 +27,15 @@ export function ShiftOpenScreen() {
   const [tried, setTried] = useState(false);
   const snapshot = till.snapshot;
 
-  if (snapshot === null) return <Skeleton label={t('sale.loading')} shape="block" />;
+  if (snapshot === null) return <Skeleton label={t('pos:sale.loading')} shape="block" />;
   if (snapshot.device === null) {
     return (
       <EmptyState
-        title={t('sale.noDevice.title')}
-        description={t('sale.noDevice.askManager')}
+        title={t('pos:sale.noDevice.title')}
+        description={t('pos:sale.noDevice.askManager')}
         action={
           <Button asChild variant="secondary">
-            <Link to="/pos">{t('toSale')}</Link>
+            <Link to="/pos">{t('pos:toSale')}</Link>
           </Button>
         }
       />
@@ -48,7 +48,7 @@ export function ShiftOpenScreen() {
         description={t('open.alreadyBody')}
         action={
           <Button asChild>
-            <Link to="/pos">{t('toSale')}</Link>
+            <Link to="/pos">{t('pos:toSale')}</Link>
           </Button>
         }
       />

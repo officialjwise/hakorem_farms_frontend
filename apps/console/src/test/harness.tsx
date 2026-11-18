@@ -66,6 +66,7 @@ export async function renderApp(
       'billing',
       'buying',
       'payables',
+      'refusals',
     ],
   });
   const router = createMemoryRouter(routes, {

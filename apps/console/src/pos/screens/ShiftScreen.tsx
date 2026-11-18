@@ -41,10 +41,10 @@ type MovementKind = 'CASH_DROP' | 'PAY_OUT' | 'PAY_IN';
  * Z report.
  */
 export function ShiftScreen() {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posShift', 'pos']);
   const till = useTill();
   const snapshot = till.snapshot;
-  if (snapshot === null) return <Skeleton label={t('sale.loading')} shape="block" />;
+  if (snapshot === null) return <Skeleton label={t('pos:sale.loading')} shape="block" />;
   const shift = snapshot.shift;
   if (snapshot.device === null || shift === null || snapshot.pack === null) {
     return (
@@ -54,7 +54,7 @@ export function ShiftScreen() {
         action={
           <Button asChild size="lg">
             <Link to={snapshot.device === null ? '/pos' : '/pos/shift/open'}>
-              {snapshot.device === null ? t('toSale') : t('sale.noShift.action')}
+              {snapshot.device === null ? t('pos:toSale') : t('pos:sale.noShift.action')}
             </Link>
           </Button>
         }
@@ -73,7 +73,7 @@ function OpenShift({
   shift: ShiftRecord;
   pack: OfflinePack;
 }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posShift', 'pos']);
   const auth = useAuth();
   const online = useOnlineStatus();
   const server = useApiQuery(
@@ -146,7 +146,7 @@ function OpenShift({
 }
 
 function CashMovement({ pack, online }: { pack: OfflinePack; online: boolean }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posShift', 'pos']);
   const [kind, setKind] = useState<MovementKind>('CASH_DROP');
   const [amount, setAmount] = useState<number | null>(null);
   const [reason, setReason] = useState('');
@@ -192,7 +192,7 @@ function CashMovement({ pack, online }: { pack: OfflinePack; online: boolean }) 
           onValueChange={(value) => setKind(value as MovementKind)}
           options={(['CASH_DROP', 'PAY_OUT', 'PAY_IN'] as const).map((value) => ({
             value,
-            label: t(`queue.cash.${value}`),
+            label: t(`pos:queue.cash.${value}`),
           }))}
         />
       </Field>
@@ -254,7 +254,7 @@ function CashMovement({ pack, online }: { pack: OfflinePack; online: boolean }) 
       <ConfirmDialog
         open={confirming}
         onOpenChange={setConfirming}
-        title={t('cash.confirmTitle', { kind: t(`queue.cash.${kind}`) })}
+        title={t('cash.confirmTitle', { kind: t(`pos:queue.cash.${kind}`) })}
         body={online ? t('cash.confirmBody') : t('cash.confirmOffline')}
         confirmLabel={t('cash.record')}
         pendingLabel={t('cash.recording')}
@@ -279,7 +279,7 @@ function CashMovement({ pack, online }: { pack: OfflinePack; online: boolean }) 
             .then(() => {
               setWitness(null);
               setConfirming(false);
-              setRecorded(t('cash.recorded', { kind: t(`queue.cash.${kind}`) }));
+              setRecorded(t('cash.recorded', { kind: t(`pos:queue.cash.${kind}`) }));
               setAmount(null);
               setReason('');
               setNote('');
@@ -288,7 +288,7 @@ function CashMovement({ pack, online }: { pack: OfflinePack; online: boolean }) 
         }}
       >
         <p className="flex items-baseline justify-between text-xl font-bold">
-          <span>{t(`queue.cash.${kind}`)}</span>
+          <span>{t(`pos:queue.cash.${kind}`)}</span>
           <MoneyDisplay pesewas={amount ?? 0} />
         </p>
         {kind === 'CASH_DROP' && witness !== null ? (
@@ -300,7 +300,7 @@ function CashMovement({ pack, online }: { pack: OfflinePack; online: boolean }) 
 }
 
 function Report({ shiftId, kind }: { shiftId: string; kind: 'X' | 'Z' }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posShift', 'pos']);
   const [open, setOpen] = useState(kind === 'Z');
   const x = useApiQuery(
     'getShiftXReport',
@@ -342,7 +342,7 @@ function Report({ shiftId, kind }: { shiftId: string; kind: 'X' | 'Z' }) {
 }
 
 function ReportBody({ report }: { report: ShiftReport }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posShift', 'pos']);
   return (
     <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1">
       <dt>{t('report.generated')}</dt>
@@ -399,7 +399,7 @@ function Close({
   online: boolean;
   onClosed: (shift: Shift) => void;
 }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posShift', 'pos']);
   const close = useApiMutation('closeShift', { invalidates: ['getShift', 'listShifts'] });
   const keyFor = useIntentKey();
   const [declared, setDeclared] = useState<Record<string, number | null>>({});
@@ -508,7 +508,7 @@ function Closing({
   isCashier: boolean;
   onApproved: (shift: Shift) => void;
 }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posShift', 'pos']);
   const auth = useAuth();
   const approve = useApiMutation('approveShiftClose', { invalidates: ['getShift', 'listShifts'] });
   const keyFor = useIntentKey();
@@ -594,7 +594,7 @@ function Closing({
 }
 
 function TenderCount({ tender }: { tender: Shift['tenders'][number] }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posShift', 'pos']);
   return (
     <li className="rounded-md border border-border p-3">
       <p className="font-semibold">{tender.paymentMethod.name}</p>

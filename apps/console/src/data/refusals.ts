@@ -3,10 +3,10 @@ import { ApiError, NetworkError, type ApiErrorDetail } from '@hakorem/api-client
 /**
  * Refusals in words (ADR 0038). The contract names every code an operation can refuse with
  * (`x-error-codes`), and a business-rule refusal names the broken rule in `details[].code`. The console
- * says each in its own words, from `common:refusals`:
+ * says each in its own words, from the `refusals` namespace:
  *
- * - the code's words replace the server's sentence: `refusals.codes.<CODE>`;
- * - each broken rule with words adds them, after the code's words: `refusals.rules.<CODE>`, whether or
+ * - the code's words replace the server's sentence: `codes.<CODE>`;
+ * - each broken rule with words adds them, after the code's words: `rules.<CODE>`, whether or
  *   not its detail names a field (a confirmation has no field to hold it). A detail without words that
  *   names a field keeps the server's sentence, which lands on that field (`mapServerErrors`);
  * - a code the build does not know keeps the server's sentence, which the contract says is safe to show.
@@ -15,17 +15,41 @@ import { ApiError, NetworkError, type ApiErrorDetail } from '@hakorem/api-client
  * It is applied once, where the console's API client throws (`data/api.ts`), so every screen, every
  * `MutationFailure` and every `FormError` shows the same words. The code, the reference and the details
  * are kept, so a screen can still branch on the code (STEP_UP_REQUIRED, a 409).
+ *
+ * The words are a namespace of their own. The back office loads it at boot; the till loads it once its sale
+ * screen is up (`preloadTillScreens`), so 12 kB of sentences are never in its first load. A refusal that
+ * arrives before then waits for the namespace (`inWordsWhenLoaded`); if it cannot be fetched, the server's
+ * sentence is said, which the contract says is safe to show.
  */
 export type RefusalWords = (key: string) => string | null;
 
-let words: RefusalWords | null = null;
+export interface RefusalCatalogue {
+  say: RefusalWords;
+  /** Fetches the namespace if it is not loaded yet. */
+  load: () => Promise<unknown>;
+}
+
+let words: RefusalCatalogue | null = null;
 
 /** Called by `DataProvider` with the catalogue; returns a detach for its effect. */
-export function attachRefusalWords(next: RefusalWords): () => void {
+export function attachRefusalWords(next: RefusalCatalogue): () => void {
   words = next;
   return () => {
     if (words === next) words = null;
   };
+}
+
+/** Fetches the refusal words ahead of the first refusal, where a catalogue is attached. */
+export function preloadRefusalWords(): Promise<unknown> {
+  return words === null ? Promise.resolve() : words.load().catch(() => undefined);
+}
+
+/** `inWords`, once the refusal words are loaded (or could not be). */
+export async function inWordsWhenLoaded(error: ApiError): Promise<ApiError> {
+  const catalogue = words;
+  if (catalogue === null) return error;
+  await catalogue.load().catch(() => undefined);
+  return inWords(error, catalogue.say);
 }
 
 /**
@@ -35,16 +59,16 @@ export function attachRefusalWords(next: RefusalWords): () => void {
  * names a field is left to that field (`mapServerErrors`), so a validation detail is not said twice.
  */
 function ruleWords(detail: ApiErrorDetail, say: RefusalWords, known: boolean): string | null {
-  const words = say(`refusals.rules.${detail.code}`);
+  const words = say(`rules.${detail.code}`);
   if (words !== null) return words;
   if (!known || detail.field !== null || detail.message.trim() === '') return null;
   return detail.message;
 }
 
 /** The same refusal, said in the console's words where it has them. */
-export function inWords(error: ApiError, say: RefusalWords | null = words): ApiError {
+export function inWords(error: ApiError, say: RefusalWords | null = words?.say ?? null): ApiError {
   if (say === null || error instanceof NetworkError || error.status === 0) return error;
-  const codeWords = say(`refusals.codes.${error.code}`);
+  const codeWords = say(`codes.${error.code}`);
   // A code the build does not know keeps the server's sentence, with only the rules it has words for.
   const rules = [
     ...new Set(

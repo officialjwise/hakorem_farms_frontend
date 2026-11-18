@@ -28,15 +28,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
   );
 
   // Refusals in words (ADR 0038): the client reads them from the catalogue the app is showing.
+  // Their namespace is loaded on demand in the till (`refusals.ts`), so it is not asked for here.
   const { i18n } = useTranslation('common');
   useEffect(() => {
     // No catalogue mounted (a test of the data layer alone): the server's sentences stay.
     if (typeof i18n?.t !== 'function') return undefined;
     // The keys are built from the codes the server sends, so they are looked up untyped.
     const lookup = i18n.t.bind(i18n) as unknown as (key: string, options: { ns: string }) => string;
-    return attachRefusalWords((key) =>
-      i18n.exists(key, { ns: 'common' }) ? lookup(key, { ns: 'common' }) : null,
-    );
+    return attachRefusalWords({
+      say: (key) => (i18n.exists(key, { ns: 'refusals' }) ? lookup(key, { ns: 'refusals' }) : null),
+      load: () => i18n.loadNamespaces('refusals'),
+    });
   }, [i18n]);
 
   const ended = auth.status === 'anonymous' || auth.status === 'expired';
