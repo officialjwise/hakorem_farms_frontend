@@ -61,5 +61,7 @@ jobs:
         run: pnpm build:storefront
         env:
           HK_API_BASE_URL: http://127.0.0.1:4011
+      - name: Storefront script budget, per route (PERFORMANCE_BUDGET.md)
+        run: pnpm budget:storefront
       - name: End to end at 360 px, with axe (Playwright)
         run: pnpm --filter @hakorem/e2e test
