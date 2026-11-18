@@ -936,8 +936,8 @@ const EGG_SHOTS: Shot[] = [
       await page.getByRole('combobox', { name: /^Product 1/ }).fill('Eggs');
       await page.getByRole('option', { name: 'Eggs, big (EGG-0003)' }).click();
       await page.getByRole('combobox', { name: 'Counted in, line 1' }).click();
-      await page.getByRole('option', { name: 'Crate (30 Unit)' }).click();
-      await page.getByLabel(/^Ordered, in Crate, line 1/).fill('20');
+      await page.getByRole('option', { name: 'Crate (30 eggs)' }).click();
+      await page.getByLabel(/^Ordered, in crates, line 1/).fill('20');
     },
   },
   {
@@ -952,7 +952,7 @@ const EGG_SHOTS: Shot[] = [
   {
     name: 'goods-receipt-from-order',
     path: `/goods-receipts/new?purchaseOrder=${ORDER_ID}`,
-    ready: 'ordered in Crate',
+    ready: 'ordered in crates',
     prepare: (api) => {
       seedEggs(api);
       api.rewrite('getPurchaseOrder', (body) =>
@@ -960,8 +960,8 @@ const EGG_SHOTS: Shot[] = [
       );
     },
     act: async (page) => {
-      await page.getByLabel(/^Accepted, in Crate, line 1/).fill('18');
-      await page.getByLabel(/^Rejected at the door, in Crate, line 1/).fill('2');
+      await page.getByLabel(/^Accepted, in crates, line 1/).fill('18');
+      await page.getByLabel(/^Rejected at the door, in crates, line 1/).fill('2');
       await page.getByRole('combobox', { name: /^Why it was rejected, line 1/ }).click();
       await page.getByRole('option', { name: 'Cracked on arrival' }).click();
       await page.getByLabel(/^Cost of the accepted quantity, GHS, line 1/).fill('855.00');
@@ -990,13 +990,13 @@ const EGG_SHOTS: Shot[] = [
   {
     name: 'price-list-egg-prices',
     path: `/price-list-versions/${EGG_DRAFT}`,
-    ready: 'from 10 Crate',
+    ready: 'from 10 crates',
     prepare: eggPrices,
   },
   {
     name: 'price-list-add-price',
     path: `/price-list-versions/${EGG_DRAFT}`,
-    ready: 'from 10 Crate',
+    ready: 'from 10 crates',
     prepare: eggPrices,
     act: async (page) => {
       await page.getByRole('button', { name: 'Add a price' }).click();
@@ -1005,7 +1005,7 @@ const EGG_SHOTS: Shot[] = [
       await page.getByRole('option', { name: 'Eggs, big (EGG-0003)' }).click();
       await dialog.getByRole('combobox', { name: 'Sold by' }).click();
       await page.getByRole('option', { name: 'Crate' }).click();
-      await dialog.getByLabel('From how many, in Crate').fill('50');
+      await dialog.getByLabel('From how many, in crates').fill('50');
     },
   },
   {
@@ -1128,8 +1128,8 @@ const PAYABLE_SHOTS: Shot[] = [
       await page.getByRole('combobox', { name: /^Goods receipt/ }).click();
       await page.getByRole('option', { name: 'GRN-2026-DDW-000081' }).click();
       await page.getByLabel(/^Supplier's invoice number/).fill('AWT-0471');
-      await page.getByLabel(/^Invoiced, in Crate, line 1/).fill('21');
-      await page.getByLabel(/^Price per Crate, GHS, line 1/).fill('48.00');
+      await page.getByLabel(/^Invoiced, in crates, line 1/).fill('21');
+      await page.getByLabel(/^Price per crate, GHS, line 1/).fill('48.00');
     },
   },
   {

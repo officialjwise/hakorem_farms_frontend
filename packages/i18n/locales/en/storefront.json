@@ -120,6 +120,7 @@
       "BUNCH": "a bunch",
       "TUBER": "a tuber",
       "UNIT": "each",
+      "EGG": "an egg",
       "BAG": "a bag",
       "TRAY": "a tray"
     },
@@ -131,6 +132,7 @@
       "BUNCH": "bunches",
       "TUBER": "tubers",
       "UNIT": "items",
+      "EGG": "eggs",
       "BAG": "bags",
       "TRAY": "trays"
     },
@@ -140,7 +142,8 @@
       "CRATE": "A crate",
       "HEAD": "One animal",
       "BAG": "A bag",
-      "TRAY": "A tray"
+      "TRAY": "A tray",
+      "EGG": "An egg"
     }
   },
   "note": {

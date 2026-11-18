@@ -233,7 +233,7 @@ export function HealthEventDialog({
                     qtyUsed === null
                       ? medicine.name
                       : t('health.medicineUsed', {
-                          qty: `${formatQuantity(qtyUsed, { places: units.places(medicine.baseUom) })} ${units.name(medicine.baseUom)}`,
+                          qty: `${formatQuantity(qtyUsed, { places: units.places(medicine.baseUom) })} ${units.after(medicine.baseUom, qtyUsed)}`,
                           product: medicine.name,
                         }),
                 },

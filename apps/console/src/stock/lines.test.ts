@@ -5,7 +5,7 @@ const EGGS = {
   id: '019a7a8d-ae28-7631-8b69-6be302d5e4c0',
   sku: 'EGG-0003',
   name: 'Eggs, big',
-  baseUom: 'UNIT',
+  baseUom: 'EGG',
 };
 const REASONS = [
   { code: 'CRACKED', requiresNote: false },

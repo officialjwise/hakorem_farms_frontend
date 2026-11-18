@@ -158,7 +158,7 @@ function UnitField({
               : t('lines.unitOf', {
                   unit: names.name(unit.code),
                   factor: unit.factor.replace(/\.?0+$/, ''),
-                  base: names.name(base),
+                  base: names.after(base, unit.factor),
                 }),
         }))}
       />
@@ -248,7 +248,8 @@ export function LinesEditor({
           const number = index + 1;
           const wrong = problems[line.key] ?? [];
           const places = line.product === null ? 3 : units.places(lineUom(line));
-          const unit = line.product === null ? '' : units.name(lineUom(line));
+          const unit = line.product === null ? '' : units.many(lineUom(line));
+          const perUnit = line.product === null ? '' : units.one(lineUom(line));
           const fromOrder = line.purchaseOrderLineId !== null;
           const reason = rejectionReasons.find((r) => r.code === line.rejectionReasonCode);
           return (
@@ -315,7 +316,7 @@ export function LinesEditor({
                   label={
                     unit === ''
                       ? t('lines.price', { number })
-                      : t('lines.priceIn', { number, unit })
+                      : t('lines.priceIn', { number, unit: perUnit })
                   }
                   hint={t('lines.priceHint')}
                 >
@@ -445,7 +446,7 @@ export function LinesSummary({ kind, lines }: { kind: LineKind; lines: DraftLine
             ) : (
               <QuantityDisplay
                 quantity={quantity}
-                unit={units.name(uom)}
+                unit={units.after(uom, quantity)}
                 places={units.places(uom)}
               />
             )}
@@ -455,7 +456,7 @@ export function LinesSummary({ kind, lines }: { kind: LineKind; lines: DraftLine
                 {t('lines.rejectedSummary')}{' '}
                 <QuantityDisplay
                   quantity={rejected}
-                  unit={units.name(uom)}
+                  unit={units.after(uom, rejected)}
                   places={units.places(uom)}
                 />
               </>

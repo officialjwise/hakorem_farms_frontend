@@ -74,6 +74,6 @@ test('a crate and six single eggs are sold offline, each at its own price, and s
   // Each line names the unit it was sold in, at that unit's price; nothing was converted on the till.
   expect(sale.lines).toEqual([
     { productId: EGGS_ID, quantity: '1.000', agreedUnitPricePesewas: CRATE, uom: 'CRATE' },
-    { productId: EGGS_ID, quantity: '6.000', agreedUnitPricePesewas: EGG, uom: 'UNIT' },
+    { productId: EGGS_ID, quantity: '6.000', agreedUnitPricePesewas: EGG, uom: 'EGG' },
   ]);
 });

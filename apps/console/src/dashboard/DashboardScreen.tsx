@@ -598,7 +598,7 @@ function TopMovers({ movers }: { movers: NonNullable<OwnerDashboard['topMovers']
         formatted: t('movers.figure', {
           amount: formatMoney(mover.revenuePesewas),
           qty: formatQuantity(mover.qty, { places: units.places(mover.uom) }),
-          unit: units.name(mover.uom),
+          unit: units.after(mover.uom, mover.qty),
         }),
         href: auth.can('mdm.product.read') ? `/products/${mover.product.id}` : undefined,
       }))}

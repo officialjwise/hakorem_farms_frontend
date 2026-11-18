@@ -368,7 +368,7 @@ function Lines({ document }: { document: BillingDocument }) {
                 <TableCell numeric label={c('quantity')}>
                   <QuantityDisplay
                     quantity={line.quantity}
-                    unit={units.name(line.uom)}
+                    unit={units.after(line.uom, line.quantity)}
                     places={units.places(line.uom)}
                   />
                 </TableCell>

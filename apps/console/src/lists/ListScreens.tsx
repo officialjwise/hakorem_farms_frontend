@@ -412,7 +412,7 @@ export function MovementsScreen() {
           cell: (movement) => (
             <QuantityDisplay
               quantity={movement.qty}
-              unit={units.name(movement.uom)}
+              unit={units.after(movement.uom, movement.qty)}
               places={units.places(movement.uom)}
             />
           ),
