@@ -90,7 +90,10 @@ export class FakeApi {
     [];
 
   private readonly rewrites = new Map<string, (body: unknown, path: string) => unknown>();
-  private readonly responders = new Map<string, (request: unknown, path: string) => unknown>();
+  private readonly responders = new Map<
+    string,
+    { answer: (request: unknown, path: string) => unknown; status: number }
+  >();
   private readonly losing = new Set<string>();
   private networkOff = false;
 
@@ -131,10 +134,15 @@ export class FakeApi {
    * an answer that depends on what was sent: `syncOfflineSales` answering for the sale ids the till sent,
    * as the server does (the contract's example names other sales). The answer must be the contract's shape.
    */
-  respond(operationId: string, answer: (request: unknown, path: string) => unknown): void {
+  respond(
+    operationId: string,
+    answer: (request: unknown, path: string) => unknown,
+    /** The answer's status: 200, or 202 for a write that waits for a second person. */
+    status = 200,
+  ): void {
     if (!(operationId in operationManifest))
       throw new Error(`${operationId} is not in the contract.`);
-    this.responders.set(operationId, answer);
+    this.responders.set(operationId, { answer, status });
   }
 
   /**
@@ -145,7 +153,7 @@ export class FakeApi {
   respondRequested(
     operation: RequestedOperation,
     answer: (request: unknown, path: string) => unknown,
-    /** The answer's status: 200, or 202 for a write that waits for a second person (CR-046's override). */
+    /** The answer's status: 200, or 202 for a write that waits for a second person. */
     status = 200,
   ): void {
     if (operation.operationId in operationManifest) {
@@ -274,10 +282,10 @@ export class FakeApi {
     if (responder !== undefined) {
       record('prism');
       const body = JSON.stringify(
-        responder(text === '' ? null : (JSON.parse(text) as unknown), path),
+        responder.answer(text === '' ? null : (JSON.parse(text) as unknown), path),
       );
       if (this.losing.delete(operation.id)) return route.abort('connectionreset');
-      return route.fulfill({ status: 200, contentType: 'application/json', body });
+      return route.fulfill({ status: responder.status, contentType: 'application/json', body });
     }
     record('prism');
     const preferred = operation === undefined ? undefined : this.prefers.get(operation.id);

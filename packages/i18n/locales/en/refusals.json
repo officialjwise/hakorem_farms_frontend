@@ -154,7 +154,13 @@
     "REFUND_EXCEEDS_PAYMENT": "That is more than was paid, so it cannot be refunded.",
     "REFUND_INVALID": "The refund was not recorded.",
     "STATEMENT_INVALID": "The statement was not made.",
-    "STORE_CREDIT_INSUFFICIENT": "The customer’s store credit does not cover that amount."
+    "STORE_CREDIT_INSUFFICIENT": "The customer’s store credit does not cover that amount.",
+    "ACCOUNT_EXISTS": "This customer already has a wholesale account. Open it from Wholesale accounts.",
+    "ACCOUNT_ON_HOLD": "The buyer's account is on hold: no credit order is confirmed until an Owner or Manager releases it.",
+    "CREDIT_LIMIT_EXCEEDED": "This order would take the buyer over their credit limit. Take a payment first, or ask for a credit override.",
+    "CREDIT_TERMS_EXCEEDED": "The buyer has invoices past their payment terms. Take a payment first, or ask for a credit override.",
+    "DUNNING_POLICY_INVALID": "These reminder levels cannot be saved that way. Check each level's days and wording.",
+    "SYNC_BATCH_TOO_LARGE": "The till sent too many sales at once. It sends them again in smaller batches."
   },
   "rules": {
     "AMOUNT_EXCEEDS_LINE": "A line is credited for more than it charged.",

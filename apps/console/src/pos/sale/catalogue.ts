@@ -46,6 +46,15 @@ export function isSoldByUnit(pack: OfflinePack, product: OfflineProduct): boolea
   return pack.stockUnits.some((unit) => unit.productId === product.product.id);
 }
 
+/**
+ * An animal sold by its tag that the pack gives no band: 2.11.0 prices a product priced by grade or weight
+ * at no single band ("a live animal has no single band"). Until each animal carries its own (CR-052), the
+ * till sells it through a quote or an order in the back office, and says so (the owner, 2026-11-18).
+ */
+export function soldThroughQuotes(pack: OfflinePack, product: OfflineProduct): boolean {
+  return isSoldByUnit(pack, product) && product.priceBand === null;
+}
+
 export function sellableUnits(pack: OfflinePack, product: OfflineProduct): OfflineStockUnit[] {
   return pack.stockUnits.filter((unit) => unit.productId === product.product.id && unit.sellable);
 }

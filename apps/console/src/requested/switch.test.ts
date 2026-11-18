@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { operationManifest } from '@hakorem/api-client';
 import { LIST_SHIFT_WITNESSES } from './shiftWitnesses';
-import { GET_ORDER_CREDIT_CHECK, REQUEST_CREDIT_OVERRIDE } from './creditControl';
 import { LIST_TILL_PIN_VERIFIERS, REPORT_TILL_PIN_EVENTS } from './tillPin';
 import {
   assertSwitchesAllowed,
@@ -36,9 +35,10 @@ describe('the requested-contract switch (ADR 0046)', () => {
     expect(() => parseRequestedContract('CR-032,CR-099')).toThrow(/CR-099/);
   });
 
-  it('refuses CR-034 and CR-042, which landed (2.0.0, 2.9.0) and have no switch any more', () => {
+  it('refuses CR-034, CR-042 and CR-046, which landed (2.0.0, 2.9.0, 2.14.0) and have no switch any more', () => {
     expect(() => parseRequestedContract('CR-032,CR-033,CR-034')).toThrow(/CR-034/);
     expect(() => parseRequestedContract('CR-032,CR-042')).toThrow(/CR-042/);
+    expect(() => parseRequestedContract('CR-033,CR-046')).toThrow(/CR-046/);
   });
 });
 
@@ -67,7 +67,5 @@ describe("the owner's conditions on ADR 0046", () => {
     expect(LIST_TILL_PIN_VERIFIERS.operationId in operationManifest).toBe(false);
     expect(REPORT_TILL_PIN_EVENTS.operationId in operationManifest).toBe(false);
     expect(LIST_SHIFT_WITNESSES.operationId in operationManifest).toBe(false);
-    expect(GET_ORDER_CREDIT_CHECK.operationId in operationManifest).toBe(false);
-    expect(REQUEST_CREDIT_OVERRIDE.operationId in operationManifest).toBe(false);
   });
 });

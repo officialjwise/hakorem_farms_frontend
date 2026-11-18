@@ -107,6 +107,24 @@ The owner's decision (2026-11-18): the two quote pages are accepted at their siz
   - `PhotoImage` takes no `className`, so it needs no `cn`.
 - **What moved, and what went.** A listing page's first load, its layout's own chunks included, fell from 126.9 kB to 124.3 kB: 2.6 kB is gone. The budgeted figure fell further, from 121.7 kB to 108.5 kB, because tailwind-merge (8.7 kB), the icons' base and Radix Slot are now counted under the layout, which needs them for the header's basket button; the layout's own chunks rose from 5.2 kB to 15.8 kB. This budget counts the page entry, as `next build` does, so the layout is printed beside it and not budgeted. Whether the 120 kB should cover the layout too is the owner's.
 
+### The whole first load, from F10m (2026-11-18)
+
+The owner's decision (2026-11-18, on F10l): **the 120 kB limit covers the whole first load, the layout's scripts included.** `pnpm budget:storefront` counts every file of the route's page entry and of the root layout, each once, and prints the page's share (`next build`'s figure) beside it. Counted that way the listing pages loaded 124,315 bytes on F10m's first build; CI was set to exactly that first, so they could not grow, and then:
+
+- **The header's basket button** is a plain `<button>` in `Button`'s primary classes, written out (`components/plainClasses.ts`), not `Button`: 1.8 kB.
+- **The header's search box** is a plain `<input>` in `Input`'s classes, not `Input`. `Input` is a client component, so the server-rendered header still shipped it, with `cn` and tailwind-merge (8.7 kB), to every page: 10.4 kB.
+- `plainClasses.test.ts` fails if either string drifts from `buttonVariants()` or `cn(inputVariants(), …)`.
+
+| Route                                          | Whole first load          | Limit  | In CI                |
+| ---------------------------------------------- | ------------------------- | ------ | -------------------- |
+| `/`, `/c/[slug]`, `/search`, the listing pages | 124,315 B → **112,145 B** | 120 kB | **yes, at 120 kB**   |
+| `/q/[token]`, the quote by its link            | 174,360 B → **173,369 B** | 170 kB | ratchet at 173,369 B |
+| `/quote`, the request-for-quote form           | 166,901 B → **165,426 B** | 170 kB | yes                  |
+| `/p/[slug]`                                    | 157,159 B → 155,764 B     | none   | no                   |
+| `/checkout`                                    | 207,849 B → 206,274 B     | none   | no                   |
+
+**The quote link page is over 170 kB counted whole** (by 3.4 kB): its own page is 169.7 kB, as F10l measured it, and the layout's scripts were never counted. It is held at its exact bytes so it cannot grow; whether its 170 kB also covers the layout is the owner's (F10m report, "For the owner").
+
 ## Console
 
 Set on 2026-11-14 when the till and the back office became two documents (ADR 0030). The numbers were confirmed by the owner the same day (A-F3-17, resolved), and changing one is an owner decision. Vite's 500 kB chunk warning is the bundler's default, not this budget, and it is switched off.

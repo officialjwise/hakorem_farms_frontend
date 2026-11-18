@@ -37,28 +37,30 @@ import { useIntentKey } from '../lib/queries';
 import { ReasonDialog } from '../lib/ReasonDialog';
 import { PageHeader } from '../lib/ScreenHeader';
 import { useStateLabels } from '../lib/states';
-import {
-  CREDIT_REFUSALS,
-  creditControlOn,
-  useOrderCreditCheck,
-  useRequestCreditOverride,
-  type OrderCreditCheck,
-} from '../requested/creditControl';
 import { useUnits } from '../stock/units';
 
 type S = components['schemas'];
 type Order = S['SalesOrder'];
+type OrderCreditCheck = S['OrderCreditCheck'];
+
+/** The refusal codes `confirmOrder` answers for a credit order it will not confirm (2.14.0). */
+const CREDIT_REFUSALS = ['CREDIT_LIMIT_EXCEEDED', 'CREDIT_TERMS_EXCEEDED', 'ACCOUNT_ON_HOLD'];
+
+/** The order's credit check as `confirmOrder` would judge it now (2.14.0). */
+function useOrderCreditCheck(orderId: string, enabled = true) {
+  return useApiQuery('getOrderCreditCheck', { path: { id: orderId } }, { enabled });
+}
 
 /** Whether a refusal is one of credit control's (CR-046), or the contract's "not built yet" (A-224). */
 function creditRefusal(code: string | undefined): boolean {
-  return code !== undefined && (CREDIT_REFUSALS as readonly string[]).includes(code);
+  return code !== undefined && CREDIT_REFUSALS.includes(code);
 }
 
 /**
  * An order made from a quote: its lines at the quote's prices, the API's estimate, the quote it came from
  * and its invoice. Confirming a credit order is where credit control happens: the server refuses an order
  * that would take the buyer past their limit or their terms, and this page says so in words, with the
- * amount over from the server's own credit check (CR-046). An override is asked for here with a reason,
+ * amount over from the server's own credit check (`getOrderCreditCheck`, 2.14.0). An override is asked for here with a reason,
  * and approved in the approvals inbox by an Owner or Manager who did not ask.
  */
 export function OrderScreen() {
@@ -220,7 +222,7 @@ export function useCreditWords(): (check: OrderCreditCheck) => string {
   const { t } = useTranslation('wholesale');
   return (check) => {
     const values = {
-      customer: check.customer.name,
+      customer: check.customer?.name ?? '',
       over: formatMoney(check.overLimitPesewas),
       limit: formatMoney(check.creditLimitPesewas),
       exposure: formatMoney(check.exposurePesewas),
@@ -233,7 +235,7 @@ export function useCreditWords(): (check: OrderCreditCheck) => string {
   };
 }
 
-/** The credit check of a credit order, from the server (CR-046), or words that it waits for the server. */
+/** The credit check of a credit order, from the server (2.14.0). */
 function CreditCheckCard({ order }: { order: Order }) {
   const { t } = useTranslation(['wholesale', 'common']);
   const check = useOrderCreditCheck(order.id);
@@ -252,61 +254,57 @@ function CreditCheckCard({ order }: { order: Order }) {
         </CardTitle>
       </CardHeader>
       <CardBody className="grid gap-3">
-        {!creditControlOn() ? (
-          <p>{t('credit.waits')}</p>
-        ) : (
-          <QueryBoundary
-            query={check}
-            labels={labels}
-            isEmpty={() => false}
-            loadingFallback={<Skeleton label={labels.loading} shape="block" className="h-24" />}
-          >
-            {(c) => (
-              <div className="grid gap-3">
-                <Alert
-                  severity={
-                    c.outcome === 'PASSES' || c.outcome === 'NOT_REQUIRED' ? 'good' : 'critical'
-                  }
-                  title={words(c)}
-                />
-                <dl className="grid grid-cols-[minmax(0,1fr)_max-content] gap-x-4 gap-y-2">
-                  <dt>{t('credit.limit')}</dt>
-                  <dd className="text-end">
-                    <MoneyDisplay pesewas={c.creditLimitPesewas} />
-                  </dd>
-                  <dt>{t('credit.exposure')}</dt>
-                  <dd className="text-end">
-                    <MoneyDisplay pesewas={c.exposurePesewas} />
-                  </dd>
-                  <dt>{t('credit.thisOrder')}</dt>
-                  <dd className="text-end">
-                    <MoneyDisplay pesewas={c.orderPesewas} />
-                  </dd>
-                  <dt className="font-semibold">{t('credit.overBy')}</dt>
-                  <dd className="text-end">
-                    <MoneyDisplay pesewas={c.overLimitPesewas} strong />
-                  </dd>
-                  <dt>{t('credit.overdue')}</dt>
-                  <dd className="text-end">
-                    <MoneyDisplay pesewas={c.overduePesewas} />
-                  </dd>
-                  <dt>{t('credit.oldest')}</dt>
-                  <dd className="text-end">
-                    {c.oldestOverdueDays === null
-                      ? t('credit.nothingOverdue')
-                      : t('credit.days', { count: c.oldestOverdueDays })}
-                  </dd>
-                  <dt>{t('credit.terms')}</dt>
-                  <dd className="text-end">{t('credit.days', { count: c.paymentTermsDays })}</dd>
-                </dl>
-                <p className="text-control-sm text-fg-muted">
-                  {t('credit.checkedAt', { when: formatDateTime(c.checkedAt) })}
-                </p>
-                {c.override === null ? null : <OverrideState override={c.override} />}
-              </div>
-            )}
-          </QueryBoundary>
-        )}
+        <QueryBoundary
+          query={check}
+          labels={labels}
+          isEmpty={() => false}
+          loadingFallback={<Skeleton label={labels.loading} shape="block" className="h-24" />}
+        >
+          {(c) => (
+            <div className="grid gap-3">
+              <Alert
+                severity={
+                  c.outcome === 'PASSES' || c.outcome === 'NOT_REQUIRED' ? 'good' : 'critical'
+                }
+                title={words(c)}
+              />
+              <dl className="grid grid-cols-[minmax(0,1fr)_max-content] gap-x-4 gap-y-2">
+                <dt>{t('credit.limit')}</dt>
+                <dd className="text-end">
+                  <MoneyDisplay pesewas={c.creditLimitPesewas} />
+                </dd>
+                <dt>{t('credit.exposure')}</dt>
+                <dd className="text-end">
+                  <MoneyDisplay pesewas={c.exposurePesewas} />
+                </dd>
+                <dt>{t('credit.thisOrder')}</dt>
+                <dd className="text-end">
+                  <MoneyDisplay pesewas={c.orderPesewas} />
+                </dd>
+                <dt className="font-semibold">{t('credit.overBy')}</dt>
+                <dd className="text-end">
+                  <MoneyDisplay pesewas={c.overLimitPesewas} strong />
+                </dd>
+                <dt>{t('credit.overdue')}</dt>
+                <dd className="text-end">
+                  <MoneyDisplay pesewas={c.overduePesewas} />
+                </dd>
+                <dt>{t('credit.oldest')}</dt>
+                <dd className="text-end">
+                  {c.oldestOverdueDays === null
+                    ? t('credit.nothingOverdue')
+                    : t('credit.days', { count: c.oldestOverdueDays })}
+                </dd>
+                <dt>{t('credit.terms')}</dt>
+                <dd className="text-end">{t('credit.days', { count: c.paymentTermsDays })}</dd>
+              </dl>
+              <p className="text-control-sm text-fg-muted">
+                {t('credit.checkedAt', { when: formatDateTime(c.checkedAt) })}
+              </p>
+              {c.override === null ? null : <OverrideState override={c.override} />}
+            </div>
+          )}
+        </QueryBoundary>
       </CardBody>
     </Card>
   );
@@ -370,7 +368,9 @@ function OrderActions({ order: o }: { order: Order }) {
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const confirm = useApiMutation('confirmOrder', { invalidates: ['getOrder', 'listOrders'] });
   const proforma = useApiMutation('issueProforma', { invalidates: ['getOrder'] });
-  const override = useRequestCreditOverride();
+  const override = useApiMutation('requestCreditOverride', {
+    invalidates: ['getOrderCreditCheck', 'getOrder', 'listCreditOverrides'],
+  });
   const check = useOrderCreditCheck(o.id, o.paymentTerms === 'CREDIT');
   const failure = useStateLabels({
     loading: t('actions.working'),
@@ -380,20 +380,14 @@ function OrderActions({ order: o }: { order: Order }) {
   });
   const refused = confirm.error !== null && creditRefusal(confirm.error.code);
   const c = check.data;
-  const blocked =
-    c !== undefined &&
-    (c.outcome === 'OVER_LIMIT' || c.outcome === 'PAST_TERMS' || c.outcome === 'ON_HOLD');
+  const blocked = c !== undefined && c.reasons.length > 0;
   const overrideOpen =
     c?.override === null ||
     c?.override === undefined ||
     ['REJECTED', 'CANCELLED', 'EXPIRED'].includes(c.override.status);
   const canConfirm = o.status === 'PLACED' && auth.can('ord.order.confirm');
   const canOverride =
-    creditControlOn() &&
-    o.status === 'PLACED' &&
-    blocked &&
-    overrideOpen &&
-    auth.can('ord.order.confirm');
+    o.status === 'PLACED' && blocked && overrideOpen && auth.can('ord.order.confirm');
   const canProforma =
     (o.status === 'PLACED' || o.status === 'CONFIRMED') && auth.can('bil.proforma.create');
   return (

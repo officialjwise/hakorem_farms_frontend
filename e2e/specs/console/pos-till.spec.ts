@@ -41,6 +41,35 @@ test('a sale held offline stays on this till and comes back at the pack price', 
   await expect(page.locator('[data-slot="cart-total"]')).toHaveText(formatMoney(65000));
 });
 
+test('with the pack as 2.11.0 gives it, a goat is sold through quotes and orders, in words (CR-052)', async ({
+  page,
+  api,
+}) => {
+  installTillServer(api, serverTotal, { contractPack: true });
+  await openTillShift(page);
+  // Said on the tile before anything is tapped, never by a greyed-out tile alone.
+  const goat = page.getByRole('button', { name: 'Goat Sold through quotes and orders' });
+  await expect(goat).toBeVisible();
+  await goat.click();
+  await expect(
+    page.getByText('Goat is sold through quotes and orders, not at this till'),
+  ).toBeVisible();
+  await expect(page.getByText(/make a quote or an order for the customer/)).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByText('No items yet')).toBeVisible();
+  // Found by its tag, it says the same, and nothing goes on the sale.
+  await find(page, 'G-0142', /^Goat G-0142/);
+  await expect(
+    page.getByText('Goat is sold through quotes and orders, not at this till'),
+  ).toBeVisible();
+  await expect(page.getByText('No items yet')).toBeVisible();
+  // Everything else still sells.
+  await page.getByRole('button', { name: 'Tomatoes, crate' }).click();
+  await expect(page.locator('[data-slot="cart-total"]')).toHaveText(formatMoney(65000));
+  await expectNoHorizontalScroll(page);
+  await expectNoAxeViolations(page);
+});
+
 test('online, a held sale goes to the register with its lines', async ({ page, api }) => {
   installTillServer(api, serverTotal);
   await openTillShift(page);

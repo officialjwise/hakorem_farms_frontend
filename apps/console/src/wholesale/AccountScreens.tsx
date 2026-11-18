@@ -20,7 +20,7 @@ import {
   MutationFailure,
   NOT_APPLICABLE,
   QueryBoundary,
-  Select,
+  Textarea,
   Skeleton,
   Table,
   TableBody,
@@ -31,21 +31,21 @@ import {
   TableRow,
   TableRowHeader,
   formatDateTime,
+  formatMoney,
   useTableView,
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { shownFailure } from '../auth/StepUp';
-import { useApiAllPages, useApiMutation, useApiQuery } from '../data/api';
+import { useApiMutation, useApiQuery } from '../data/api';
 import { isApprovalPending } from '../lib/approval';
 import { LeaveGuardDialog, useLeaveGuard } from '../lib/LeaveGuard';
-import { uniqueById, useIntentKey } from '../lib/queries';
+import { useIntentKey } from '../lib/queries';
 import { ReadableId } from '../lib/ReadableId';
 import { ReasonDialog } from '../lib/ReasonDialog';
 import { PageHeader } from '../lib/ScreenHeader';
 import { useStateLabels } from '../lib/states';
 import { TableCard } from '../lib/TableCard';
 import { useCursorPages } from '../lib/useCursorPages';
-import { creditControlOn, type CreditOverrideWithReason } from '../requested/creditControl';
 import { ANY, FilterSelect, countSet, param } from '../stock/filters';
 import { AgeingBuckets } from './AgeingScreen';
 import { CustomerPicker } from './CustomerPicker';
@@ -206,7 +206,8 @@ interface TermsDraft {
   creditLimitPesewas: number | null;
   paymentTermsDays: string;
   overdueHoldDays: string;
-  priceListId: string;
+  /** Why the limit is asked for, shown to the approver (2.14.0). */
+  reason: string;
 }
 
 function TermsFields({
@@ -220,11 +221,6 @@ function TermsFields({
 }) {
   const { t } = useTranslation(['wholesale', 'common']);
   const required = t('common:field.required');
-  const lists = useApiAllPages(
-    'listPriceLists',
-    { query: { kind: 'CUSTOMER', limit: 100 } },
-    { staleClass: 'reference' },
-  );
   return (
     <>
       <Field
@@ -269,15 +265,11 @@ function TermsFields({
           onChange={(event) => onChange({ overdueHoldDays: event.target.value })}
         />
       </Field>
-      <Field label={t('fields.priceList')} hint={t('fields.priceListHint')}>
-        <Select
-          value={draft.priceListId}
-          onValueChange={(priceListId) => onChange({ priceListId })}
-          placeholder={t('fields.choosePriceList')}
-          options={uniqueById(lists.data?.items ?? []).map((list) => ({
-            value: list.id,
-            label: list.name,
-          }))}
+      <Field label={t('fields.limitReason')} hint={t('fields.limitReasonHint')}>
+        <Textarea
+          rows={2}
+          value={draft.reason}
+          onChange={(event) => onChange({ reason: event.target.value })}
         />
       </Field>
     </>
@@ -302,7 +294,7 @@ export function BusinessAccountNewScreen() {
     creditLimitPesewas: null,
     paymentTermsDays: '30',
     overdueHoldDays: '',
-    priceListId: '',
+    reason: '',
   });
   const [checked, setChecked] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -327,13 +319,14 @@ export function BusinessAccountNewScreen() {
       ...(draft.overdueHoldDays === ''
         ? {}
         : { overdueHoldDays: toDays(draft.overdueHoldDays) ?? 0 }),
-      ...(draft.priceListId === '' ? {} : { priceListId: draft.priceListId }),
+      ...(draft.reason.trim() === '' ? {} : { reason: draft.reason.trim() }),
     };
     create
       .mutateAsync({ body }, { idempotencyKey: keyFor(body) })
-      .then((made) => {
+      .then(() => {
+        // Opened at once; a limit asked for waits for its approver (202), and the account says so.
         setSaved(true);
-        return navigate(`/business-accounts/${made.customer.id}`);
+        return navigate(`/business-accounts/${customer.id}`);
       })
       .catch(() => undefined);
   };
@@ -423,6 +416,17 @@ export function BusinessAccountScreen() {
             >
               {a.holdReason ?? null}
             </Alert>
+          ) : null}
+          {a.pendingCreditLimitPesewas === null ? null : (
+            <Alert
+              severity="warning"
+              title={t('account.limitPending', {
+                limit: formatMoney(a.pendingCreditLimitPesewas),
+              })}
+            />
+          )}
+          {a.pendingRelease ? (
+            <Alert severity="warning" title={t('account.releasePending')} />
           ) : null}
           {a.availableCreditPesewas === 0 && a.status === 'ACTIVE' ? (
             <Alert severity="warning" title={t('account.noCreditLeft')} />
@@ -541,7 +545,7 @@ function AccountActions({ account: a }: { account: Account }) {
     creditLimitPesewas: a.creditLimitPesewas,
     paymentTermsDays: String(a.paymentTermsDays),
     overdueHoldDays: String(a.overdueHoldDays),
-    priceListId: a.priceList?.id ?? '',
+    reason: '',
   });
   const [checked, setChecked] = useState(false);
   const failure = useStateLabels({
@@ -558,12 +562,15 @@ function AccountActions({ account: a }: { account: Account }) {
       path: { customerId: a.customer.id },
       body: {
         version: a.version,
-        creditLimitPesewas: draft.creditLimitPesewas ?? 0,
+        // Every limit change waits for an approver (2.14.0), so an unchanged limit is not sent.
+        ...(draft.creditLimitPesewas === a.creditLimitPesewas
+          ? {}
+          : { creditLimitPesewas: draft.creditLimitPesewas ?? 0 }),
         paymentTermsDays: toDays(draft.paymentTermsDays) ?? 0,
         ...(draft.overdueHoldDays === ''
           ? {}
           : { overdueHoldDays: toDays(draft.overdueHoldDays) ?? 0 }),
-        ...(draft.priceListId === '' ? {} : { priceListId: draft.priceListId }),
+        ...(draft.reason.trim() === '' ? {} : { reason: draft.reason.trim() }),
       },
     };
     update
@@ -630,11 +637,8 @@ function AccountActions({ account: a }: { account: Account }) {
               {t('account.hold')}
             </Button>
           ) : null}
-          {/* The owner (2026-11-18): an Owner or Manager releases a hold, never the Accountant who may put one
-              on. Until the seed splits the permission (CR-048), releasing takes the hold and the terms'. */}
-          {auth.can('whl.account.hold') &&
-          auth.can('whl.account.manage') &&
-          a.status === 'ON_HOLD' ? (
+          {/* An Owner or Manager releases a hold, never the Accountant who may put one on (2.14.0, CR-048). */}
+          {auth.can('whl.account.release') && a.status === 'ON_HOLD' && !a.pendingRelease ? (
             <Button variant="secondary" onClick={() => setOpen('release')}>
               {t('account.release')}
             </Button>
@@ -682,7 +686,7 @@ function AccountActions({ account: a }: { account: Account }) {
             const answer: unknown = await release.mutateAsync(input, {
               idempotencyKey: keyFor(input),
             });
-            // CR-048: a release may wait for an Owner or Manager other than the one who asked.
+            // A release waits for an Owner or Manager other than the one who asked (2.14.0, CR-048).
             setOutcome(
               isApprovalPending(answer)
                 ? { approvalId: answer.approvalRequestId, waiting: 'release' }
@@ -726,12 +730,11 @@ function Overrides({ customerId }: { customerId: string }) {
                   <TableHead numeric>{t('columns.limit')}</TableHead>
                   <TableHead numeric>{t('columns.exposure')}</TableHead>
                   <TableHead>{t('columns.approvedBy')}</TableHead>
-                  {creditControlOn() ? <TableHead>{t('columns.reason')}</TableHead> : null}
+                  <TableHead>{t('columns.reason')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {page.data.map((row) => {
-                  const o = row as CreditOverrideWithReason;
+                {page.data.map((o) => {
                   return (
                     <TableRow key={o.id}>
                       <TableRowHeader>
@@ -750,17 +753,11 @@ function Overrides({ customerId }: { customerId: string }) {
                           who: o.approvedBy.displayName,
                           when: formatDateTime(o.recordedAt),
                         })}
-                        {o.requestedBy === undefined ? null : (
-                          <span className="block text-control-sm text-fg-muted">
-                            {t('overrides.askedBy', { who: o.requestedBy.displayName })}
-                          </span>
-                        )}
+                        <span className="block text-control-sm text-fg-muted">
+                          {t('overrides.askedBy', { who: o.requestedBy.displayName })}
+                        </span>
                       </TableCell>
-                      {creditControlOn() ? (
-                        <TableCell label={t('columns.reason')}>
-                          {o.reason ?? NOT_APPLICABLE}
-                        </TableCell>
-                      ) : null}
+                      <TableCell label={t('columns.reason')}>{o.reason}</TableCell>
                     </TableRow>
                   );
                 })}

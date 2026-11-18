@@ -199,9 +199,9 @@
     "overdueHoldDaysHint": "Days past due after which the account goes on hold by itself. Leave it empty for the farm's default.",
     "daysWrong": "Type a whole number of days, from 0 to 365.",
     "priceList": "Price list",
-    "priceListHint": "The buyer's own prices (a customer price list), read first when their lines are priced.",
-    "choosePriceList": "No price list of their own",
-    "accountManager": "Account manager"
+    "accountManager": "Account manager",
+    "limitReason": "Why this limit",
+    "limitReasonHint": "Shown to the Owner or Manager who approves a new limit. Leave it empty when the limit stays the same."
   },
   "builder": {
     "title": "New quote",
@@ -282,7 +282,7 @@
     "issuing": "Sending",
     "notIssued": "The quote was not sent",
     "issueTitle": "Send {{name}}, version {{number}}?",
-    "issueBody": "The customer gets a link to read and accept it. Earlier versions are replaced and their links stop working.",
+    "issueBody": "Earlier versions are replaced and their links stop working. Once it is issued, its link is shown here once, to copy or send on WhatsApp.",
     "channels": "Send the link by",
     "channelsNone": "Choose at least one way to send the link.",
     "revise": "Revise",
@@ -308,7 +308,7 @@
     "discard": "Discard changes"
   },
   "outcome": {
-    "issued": "{{name}} was sent to the customer",
+    "issued": "{{name}} is issued, and its link is ready to pass on",
     "saved": "{{name}} was saved",
     "revised": "A new draft version of {{name}} was started",
     "accepted": "{{name}} is recorded as accepted",
@@ -318,7 +318,8 @@
     "marginWaiting": "This version waits for margin approval",
     "converted": "{{name}} is now order {{order}}",
     "openOrder": "Open the order",
-    "openApproval": "Open the approval"
+    "openApproval": "Open the approval",
+    "newLink": "A new link to {{name}} is ready to pass on"
   },
   "rfqs": {
     "title": "Requests for quote",
@@ -371,7 +372,6 @@
     "loading": "Checking the buyer's credit",
     "error": "The credit check could not be loaded",
     "denied": "You cannot see this order's credit check.",
-    "waits": "The amount over the limit waits for the server (CR-046). Confirming still checks the credit, and the server's answer is shown here.",
     "limit": "Credit limit",
     "exposure": "Owed before this order",
     "thisOrder": "This order",
@@ -390,7 +390,8 @@
       "OVER_LIMIT": "This order would take {{customer}} {{over}} over their {{limit}} credit limit.",
       "PAST_TERMS": "{{customer}} has {{overdue}} overdue, the oldest {{days}} days past due on {{terms}}-day terms.",
       "ON_HOLD": "{{customer}}'s account is on hold: no credit order is confirmed until it is released.",
-      "NOT_REQUIRED": "Not a credit order: no credit check is needed."
+      "NOT_REQUIRED": "Not a credit order: no credit check is needed.",
+      "NO_ACCOUNT": "This buyer has no open business account, so the farm cannot give this order credit. Open an account for them, or take a payment first."
     }
   },
   "override": {
@@ -436,7 +437,7 @@
     "notSaved": "The account was not saved",
     "onHold": "On hold since {{when}}: no credit order is confirmed",
     "noCreditLeft": "No credit left: the next credit order needs a payment or an override",
-    "noPriceList": "None of their own: channel prices",
+    "noPriceList": "None of their own: channel prices. A buyer's prices are given on the price list, under Who pays these prices.",
     "owes": "What they owe",
     "exposure": "Owed now",
     "exposureHint": "Owed now is unpaid invoices plus confirmed orders not yet invoiced, as the server works it out.",
@@ -460,7 +461,9 @@
       "released": "{{name}} is released from hold",
       "limitWaiting": "The new limit waits for an Owner or Manager other than you",
       "releaseWaiting": "The release waits for an Owner or Manager other than you"
-    }
+    },
+    "limitPending": "A credit limit of {{limit}} waits for an Owner or Manager who did not ask. Until then the limit below stands.",
+    "releasePending": "A release from hold waits for an Owner or Manager who did not ask. The account stays on hold until then."
   },
   "ageing": {
     "title": "Ageing",
@@ -483,5 +486,19 @@
       "days61To90Pesewas": "61 to 90 days late",
       "daysOver90Pesewas": "Over 90 days late"
     }
+  },
+  "link": {
+    "title": "The customer's link",
+    "once": "This link is shown only once. Copy it or send it now: the farm keeps no copy of it.",
+    "again": "If it is lost, make a new link from this quote with \"Make a new link\". Links already given keep working until this version is replaced or expires.",
+    "copy": "Copy the link",
+    "whatsApp": "Send on WhatsApp to {{phone}}",
+    "message": "Hello {{name}}, here is your quote {{number}} from HaKorem Farms. Open it to read and accept it: {{link}}",
+    "messageIs": "WhatsApp opens with this message, for you to send: \"{{message}}\"",
+    "make": "Make a new link",
+    "makeTitle": "Make a new link to {{name}}?",
+    "makeBody": "The new link is shown once, to copy or send on WhatsApp. Nothing is sent to the customer, and links already given keep working.",
+    "notMade": "The new link was not made",
+    "noShop": "This console was built without the shop's address (HK_SHOP_URL), so it cannot show the quote's link."
   }
 }

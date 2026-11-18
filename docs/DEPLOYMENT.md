@@ -106,6 +106,22 @@ The till loads its shell and sale screen with the document. Every other till scr
 
 ## 5. Never set `HK_REQUESTED_CONTRACT` for a deployed console (ADR 0046)
 
-`HK_REQUESTED_CONTRACT` names the contract requests a build is built against before the contract carries them (`CR-032,CR-033,CR-046,CR-050` in the e2e and CI builds, whose fake answers them). A staging or production build leaves it **unset**: the console then calls nothing the contract lacks, and the till says in words that the PIN lock, offline mobile money, the cash drop witness and the receipt link wait for the server, and a product is sold in its one sale unit only (no single egg beside the crate, CR-038); in the back office, a supplier's account lists its invoices, claims and payments without the balance (CR-042). A build that sets it with `HK_API_BASE_URL` anything but `/mock` **fails before building**, naming the switches (the owner's condition on ADR 0046).
+`HK_REQUESTED_CONTRACT` names the contract requests a build is built against before the contract carries them (`CR-032,CR-033,CR-050` in the e2e and CI builds, whose fake answers them). A staging or production build leaves it **unset**: the console then calls nothing the contract lacks, and the till says in words that the PIN lock, offline mobile money, the cash drop witness and the receipt link wait for the server, and a product is sold in its one sale unit only (no single egg beside the crate, CR-038); in the back office, a supplier's account lists its invoices, claims and payments without the balance (CR-042). A build that sets it with `HK_API_BASE_URL` anything but `/mock` **fails before building**, naming the switches (the owner's condition on ADR 0046).
 
 **How to check it:** the deploy workflow's console build step sets `HK_API_BASE_URL` and nothing named `HK_REQUESTED_CONTRACT`.
+
+## 6. Set `HK_SHOP_URL` for every deployed console (ADR 0056)
+
+The console shows a quote's link once, after it is sent, to copy or send on WhatsApp (the owner, 2026-11-18). The link is the shop's address and the storefront's `/q/{token}` page. The console learns the shop's address only from `HK_SHOP_URL`, read at build time, never from the code.
+
+**What F13 does:** build the console with `HK_SHOP_URL` set to the shop's own origin, the same as the storefront's `NEXT_PUBLIC_SITE_URL`:
+
+| Build      | `HK_API_BASE_URL` | `HK_SHOP_URL`                     |
+| ---------- | ----------------- | --------------------------------- |
+| production | `/api/v1`         | `https://hakoremfarms.com`        |
+| staging    | `/api/v1`         | the staging shop's own `https://` |
+| e2e and CI | `/mock`           | `http://127.0.0.1:3100`           |
+
+A build for any API but `/mock` without it **fails before building**, naming the variable: the token in a link is answered once, so a console that could not show it would lose it.
+
+**How to check it:** the deploy workflow's console build step sets `HK_SHOP_URL`; the smoke suite on staging sends a quote and finds its link beginning with the staging shop's address.

@@ -313,48 +313,46 @@ describe('useRequestedQuery (ADR 0052)', () => {
 });
 
 describe('useRequestedMutation (ADR 0053)', () => {
-  const override = {
-    request: 'CR-046',
-    operationId: 'requestCreditOverride',
+  // CR-032's PIN events and verifiers, still requested; CR-046's override landed in 2.14.0, and the
+  // client now refuses it as a requested operation.
+  const events = {
+    request: 'CR-032',
+    operationId: 'reportTillPinEvents',
     method: 'post',
-    path: '/orders/{id}/credit-override',
-    permission: 'ord.order.confirm',
+    path: '/registers/{id}/pin-events',
+    permission: 'pos.shift.open',
     idempotent: true,
     csrf: 'required',
     public: false,
     body: 'json',
-    device: false,
+    device: true,
   } as const;
-  const check = { ...override, operationId: 'getOrderCreditCheck', method: 'get' } as const;
+  const verifiers = { ...events, operationId: 'listTillPinVerifiers', method: 'get' } as const;
 
   it('sends the body with an idempotency key and refetches the requested read it names', async () => {
-    const { api, wrapper, queryClient, requests } = testData(() =>
-      json({ status: 'PENDING_APPROVAL' }, 202),
-    );
+    const { api, wrapper, queryClient, requests } = testData(() => json({ accepted: 1 }, 200));
     const useRequestedMutation = createRequestedMutation(api);
-    queryClient.setQueryData(['requested', 'getOrderCreditCheck', { path: { id: 'o1' } }], {});
+    queryClient.setQueryData(['requested', 'listTillPinVerifiers', { path: { id: 'r1' } }], {});
     queryClient.setQueryData(['requested', 'getSupplierBalance', { path: { id: 's1' } }], {});
     const { result } = renderHook(
-      () => useRequestedMutation(override, { invalidates: [check.operationId] }),
+      () => useRequestedMutation(events, { invalidates: [verifiers.operationId] }),
       { wrapper },
     );
-    await act(() =>
-      result.current.mutateAsync({ path: { id: 'o1' }, body: { reason: 'Pays on Friday' } }),
-    );
-    expect(requests[0]?.url).toBe('http://api.test/v1/orders/o1/credit-override');
+    await act(() => result.current.mutateAsync({ path: { id: 'r1' }, body: { events: [] } }));
+    expect(requests[0]?.url).toBe('http://api.test/v1/registers/r1/pin-events');
     expect(requests[0]?.headers.get('Idempotency-Key')).toMatch(UUID);
-    expect(await requests[0]?.json()).toEqual({ reason: 'Pays on Friday' });
+    expect(await requests[0]?.json()).toEqual({ events: [] });
     const stale = (key: readonly unknown[]) => queryClient.getQueryState(key)?.isInvalidated;
-    expect(stale(['requested', 'getOrderCreditCheck', { path: { id: 'o1' } }])).toBe(true);
+    expect(stale(['requested', 'listTillPinVerifiers', { path: { id: 'r1' } }])).toBe(true);
     expect(stale(['requested', 'getSupplierBalance', { path: { id: 's1' } }])).toBe(false);
   });
 
   it('keeps the refusal as the normalised ApiError', async () => {
     const { api, wrapper } = testData(() => json(envelope('MAKER_CANNOT_CHECK'), 422));
     const useRequestedMutation = createRequestedMutation(api);
-    const { result } = renderHook(() => useRequestedMutation(override), { wrapper });
+    const { result } = renderHook(() => useRequestedMutation(events), { wrapper });
     await act(() =>
-      result.current.mutateAsync({ path: { id: 'o1' }, body: { reason: 'x' } }).catch(() => {}),
+      result.current.mutateAsync({ path: { id: 'r1' }, body: { events: [] } }).catch(() => {}),
     );
     await waitFor(() => expect(result.current.error?.code).toBe('MAKER_CANNOT_CHECK'));
   });

@@ -805,6 +805,8 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 
 **Until this lands:** the order's credit check and the override are built against these shapes behind `HK_REQUESTED_CONTRACT=CR-046` (ADR 0046, ADR 0052, ADR 0053): `apps/console/src/requested/creditControl.ts`, answered in the e2e suite by `e2e/support/requested.ts`. With the switch off, the order page confirms as the contract says, shows a 202 as "waiting for a credit override" with its approval, shows `CREDIT_CHECK_UNAVAILABLE` in words, and says that the amount over waits for the server.
 
+**Answered in 2.14.0 (F10m):** `getOrderCreditCheck`, `requestCreditOverride` (202 `CreditOverridePending`) and `CreditOverride.reason`, `requestedBy` and `overLimitPesewas`, in the requested shape, with `reasons` and an outcome `NO_ACCOUNT` beside it; `confirmOrder` takes `creditOverrideReason`. The switch and `requested/creditControl.ts` are deleted: the order's credit card and the override call the generated client, and the account's overrides always show who asked and why.
+
 ## CR-047. The quote link's token, and what an accepted or replaced quote says (description fix, additive)
 
 - **Raised by:** frontend, the quote acceptance page: "the link carries its own long random token, never a quote number or ID. Show clear states for an expired quote and for one replaced by a newer revision" (owner, 2026-11-17).
@@ -845,6 +847,8 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 
 **Until this lands:** the test fake gives these roles as above (A-F10-10), with `whl.account.manage` standing in for the release permission: the console offers "Release from hold" only to a holder of both `whl.account.hold` and `whl.account.manage`, so the Accountant who may put a hold on never sees it. The account screen already shows a 202 from a limit change or a release as waiting for an Owner or Manager other than the person who asked, with the approval. No switch: the shapes are the contract's.
 
+**Answered in 2.14.0 and 2.16.0 (F10m):** the seed grants `whl.*` as asked (the Owner and the Manager everything, with `whl.account.release` and `whl.credit.override`; Sales and the Accountant the reads, the Accountant the hold); `releaseBusinessAccount` takes `whl.account.release` and answers 202 `ACCOUNT_RELEASE`; every credit-limit change answers 202 `CREDIT_LIMIT_CHANGE`. Built: "Release from hold" is offered to a holder of `whl.account.release`, an account says when a limit or a release waits for its second person (`pendingCreditLimitPesewas`, `pendingRelease`), and the fake's grants match the seed.
+
 ## CR-049. The shop's request for quote takes a quantity and its unit (additive)
 
 - **Raised by:** frontend, F10i, the request-for-quote form: "how many crates". The owner (2026-11-18): the count as text is fine until the backend adds a quantity and unit field.
@@ -874,7 +878,7 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 
 **Request:** the band each sellable animal is sold at, resolved as the server would at the counter (the register's lists, a buyer with no account, its grade and its weight band from `lastWeightKg`): `OfflineStockUnit.priceBand: PriceBand | null` and `OfflineStockUnit.priceListEntryId: uuid | null`, null when the animal has no price at this register. A product priced per kilogram keeps its own band, and the scale gives the weight. Say in `syncOfflineSales` how an animal re-weighed at the sale is priced if its weight moved it to another band.
 
-**Until this lands:** a till with the real pack refuses a goat in words and sells everything else. The e2e pack gives the goat the per-head band of 2.10.0's example (`goatPricedPerHead` in `e2e/support/till.ts`), so the till's own tests still run with an animal.
+**Until this lands** (the owner, 2026-11-18: the backend adds each animal's price to the pack late in the till work): with the real pack, an animal's tile says "Sold through quotes and orders" before it is tapped, and a tap, or its tag found by search, says the animal is sold through quotes and orders, not at this till, and to make a quote or an order in the back office. Nothing goes on the sale, and everything else sells (`soldThroughQuotes` in `pos/sale/catalogue.ts`; `pos-till.spec.ts` with the pack as 2.11.0 answers it). The other till specs give the goat the per-head band of 2.10.0's example (`goatPricedPerHead` in `e2e/support/till.ts`), so they still run with an animal.
 
 ## CR-053. An order names its pick lists and the answer it waits for (additive)
 
