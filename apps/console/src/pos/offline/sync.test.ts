@@ -165,7 +165,7 @@ const sale = (h: ReturnType<typeof harness>, lines: CartLine[] = [EGGS], handed 
   });
 
 describe("a shift opened offline takes the pack's sequence (2.15.0)", () => {
-  it('prints the pack\'s nextShiftSeq in its references, and sends it as shiftSeq', async () => {
+  it("prints the pack's nextShiftSeq in its references, and sends it as shiftSeq", async () => {
     let online = false;
     const s = server({
       openShift: (sent) => {
