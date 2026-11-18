@@ -1,6 +1,6 @@
 # F10j: quotes, wholesale accounts and credit control
 
-- **Session:** F10 continued, on branch `claude/determined-goodall-33snvl`, from `main` at `4df43d7` (F10g merged as PR #26), rebased onto `678f8c9` (F10h merged as PR #27) before merging.
+- **Session:** F10 continued, on branch `claude/determined-goodall-33snvl`, from `main` at `4df43d7` (F10g merged as PR #26), rebased onto `678f8c9` (F10h merged as PR #27), then merged with `37e5c98` (F10i, the till's shift, merged as PR #29).
 - **Date:** 2026-11-17
 - **Scope:** the F10 row of `docs/BUILD_PROMPT.md`, in the owner's order:
   1. quotes in the console: built, revised, sent, converted;
@@ -8,8 +8,12 @@
   3. accepting a quote from a phone (the gate);
   4. wholesale accounts;
   5. credit control: ageing, the refusal with the amount over, the override.
-- **Parallel work:** the other session (F10h) merged first. It synced the same contract 2.5.0 and built nothing else, so the rebase met only a comment in `fakeRoles.test.ts` and `package.json`'s e2e lines. Its report took the name F10h, so this one is F10j (screenshots in `docs/screenshots/F10j/`, tag `F10j`). No supplier, purchase order, supplier invoice or payment screen was touched, and not the till.
-- **How it was built:** the storefront half (items 2 and 3, ADR 0054) was built in a separate worktree on a branch and merged in; the rebase made the history linear. The only conflict was `package.json`'s three e2e lines, which carry both the console's switches and the storefront's API address.
+- **Parallel work:** two other sessions merged while this one ran, and it took the next free names and numbers.
+  - **F10h (PR #27)** synced the same contract 2.5.0 and built nothing else; this branch was rebased onto it.
+  - **F10i (PR #29)**, the till's shift on 2.5.0, took the name F10i, **CR-045** (who can witness a cash drop) and **A-F10-07 to A-F10-09**. This session is therefore **F10j**; its requests are **CR-046 to CR-050** and its assumptions **A-F10-10 to A-F10-12**; screenshots are in `docs/screenshots/F10j/`, tag `F10j`.
+  - PR #29 was **merged into this branch, not rebased under it**: replaying seventeen commits that still named the old numbers against main's CR-045 would have meant resolving the same switch lists again and again, with a misleading history in between. One merge commit resolves it against the renumbered state. The conflicts were the switch lists (now `CR-032,CR-033,CR-038,CR-042,CR-045,CR-046,CR-047`), `landed.ts`, the i18n registry and harness (`wholesale` beside `refusals`), and the appended rows of the two docs tables.
+  - No supplier, purchase order, supplier invoice or payment screen was touched, and not the till.
+- **How it was built:** the storefront half (items 2 and 3, ADR 0054) was built in a separate worktree on a branch and merged in. The only conflict was `package.json`'s three e2e lines, which carry both the console's switches and the storefront's API address.
 
 ## The contract: 2.5.0, additive, and B10 not in it yet
 
@@ -262,7 +266,7 @@ Every screen is in `docs/screenshots/F10j/`, at 360 and 1280 px (`pnpm screensho
 | `budget:storefront` (new)                                           | 0    | `/quote` 157.1 and `/q/[token]` 169.3 of 170 kB; listings 121.7 against 120 (target) |
 | `test:e2e`, full run                                                | 0    | 310 of 310 in 5.1 minutes (was 286: 14 console and 10 storefront quote tests)        |
 
-**The till grew by 0.2 kB** without being touched. The shared namespace table (`packages/i18n`) carries one more loader, for `wholesale`. It has 2.7 kB left; the F10g opening message's item 2 (load the till's refusal words on demand) is now more pressing.
+**The till** is at 242.3 kB after the merge: F10i loaded its refusal and shift words on demand (247.1 to 242.1 kB), and this session's `wholesale` loader in the shared namespace table adds 0.2 kB.
 
 ## For the owner
 
@@ -291,6 +295,6 @@ Read ADR 0046, 0052, 0053 and 0054.
      acceptance gets.
    - If units carry plural names: "540 eggs", "10 crates" in stock/units.ts and the e2e expectations.
    - CR-038, CR-039, CR-032, CR-033, CR-042 to CR-044: as the F10g opening message says.
-2. The till is at 247.3 of 250 kB: load common:refusals' rule words on demand there (F10g item 2).
+2. The listing pages are 1.7 kB over their 120 kB target (pnpm budget:storefront prints it): the owner decides whether CI fails on them.
 3. If B9b went live, take the F10 report's items against the real API.
 ```
