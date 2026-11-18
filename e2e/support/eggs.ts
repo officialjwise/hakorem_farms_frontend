@@ -130,6 +130,7 @@ export function eggEntries(base: S['PriceListEntry']): S['PriceListEntry'][] {
     weightBand: null,
     basis: 'PER_UNIT' as const,
     quoteOnly: false,
+    baseUom: 'EGG',
   };
   return [
     {

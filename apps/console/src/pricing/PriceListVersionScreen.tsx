@@ -252,7 +252,7 @@ function ChangeBadge({ kind }: { kind: ChangeKind }) {
 /**
  * What a line prices, in words: the product, its grade and band, the selling unit (a crate or a single
  * egg, 2.1.0), and the quantity break counted in that unit, with the same break in the base unit as the
- * API states it (`minQtyBase`). Nothing is converted here.
+ * API states it (`minQtyBase` in `baseUom`, CR-041): "from 10 crates (300 eggs)". Nothing is converted here.
  */
 export function entryWords(
   entry: PriceListEntry,
@@ -275,10 +275,9 @@ export function entryWords(
       ? undefined
       : entry.minQtyBase === entry.minQty
         ? t('entry.minQty', { qty: qty(entry.minQty, entry.uom) })
-        : // The entry names no base unit (`ProductRef` has none), so the base figure is shown bare.
-          t('entry.minQtyBoth', {
+        : t('entry.minQtyBoth', {
             qty: qty(entry.minQty, entry.uom),
-            base: formatQuantity(entry.minQtyBase, { places: 0 }),
+            base: qty(entry.minQtyBase, entry.baseUom),
           }),
   ].filter((part): part is string => part !== undefined);
 }
