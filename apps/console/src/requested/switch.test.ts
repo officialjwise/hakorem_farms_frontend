@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { operationManifest } from '@hakorem/api-client';
-import { GET_SUPPLIER_BALANCE } from './supplierBalance';
+import { LIST_SHIFT_WITNESSES } from './shiftWitnesses';
 import { LIST_TILL_PIN_VERIFIERS, REPORT_TILL_PIN_EVENTS } from './tillPin';
 import {
   assertSwitchesAllowed,
@@ -35,8 +35,9 @@ describe('the requested-contract switch (ADR 0046)', () => {
     expect(() => parseRequestedContract('CR-032,CR-099')).toThrow(/CR-099/);
   });
 
-  it('refuses CR-034, which landed in contract 2.0.0 and has no switch any more', () => {
+  it('refuses CR-034 and CR-042, which landed (2.0.0, 2.9.0) and have no switch any more', () => {
     expect(() => parseRequestedContract('CR-032,CR-033,CR-034')).toThrow(/CR-034/);
+    expect(() => parseRequestedContract('CR-032,CR-042')).toThrow(/CR-042/);
   });
 });
 
@@ -64,6 +65,6 @@ describe("the owner's conditions on ADR 0046", () => {
   it('describes no requested operation the generated manifest already lists', () => {
     expect(LIST_TILL_PIN_VERIFIERS.operationId in operationManifest).toBe(false);
     expect(REPORT_TILL_PIN_EVENTS.operationId in operationManifest).toBe(false);
-    expect(GET_SUPPLIER_BALANCE.operationId in operationManifest).toBe(false);
+    expect(LIST_SHIFT_WITNESSES.operationId in operationManifest).toBe(false);
   });
 });

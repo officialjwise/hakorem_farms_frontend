@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 import type { components } from '@hakorem/api-client';
 import {
-  Alert,
   Button,
   Card,
   CardBody,
@@ -21,7 +20,6 @@ import { PageHeader } from '../lib/ScreenHeader';
 import { useStateLabels } from '../lib/states';
 import { TableCard } from '../lib/TableCard';
 import { useCursorPages } from '../lib/useCursorPages';
-import { supplierBalanceOn, useSupplierBalance } from '../requested/supplierBalance';
 import {
   ClaimStatusBadge,
   InvoiceStatusBadge,
@@ -32,9 +30,9 @@ import {
 type S = components['schemas'];
 
 /**
- * A supplier's account: the balance the server works out (CR-042, behind its switch), and beneath it each
- * invoice still owed, each open claim and each payment, with the API's own figures. With the switch off the
- * screen says the balance waits for the server; it never adds the rows up itself.
+ * A supplier's account: the balance the server works out (`getSupplierBalance`, CR-042, 2.9.0), and beneath
+ * it each invoice still owed, each open claim and each payment, with the API's own figures. It never adds the
+ * rows up itself.
  */
 export function SupplierAccountScreen() {
   const { t } = useTranslation(['payables', 'common']);
@@ -100,23 +98,16 @@ export function SupplierAccountScreen() {
   );
 }
 
-/** The server's balance (CR-042), or words that it waits for the server. */
+/** The server's balance (`getSupplierBalance`, 2.9.0). */
 function Balance({ supplierId }: { supplierId: string }) {
   const { t } = useTranslation(['payables', 'common']);
-  const balance = useSupplierBalance(supplierId);
+  const balance = useApiQuery('getSupplierBalance', { path: { id: supplierId } });
   const labels = useStateLabels({
     loading: t('balance.loading'),
     emptyTitle: t('balance.error'),
     errorTitle: t('balance.error'),
     deniedTitle: t('balance.denied'),
   });
-  if (!supplierBalanceOn()) {
-    return (
-      <Alert severity="info" title={t('balance.waits')}>
-        {t('balance.waitsBody')}
-      </Alert>
-    );
-  }
   return (
     <section aria-labelledby="balance-title">
       <Card>

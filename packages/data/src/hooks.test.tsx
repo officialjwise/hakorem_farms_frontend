@@ -262,36 +262,36 @@ describe('useApiAllPages', () => {
 });
 
 describe('useRequestedQuery (ADR 0052)', () => {
-  const balance = {
-    request: 'CR-042',
-    operationId: 'getSupplierBalance',
+  const witnesses = {
+    request: 'CR-050',
+    operationId: 'listShiftWitnesses',
     method: 'get',
-    path: '/suppliers/{id}/balance',
-    permission: 'pur.supplier_invoice.read',
+    path: '/shifts/{id}/witnesses',
+    permission: 'pos.cash.move',
     idempotent: false,
     csrf: 'none',
     public: false,
     body: 'none',
-    device: false,
+    device: true,
   } as const;
 
   it('reads the requested operation under its own key, apart from every generated one', async () => {
-    const answer = { owedPesewas: 94_050 };
+    const answer = { data: [], asOf: '2026-11-18T09:00:00Z' };
     const { api, wrapper, queryClient, requests } = testData(() => json(answer));
     const useRequestedQuery = createRequestedQuery(api);
     const input = { path: { id: 's/1' } };
-    const { result } = renderHook(() => useRequestedQuery(balance, input), { wrapper });
+    const { result } = renderHook(() => useRequestedQuery(witnesses, input), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(requests[0]?.url).toBe('http://api.test/v1/suppliers/s%2F1/balance');
+    expect(requests[0]?.url).toBe('http://api.test/v1/shifts/s%2F1/witnesses');
     expect(result.current.data).toEqual(answer);
-    expect(queryClient.getQueryData(['requested', 'getSupplierBalance', input])).toEqual(answer);
+    expect(queryClient.getQueryData(['requested', 'listShiftWitnesses', input])).toEqual(answer);
   });
 
   it('sends nothing while its switch holds it back', async () => {
     const { api, wrapper, requests } = testData(() => json({}));
     const useRequestedQuery = createRequestedQuery(api);
     const { result } = renderHook(
-      () => useRequestedQuery(balance, { path: { id: 's1' } }, { enabled: false }),
+      () => useRequestedQuery(witnesses, { path: { id: 's1' } }, { enabled: false }),
       { wrapper },
     );
     await Promise.resolve();
@@ -302,7 +302,7 @@ describe('useRequestedQuery (ADR 0052)', () => {
   it('fails with the normalised ApiError and does not retry a 403', async () => {
     const { api, wrapper, requests } = testData(() => json(envelope('FORBIDDEN'), 403));
     const useRequestedQuery = createRequestedQuery(api);
-    const { result } = renderHook(() => useRequestedQuery(balance, { path: { id: 's1' } }), {
+    const { result } = renderHook(() => useRequestedQuery(witnesses, { path: { id: 's1' } }), {
       wrapper,
     });
     await waitFor(() => expect(result.current.isError).toBe(true));

@@ -6,6 +6,7 @@
  */
 import { screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { formatMoney } from '@hakorem/ui';
 import { queryClient } from '../data/api';
 import { renderApp, signedIn } from '../test/harness';
 import { holdResponses, mock } from '../test/integration-setup';
@@ -79,13 +80,12 @@ describe('supplier payments', () => {
 });
 
 describe("a supplier's account", () => {
-  it('says the balance waits for the server, and lists its invoices, claims and payments', async () => {
+  it("shows the server's balance, and lists its invoices, claims and payments", async () => {
     await renderApp(`/suppliers/${ANY_ID}`, await signedIn('owner'));
-    expect(
-      await screen.findByText('The balance waits for the server', {}, { timeout: 5000 }),
-    ).toBeInTheDocument();
-    // Switch off (CR-042): nothing is asked for the balance, and nothing on screen adds the rows up.
-    expect(screen.queryByRole('region', { name: 'Balance' })).toBeNull();
+    // getSupplierBalance (2.9.0): every figure is the server's; nothing on screen adds the rows up.
+    const balance = await screen.findByRole('region', { name: 'Balance' }, { timeout: 5000 });
+    await waitFor(() => expect(balance).toHaveTextContent(formatMoney(103_642)));
+    expect(balance).toHaveTextContent(formatMoney(37_345));
     await waitFor(() =>
       expect(screen.getByRole('region', { name: 'Invoices still owed' })).toHaveTextContent(
         'Invoice',

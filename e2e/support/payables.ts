@@ -2,11 +2,10 @@
  * The supplier invoice session's fixtures (F10g, contract 2.4.0): the egg order of the buying session
  * (20 crates of big eggs at GH₵47.50 a crate from Awutu Poultry Farm), its receipt (18 crates in, 2 cracked
  * crates turned away), the claim for those 2 crates, the supplier's invoices, a payment and the supplier's
- * balance (CR-042, requested). Every amount here is the server's answer, stated as the server would give it;
+ * balance (`getSupplierBalance`, CR-042 as it landed in 2.9.0). Every amount here is the server's answer, stated as the server would give it;
  * the screens never work one out.
  */
 import type { components } from '@hakorem/api-client';
-import { GET_SUPPLIER_BALANCE } from '../../apps/console/src/requested/supplierBalance';
 import { eggOrder, eggReceipt, EGGS_REF, ORDER_ID, ORDER_LINE_ID, SUPPLIER } from './eggs';
 import type { FakeApi } from './fakeApi';
 
@@ -74,6 +73,7 @@ function eggLine(
     | 'matchReasons'
     | 'qtyVariance'
     | 'priceVariancePesewas'
+    | 'priceVarianceLinePesewas'
     | 'priceVarianceDirection'
   >,
 ): S['SupplierInvoiceLine'] {
@@ -100,12 +100,18 @@ function eggLine(
 
 const UNCHECKED: Pick<
   S['SupplierInvoiceLine'],
-  'matchStatus' | 'matchReasons' | 'qtyVariance' | 'priceVariancePesewas' | 'priceVarianceDirection'
+  | 'matchStatus'
+  | 'matchReasons'
+  | 'qtyVariance'
+  | 'priceVariancePesewas'
+  | 'priceVarianceLinePesewas'
+  | 'priceVarianceDirection'
 > = {
   matchStatus: 'UNMATCHED',
   matchReasons: [],
   qtyVariance: null,
   priceVariancePesewas: null,
+  priceVarianceLinePesewas: null,
   priceVarianceDirection: null,
 };
 
@@ -155,8 +161,11 @@ export function wrongInvoice(
           : {
               matchStatus: 'MISMATCH',
               matchReasons: ['QTY_EXCEEDS_RECEIVED', 'PRICE_OUTSIDE_TOLERANCE'],
-              qtyVariance: '1.000',
-              priceVariancePesewas: 1050,
+              // CR-044 (2.9.0): one crate over is 30 eggs, in the product's base unit; the price is
+              // GH₵0.50 a crate over the order's GH₵47.50, GH₵10.50 on the line's 21 crates.
+              qtyVariance: '30.000',
+              priceVariancePesewas: 50,
+              priceVarianceLinePesewas: 1050,
               priceVarianceDirection: 'OVER',
             },
       ),
@@ -170,7 +179,8 @@ export function wrongInvoice(
 
 /**
  * The supplier's corrected invoice AWT-0471: the 18 crates that came in, at the order's GH₵47.50,
- * GH₵855.00. It leaves the 2 cracked crates out, so it settles their claim. The server's figures.
+ * GH₵855.00. It leaves the 2 cracked crates out, so it settles their claim. The server's figures. The
+ * Accountant entered it.
  */
 export function rightInvoice(
   base: S['SupplierInvoice'],
@@ -198,10 +208,13 @@ export function rightInvoice(
         matchReasons: [],
         qtyVariance: '0.000',
         priceVariancePesewas: null,
+        priceVarianceLinePesewas: null,
         priceVarianceDirection: null,
       },
     ],
     version: 3,
+    // Entered by the Accountant, so the Owner may approve it (CR-043, 2.9.0: never its maker).
+    createdBy: ACCOUNTANT,
   };
 }
 
@@ -230,7 +243,7 @@ export function eggClaim(
         purchaseOrderLineId: ORDER_LINE_ID,
         product: EGGS_REF,
         rejectionReasonCode: 'CRACKED',
-        baseUom: 'UNIT',
+        baseUom: 'EGG',
         qtyDeliveredBase: '600.000',
         qtyAcceptedBase: '540.000',
         qtyRejectedBase: '60.000',
@@ -276,7 +289,7 @@ export function claimCreditNote(base: S['SupplierInvoice']): S['SupplierInvoice'
       {
         ...line,
         qty: '60.000',
-        uom: 'UNIT',
+        uom: 'EGG',
         unitPricePesewas: 0,
         lineNetPesewas: 9500,
         supplierClaimLineId: '019a7f23-7a8b-7c9d-8e0f-1a2b3c4d5e66',
@@ -338,8 +351,8 @@ export function paymentApproval(
   };
 }
 
-/** The supplier's balance as CR-042 asks the server to give it, with the right invoice approved. */
-export const BALANCE = {
+/** The supplier's balance as `getSupplierBalance` gives it (2.9.0), with the right invoice approved. */
+export const BALANCE: S['SupplierBalance'] = {
   supplier: SUPPLIER,
   asOf: '2026-11-18T12:00:00Z',
   owedPesewas: 85500,
@@ -364,5 +377,5 @@ export function seedPayables(api: FakeApi): void {
     return first === undefined ? page : { ...page, data: [postedReceipt(first)] };
   });
   api.rewrite('getGoodsReceipt', (body) => postedReceipt(body as S['GoodsReceipt']));
-  api.respondRequested(GET_SUPPLIER_BALANCE, () => BALANCE);
+  api.respond('getSupplierBalance', () => ({ ...BALANCE }));
 }
