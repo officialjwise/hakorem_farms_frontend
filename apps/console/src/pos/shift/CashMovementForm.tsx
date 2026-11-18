@@ -32,7 +32,7 @@ import { MOVEMENT_KINDS, reasonsFor, type MovementKind } from './reasons';
 
 /** Who witnesses a drop, by the owner's rule (2026-11-17) and what this till can know. */
 type WitnessSource =
-  /** Online with CR-045: the supervisors signed in at the branch, from the server. */
+  /** Online with CR-050: the supervisors signed in at the branch, from the server. */
   | 'signed-in'
   /** A supervisor's PIN on this till (CR-032), offline or where the till cannot see who is signed in. */
   | 'pin'
