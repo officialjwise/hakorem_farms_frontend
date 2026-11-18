@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { LoadFailed } from '../../../components/LoadFailed';
 import { QuoteAnswer } from '../../../components/quote/QuoteAnswer';
-import { QuoteState, QuoteView } from '../../../components/quote/QuoteView';
+import { QuoteClosed, QuoteState, QuoteView } from '../../../components/quote/QuoteView';
 import { getT, getWords } from '../../../i18n/server';
 import { getShopProfile, load } from '../../../lib/api';
 
@@ -28,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * server made for this version, and that token is the only thing this page sends: never the quote's number
  * or id, and it is never logged here. A server read, so the quote shows on a slow phone before any script;
  * the answer is the one island. Every state says in words what it means; a wrong token says only that the
- * link is not valid (CR-047).
+ * link is not valid (CR-047), and a closed one why it closed (2.12.0).
  */
 export default async function QuoteByLinkPage({ params }: Props) {
   const { token } = await params;
@@ -38,6 +38,13 @@ export default async function QuoteByLinkPage({ params }: Props) {
     getShopProfile(),
     getWords('quote', 'quoteRequest', 'refusals', 'cart'),
   ]);
+  if (!quote.ok && quote.error.status === 422 && quote.error.code === 'QUOTE_LINK_CLOSED') {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-8">
+        <QuoteClosed reason={quote.error.details[0]?.code ?? null} profile={profile} t={t} />
+      </div>
+    );
+  }
   if (!quote.ok) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-8">

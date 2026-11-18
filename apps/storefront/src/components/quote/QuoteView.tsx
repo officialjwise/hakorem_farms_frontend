@@ -250,3 +250,34 @@ export function QuoteState({
       );
   }
 }
+
+/**
+ * A link the server has closed (2.12.0, ADR-0087): 422 `QUOTE_LINK_CLOSED` names why in `details[0].code`
+ * (`EXPIRED`, `REPLACED`, `WITHDRAWN`) and answers nothing of the quote, so the page says why in words and
+ * how to ask again, and shows no total.
+ */
+export function QuoteClosed({
+  reason,
+  profile,
+  t,
+}: {
+  reason: string | null;
+  profile: Loaded<S['ShopProfile']>;
+  t: ShopT;
+}) {
+  const [title, body] =
+    reason === 'EXPIRED'
+      ? [t('quote.expiredTitle'), t('quote.expiredLinkBody')]
+      : reason === 'REPLACED'
+        ? [t('quote.supersededTitle'), t('quote.supersededBody')]
+        : reason === 'WITHDRAWN'
+          ? [t('quote.withdrawnTitle'), t('quote.withdrawnBody')]
+          : [t('quote.closedTitle'), t('quote.withdrawnBody')];
+  return (
+    <div className="grid gap-3">
+      <h1 className="text-3xl font-bold text-balance">{title}</h1>
+      <p className="max-w-prose text-fg-muted">{body}</p>
+      <AskAgain profile={profile} t={t} />
+    </div>
+  );
+}
