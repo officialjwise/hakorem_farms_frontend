@@ -150,7 +150,18 @@
     "businessAccounts": "Wholesale accounts",
     "businessAccountNew": "Open a wholesale account",
     "businessAccount": "Wholesale account",
-    "ageing": "Ageing"
+    "ageing": "Ageing",
+    "orderFulfilment": "Picking and delivery",
+    "fulfilments": "Picking",
+    "fulfilment": "Pick list",
+    "deliveries": "Dispatch",
+    "routes": "Delivery runs",
+    "route": "Delivery run",
+    "driverRun": "Today's run",
+    "driverStop": "Stop",
+    "driverProof": "Delivered",
+    "driverFailure": "Not delivered",
+    "driverCash": "Cash I carry"
   },
   "placeholder": {
     "title": "This area is built in a later session",

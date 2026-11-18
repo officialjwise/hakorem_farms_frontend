@@ -18,8 +18,9 @@ export function RootLayout() {
   const { t } = useTranslation('shell');
   const matches = useMatches();
   const handle = matches.at(-1)?.handle;
-  const pos = isRouteHandle(handle) && handle.shell === 'pos';
-  // The back office follows the person's choice (system by default); the till stays light.
+  // The till and the driver's phone stay light: daylight on the screen (A-F0-03, A-F11-02).
+  const pos = isRouteHandle(handle) && (handle.shell === 'pos' || handle.shell === 'driver');
+  // The back office follows the person's choice (system by default).
   const chosen = usePreference(themePreference);
   const theme: ThemePreference = pos ? 'light' : chosen;
 
