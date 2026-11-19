@@ -1,23 +1,25 @@
 'use client';
 
-import { CircleCheck, X } from 'lucide-react';
+import { CircleCheck } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useRef, useState, type FormEvent } from 'react';
 import { newIdempotencyKey, type ApiError, type components } from '@hakorem/api-client';
-import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  Field,
-  Input,
-  Textarea,
-  formatMoney,
-} from '@hakorem/ui';
+import { Alert, Button, Field, Input, formatMoney } from '@hakorem/ui';
 import { useApiMutation } from '../../lib/browserApi';
-import { fill, refusal, word, type Words } from '../../lib/words';
+import { refusal, word, type Words } from '../../lib/words';
 import { RequestReference } from '../RequestReference';
 import { ShopData } from '../ShopData';
+import type { Confirming } from './QuoteConfirm';
+
+/**
+ * The confirmations' code (Radix Dialog with its focus trap and layers, and `Textarea`) loads once the
+ * customer starts to answer, on the first focus on the name or a button or on the tap itself, not with
+ * the page: a customer who only reads the quote does not download it (as the basket's drawer, ADR 0041).
+ */
+const QuoteConfirm = dynamic(() => import('./QuoteConfirm').then((m) => m.QuoteConfirm), {
+  ssr: false,
+});
 
 type S = components['schemas'];
 
@@ -57,7 +59,14 @@ function Answer({ token, quote, words }: Props) {
   const [name, setName] = useState('');
   const [nameError, setNameError] = useState('');
   const [reason, setReason] = useState('');
-  const [open, setOpen] = useState<'accept' | 'decline' | null>(null);
+  const [open, setOpenState] = useState<Confirming>(null);
+  const [started, setStarted] = useState(false);
+  /** The customer has started to answer: fetch the confirmations' code now, so it is there at the tap. */
+  const start = () => setStarted(true);
+  const setOpen = (next: Confirming) => {
+    if (next !== null) setStarted(true);
+    setOpenState(next);
+  };
   const accept = useApiMutation('acceptQuoteByLink');
   const decline = useApiMutation('declineQuoteByLink');
   const intent = useRef<{ said: string; key: string } | null>(null);
@@ -120,17 +129,19 @@ function Answer({ token, quote, words }: Props) {
               <Input
                 value={name}
                 autoComplete="name"
+                onFocus={start}
                 onChange={(event) => setName(event.target.value)}
               />
             </Field>
             <div className="flex flex-wrap gap-3">
-              <Button type="submit" size="lg">
+              <Button type="submit" size="lg" onFocus={start}>
                 {w('accept')}
               </Button>
               <Button
                 type="button"
                 size="lg"
                 variant="secondary"
+                onFocus={start}
                 onClick={() => {
                   decline.reset();
                   setOpen('decline');
@@ -142,75 +153,42 @@ function Answer({ token, quote, words }: Props) {
           </form>
         </section>
       )}
-      <Dialog
-        open={open === 'accept'}
-        onOpenChange={(next) => setOpen(next ? 'accept' : null)}
-        title={fill(w('confirmAccept.title'), { quoteNo: quote.quoteNo })}
-        closeLabel={w('close')}
-      >
-        <div className="grid gap-4">
-          <p>
-            {fill(w('confirmAccept.body'), {
-              versionNo: quote.versionNo,
-              total,
-              name: name.trim(),
-            })}
-          </p>
-          <DialogActions cancelLabel={w('cancel')} onCancel={() => setOpen(null)}>
-            <Button
-              loading={accept.isPending}
-              loadingLabel={w('confirmAccept.sending')}
-              onClick={() => {
-                const body = { acceptedName: name.trim() };
-                accept
-                  .mutateAsync(
-                    { path: { token }, body },
-                    { idempotencyKey: keyFor(JSON.stringify(['accept', body])) },
-                  )
-                  .then(() => setOpen(null))
-                  .catch(refused);
-              }}
-            >
-              <CircleCheck />
-              {w('confirmAccept.confirm')}
-            </Button>
-          </DialogActions>
-        </div>
-      </Dialog>
-      <Dialog
-        open={open === 'decline'}
-        onOpenChange={(next) => setOpen(next ? 'decline' : null)}
-        title={fill(w('confirmDecline.title'), { quoteNo: quote.quoteNo })}
-        closeLabel={w('close')}
-      >
-        <div className="grid gap-4">
-          <p>{fill(w('confirmDecline.body'), { versionNo: quote.versionNo })}</p>
-          <Field label={w('confirmDecline.reason')} hint={w('confirmDecline.reasonHint')}>
-            <Textarea value={reason} rows={3} onChange={(event) => setReason(event.target.value)} />
-          </Field>
-          <DialogActions cancelLabel={w('cancel')} onCancel={() => setOpen(null)}>
-            <Button
-              variant="danger"
-              loading={decline.isPending}
-              loadingLabel={w('confirmDecline.sending')}
-              onClick={() => {
-                const said = reason.trim();
-                const body = said === '' ? {} : { reason: said };
-                decline
-                  .mutateAsync(
-                    { path: { token }, body },
-                    { idempotencyKey: keyFor(JSON.stringify(['decline', body])) },
-                  )
-                  .then(() => setOpen(null))
-                  .catch(refused);
-              }}
-            >
-              <X />
-              {w('confirmDecline.confirm')}
-            </Button>
-          </DialogActions>
-        </div>
-      </Dialog>
+      {started ? (
+        <QuoteConfirm
+          open={open}
+          onOpen={setOpen}
+          quoteNo={quote.quoteNo}
+          versionNo={quote.versionNo}
+          total={total}
+          name={name.trim()}
+          reason={reason}
+          onReason={setReason}
+          accepting={accept.isPending}
+          declining={decline.isPending}
+          onAccept={() => {
+            const body = { acceptedName: name.trim() };
+            accept
+              .mutateAsync(
+                { path: { token }, body },
+                { idempotencyKey: keyFor(JSON.stringify(['accept', body])) },
+              )
+              .then(() => setOpen(null))
+              .catch(refused);
+          }}
+          onDecline={() => {
+            const said = reason.trim();
+            const body = said === '' ? {} : { reason: said };
+            decline
+              .mutateAsync(
+                { path: { token }, body },
+                { idempotencyKey: keyFor(JSON.stringify(['decline', body])) },
+              )
+              .then(() => setOpen(null))
+              .catch(refused);
+          }}
+          words={words}
+        />
+      ) : null}
     </div>
   );
 }
