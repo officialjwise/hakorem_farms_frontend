@@ -976,3 +976,80 @@ The server returns the rest to stock (or keeps it on the van for a reattempt, as
 - nothing is built for the hand-in (the till is another session's);
 - the phone treats a 404 and an empty route alike ("No run for you today");
 - after a lost answer, the phone's own words say when cash differs from what was due.
+
+## CR-058. The daily exception report: marking an item reviewed, and the controls that have no kind (additive, seed)
+
+- **Raised by:** frontend F12, the daily exception report (`/exceptions`). The owner (F12 brief, 2026-11-19): "Let an Owner or Manager mark it reviewed with a note. Urgent items at the top."
+- **Contract read first (2.16.0, and 2.17.0 on backend main):**
+  - `getDailyExceptionReport` and `listExceptions` answer `ExceptionItem`s with a severity, branch, actor, `subjectDocument` and `raisedAt`, but nothing says whether anyone has looked at an item, and no operation records it.
+  - `ExceptionKind` has no kind for five controls the owner names as feeding the report. The descriptions publish each for "the daily exception report's source", but not under which kind:
+    - an unwitnessed cash drop (`recordCashMovement`, `syncOfflineSales`, abuse case 17);
+    - a death's photograph whose bytes are already on another record (`liv.MortalityPhotoReused`, abuse case 2);
+    - a quote accepted from its link in a browser holding a staff session;
+    - cash handed in late (a driver's collections not handed in on the day, `OFFLINE_CASH_NOT_TAKEN` at sync);
+    - stock that went below zero (`NEGATIVE_STOCK` at sync, a `StockException` kind).
+  - No seeded role holds `rpt.exceptions.read` (2.16.0 `x-seeded-roles`).
+
+**Request:**
+
+1. `reviewException`: `POST /exceptions/{id}/review`, permission `rpt.exceptions.review`, `Idempotency-Key`, CSRF. Body `ExceptionReviewCreate { note: string }`, 1 to 500 characters, as `ReasonRequest.reason`. Answers the `ExceptionItem` with its `review`. A second review is 409 `ALREADY_REVIEWED`, or replaces the first; say which. It is audited.
+2. `ExceptionItem.review: ExceptionReview | null`, always sent: `{ reviewedBy: PrincipalRef, reviewedAt: date-time, note: string }`.
+3. `listExceptions?reviewed=true|false`, so the header can show only what nobody has looked at.
+4. `ExceptionKind` gains `CASH_DROP`, `MORTALITY_PHOTO_REUSED`, `QUOTE_ACCEPTED_BY_STAFF`, `CASH_HANDED_IN_LATE` and `NEGATIVE_STOCK`. If any of them already lands under an existing kind, say which, and which `details` key names it.
+5. **The seed:** the Owner and the Manager hold `rpt.exceptions.read` and `rpt.exceptions.review`; the Accountant holds `rpt.exceptions.read`.
+
+**Until this lands:**
+
+- the report shows every item, urgent first, and says in words that marking reviewed waits for the backend;
+- an e2e build switched on for CR-058 sends `reviewException` and reads `review` (`requested/exceptionReview.ts`, ADR 0046, ADR 0053);
+- the five kinds have their words ready, and any kind the build does not know shows its code.
+
+## CR-059. The egg reports: sales by shop, margin per crate after breakage, breakage by reason and shop, stock valuation (additive)
+
+- **Raised by:** frontend F12, the reports section (`/reports`). The owner's F12 brief names the four.
+- **Contract read first (2.16.0):** `listReportDefinitions` lists ten codes: `STOCK_ON_HAND`, `AGEING_STOCK`, `EXPIRING_LOTS`, `MORTALITY_RATE`, `FEED_CONVERSION`, `DELIVERY_PERFORMANCE`, `SALES_BY_CASHIER`, `SALES_SUMMARY`, `PURCHASES` and `CUSTOMER_LIST`. None is for eggs. `STOCK_ON_HAND` values all stock at cost, not eggs by crate and loose egg. Breakage is a stock adjustment reason (CR-035), with no report.
+
+**Request:** four codes on `runReport`, each listed by `listReportDefinitions` with its parameters and with a named example (`Prefer: example=<CODE>`), in SCREEN, XLSX and PDF. Money is integer pesewas; quantities are in eggs, the base unit, with the crate's figure beside them where it applies.
+
+1. `EGG_SALES_BY_SHOP` (`branchId`, `from`, `to`): per branch and channel, crates sold, loose eggs sold, eggs in all, net sales and tax, with totals.
+2. `EGG_CRATE_MARGIN` (`branchId`, `from`, `to`): per branch, the crates sold, the cost per crate at cost with breakage spread over the good crates, the price per crate, and the margin per crate in pesewas and per cent, all from the server.
+3. `EGG_BREAKAGE` (`branchId`, `from`, `to`): per branch and reason code (received broken, broken in store, cracked at picking, rejected at the door), the eggs written off and their value at cost.
+4. `EGG_STOCK_VALUATION` (`branchId`, `to`): per branch and location, crates and loose eggs on hand, and their value at cost, never at price (CR-001).
+
+**Until this lands:** the reports section lists the four. Each says it waits for the backend, until `listReportDefinitions` lists its code. Then it runs on `runReport` like every other report, with no console change.
+
+## CR-060. The VAT return: VAT, NHIL and GETFund for a period (additive)
+
+- **Raised by:** frontend F12, the reports section (`/reports/vat-return`).
+- **Contract read first (2.16.0):** the tax module carries the levies (`listTaxLevies`: VAT, NHIL and GETFund, 15%, 2.5% and 2.5% on one base), the scheme versions and `calculateTax`. No operation or report code gives a period's return: output tax charged, input tax reclaimable and the net due, per levy.
+
+**Request:** a `VAT_RETURN` code on `runReport` (`branchId`, `from`, `to`), listed by `listReportDefinitions`, in SCREEN, XLSX and PDF.
+
+- One row per levy, in the order the return is filed: code, name, rate, the taxable base, output tax on sales, input tax reclaimable on purchases (zero for a levy that is not reclaimable), and the net due. Every money column is integer pesewas.
+- `totals`: the base, the output, the input and the net due for all three.
+- If the return is better as its own operation (`getVatReturn`), with exempt and zero-rated sales apart, say so and the console will call that.
+
+**Until this lands:** the VAT return is listed in reports and says it waits for the backend, until `listReportDefinitions` lists `VAT_RETURN`.
+
+## CR-061. Every report exports: the financial statements and the exception report as files; and the B12 seed for reports (additive, seed)
+
+- **Raised by:** frontend F12, the profit and loss, balance sheet and trial balance screens and the exception report. The brief's RPT: "export to spreadsheet and PDF for every report in the system".
+- **Contract read first (2.16.0):**
+  - `getProfitAndLoss`, `getBalanceSheet`, `getTrialBalance` and `getDailyExceptionReport` answer JSON only. `runReport` exports its own codes (PDF, XLSX), and `createExportJob` exports master data. `createAccountingExport` is the accountant's ledger package. Neither gives a statement as the owner reads it on screen.
+  - No seeded role holds `rpt.report.read` or `rpt.report.export`. The Owner holds only `rpt.dashboard.owner` and `rpt.tile.read`.
+
+**Request:**
+
+1. Four codes on `runReport`, in PDF and XLSX only, with the parameters of the operations they mirror:
+   - `PROFIT_AND_LOSS` (`branchId`, `from`, `to`);
+   - `BALANCE_SHEET` (`branchId`, `asOf`);
+   - `TRIAL_BALANCE` (`branchId`, `from`, `to`);
+   - `DAILY_EXCEPTIONS` (`branchId`, `date`).
+
+   The figures are the operations' own, so a file always matches the screen.
+
+2. **The seed:**
+   - the Owner and the Manager hold `rpt.report.read` and `rpt.report.export`;
+   - the Accountant holds them and `fin.report.read`.
+
+**Until this lands:** each screen offers "This page as CSV", built from the table on screen. Its Export menu offers XLSX and PDF only once `listReportDefinitions` lists the screen's code.
