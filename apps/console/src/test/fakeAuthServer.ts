@@ -317,6 +317,12 @@ const OWNER_F5B_PERMISSIONS = [
   'fin.report.read',
 ];
 
+/**
+ * F12, the owner's brief (2026-11-19): an Owner or a Manager marks a daily exception reviewed with a note
+ * (CR-058, not in the contract yet: `fakeRoles.test.ts` lists it as requested).
+ */
+const EXCEPTION_REVIEW_PERMISSIONS = ['rpt.exceptions.read', 'rpt.exceptions.review'];
+
 /** What the owner holds for the F5c settings section: the business profile and the system settings. */
 const OWNER_F5C_PERMISSIONS = ['aud.setting.read'];
 
@@ -557,6 +563,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
       ...WHOLESALE_PERMISSIONS,
       ...MANAGER_TILL_PERMISSIONS,
       ...DISPATCH_PERMISSIONS,
+      ...EXCEPTION_REVIEW_PERMISSIONS,
     ],
     moreBranches: SELLING_POINTS,
   },
@@ -568,7 +575,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
     mustChangePassword: false,
     roleCode: 'MANAGER',
     roleName: 'Manager',
-    permissions: [...MANAGER_PERMISSIONS, ...DISPATCH_PERMISSIONS],
+    permissions: [...MANAGER_PERMISSIONS, ...DISPATCH_PERMISSIONS, ...EXCEPTION_REVIEW_PERMISSIONS],
   },
   'adwoa.darko@hakoremfarms.com': {
     id: '019a7a86-ac02-78a8-ade0-935170bb0c2f',

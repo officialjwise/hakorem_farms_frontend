@@ -38,6 +38,15 @@ const NOT_SEEDED_FOR_ROLE: Readonly<Record<string, readonly string[]>> = {
   STOREKEEPER: ['ord.order.read'],
 };
 
+/**
+ * Permissions a contract request asks for, which the contract does not name yet (ADR 0046). The fake may
+ * hold them so an e2e build switched on for the request can use it. When the contract names one, its line
+ * fails: move it to NOT_SEEDED until the seed grants it, then delete it.
+ */
+const REQUESTED: Readonly<Record<string, string>> = {
+  'rpt.exceptions.review': 'CR-058',
+};
+
 const seeded = new Set<string>(seededRoles.flatMap((role) => [...role.permissions]));
 
 /** Every permission named on an operation, including a compound one ("rpt.report.read, plus rpt.report.export"). */
@@ -56,7 +65,7 @@ describe('the test fake holds the seeded roles (CR-023)', () => {
       const holds = new Set<string>(role?.permissions ?? []);
       const planned = NOT_SEEDED_FOR_ROLE[user.roleCode] ?? [];
       const beyond = user.permissions.filter(
-        (p) => !holds.has(p) && !(p in NOT_SEEDED) && !planned.includes(p),
+        (p) => !holds.has(p) && !(p in NOT_SEEDED) && !(p in REQUESTED) && !planned.includes(p),
       );
       expect(beyond).toEqual([]);
     },
@@ -84,6 +93,14 @@ describe('the test fake holds the seeded roles (CR-023)', () => {
     (permission) => {
       expect(seeded.has(permission)).toBe(false);
       expect(named.has(permission)).toBe(true);
+    },
+  );
+
+  it.each(Object.entries(REQUESTED))(
+    '%s is not in the contract yet (%s asks for it)',
+    (permission) => {
+      expect(named.has(permission)).toBe(false);
+      expect(seeded.has(permission)).toBe(false);
     },
   );
 });

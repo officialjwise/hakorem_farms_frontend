@@ -312,6 +312,14 @@ export const protectedRoutes: RouteObject[] = [
           },
         ],
       },
+      // F12: the daily exception report, what went wrong on a day.
+      {
+        path: 'exceptions',
+        element: lazyScreen(() =>
+          import('../exceptions/ExceptionReportScreen').then((m) => m.ExceptionReportScreen),
+        ),
+        handle: back('rpt.exceptions.read', 'exceptions'),
+      },
       // F5c: the settings section. Display is anyone's; the business and system settings need aud.setting.read.
       {
         path: 'settings',

@@ -16,6 +16,7 @@ export interface RouteHandle {
 
 export type NavKey =
   | 'dashboard'
+  | 'exceptions'
   | 'stock'
   | 'products'
   | 'orders'

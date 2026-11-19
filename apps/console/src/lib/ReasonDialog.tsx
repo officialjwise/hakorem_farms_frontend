@@ -43,6 +43,9 @@ export interface ReasonDialogProps {
     | 'deniedDescription'
   >;
   destructive?: boolean;
+  /** The field's label and hint, when what is asked is not a reason (a reviewer's note). */
+  fieldLabel?: string;
+  fieldHint?: string;
 }
 
 /**
@@ -62,6 +65,8 @@ export function ReasonDialog({
   error,
   failureLabels,
   destructive = false,
+  fieldLabel,
+  fieldHint,
 }: ReasonDialogProps) {
   const { t } = useTranslation(['iam', 'common']);
   const schema = useMemo(
@@ -101,8 +106,8 @@ export function ReasonDialog({
         <MutationFailure error={error} labels={failureLabels} />
         <FormField
           name="reason"
-          label={t('iam:user.reason')}
-          hint={t('iam:user.reasonHint')}
+          label={fieldLabel ?? t('iam:user.reason')}
+          hint={fieldHint ?? t('iam:user.reasonHint')}
           required
           requiredLabel={t('common:field.required')}
           requiredMark="asterisk"
