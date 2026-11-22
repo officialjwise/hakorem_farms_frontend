@@ -159,7 +159,7 @@
     "ACCOUNT_ON_HOLD": "The buyer's account is on hold: no credit order is confirmed until an Owner or Manager releases it.",
     "CREDIT_LIMIT_EXCEEDED": "This order would take the buyer over their credit limit. Take a payment first, or ask for a credit override.",
     "CREDIT_TERMS_EXCEEDED": "The buyer has invoices past their payment terms. Take a payment first, or ask for a credit override.",
-    "DUNNING_POLICY_INVALID": "These reminder levels cannot be saved that way. Check each level's days and wording.",
+    "DUNNING_POLICY_INVALID": "These reminder levels cannot be saved that way. Check each level's days and channels.",
     "SYNC_BATCH_TOO_LARGE": "The till sent too many sales at once. It sends them again in smaller batches.",
     "TILL_PIN_INVALID": "The till PIN was not set: the check this till made from it is weaker than the server takes. Try again; if it is refused again, tell a manager."
   },
@@ -280,6 +280,9 @@
     "SHIFT_NOT_FORCE_CLOSED": "Only a shift a manager closed without a count is counted late.",
     "SHIFT_ALREADY_COUNTED": "This shift’s drawer is already counted.",
     "ORDER_LINE_UNKNOWN": "That order line could not be found on the order.",
-    "ORDER_LINE_OTHER_PRODUCT": "That order line is for another product."
+    "ORDER_LINE_OTHER_PRODUCT": "That order line is for another product.",
+    "LEVELS_NOT_CONSECUTIVE": "The levels must be numbered 1, 2, 3 in turn, with none missing.",
+    "DAYS_NOT_INCREASING": "Each level must be sent at more days overdue than the level before it.",
+    "CHANNEL_REPEATED": "A level names the same channel twice. Choose each channel once."
   }
 }

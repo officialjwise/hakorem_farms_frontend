@@ -79,6 +79,24 @@ describe('refusals in words (ADR 0038)', () => {
     );
   });
 
+  it('says why reminder levels were refused, for each of the three reasons (2.16.0)', () => {
+    const reasons = ['LEVELS_NOT_CONSECUTIVE', 'DAYS_NOT_INCREASING', 'CHANNEL_REPEATED'];
+    expect(contract).toContain(
+      '`DUNNING_POLICY_INVALID` (`LEVELS_NOT_CONSECUTIVE`, `DAYS_NOT_INCREASING`, `CHANNEL_REPEATED`)',
+    );
+    for (const reason of reasons) expect(say(`rules.${reason}`)).not.toBeNull();
+    const said = inWords(
+      refusal('DUNNING_POLICY_INVALID', 'Refused.', [
+        { field: '/levels/1/daysOverdue', code: 'DAYS_NOT_INCREASING', message: 'days' },
+      ]),
+      say,
+    );
+    expect(said.message).toBe(
+      "These reminder levels cannot be saved that way. Check each level's days and channels. Each level must be sent at more days overdue than the level before it.",
+    );
+    expect(said.details[0]?.field).toBe('/levels/1/daysOverdue');
+  });
+
   it('leaves a detail on a field to the field, in the server’s words', () => {
     const detail = { field: '/name', code: 'MIN_LENGTH', message: 'At least two letters.' };
     const said = inWords(refusal('VALIDATION_FAILED', 'Invalid.', [detail]), say);
