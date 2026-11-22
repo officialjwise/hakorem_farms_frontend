@@ -7,14 +7,14 @@ import {
   signInWithTotp,
   USERS,
 } from '../../support/helpers';
-import { PEOPLE, installTillPins } from '../../support/requested';
+import { PEOPLE, installTillPins } from '../../support/tillPins';
 import { expect, test } from '../../support/test';
 import { enrolTill, installTillServer, openTillShift, type SentSale } from '../../support/till';
 
 /**
  * The till's shift at 360 px (F10j, contract 2.5.0; the witness from F10k): a cash drop witnessed by the
  * supervisor who takes the cash entering their PIN on the till, needed while a supervisor is signed in at
- * the branch, or plainly unwitnessed when none is (owner, 2026-11-18; CR-050's read as requested); a
+ * the branch, or plainly unwitnessed when none is (owner, 2026-11-18; CR-050's read, in 2.17.0); a
  * pay-out's reason and note; a refused drop and a refused open, each left on screen in words; and the whole
  * close: blind count, the API's over or short, and a supervisor's sign-off with a fresh step-up, then the Z
  * report.
@@ -72,6 +72,7 @@ test("with a supervisor signed in, a drop's witness is that supervisor's PIN on 
     amountPesewas: 50000,
     reasonCode: 'SAFE_DROP',
     witnessId: PEOPLE.manager.id,
+    witnessPinVersion: 7,
   });
   // The client id is the idempotency key, so a resend is the same drop.
   const body = request.postDataJSON() as { id: string };

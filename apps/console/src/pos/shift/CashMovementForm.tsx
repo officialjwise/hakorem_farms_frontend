@@ -12,11 +12,9 @@ import {
   Skeleton,
   StatusBadge,
 } from '@hakorem/ui';
-import { useApiAllPages } from '../../data/api';
+import { useApiAllPages, useApiQuery } from '../../data/api';
 import { ConfirmDialog } from '../../lib/ConfirmDialog';
 import { RequestReference } from '../../lib/RequestReference';
-import { useShiftWitnesses, shiftWitnessesOn } from '../../requested/shiftWitnesses';
-import { requestedOn } from '../../requested/switch';
 import { getTill, useTill } from '../offline/till';
 import {
   CONFIRMED_STATUSES,
@@ -82,11 +80,16 @@ export function CashMovementForm({
   const needsNote = reasons.find((r) => r.code === reason)?.requiresNote === true;
 
   const isDrop = kind === 'CASH_DROP';
-  const localAuth = requestedOn('CR-032') ? (snapshot?.localAuth ?? null) : null;
+  const localAuth = snapshot?.localAuth ?? null;
   const pinApprovers =
     localAuth === null ? [] : witnessApprovers(localAuth.verifiers, shift.cashierId);
-  const canAsk = online && shift.confirmed && shiftWitnessesOn();
-  const signedIn = useShiftWitnesses(shift.id, isDrop && canAsk);
+  const canAsk = online && shift.confirmed;
+  // Who is signed in at the branch now (CR-050, 2.17.0): the same source the server judges a drop by.
+  const signedIn = useApiQuery(
+    'listShiftWitnesses',
+    { path: { id: shift.id } },
+    { enabled: isDrop && canAsk },
+  );
   const rule = witnessRule({
     online,
     canAsk,
@@ -198,7 +201,9 @@ export function CashMovementForm({
                 amountPesewas: amount,
                 reasonCode: reason,
                 ...(note.trim() !== '' ? { note: note.trim() } : {}),
-                ...(witness !== null ? { witnessId: witness.principalId } : {}),
+                ...(witness !== null
+                  ? { witnessId: witness.principalId, witnessPinVersion: witness.verifierVersion }
+                  : {}),
               },
               witness !== null ? [witness] : [],
             )

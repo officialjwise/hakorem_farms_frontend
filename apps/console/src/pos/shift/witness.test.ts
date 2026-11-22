@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { PinVerifier } from '../../requested/tillPin';
+import type { PinVerifier } from '../pin/pin';
 import { asksForPin, mayRecord, serverDecides, witnessApprovers, witnessRule } from './witness';
 
 const CASHIER = '019a7a86-ac02-78a8-ade0-935170bb0c2f';
@@ -8,13 +8,15 @@ const MANAGER = '019a7a86-4f35-7afd-b035-b8ab03a83188';
 const verifier = (principalId: string, approves: PinVerifier['approves']): PinVerifier => ({
   principalId,
   displayName: principalId === MANAGER ? 'Kwabena Owusu' : 'Adwoa Darko',
+  role: approves.length > 0 ? 'SUPERVISOR' : 'OPERATOR',
   version: 1,
   algorithm: 'PBKDF2-SHA256',
   iterations: 600_000,
   salt: 'c2FsdHNhbHRzYWx0c2FsdA==',
   hash: 'aGFzaGhhc2hoYXNoaGFzaGhhc2hoYXNoaGFzaGhhc2g=',
   approves,
-  lockedOut: false,
+  locked: false,
+  wrongTries: 0,
 });
 
 const manager = { id: MANAGER, displayName: 'Kwabena Owusu' };

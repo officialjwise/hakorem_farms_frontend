@@ -5,8 +5,9 @@
  * delete its module in `requested/`, its id from `CONTRACT_REQUESTS` (`switch.ts`) and from the builds
  * (`package.json`, `.github/workflows/ci.yml`), and call the generated client.
  *
- * A request is checked by its first item to land: an operation (CR-032, CR-033's public read) or a field on a
- * response (CR-033). CR-050 by its read (its other half, a drop with no witness when none is signed in, changes no shape). CR-034 landed in 2.0.0, CR-042 in 2.9.0, CR-038 in 2.11.0, CR-045 in 2.12.0 and CR-046 in 2.14.0, and their switches were deleted.
+ * A request is checked by its first item to land: an operation (CR-033's public read) or a field on a
+ * response (CR-033). CR-034 landed in 2.0.0, CR-042 in 2.9.0, CR-038 in 2.11.0, CR-045 in 2.12.0, CR-046 in
+ * 2.14.0, and CR-032 and CR-050 in 2.17.0, and their switches were deleted.
  */
 import type { components, operationManifest } from '@hakorem/api-client';
 import type { ContractRequest } from './switch';
@@ -22,16 +23,11 @@ type Lacks<Shape, Key extends PropertyKey, Request extends string> = Key extends
 
 type Manifest = typeof operationManifest;
 
-const cr032: Lacks<Manifest, 'listTillPinVerifiers', 'CR-032'> = true;
-const cr032Events: Lacks<Manifest, 'reportTillPinEvents', 'CR-032'> = true;
 const cr033Pack: Lacks<Schemas['OfflinePack'], 'receiptLinkTemplate', 'CR-033'> = true;
 const cr033Result: Lacks<Schemas['SyncResultItem'], 'receiptMessage', 'CR-033'> = true;
 const cr033Read: Lacks<Manifest, 'getPublicReceipt', 'CR-033'> = true;
-const cr050Read: Lacks<Manifest, 'listShiftWitnesses', 'CR-050'> = true;
 
 /** One entry per switch, so a new switch without a check fails `switch.test.ts`. */
 export const LANDED_CHECKS: Record<ContractRequest, readonly boolean[]> = {
-  'CR-032': [cr032, cr032Events],
   'CR-033': [cr033Pack, cr033Result, cr033Read],
-  'CR-050': [cr050Read],
 };

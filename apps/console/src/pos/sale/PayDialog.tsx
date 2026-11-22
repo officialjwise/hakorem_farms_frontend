@@ -16,7 +16,6 @@ import {
 import { useAuth } from '../../auth/AuthProvider';
 import { useApiMutation } from '../../data/api';
 import { newRecordId } from '../../lib/clientId';
-import { requestedOn } from '../../requested/switch';
 import {
   cartTotal,
   lineAmount,
@@ -456,7 +455,7 @@ function UnverifiedMobileMoney({
   const payer = phone.replace(/\s+/g, '');
   const ready = amount !== null && amount > 0 && amount <= remaining && PHONE.test(payer);
 
-  if (!requestedOn('CR-032') || localAuth === null) {
+  if (localAuth === null) {
     return <p className="text-sm text-fg-muted">{t('unverified.unavailable')}</p>;
   }
   return (
@@ -515,6 +514,7 @@ function UnverifiedMobileMoney({
                 network,
                 ...(providerReference !== '' ? { providerReference } : {}),
                 approvedById: record.principalId,
+                approvedByPinVersion: record.verifierVersion,
               },
               label: t('unverified.taken', { name: method.name, approver: record.displayName }),
               approval: record,

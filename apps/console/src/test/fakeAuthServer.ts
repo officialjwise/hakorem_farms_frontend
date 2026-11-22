@@ -118,6 +118,8 @@ const CASHIER_TILL_PERMISSIONS = [
   // A mobile money tender at the counter: the request to the customer's phone and the check that it cleared.
   'pay.payment.initiate',
   'pay.payment.read',
+  // 2.17.0, as seeded for the Cashier, the Manager and the Owner: one's own till PIN.
+  'pos.pin.set',
 ];
 
 /**
@@ -125,6 +127,7 @@ const CASHIER_TILL_PERMISSIONS = [
  * "a manager" in OFFLINE_SYNC section 3), signing a shift's close off, and force-closing one.
  */
 const MANAGER_TILL_PERMISSIONS = [
+  'pos.pin.set',
   'pos.register.read',
   'pos.device.read',
   'pos.device.enrol',
