@@ -35,6 +35,8 @@ export const API_PATH = '/mock';
 interface Operation {
   id: string;
   method: string;
+  /** The contract's path template, for example `/investor/me`. */
+  path: string;
   pattern: RegExp;
   /** Path parameters in the template: fewer is a more literal match. */
   params: number;
@@ -45,6 +47,7 @@ interface Operation {
 const OPERATIONS: Operation[] = Object.entries(operationManifest).map(([id, row]) => ({
   id,
   method: row.method.toUpperCase(),
+  path: row.path,
   pattern: new RegExp(`^${row.path.replace(/\{[^}]+\}/g, '[^/]+')}$`),
   params: (row.path.match(/\{/g) ?? []).length,
   permission: row.permission,
@@ -237,7 +240,10 @@ export class FakeApi {
       return route.continue();
     }
     const session = this.server.sessionFor(this.jar);
-    if (session === null) {
+    // The investor operations take the investor's cookie and nothing else takes it (ADR 0058): a session of
+    // the other realm is the contract's 401, as the real API's cookie check gives it.
+    const investorOnly = operation.path.startsWith('/investor/');
+    if (session === null || (session.realm === 'INVESTOR') !== investorOnly) {
       record('prism-401');
       return route.continue({ headers: { ...request.headers(), prefer: 'code=401' } });
     }

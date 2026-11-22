@@ -38,7 +38,12 @@
     "checking": "Checking your session",
     "error": "We could not check your session",
     "errorBody": "The connection may be down. Try again.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "staffInPortal": "You are signed in as staff",
+    "staffInPortalBody": "This is the investor portal. Sign out, then sign in with your investor account. Staff use the back office.",
+    "investorInConsole": "You are signed in as an investor",
+    "investorInConsoleBody": "This is the back office, for staff. Your capital, share and statements are in the investor portal.",
+    "signOut": "Sign out"
   },
   "backOffice": {
     "navLabel": "Main navigation",
@@ -104,6 +109,7 @@
     "registers": "Cash registers",
     "reports": "Reports",
     "report": "Report",
+    "exceptions": "Exception report",
     "settings": "Settings",
     "settingsBusiness": "Business profile",
     "settingsSystem": "System settings",
@@ -163,7 +169,8 @@
     "driverStop": "Stop",
     "driverProof": "Delivered",
     "driverFailure": "Not delivered",
-    "driverCash": "Cash I carry"
+    "driverCash": "Cash I carry",
+    "investor": "Investor portal"
   },
   "placeholder": {
     "title": "This area is built in a later session",
@@ -253,7 +260,8 @@
       "INFO": "Note",
       "REVIEW": "Review",
       "URGENT": "Urgent"
-    }
+    },
+    "openReport": "Open the daily exception report"
   },
   "account": {
     "title": "Your account",

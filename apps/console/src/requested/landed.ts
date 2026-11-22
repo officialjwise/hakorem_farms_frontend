@@ -7,7 +7,8 @@
  *
  * A request is checked by its first item to land: an operation (CR-033's public read) or a field on a
  * response (CR-033). CR-034 landed in 2.0.0, CR-042 in 2.9.0, CR-038 in 2.11.0, CR-045 in 2.12.0, CR-046 in
- * 2.14.0, and CR-032 and CR-050 in 2.17.0, and their switches were deleted.
+ * 2.14.0, and CR-032 and CR-050 in 2.17.0, and their switches were deleted. CR-059 is checked by its write
+ * and the item's field.
  */
 import type { components, operationManifest } from '@hakorem/api-client';
 import type { ContractRequest } from './switch';
@@ -26,8 +27,11 @@ type Manifest = typeof operationManifest;
 const cr033Pack: Lacks<Schemas['OfflinePack'], 'receiptLinkTemplate', 'CR-033'> = true;
 const cr033Result: Lacks<Schemas['SyncResultItem'], 'receiptMessage', 'CR-033'> = true;
 const cr033Read: Lacks<Manifest, 'getPublicReceipt', 'CR-033'> = true;
+const cr059Review: Lacks<Manifest, 'reviewException', 'CR-059'> = true;
+const cr059Field: Lacks<Schemas['ExceptionItem'], 'review', 'CR-059'> = true;
 
 /** One entry per switch, so a new switch without a check fails `switch.test.ts`. */
 export const LANDED_CHECKS: Record<ContractRequest, readonly boolean[]> = {
   'CR-033': [cr033Pack, cr033Result, cr033Read],
+  'CR-059': [cr059Review, cr059Field],
 };

@@ -10,7 +10,7 @@ import type { OperationInput, components } from '@hakorem/api-client';
 
 export { ApiError, NetworkError } from '@hakorem/api-client';
 
-/** Schema `Realm`. The console only uses STAFF. */
+/** Schema `Realm`. The back office and the till sign staff in; the investor portal, investors (ADR 0058). */
 export type Realm = components['schemas']['Realm'];
 /** Schema `GrantSummary`. */
 export type GrantSummary = components['schemas']['GrantSummary'];
@@ -29,6 +29,7 @@ export type ErrorDetail = components['schemas']['ErrorDetail'];
 type BodyOf<
   Op extends
     | 'loginStaff'
+    | 'loginInvestor'
     | 'verifyTotp'
     | 'changePassword'
     | 'requestPasswordReset'
@@ -48,6 +49,8 @@ type BodyOf<
 export interface AuthClient {
   /** operationId `loginStaff`: POST /auth/staff/login. */
   loginStaff(input: BodyOf<'loginStaff'>): Promise<LoginResult>;
+  /** operationId `loginInvestor`: POST /auth/investor/login, the investor portal's sign-in (ADR 0058). */
+  loginInvestor(input: BodyOf<'loginInvestor'>): Promise<LoginResult>;
   /** operationId `verifyTotp`: POST /auth/totp/verify. */
   verifyTotp(input: BodyOf<'verifyTotp'>): Promise<LoginResult>;
   /** operationId `getCurrentSession`: GET /auth/session. Throws ApiError 401 UNAUTHENTICATED without a valid access cookie. */
@@ -58,8 +61,13 @@ export interface AuthClient {
   logout(): Promise<void>;
   /** operationId `changePassword`: POST /auth/password/change. */
   changePassword(input: BodyOf<'changePassword'>): Promise<void>;
-  /** operationId `requestPasswordReset`: POST /auth/password/reset-request, with realm STAFF added by the client. */
-  requestPasswordReset(input: Omit<BodyOf<'requestPasswordReset'>, 'realm'>): Promise<void>;
+  /**
+   * operationId `requestPasswordReset`: POST /auth/password/reset-request, in the realm given, STAFF when
+   * none is.
+   */
+  requestPasswordReset(
+    input: Omit<BodyOf<'requestPasswordReset'>, 'realm'> & { realm?: 'STAFF' | 'INVESTOR' },
+  ): Promise<void>;
   /** operationId `resetPassword`: POST /auth/password/reset. */
   resetPassword(input: BodyOf<'resetPassword'>): Promise<void>;
   /**

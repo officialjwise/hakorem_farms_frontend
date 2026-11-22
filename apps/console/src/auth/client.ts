@@ -17,6 +17,7 @@ const client = (): AuthClient => (real ??= createApiAuthClient({ baseUrl: apiBas
 // Each method is async so a missing HK_API_BASE_URL arrives as a rejected promise, like any other failure.
 export const authClient: AuthClient = {
   loginStaff: async (input) => client().loginStaff(input),
+  loginInvestor: async (input) => client().loginInvestor(input),
   verifyTotp: async (input) => client().verifyTotp(input),
   getCurrentSession: async () => client().getCurrentSession(),
   refreshSession: async () => client().refreshSession(),

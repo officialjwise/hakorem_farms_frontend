@@ -36,6 +36,7 @@ import {
   ScanBarcode,
   ScrollText,
   Settings,
+  ShieldAlert,
   ShieldCheck,
   ShoppingBasket,
   SlidersHorizontal,
@@ -268,7 +269,15 @@ export const BACK_OFFICE_GROUPS: readonly NavGroup[] = [
   },
   {
     key: 'reports',
-    items: [{ key: 'reports', path: '/reports', permission: 'rpt.report.read', icon: ChartColumn }],
+    items: [
+      { key: 'reports', path: '/reports', permission: 'rpt.report.read', icon: ChartColumn },
+      {
+        key: 'exceptions',
+        path: '/exceptions',
+        permission: 'rpt.exceptions.read',
+        icon: ShieldAlert,
+      },
+    ],
   },
   {
     key: 'people',

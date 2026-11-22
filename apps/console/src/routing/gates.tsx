@@ -105,6 +105,25 @@ export function SessionGate({ children }: { children: ReactNode }) {
         />
       );
     case 'authenticated':
+      // A session of another realm (an investor's in the back office, staff in the investor portal) is
+      // said in words and never used (ADR 0058).
+      if (auth.session !== null && auth.session.realm !== auth.realm) {
+        const portal = auth.realm === 'INVESTOR';
+        return (
+          <div className="grid min-h-dvh place-items-center p-6">
+            <ErrorState
+              icon={Lock}
+              title={t(portal ? 'shell:session.staffInPortal' : 'shell:session.investorInConsole')}
+              description={t(
+                portal ? 'shell:session.staffInPortalBody' : 'shell:session.investorInConsoleBody',
+              )}
+              action={
+                <Button onClick={() => void auth.logout()}>{t('shell:session.signOut')}</Button>
+              }
+            />
+          </div>
+        );
+      }
       if (auth.session?.mustChangePassword) return <Navigate to="/change-password" replace />;
       return children;
   }

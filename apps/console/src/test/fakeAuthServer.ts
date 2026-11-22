@@ -100,6 +100,8 @@ export interface FakeUser {
   mustEnrolTotp?: boolean;
   /** Branches beyond the farm where the user holds the same role. */
   moreBranches?: readonly (typeof SELLING_POINTS)[number][];
+  /** The realm the account signs in to: staff (default) or the investor portal (ADR 0058). */
+  realm?: 'STAFF' | 'INVESTOR';
 }
 
 /**
@@ -323,6 +325,12 @@ const OWNER_F5B_PERMISSIONS = [
   'rpt.report.export',
   'fin.report.read',
 ];
+
+/**
+ * F12, the owner's brief (2026-11-19): an Owner or a Manager marks a daily exception reviewed with a note
+ * (CR-059, not in the contract yet: `fakeRoles.test.ts` lists it as requested).
+ */
+const EXCEPTION_REVIEW_PERMISSIONS = ['rpt.exceptions.read', 'rpt.exceptions.review'];
 
 /** What the owner holds for the F5c settings section: the business profile and the system settings. */
 const OWNER_F5C_PERMISSIONS = ['aud.setting.read'];
@@ -565,6 +573,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
       ...WHOLESALE_PERMISSIONS,
       ...MANAGER_TILL_PERMISSIONS,
       ...DISPATCH_PERMISSIONS,
+      ...EXCEPTION_REVIEW_PERMISSIONS,
     ],
     moreBranches: SELLING_POINTS,
   },
@@ -576,7 +585,7 @@ export const FAKE_USERS: Record<string, FakeUser> = {
     mustChangePassword: false,
     roleCode: 'MANAGER',
     roleName: 'Manager',
-    permissions: [...MANAGER_PERMISSIONS, ...DISPATCH_PERMISSIONS],
+    permissions: [...MANAGER_PERMISSIONS, ...DISPATCH_PERMISSIONS, ...EXCEPTION_REVIEW_PERMISSIONS],
   },
   'adwoa.darko@hakoremfarms.com': {
     id: '019a7a86-ac02-78a8-ade0-935170bb0c2f',
@@ -711,9 +720,29 @@ interface Challenge {
   started?: boolean;
 }
 
-/** The eleven operations this fake answers, by method and path. Everything else is not its business. */
+/**
+ * The investor portal's accounts (ADR 0058): they sign in with `loginInvestor` only, hold no grant and no
+ * permission, and the server scopes every investor read to them. Apart from FAKE_USERS, which holds the
+ * seeded staff roles.
+ */
+export const FAKE_INVESTORS: Record<string, FakeUser> = {
+  'esi.bonsu@example.com': {
+    id: '019a7a90-5e1d-7c2a-9b44-2f6d1e8a3c07',
+    displayName: 'Esi Bonsu',
+    password: 'Cocoa-Harvest-2026!',
+    totp: false,
+    mustChangePassword: false,
+    roleCode: 'INVESTOR',
+    roleName: 'Investor',
+    permissions: [],
+    realm: 'INVESTOR',
+  },
+};
+
+/** The twelve operations this fake answers, by method and path. Everything else is not its business. */
 export const FAKE_AUTH_ROUTES = {
   'POST /auth/staff/login': 'loginStaff',
+  'POST /auth/investor/login': 'loginInvestor',
   'POST /auth/totp/verify': 'verifyTotp',
   'GET /auth/session': 'getCurrentSession',
   'POST /auth/refresh': 'refreshSession',
@@ -799,7 +828,9 @@ export interface FakeAuthServer {
   /** Answers one of the nine auth operations, or returns null for any other request. */
   handle(request: FakeRequest, jar: CookieJar): FakeResponse | null;
   /** The signed-in user behind the jar's access cookie, or null (no cookie, expired, or revoked). */
-  sessionFor(jar: CookieJar): { email: string; permissions: readonly string[] } | null;
+  sessionFor(
+    jar: CookieJar,
+  ): { email: string; permissions: readonly string[]; realm: 'STAFF' | 'INVESTOR' } | null;
   /** A manager revokes every session (the next refresh answers 401). */
   revokeAllSessions(): void;
   /**
@@ -822,10 +853,11 @@ export function createFakeAuthServer(): FakeAuthServer {
   let pendingPasswordChange: string | null = null;
   /** Users who confirmed an enrolment with this fake: they are asked for a code from then on. */
   const enrolled = new Set<string>();
-  const usesTotp = (email: string) => FAKE_USERS[email]?.totp === true || enrolled.has(email);
+  const accounts: Record<string, FakeUser> = { ...FAKE_USERS, ...FAKE_INVESTORS };
+  const usesTotp = (email: string) => accounts[email]?.totp === true || enrolled.has(email);
 
   const passwordOf = (email: string): string | undefined =>
-    passwords[email] ?? FAKE_USERS[email]?.password;
+    passwords[email] ?? accounts[email]?.password;
 
   /** Drops expired cookies, as a browser would. */
   function tidy(jar: CookieJar): CookieJar {
@@ -835,10 +867,11 @@ export function createFakeAuthServer(): FakeAuthServer {
   }
 
   function sessionInfo(sessionId: string, session: ServerSession): SessionInfo {
-    const user = FAKE_USERS[session.email] as FakeUser;
+    const user = accounts[session.email] as FakeUser;
+    const investor = user.realm === 'INVESTOR';
     return {
       sessionId,
-      realm: 'STAFF',
+      realm: user.realm ?? 'STAFF',
       principal: { id: user.id, displayName: user.displayName },
       csrfToken: session.csrf,
       accessExpiresAt: new Date(session.accessExpires).toISOString(),
@@ -847,7 +880,7 @@ export function createFakeAuthServer(): FakeAuthServer {
         session.steppedUpAt === null ? null : new Date(session.steppedUpAt).toISOString(),
       mustChangePassword: false,
       totpEnrolled: user.totp,
-      grants: [BRANCH, ...(user.moreBranches ?? [])].map((branch) => ({
+      grants: (investor ? [] : [BRANCH, ...(user.moreBranches ?? [])]).map((branch) => ({
         roleCode: user.roleCode,
         roleName: user.roleName,
         ...branch,
@@ -890,7 +923,11 @@ export function createFakeAuthServer(): FakeAuthServer {
     return entry;
   }
 
-  function loginStaff(body: { identifier: string; password: string }, jar: CookieJar) {
+  function loginStaff(
+    body: { identifier: string; password: string },
+    jar: CookieJar,
+    realm: 'STAFF' | 'INVESTOR' = 'STAFF',
+  ) {
     const email = body.identifier.trim().toLowerCase();
     const failure = failures.get(email) ?? { count: 0, until: 0 };
     if (failure.until > now()) {
@@ -898,8 +935,10 @@ export function createFakeAuthServer(): FakeAuthServer {
         retryAfter: secondsUntil(failure.until - now()),
       });
     }
-    const user = FAKE_USERS[email];
-    if (!user || passwordOf(email) !== body.password) {
+    const user = accounts[email];
+    // Each realm signs in its own accounts only: an investor at the staff sign-in, or staff at the
+    // investor's, is a wrong password (ADR 0058).
+    if (!user || (user.realm ?? 'STAFF') !== realm || passwordOf(email) !== body.password) {
       failure.count += 1;
       if (failure.count >= MAX_FAILURES) {
         failure.until = now() + LOCKOUT_MS;
@@ -1060,6 +1099,8 @@ export function createFakeAuthServer(): FakeAuthServer {
       switch (operation) {
         case 'loginStaff':
           return loginStaff(body as { identifier: string; password: string }, jar);
+        case 'loginInvestor':
+          return loginStaff(body as { identifier: string; password: string }, jar, 'INVESTOR');
         case 'verifyTotp':
           return verifyTotp(body as { challengeToken: string; code: string }, jar);
         case 'getCurrentSession': {
@@ -1127,8 +1168,12 @@ export function createFakeAuthServer(): FakeAuthServer {
     sessionFor(jar) {
       const entry = authenticate(jar);
       if (!entry) return null;
-      const user = FAKE_USERS[entry[1].email] as FakeUser;
-      return { email: entry[1].email, permissions: user.permissions };
+      const user = accounts[entry[1].email] as FakeUser;
+      return {
+        email: entry[1].email,
+        permissions: user.permissions,
+        realm: user.realm ?? 'STAFF',
+      };
     },
     revokeAllSessions() {
       for (const session of Object.values(sessions)) session.revoked = true;

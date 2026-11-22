@@ -8,17 +8,17 @@ Read this file, `docs/SHARED_BRIEF.md`, your session's section of `docs/BUILD_PR
 
 ## Which surface is which
 
-| Path                  | What it is                                                                                                                                                       |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/ui`         | The design system: tokens, components, formatters, forms, Storybook. Built (F0).                                                                                 |
-| `packages/i18n`       | react-i18next catalogue, one namespace per feature. Apps call `t()`; `packages/ui` never does.                                                                   |
-| `packages/api-client` | Generated from the contract: types, operation table, `call(operationId, …)`. Never hand-edited.                                                                  |
-| `packages/data`       | TanStack Query layer: `useApiQuery`, `useApiMutation`, keys, stale times, retry. See DATA_CONVENTIONS.                                                           |
-| `apps/storefront`     | Public shop, Next.js 15, server rendered, built for 3G. Shell built (F1); catalogue screens are F7.                                                              |
-| `apps/console`        | Installable PWA, Vite: two documents, `index.html` (back office) and `pos.html` (till) (ADR 0030); the real auth client; users, roles, sessions, audit log (F3). |
-| `e2e/`                | Playwright and axe specs, Chromium, 360 px, against production builds.                                                                                           |
-| `contract/`           | A synced copy of the backend's OpenAPI contract. Never hand-edited.                                                                                              |
-| `tooling/lint-tokens` | The `hakorem/token-usage` lint rule.                                                                                                                             |
+| Path                  | What it is                                                                                                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/ui`         | The design system: tokens, components, formatters, forms, Storybook. Built (F0).                                                                                    |
+| `packages/i18n`       | react-i18next catalogue, one namespace per feature. Apps call `t()`; `packages/ui` never does.                                                                      |
+| `packages/api-client` | Generated from the contract: types, operation table, `call(operationId, …)`. Never hand-edited.                                                                     |
+| `packages/data`       | TanStack Query layer: `useApiQuery`, `useApiMutation`, keys, stale times, retry. See DATA_CONVENTIONS.                                                              |
+| `apps/storefront`     | Public shop, Next.js 15, server rendered, built for 3G. Shell built (F1); catalogue screens are F7.                                                                 |
+| `apps/console`        | Installable PWA, Vite: three documents, `index.html` (back office), `pos.html` (till) and `investor.html` (investor portal) (ADR 0030, 0058); the real auth client. |
+| `e2e/`                | Playwright and axe specs, Chromium, 360 px, against production builds.                                                                                              |
+| `contract/`           | A synced copy of the backend's OpenAPI contract. Never hand-edited.                                                                                                 |
+| `tooling/lint-tokens` | The `hakorem/token-usage` lint rule.                                                                                                                                |
 
 ## The contract rule
 
@@ -52,7 +52,7 @@ pnpm dev:mock          # Prism on 4010, from contract/openapi.yaml
 pnpm test:integration  # screens and the data layer against the real Prism (starts it itself)
 ```
 
-Set `HK_API_BASE_URL` to choose the API. Nothing else decides it. `HK_SHOP_URL` is the shop's address in a quote's link; a build for any API but `/mock` fails without it (ADR 0056). `HK_REQUESTED_CONTRACT` (`CR-033`) builds the console against contract requests not yet in the contract; only the e2e and CI builds set it, and a build for any API but `/mock` fails with it set (ADR 0046). When a request lands, `requested/landed.ts` fails the type check until its switch is deleted. For the mock in a browser, run `pnpm dev:mock` and `HK_API_BASE_URL=/mock pnpm dev:console`: the console's dev and preview servers forward `/mock` to Prism and add the staff cookie (ADR 0025). Node tests use `http://127.0.0.1:4010` directly.
+Set `HK_API_BASE_URL` to choose the API. Nothing else decides it. `HK_SHOP_URL` is the shop's address in a quote's link; a build for any API but `/mock` fails without it (ADR 0056). `HK_REQUESTED_CONTRACT` (`CR-033,CR-059`) builds the console against contract requests not yet in the contract; only the e2e and CI builds set it, and a build for any API but `/mock` fails with it set (ADR 0046). When a request lands, `requested/landed.ts` fails the type check until its switch is deleted. For the mock in a browser, run `pnpm dev:mock` and `HK_API_BASE_URL=/mock pnpm dev:console`: the console's dev and preview servers forward `/mock` to Prism and add the staff cookie (ADR 0025). Node tests use `http://127.0.0.1:4010` directly.
 
 Arrive later, named in `docs/BUILD_PROMPT.md`: `test:e2e:staging` and `lighthouse` (F13).
 

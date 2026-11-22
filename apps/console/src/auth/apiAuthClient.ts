@@ -68,6 +68,7 @@ export function createApiAuthClient(options: ApiAuthClientOptions): AuthClient {
 
   return {
     loginStaff: async (body) => rememberLogin(await api.call('loginStaff', { body })),
+    loginInvestor: async (body) => rememberLogin(await api.call('loginInvestor', { body })),
     verifyTotp: async (body) => rememberLogin(await api.call('verifyTotp', { body })),
     getCurrentSession: async () => remember(await api.call('getCurrentSession')),
     refreshSession: async () => remember(await api.call('refreshSession')),
@@ -82,8 +83,8 @@ export function createApiAuthClient(options: ApiAuthClientOptions): AuthClient {
     changePassword: async (body) => {
       await api.call('changePassword', { body });
     },
-    requestPasswordReset: async (body) => {
-      await api.call('requestPasswordReset', { body: { ...body, realm: 'STAFF' } });
+    requestPasswordReset: async ({ realm = 'STAFF', ...body }) => {
+      await api.call('requestPasswordReset', { body: { ...body, realm } });
     },
     resetPassword: async (body) => {
       await api.call('resetPassword', { body });

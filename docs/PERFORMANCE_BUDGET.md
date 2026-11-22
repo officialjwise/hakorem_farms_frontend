@@ -147,12 +147,13 @@ The till's **initial load is its shell and the sale screen** (the `/pos` index r
 
 Gzipped, for each document's **initial load**: what the browser must fetch before the first screen renders. That is the entry chunk, every chunk it imports statically, the catalogue namespaces it loads at boot (`ENTRY_NAMESPACES` in `apps/console/src/app/entries.ts`) and its stylesheet. 1 kB is 1,000 bytes. What loads on demand is reported beside it, not budgeted.
 
-| Document                  | Script budget | Style budget | Measured (initial script, style; on demand) |
-| ------------------------- | ------------- | ------------ | ------------------------------------------- |
-| The till, `pos.html`      | 250 kB        | 15 kB        | 195.8 kB, 10.7 kB; 42.8 kB in 7 chunks      |
-| Back office, `index.html` | 300 kB        | 15 kB        | 266.1 kB, 10.7 kB; none                     |
+| Document                                              | Script budget | Style budget | Measured (initial script, style; on demand) |
+| ----------------------------------------------------- | ------------- | ------------ | ------------------------------------------- |
+| The till, `pos.html`                                  | 250 kB        | 15 kB        | 195.8 kB, 10.7 kB; 42.8 kB in 7 chunks      |
+| Back office, `index.html`                             | 300 kB        | 15 kB        | 266.1 kB, 10.7 kB; none                     |
+| Investor portal, `investor.html` (ADR 0058, A-F12-02) | 250 kB        | 15 kB        | 225.2 kB, 12.7 kB; 110.4 kB on demand (F12) |
 
-And one rule that is not a number: **the till's initial load never contains the back office's entry chunk.**
+And one rule that is not a number: **neither the till's nor the investor portal's initial load contains the back office's entry chunk.**
 
 How the measurement got here:
 
@@ -162,6 +163,7 @@ How the measurement got here:
 
 - **F9: the till grew from 190.8 kB to 240.2 kB** (`pnpm budget:console`, 2026-11-16), 9.8 kB under its budget. The sale screen now sells: the offline store, queue and sync, the cart arithmetic and hash, the `pos` words, and the sale's own dialogs (an item's weight and price, payment, hold and recall), which bring Radix Select and the money and weight inputs into the initial load. They load with the document on purpose: the sale must complete with the network off even if the connection drops a second after the till starts, before anything could be fetched on demand. The till's other screens (setup, shift, the queue, returns) load on demand, 68.1 kB in 26 chunks, and are fetched once the till is ready (ADR 0043). The next till feature that adds to the sale screen should look here first: the headroom is small.
 - **F10j: the till fell from 247.1 kB to 241.8 kB** (`pnpm budget:console`, 2026-11-18), with the same build switches as CI. The refusal words (`refusals`, 12 kB of sentences, out of `common`) and the shift screens' words (`posShift`, out of `pos`) are namespaces of their own, fetched with the till's other screens once the sale screen is up (`TILL_NAMESPACES` in `apps/console/src/pos/routes.tsx`). A refusal that arrives before then waits for its words. The back office loads `refusals` at boot, 279.8 kB to 281.0 kB. The shift screens on 2.5.0 then added 0.3 kB to the till's queue, which must load with it (a fresh cash movement sent alone, a refused open let go): **242.1 kB**, 7.9 kB under budget. The shift screens themselves load on demand.
+- **F12: a third document costs the other two.** The investor portal (ADR 0058) shares the design system, the data layer and the sign-in screens with both. The bundler splits that shared code into more, smaller chunks, which compress less well. The till went from 244.9 kB to **247.4 kB** and the back office from 287.4 kB to **291.6 kB**, with the same build without the portal as the comparison. The portal's sign-in screens load with it, as the back office's do: on demand they cost the till 1.5 kB more. The till has 2.6 kB of headroom left. Merging the small shared chunks (Rolldown's `codeSplitting` groups) is the lever, and a decision for the owner.
 
 Not counted: the service worker and the icons.
 

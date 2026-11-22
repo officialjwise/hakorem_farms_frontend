@@ -5,11 +5,12 @@ import type { RouteObject } from 'react-router';
 import { entryFor } from '../app/entries';
 import { LazyScreen } from '../app/LazyScreen';
 import { protectedRoutes as backOfficeRoutes } from '../app/routes';
+import { investorProtectedRoutes } from '../investor/routes';
 import { posProtectedRoutes, posRoutes } from '../pos/routes';
 import { isRouteHandle } from './handle';
 
-/** Both documents' protected routes (ADR 0030): every rule below holds for each. */
-const protectedRoutes = [...backOfficeRoutes, ...posProtectedRoutes];
+/** Every document's protected routes (ADR 0030, ADR 0058): every rule below holds for each. */
+const protectedRoutes = [...backOfficeRoutes, ...posProtectedRoutes, ...investorProtectedRoutes];
 
 function leaves(list: RouteObject[], trail = ''): { path: string; route: RouteObject }[] {
   return list.flatMap((route) => {
@@ -61,6 +62,21 @@ describe('each document owns only its own addresses (ADR 0030)', () => {
     const till = leaves(posProtectedRoutes);
     expect(till.length).toBeGreaterThan(0);
     for (const { path } of till) expect(entryFor(path), path).toBe('pos');
+  });
+
+  it('the investor portal declares only addresses under /investor, with no permission (ADR 0058)', () => {
+    const portal = leaves(investorProtectedRoutes, '/investor');
+    expect(portal.length).toBe(5);
+    for (const { path, route } of portal) {
+      expect(entryFor(path), path).toBe('investor');
+      expect(isRouteHandle(route.handle) && route.handle.permission, path).toBeNull();
+    }
+    expect(['/investor', '/investor/', '/investor/login'].map(entryFor)).toEqual(
+      Array(3).fill('investor'),
+    );
+    expect(['/investors', '/investor.html', '/investor/x.js'].map(entryFor)).toEqual(
+      Array(3).fill('back-office'),
+    );
   });
 
   it('routes /pos and below to the till, and everything else, files included, to the back office', () => {

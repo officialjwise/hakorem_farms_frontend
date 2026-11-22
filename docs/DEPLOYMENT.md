@@ -2,7 +2,7 @@
 
 What a host must do to serve the frontend correctly. The pipeline, environments, Caddy configuration and release procedure are specified in the backend's `docs/DEPLOYMENT.md` (read it; this repository never edits it). This document holds the frontend's own requirements on that setup. **F13 applies every rule here** when it wires the deploy, and each rule says how to check it.
 
-## 1. The console is two documents (ADR 0030)
+## 1. The console is two documents (ADR 0030), and a third for investors (section 7)
 
 The console's static build (`apps/console/dist`) holds two HTML documents:
 
@@ -106,7 +106,7 @@ The till loads its shell and sale screen with the document. Every other till scr
 
 ## 5. Never set `HK_REQUESTED_CONTRACT` for a deployed console (ADR 0046)
 
-`HK_REQUESTED_CONTRACT` names the contract requests a build is built against before the contract carries them (`CR-033` in the e2e and CI builds, whose fake answers it). A staging or production build leaves it **unset**: the console then calls nothing the contract lacks, and the till says in words that the receipt link waits for the server. A build that sets it with `HK_API_BASE_URL` anything but `/mock` **fails before building**, naming the switches (the owner's condition on ADR 0046).
+`HK_REQUESTED_CONTRACT` names the contract requests a build is built against before the contract carries them (`CR-033,CR-059` in the e2e and CI builds, whose fake answers them). A staging or production build leaves it **unset**: the console then calls nothing the contract lacks, and the till says in words that the receipt link waits for the server. A build that sets it with `HK_API_BASE_URL` anything but `/mock` **fails before building**, naming the switches (the owner's condition on ADR 0046).
 
 **How to check it:** the deploy workflow's console build step sets `HK_API_BASE_URL` and nothing named `HK_REQUESTED_CONTRACT`.
 
@@ -125,3 +125,11 @@ The console shows a quote's link once, after it is sent, to copy or send on What
 A build for any API but `/mock` without it **fails before building**, naming the variable: the token in a link is answered once, so a console that could not show it would lose it.
 
 **How to check it:** the deploy workflow's console build step sets `HK_SHOP_URL`; the smoke suite on staging sends a quote and finds its link beginning with the staging shop's address.
+
+## 7. The investor portal is a third document (ADR 0058)
+
+`apps/console/dist` also holds `investor.html`: a request for `/investor` or anything under `/investor/` that is not a file is answered with it. `entryFor` in `apps/console/src/app/entries.ts` is the source of truth, as for the till, and the dev and preview servers follow it. The portal's router sits under `/investor`, so its sign-in is `/investor/login`.
+
+**Why it matters:** a host that answers `index.html` at `/investor` serves the back office there: an investor would meet the staff sign-in, which refuses them.
+
+**How to check it:** the smoke suite opens `/investor` and expects the investor portal's sign-in (F13).
