@@ -4,6 +4,7 @@
   "day": "Day",
   "dayHint": "Business day in Accra. Today until you choose another.",
   "today": "Today",
+  "export": "Export",
   "loading": "Loading the exception report",
   "error": "The exception report could not be loaded",
   "denied": "You do not have access to the exception report",

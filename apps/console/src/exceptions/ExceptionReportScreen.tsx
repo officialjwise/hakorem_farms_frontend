@@ -9,6 +9,7 @@ import {
   Card,
   CardBody,
   DatePicker,
+  ExportMenu,
   Field,
   MoneyDisplay,
   QueryBoundary,
@@ -34,6 +35,7 @@ import { useIntentKey } from '../lib/queries';
 import { ReasonDialog } from '../lib/ReasonDialog';
 import { PageHeader } from '../lib/ScreenHeader';
 import { useStateLabels } from '../lib/states';
+import { useStatementExport } from '../reports/exporting';
 import { accraToday } from '../reports/period';
 import {
   exceptionReviewOn,
@@ -84,6 +86,8 @@ export function ExceptionReportScreen() {
   const scope = useBranchScope();
   const [day, setDay] = useState<DateString>(accraToday());
   const report = useApiQuery('getDailyExceptionReport', { query: { date: day, ...scope.query } });
+  // The report as a file, once runReport lists its code (CR-061).
+  const exporting = useStatementExport('DAILY_EXCEPTIONS', { date: day, ...scope.query });
   const labels = useStateLabels({
     loading: t('loading'),
     emptyTitle: t('empty'),
@@ -111,7 +115,11 @@ export function ExceptionReportScreen() {
             {t('today')}
           </Button>
         )}
+        {exporting.items.length === 0 ? null : (
+          <ExportMenu label={t('export')} items={exporting.items} />
+        )}
       </div>
+      {exporting.status}
       <QueryBoundary
         query={report}
         labels={labels}

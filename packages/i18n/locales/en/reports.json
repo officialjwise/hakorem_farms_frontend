@@ -1,6 +1,6 @@
 {
   "title": "Reports",
-  "description": "Sales, purchases, stock and profit for any period, from the API, ready to export.",
+  "description": "Sales, stock, the ledger's statements, eggs and VAT for any period, from the API, ready to export.",
   "list": {
     "sales": {
       "name": "Sales report",
@@ -21,6 +21,34 @@
     "profit-and-loss": {
       "name": "Profit and loss",
       "about": "Income, cost of sales and expenses from the ledger for the period."
+    },
+    "balance-sheet": {
+      "name": "Balance sheet",
+      "about": "What the business owns and owes, and the owners' equity, at the end of a day, from the ledger."
+    },
+    "trial-balance": {
+      "name": "Trial balance",
+      "about": "Every account's opening, period and closing debits and credits, and whether the ledger balances."
+    },
+    "egg-sales": {
+      "name": "Egg sales by shop",
+      "about": "Crates and loose eggs sold at each shop and channel in the period (CR-059)."
+    },
+    "egg-margin": {
+      "name": "Margin per crate",
+      "about": "Cost, price and margin per crate after breakage, from the server (CR-059)."
+    },
+    "egg-breakage": {
+      "name": "Egg breakage",
+      "about": "Eggs written off by reason and shop, at cost (CR-059)."
+    },
+    "egg-valuation": {
+      "name": "Egg stock valuation",
+      "about": "Crates and loose eggs on hand at each shop at the end of a day, at cost (CR-059)."
+    },
+    "vat-return": {
+      "name": "VAT return",
+      "about": "VAT, NHIL and GETFund charged and reclaimable in the period, and what is due (CR-060)."
     }
   },
   "range": "Report period",
@@ -38,8 +66,6 @@
   "asOf_one": "Data as of {{when}} · {{count}} row",
   "asOf_other": "Data as of {{when}} · {{count}} rows",
   "generated": "Generated {{when}}",
-  "checks_one": "{{count}} check on this statement",
-  "checks_other": "{{count}} checks on this statement",
   "export": "Export",
   "xlsx": "Spreadsheet (XLSX)",
   "pdf": "PDF",
@@ -52,5 +78,36 @@
     "amount": "Amount",
     "totalFor": "Total {{section}}"
   },
-  "thisMonth": "This month"
+  "thisMonth": "This month",
+  "groups": {
+    "trading": "Sales and stock",
+    "financial": "The ledger",
+    "eggs": "Eggs",
+    "tax": "Tax"
+  },
+  "waits": "This report waits for the backend ({{request}}). It runs here as soon as the API lists it.",
+  "waitsShort": "Waits for the backend ({{request}})",
+  "asAt": "As at",
+  "asAtWords": "as at {{day}}",
+  "totalAt": "Total at the date",
+  "negativeBalance": "A negative balance at the date",
+  "checksPassed_one": "The statement's check passed",
+  "checksPassed_other": "All {{count}} of the statement's checks passed",
+  "checksFailed_one": "{{count}} check on this statement failed. Ask the accountant before relying on it.",
+  "checksFailed_other": "{{count}} checks on this statement failed. Ask the accountant before relying on it.",
+  "tb": {
+    "account": "Account",
+    "openingDebit": "Opening debit",
+    "openingCredit": "Opening credit",
+    "periodDebit": "Debits in the period",
+    "periodCredit": "Credits in the period",
+    "closingDebit": "Closing debit",
+    "closingCredit": "Closing credit",
+    "totalDebit": "Debits in the period, every account",
+    "totalCredit": "Credits in the period, every account",
+    "balanced": "The trial balance balances: debits equal credits and the closing balances net to zero.",
+    "notBalanced": "The trial balance does not balance",
+    "notBalancedBody": "Debits and credits differ. The ledger has raised an alert; ask the accountant before relying on any statement.",
+    "pages": "Trial balance pages"
+  }
 }
