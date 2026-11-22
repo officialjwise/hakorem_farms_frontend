@@ -28,14 +28,15 @@ async function ask(method: string, path: string): Promise<Response> {
 
 describe('the Prism mock covers the whole contract', () => {
   it('lists the operations it is going to ask for', () => {
-    // 648 published in contract 2.16.0 (CONTRACT_CHANGELOG): 600 in 1.17.0; 1.21.0 adds eight tiles and two
+    // 652 published in contract 2.17.0 (CONTRACT_CHANGELOG): 600 in 1.17.0; 1.21.0 adds eight tiles and two
     // label reads (610); 1.23.0 adds the price list preview (611); 1.26.0 the sixteen care operations (627);
     // 1.27.0 the three unit conversions (630); 1.29.0 the payout details read (631); 1.30.0 three purchase
     // operations (634); 1.31.0 the tag lookup (635); 1.54.0 the shop's public profile (636); 2.4.0 the six
     // supplier claim operations (642); 2.8.0 the late count of a force-closed shift (643); 2.9.0 the
     // supplier's balance (644); 2.12.0 who holds a price list, both ways (646, CR-041); 2.14.0 an order's
-    // credit check and its override (648, CR-046).
-    expect(operations.length).toBe(648);
+    // credit check and its override (648, CR-046); 2.17.0 the till PIN's three and who may witness a
+    // drop (652, CR-032 and CR-050).
+    expect(operations.length).toBe(652);
     expect(reads.length).toBeGreaterThan(250);
   });
 
