@@ -47,7 +47,8 @@ describe('the reports', () => {
     expect(screen.getByLabelText('As at')).toHaveValue();
     // Until CR-062 lists the statement's code, its only file is the page as CSV.
     await userEvent.setup().click(screen.getByRole('button', { name: /^Export/ }));
-    expect(screen.queryByRole('menuitem', { name: 'PDF' })).toBeNull();
+    expect(await screen.findByRole('button', { name: /CSV/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'PDF' })).toBeNull();
   });
 
   it('the trial balance: each account, the API totals, and whether it balances', async () => {
