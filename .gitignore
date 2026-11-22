@@ -45,3 +45,6 @@ __screenshots__/
 
 # The backend contract and changelog as fetched by pnpm sync-contract:github (ADR 0018)
 .contract-upstream/
+
+# Agent worktrees made inside a session (never committed)
+.claude/worktrees/
