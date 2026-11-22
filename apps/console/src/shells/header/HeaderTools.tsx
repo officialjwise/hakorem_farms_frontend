@@ -142,6 +142,8 @@ export function Notifications() {
   const auth = useAuth();
   const scope = useBranchScope();
   const allowed = auth.can('rpt.exceptions.read');
+  // Controlled, so following the report's link closes it.
+  const [open, setOpen] = useState(false);
   // Exceptions are acted on: `live`.
   const exceptions = useApiQuery(
     'listExceptions',
@@ -156,6 +158,8 @@ export function Notifications() {
     <Popover
       label={t('notifications.title')}
       align="end"
+      open={open}
+      onOpenChange={setOpen}
       trigger={
         <Button
           variant="ghost"
@@ -211,6 +215,13 @@ export function Notifications() {
             })}
           </ul>
         )}
+        <Link
+          to="/exceptions"
+          onClick={() => setOpen(false)}
+          className="text-sm font-semibold text-accent-text underline"
+        >
+          {t('notifications.openReport')}
+        </Link>
       </div>
     </Popover>
   );

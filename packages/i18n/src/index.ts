@@ -27,6 +27,7 @@ import type branchesNs from '../locales/en/branches.json';
 import type labelsNs from '../locales/en/labels.json';
 import type listsNs from '../locales/en/lists.json';
 import type reportsNs from '../locales/en/reports.json';
+import type exceptionsNs from '../locales/en/exceptions.json';
 import type settingsNs from '../locales/en/settings.json';
 import type livestockNs from '../locales/en/livestock.json';
 import type processingNs from '../locales/en/processing.json';
@@ -58,6 +59,7 @@ export const NAMESPACES = [
   'labels',
   'lists',
   'reports',
+  'exceptions',
   'settings',
   'livestock',
   'processing',
@@ -94,6 +96,7 @@ export const catalogue: Record<
     labels: () => import('../locales/en/labels.json'),
     lists: () => import('../locales/en/lists.json'),
     reports: () => import('../locales/en/reports.json'),
+    exceptions: () => import('../locales/en/exceptions.json'),
     settings: () => import('../locales/en/settings.json'),
     livestock: () => import('../locales/en/livestock.json'),
     processing: () => import('../locales/en/processing.json'),
@@ -175,6 +178,7 @@ declare module 'i18next' {
       labels: typeof labelsNs;
       lists: typeof listsNs;
       reports: typeof reportsNs;
+      exceptions: typeof exceptionsNs;
       settings: typeof settingsNs;
       livestock: typeof livestockNs;
       processing: typeof processingNs;

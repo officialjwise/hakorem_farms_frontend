@@ -468,8 +468,10 @@ function Figures({ d }: { d: OwnerDashboard }) {
               </ul>
             )}
             {live.exceptionsToday === null ? null : (
-              <p className="text-control-sm text-fg-muted">
-                {t('attention.exceptions', { count: live.exceptionsToday })}
+              <p className="text-control-sm">
+                <Link to="/exceptions" className="text-accent-text underline">
+                  {t('attention.exceptions', { count: live.exceptionsToday })}
+                </Link>
               </p>
             )}
           </Panel>

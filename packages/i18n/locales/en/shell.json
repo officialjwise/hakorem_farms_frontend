@@ -104,6 +104,7 @@
     "registers": "Cash registers",
     "reports": "Reports",
     "report": "Report",
+    "exceptions": "Exception report",
     "settings": "Settings",
     "settingsBusiness": "Business profile",
     "settingsSystem": "System settings",
@@ -253,7 +254,8 @@
       "INFO": "Note",
       "REVIEW": "Review",
       "URGENT": "Urgent"
-    }
+    },
+    "openReport": "Open the daily exception report"
   },
   "account": {
     "title": "Your account",

@@ -40,6 +40,7 @@ import { useIntentKey } from '../lib/queries';
 import { PageHeader } from '../lib/ScreenHeader';
 import { useStateLabels } from '../lib/states';
 import { TableCard } from '../lib/TableCard';
+import { accraToday, monthStart } from './period';
 
 type ReportRun = components['schemas']['ReportRun'];
 type Column = components['schemas']['ReportColumn'];
@@ -57,16 +58,6 @@ export const REPORTS = {
   'profit-and-loss': { code: null, icon: BadgeCent },
 } as const satisfies Record<string, { code: string | null; icon: LucideIcon }>;
 type ReportKey = keyof typeof REPORTS;
-
-/** Today in Accra, as a calendar date: the default end of a range. */
-function accraToday(): DateString {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Accra' }).format(
-    new Date(),
-  ) as DateString;
-}
-function monthStart(day: DateString): DateString {
-  return `${day.slice(0, 8)}01` as DateString;
-}
 
 /** One cell of a report, formatted by the type the API gave its column. */
 function cellText(column: Column, value: unknown): string {
