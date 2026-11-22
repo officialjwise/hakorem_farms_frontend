@@ -354,6 +354,7 @@
     "error": "The order could not be loaded",
     "denied": "You cannot see orders (ord.order.read).",
     "backToQuote": "Back to quote {{quote}}",
+    "toFulfilment": "Picking and delivery for this order",
     "lines": "The order's lines",
     "fromQuoteLine": "At the quote's price",
     "noInvoice": "Not invoiced yet",

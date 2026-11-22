@@ -108,6 +108,14 @@ export function OrderScreen() {
               label={t(`orderStatus.${o.status}`, { defaultValue: o.status })}
             />
           </div>
+          {/* F11's page for the same order: its picking, consent and delivery. */}
+          <Link
+            to={`/orders/${o.id}/fulfilment`}
+            className="text-accent-text underline"
+            data-slot="order-fulfilment-link"
+          >
+            {t('order.toFulfilment')}
+          </Link>
           <Card>
             <CardBody>
               <dl className="grid gap-x-4 gap-y-2 sm:grid-cols-[max-content_minmax(0,1fr)]">

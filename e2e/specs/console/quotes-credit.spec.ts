@@ -525,6 +525,11 @@ test.describe('credit control', () => {
       page.getByText('Override approved by Kwabena Owusu at 2026-11-17 12:50'),
     ).toBeVisible();
     await expect(page.getByText('Asked for by Ama Mensah at 2026-11-17 12:35')).toBeVisible();
+    // The order's own page links to its picking and delivery (F11), and the link opens it.
+    const toFulfilment = page.getByRole('link', { name: 'Picking and delivery for this order' });
+    await expect(toFulfilment).toHaveAttribute('href', `/orders/${ORDER_ID}/fulfilment`);
+    await toFulfilment.click();
+    await expect(page).toHaveURL(new RegExp(`/orders/${ORDER_ID}/fulfilment$`));
 
     await page.goto(`/business-accounts/${CUSTOMER.id}`);
     const overrides = page.getByRole('region', { name: 'Credit overrides' });
