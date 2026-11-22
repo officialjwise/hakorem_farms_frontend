@@ -32,23 +32,23 @@
     },
     "egg-sales": {
       "name": "Egg sales by shop",
-      "about": "Crates and loose eggs sold at each shop and channel in the period (CR-059)."
+      "about": "Crates and loose eggs sold at each shop and channel in the period (CR-060)."
     },
     "egg-margin": {
       "name": "Margin per crate",
-      "about": "Cost, price and margin per crate after breakage, from the server (CR-059)."
+      "about": "Cost, price and margin per crate after breakage, from the server (CR-060)."
     },
     "egg-breakage": {
       "name": "Egg breakage",
-      "about": "Eggs written off by reason and shop, at cost (CR-059)."
+      "about": "Eggs written off by reason and shop, at cost (CR-060)."
     },
     "egg-valuation": {
       "name": "Egg stock valuation",
-      "about": "Crates and loose eggs on hand at each shop at the end of a day, at cost (CR-059)."
+      "about": "Crates and loose eggs on hand at each shop at the end of a day, at cost (CR-060)."
     },
     "vat-return": {
       "name": "VAT return",
-      "about": "VAT, NHIL and GETFund charged and reclaimable in the period, and what is due (CR-060)."
+      "about": "VAT, NHIL and GETFund charged and reclaimable in the period, and what is due (CR-061)."
     }
   },
   "range": "Report period",

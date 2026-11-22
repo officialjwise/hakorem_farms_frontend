@@ -58,8 +58,8 @@ type Column = components['schemas']['ReportColumn'];
 /**
  * The reports (F5b, F12). Most run on `runReport` by code; the ledger statements read their own operations
  * (`getProfitAndLoss`, `getBalanceSheet`, `getTrialBalance`) and export through `runReport` once its
- * listing carries their code (CR-061). The egg reports and the VAT return are codes the contract does not
- * list yet (CR-059, CR-060): each runs once `listReportDefinitions` lists its code, and says in words that
+ * listing carries their code (CR-062). The egg reports and the VAT return are codes the contract does not
+ * list yet (CR-060, CR-061): each runs once `listReportDefinitions` lists its code, and says in words that
  * it waits for the backend until then. Every figure, total and summary is the API's.
  */
 export const REPORTS = {
@@ -75,17 +75,17 @@ export const REPORTS = {
   },
   'balance-sheet': { group: 'financial', code: null, exportCode: 'BALANCE_SHEET', icon: Landmark },
   'trial-balance': { group: 'financial', code: null, exportCode: 'TRIAL_BALANCE', icon: Scale },
-  'egg-sales': { group: 'eggs', code: 'EGG_SALES_BY_SHOP', request: 'CR-059', icon: Egg },
-  'egg-margin': { group: 'eggs', code: 'EGG_CRATE_MARGIN', request: 'CR-059', icon: Percent },
-  'egg-breakage': { group: 'eggs', code: 'EGG_BREAKAGE', request: 'CR-059', icon: EggOff },
+  'egg-sales': { group: 'eggs', code: 'EGG_SALES_BY_SHOP', request: 'CR-060', icon: Egg },
+  'egg-margin': { group: 'eggs', code: 'EGG_CRATE_MARGIN', request: 'CR-060', icon: Percent },
+  'egg-breakage': { group: 'eggs', code: 'EGG_BREAKAGE', request: 'CR-060', icon: EggOff },
   'egg-valuation': {
     group: 'eggs',
     code: 'EGG_STOCK_VALUATION',
-    request: 'CR-059',
+    request: 'CR-060',
     asOf: true,
     icon: Warehouse,
   },
-  'vat-return': { group: 'tax', code: 'VAT_RETURN', request: 'CR-060', icon: ReceiptText },
+  'vat-return': { group: 'tax', code: 'VAT_RETURN', request: 'CR-061', icon: ReceiptText },
 } as const satisfies Record<string, ReportEntry>;
 type ReportKey = keyof typeof REPORTS;
 
@@ -93,10 +93,10 @@ interface ReportEntry {
   group: 'trading' | 'financial' | 'eggs' | 'tax';
   /** The `runReport` code, or null for a ledger statement read through its own operation. */
   code: string | null;
-  /** A statement's code on `runReport` for its file (CR-061). */
+  /** A statement's code on `runReport` for its file (CR-062). */
   exportCode?: string;
   /** The request a code waits for: the report runs once `listReportDefinitions` lists the code. */
-  request?: 'CR-059' | 'CR-060';
+  request?: 'CR-060' | 'CR-061';
   /** Read at the end of one day (`to`) rather than for a period. */
   asOf?: true;
   icon: LucideIcon;
@@ -260,7 +260,7 @@ export function ReportScreen() {
 }
 
 /**
- * A report whose code the contract does not list yet (CR-059, CR-060): it runs, as any other, once
+ * A report whose code the contract does not list yet (CR-060, CR-061): it runs, as any other, once
  * `listReportDefinitions` lists the code, and says in words that it waits for the backend until then.
  */
 function ListedReport({

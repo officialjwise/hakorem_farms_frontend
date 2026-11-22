@@ -1,6 +1,6 @@
 /**
  * The reports against the REAL Prism mock (ADR 0019): the list in its groups, the ledger's statements from
- * their own operations, and the reports whose codes the contract does not list yet (CR-059, CR-060), which
+ * their own operations, and the reports whose codes the contract does not list yet (CR-060, CR-061), which
  * say so in words. An egg report answered by the API, and a statement's file, are in the e2e spec, where
  * the fake API can list their codes.
  */
@@ -20,10 +20,10 @@ describe('the reports', () => {
     await renderApp('/reports', await signedIn('owner'));
     const eggs = await screen.findByRole('region', { name: 'Eggs' }, { timeout: 5000 });
     const margin = within(eggs).getByRole('link', { name: /Margin per crate/ });
-    await waitFor(() => expect(margin).toHaveTextContent('Waits for the backend (CR-059)'));
+    await waitFor(() => expect(margin).toHaveTextContent('Waits for the backend (CR-060)'));
     expect(
       within(screen.getByRole('region', { name: 'Tax' })).getByRole('link', { name: /VAT return/ }),
-    ).toHaveTextContent('Waits for the backend (CR-060)');
+    ).toHaveTextContent('Waits for the backend (CR-061)');
     const ledger = screen.getByRole('region', { name: 'The ledger' });
     for (const name of ['Profit and loss', 'Balance sheet', 'Trial balance']) {
       expect(within(ledger).getByRole('link', { name: new RegExp(name) })).not.toHaveTextContent(
@@ -45,7 +45,7 @@ describe('the reports', () => {
     expect(table).toHaveTextContent('Total Equity');
     expect(screen.getByText(/checks? passed/)).toBeInTheDocument();
     expect(screen.getByLabelText('As at')).toHaveValue();
-    // Until CR-061 lists the statement's code, its only file is the page as CSV.
+    // Until CR-062 lists the statement's code, its only file is the page as CSV.
     await userEvent.setup().click(screen.getByRole('button', { name: /^Export/ }));
     expect(screen.queryByRole('menuitem', { name: 'PDF' })).toBeNull();
   });
@@ -63,7 +63,7 @@ describe('the reports', () => {
   it('an egg report waits for the backend until the API lists its code', async () => {
     await renderApp('/reports/egg-breakage', await signedIn('owner'));
     expect(
-      await screen.findByText(/waits for the backend \(CR-059\)/, {}, { timeout: 5000 }),
+      await screen.findByText(/waits for the backend \(CR-060\)/, {}, { timeout: 5000 }),
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 1, name: 'Egg breakage' })).toBeInTheDocument();
   });

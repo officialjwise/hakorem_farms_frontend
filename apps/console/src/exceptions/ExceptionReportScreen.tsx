@@ -86,7 +86,7 @@ export function ExceptionReportScreen() {
   const scope = useBranchScope();
   const [day, setDay] = useState<DateString>(accraToday());
   const report = useApiQuery('getDailyExceptionReport', { query: { date: day, ...scope.query } });
-  // The report as a file, once runReport lists its code (CR-061).
+  // The report as a file, once runReport lists its code (CR-062).
   const exporting = useStatementExport('DAILY_EXCEPTIONS', { date: day, ...scope.query });
   const labels = useStateLabels({
     loading: t('loading'),
