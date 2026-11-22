@@ -8,8 +8,8 @@ import { createHash } from 'node:crypto';
 import { expect, type Page } from '@playwright/test';
 import type { FakeApi } from './fakeApi';
 import { confirmStepUp, signIn, signInWithTotp, USERS } from './helpers';
-import { LIST_SHIFT_WITNESSES } from '../../apps/console/src/requested/shiftWitnesses';
-import { MOMO_METHOD_ID, PEOPLE, RECEIPT_LINK_TEMPLATE } from './requested';
+import { RECEIPT_LINK_TEMPLATE } from './requested';
+import { MOMO_METHOD_ID, PEOPLE } from './tillPins';
 
 export interface SentSale {
   id: string;
@@ -143,6 +143,20 @@ export function installTillServer(
     totals: new Map(),
   };
   const shifts = new Map<string, Record<string, unknown>>();
+  // No till PINs unless a test installs them (`installTillPins`, which answers these after this does):
+  // Prism's example would give the till a supervisor's PIN every test would then hold.
+  api.respond('listTillPinVerifiers', (_request, path) => ({
+    registerId: path.split('/')[2] ?? '',
+    data: [],
+    policy: { maxWrongTries: 5, lockedUntil: 'NEW_PIN_SET' },
+    asOf: new Date().toISOString(),
+  }));
+  api.respond('reportTillPinEvents', () => ({
+    eventResults: [],
+    signOutResults: [],
+    locked: [],
+    serverTime: new Date().toISOString(),
+  }));
   let receipt = 6200;
   api.rewrite('getOfflinePack', (body) => {
     const pack = body as {
@@ -252,8 +266,8 @@ export function installTillServer(
       page: { nextCursor: null, limit: 25, hasMore: false },
     };
   });
-  // CR-050, requested: who can witness a drop now.
-  api.respondRequested(LIST_SHIFT_WITNESSES, () => ({
+  // Who can witness a drop now (CR-050, 2.17.0).
+  api.respond('listShiftWitnesses', () => ({
     data: options.witnesses ?? [MANAGER],
     asOf: new Date().toISOString(),
   }));

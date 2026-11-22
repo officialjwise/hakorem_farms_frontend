@@ -51,8 +51,9 @@ test('a crate and six single eggs are sold offline, each at its own price, and s
   await line.getByRole('button', { name: 'Save the item' }).click();
   await expect(cart.locator('[data-slot="cart-total"]')).toHaveText(formatMoney(CRATE + 6 * EGG));
   await expect(cart).toContainText('1 crate');
-  // The offline pack names no unit, so the till says the code: "6 egg" until CR-051 gives it the names.
-  await expect(cart).toContainText('6 egg');
+  // The pack names its units (CR-051, 2.17.0): "6 eggs", and a line by the egg says so in words.
+  await expect(cart).toContainText('6 eggs');
+  await expect(cart).toContainText('Eggs, big, by the egg');
   await expectNoHorizontalScroll(page);
   await expectNoAxeViolations(page);
 

@@ -263,11 +263,12 @@ describe('useApiAllPages', () => {
 });
 
 describe('useRequestedQuery (ADR 0052)', () => {
+  // A fixture no contract will carry, so the tests do not break each time a real request lands.
   const witnesses = {
-    request: 'CR-050',
-    operationId: 'listShiftWitnesses',
+    request: 'CR-000',
+    operationId: 'sampleRequestedRead',
     method: 'get',
-    path: '/shifts/{id}/witnesses',
+    path: '/shifts/{id}/sample-requested-read',
     permission: 'pos.cash.move',
     idempotent: false,
     csrf: 'none',
@@ -283,9 +284,9 @@ describe('useRequestedQuery (ADR 0052)', () => {
     const input = { path: { id: 's/1' } };
     const { result } = renderHook(() => useRequestedQuery(witnesses, input), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(requests[0]?.url).toBe('http://api.test/v1/shifts/s%2F1/witnesses');
+    expect(requests[0]?.url).toBe('http://api.test/v1/shifts/s%2F1/sample-requested-read');
     expect(result.current.data).toEqual(answer);
-    expect(queryClient.getQueryData(['requested', 'listShiftWitnesses', input])).toEqual(answer);
+    expect(queryClient.getQueryData(['requested', 'sampleRequestedRead', input])).toEqual(answer);
   });
 
   it('sends nothing while its switch holds it back', async () => {
@@ -313,13 +314,13 @@ describe('useRequestedQuery (ADR 0052)', () => {
 });
 
 describe('useRequestedMutation (ADR 0053)', () => {
-  // CR-032's PIN events and verifiers, still requested; CR-046's override landed in 2.14.0, and the
-  // client now refuses it as a requested operation.
+  // Fixtures no contract will carry: CR-046's override (2.14.0) and CR-032's PIN events (2.17.0), the
+  // samples before, landed, and the client now refuses a landed operation as a requested one.
   const events = {
-    request: 'CR-032',
-    operationId: 'reportTillPinEvents',
+    request: 'CR-000',
+    operationId: 'sampleRequestedWrite',
     method: 'post',
-    path: '/registers/{id}/pin-events',
+    path: '/registers/{id}/sample-requested-write',
     permission: 'pos.shift.open',
     idempotent: true,
     csrf: 'required',
@@ -327,23 +328,23 @@ describe('useRequestedMutation (ADR 0053)', () => {
     body: 'json',
     device: true,
   } as const;
-  const verifiers = { ...events, operationId: 'listTillPinVerifiers', method: 'get' } as const;
+  const verifiers = { ...events, operationId: 'sampleRequestedRead', method: 'get' } as const;
 
   it('sends the body with an idempotency key and refetches the requested read it names', async () => {
     const { api, wrapper, queryClient, requests } = testData(() => json({ accepted: 1 }, 200));
     const useRequestedMutation = createRequestedMutation(api);
-    queryClient.setQueryData(['requested', 'listTillPinVerifiers', { path: { id: 'r1' } }], {});
+    queryClient.setQueryData(['requested', 'sampleRequestedRead', { path: { id: 'r1' } }], {});
     queryClient.setQueryData(['requested', 'getSupplierBalance', { path: { id: 's1' } }], {});
     const { result } = renderHook(
       () => useRequestedMutation(events, { invalidates: [verifiers.operationId] }),
       { wrapper },
     );
     await act(() => result.current.mutateAsync({ path: { id: 'r1' }, body: { events: [] } }));
-    expect(requests[0]?.url).toBe('http://api.test/v1/registers/r1/pin-events');
+    expect(requests[0]?.url).toBe('http://api.test/v1/registers/r1/sample-requested-write');
     expect(requests[0]?.headers.get('Idempotency-Key')).toMatch(UUID);
     expect(await requests[0]?.json()).toEqual({ events: [] });
     const stale = (key: readonly unknown[]) => queryClient.getQueryState(key)?.isInvalidated;
-    expect(stale(['requested', 'listTillPinVerifiers', { path: { id: 'r1' } }])).toBe(true);
+    expect(stale(['requested', 'sampleRequestedRead', { path: { id: 'r1' } }])).toBe(true);
     expect(stale(['requested', 'getSupplierBalance', { path: { id: 's1' } }])).toBe(false);
   });
 

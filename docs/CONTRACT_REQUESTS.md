@@ -35,7 +35,7 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-029 | 2026-11-16 | Answered (1.46.0), built  |
 | CR-030 | 2026-11-16 | Answered (1.43.0)         |
 | CR-031 | 2026-11-16 | Planned shape (1.45.0)    |
-| CR-032 | 2026-11-16 | Open, amended F10d        |
+| CR-032 | 2026-11-16 | Answered (2.17.0), built  |
 | CR-033 | 2026-11-16 | Open, amended F10e        |
 | CR-034 | 2026-11-17 | Answered (2.0.0), built   |
 | CR-035 | 2026-11-17 | Answered (2.3.0), built   |
@@ -53,14 +53,15 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-047 | 2026-11-18 | Part answered (2.12.0)    |
 | CR-048 | 2026-11-18 | Open                      |
 | CR-049 | 2026-11-18 | Answered (2.12.0)         |
-| CR-050 | 2026-11-18 | Part 2 answered (2.6.0)   |
-| CR-051 | 2026-11-18 | Open                      |
+| CR-050 | 2026-11-18 | Answered (2.17.0), built  |
+| CR-051 | 2026-11-18 | Answered (2.17.0), built  |
 | CR-052 | 2026-11-18 | Open                      |
 | CR-053 | 2026-11-18 | Open                      |
 | CR-054 | 2026-11-18 | Open                      |
 | CR-055 | 2026-11-18 | Open                      |
 | CR-056 | 2026-11-18 | Open                      |
 | CR-057 | 2026-11-18 | Open                      |
+| CR-058 | 2026-11-22 | Open                      |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -568,6 +569,16 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 3. `SyncResultItem.receiptMessage` (object or null): `{ channel: SMS, status: QUEUED | SENT | FAILED | NO_PHONE }`, as before. The server sends the SMS once, on the sale's first sync, to the sale's `customerPhone`, with the link (which works from that moment), the official number and the sale reference; a resend answers the first result's status and sends nothing.
 4. `getPublicReceipt`: `GET /shop/receipts/{token}`, public, found by the token's hash. 200 `PublicReceipt`: `{ state: RECORDED, saleReference, receiptNo, occurredAt, business: { name, phone }, lines: [{ name, quantity, saleUom, weightKg, stockUnitIdentifier, unitPricePesewas, amountPesewas }], totalPesewas, tenders: [{ name, amountPesewas, tenderedPesewas, unverified }], changePesewas, currency }`, with no `saleId` and no other id. A token the server has not been sent, mistyped, guessed or altered answers 404 `NOT_FOUND`, one answer for all of them. The `RECORDING` state of the F10 shape is gone: until the sale syncs, the link is not live, and the receipt says so. `quantity` and `weightKg` are the contract's three-place strings.
 
+**Answered in 2.17.0 (F10n), differently from the request, and built (ADR 0057):**
+
+- The person's own till sets the PIN and sends only its verifier (`setTillPin`).
+- The till reports every try, not only lockouts (`reportTillPinEvents`).
+- Five wrong tries against a version lock it on every till until its owner sets a new PIN.
+- A verifier names a role, not a list of approvals.
+- The approvals carry `approvedByPinVersion` and `witnessPinVersion`.
+- The PIN's length and the idle lock are not in the policy: the till's own constants (A-F10-14).
+- The till's switch is deleted.
+
 ## CR-034. The server generates each product's SKU (changed request body)
 
 - **Raised by:** frontend, the owner's decision (2026-11-17): "SKU stays, but the server generates it. Make it read-only on the product forms: never typed, shown once the product is saved."
@@ -860,6 +871,8 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 
 **Answered in 2.12.0 (F10l), not built:** `PublicQuoteRequest.quantity` and `uom`, but only with `productId`. The shop's form names no product, so the count stays in `requirements` (A-F10-11) until the form asks which product.
 
+**Answered in 2.17.0 (F10n), and built:** `listShiftWitnesses` (part 1), read with `useApiQuery` on the till's shift screen. A witnessed drop carries the witness's PIN version (`witnessPinVersion`). The switch is deleted.
+
 ## CR-051. The offline pack names its units, for one and for more (additive)
 
 - **Raised by:** frontend F10k, the till's sale screen, after 2.9.0 gave every unit `singularName` and `pluralName` ("540 eggs", "1 crate").
@@ -870,6 +883,8 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 **Until this lands:** the till says the unit's code in lower case after a quantity ("6 egg"), which is wrong for a plural. Nothing is built on it.
 
 **Still open after 2.11.0 (F10l):** `getOfflinePack` moved into code without `uoms`.
+
+**Answered in 2.17.0 (F10n):** `OfflinePack.uoms` as asked. The till says "6 eggs", "1 crate" and "By the egg" from it, on screen and on the printed receipt.
 
 ## CR-052. The till sells a live animal priced by grade or weight (additive)
 
@@ -976,3 +991,20 @@ The server returns the rest to stock (or keeps it on the van for a reattempt, as
 - nothing is built for the hand-in (the till is another session's);
 - the phone treats a 404 and an empty route alike ("No run for you today");
 - after a lost answer, the phone's own words say when cash differs from what was due.
+
+## CR-058. After a margin approval, the salesperson issues the quote and gets its link (behaviour, additive)
+
+- **Raised by:** frontend F10n, the quote page. The owner (2026-11-19): after a margin approval, the salesperson issues and sends the quote and sees its link; the backend is changing it.
+- **Contract read first (2.17.0):**
+  - `issueQuoteVersion` below the margin floor answers 202 `ApprovalPending` (`QUOTE_BELOW_MARGIN`). Approved, "the version is issued", so the link's token goes to the approver's answer, which never shows it.
+  - `QuoteVersion` has no state for "approved, not yet issued".
+- **Today:** the quote page tells the salesperson to make a new link from the quote ("Make a new link", `channels: []`).
+
+**Request:**
+
+1. **Approving `QUOTE_BELOW_MARGIN` no longer issues the version.** It records the approval on the version and nothing else. There is no reservation, no `quo.QuoteIssued` and no token.
+2. **The version says it is approved and waiting to be issued.** For example, `QuoteVersion.marginApproval`: `{ approvalRequestId, decidedBy: PrincipalRef, decidedAt }` or null. With it, `Quote.status` is a value such as `APPROVED`, distinct from `PENDING_APPROVAL` and `ISSUED`.
+3. **`issueQuoteVersion` on an approved version issues it**, with the channels the salesperson chooses. It answers 200 with `acceptanceLinkToken`, as an unapproved issue does, and does not ask for approval again unless the prices or costs changed since it was approved. If they changed, it answers 202 again, with the reason.
+4. **Who may issue it:** a holder of `quo.quote.issue`, normally the version's author. Please state whether the approver may issue it too.
+
+**Until this lands:** nothing changes on the console. When the contract carries it, the quote page offers "Issue and send" on an approved version and shows the link once, as for any issue (F10m, section 3).

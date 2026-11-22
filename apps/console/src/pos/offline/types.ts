@@ -4,8 +4,14 @@
  * API shape here is the contract's; the rest is the till's own bookkeeping.
  */
 import type { components } from '@hakorem/api-client';
-import type { PinApproval, TillPinEvent, TillPinVerifiers } from '../../requested/tillPin';
-import type { PinAttempts } from '../pin/pin';
+import type {
+  PinApproval,
+  PinAttempts,
+  PinVerifier,
+  TillPinEvent,
+  TillPinPolicy,
+  TillSignOut,
+} from '../pin/pin';
 import type { CartLine } from './cart';
 
 type Schemas = components['schemas'];
@@ -112,9 +118,9 @@ export interface ReceiptContent {
 }
 
 /**
- * A PIN that approved something on this till (CR-032): who, and which of their verifiers it was checked
- * against. The contract carries the approver's id (`approvedById`, `witnessId`) but not the verifier
- * version yet, so the version is kept here, beside the record, and shown on the queue screen.
+ * A PIN that approved something on this till (CR-032): who, and which of their PIN versions it was checked
+ * against. The payload carries both since 2.17.0 (`approvedById` and `approvedByPinVersion`, `witnessId`
+ * and `witnessPinVersion`); this copy is the queue screen's, with the name and the time.
  */
 export interface PinApprovalRecord {
   approval: PinApproval;
@@ -180,11 +186,13 @@ export interface TillMeta {
   lastShiftSeq: number | null;
   /**
    * Wrong PINs and lockouts on this till, by person (CR-032). Kept through sign-out and shift close: a
-   * lockout ends only when the server says so or a supervisor signs the cashier out (owner, 2026-11-17).
+   * lockout ends only when its owner sets a new PIN (2.17.0, `NEW_PIN_SET`).
    */
   pinAttempts: Record<string, PinAttempts>;
-  /** Lockouts and supervisor sign-outs the server has not been told of yet, oldest first. Kept likewise. */
+  /** Every PIN try the server has not been told of yet, oldest first (`reportTillPinEvents`). Kept likewise. */
   pinEvents: TillPinEvent[];
+  /** Locked cashiers signed out by a supervisor's PIN, not yet told to the server. Kept likewise. */
+  pinSignOuts: TillSignOut[];
   /** The till is locked until its cashier's PIN opens it. Kept, so a reload stays locked. */
   locked: boolean;
 }
@@ -209,6 +217,7 @@ export const EMPTY_META: TillMeta = {
   lastShiftSeq: null,
   pinAttempts: {},
   pinEvents: [],
+  pinSignOuts: [],
   locked: false,
 };
 
@@ -219,10 +228,14 @@ export interface RefusedVerifier {
 }
 
 /**
- * What the till keeps of the server's verifiers: only those at or above the floor, the policy with at most
- * five tries, and who was refused (owner, 2026-11-17).
+ * What the till keeps of `listTillPinVerifiers`: only verifiers at or above the floor (and locked ones, which
+ * carry no material), the policy with at most five tries, and who was refused (owner, 2026-11-17).
  */
-export interface LocalAuth extends TillPinVerifiers {
+export interface LocalAuth {
+  registerId: string;
+  asOf: string;
+  policy: TillPinPolicy;
+  verifiers: PinVerifier[];
   refused: RefusedVerifier[];
 }
 

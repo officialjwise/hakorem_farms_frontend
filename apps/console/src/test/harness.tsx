@@ -20,6 +20,8 @@ export const USERS = {
   temp: { identifier: 'new.staff@hakoremfarms.com', password: 'Temp-8841-Farm' },
   /** Accountant: the role must use TOTP and this user has not set it up, so sign-in asks them to enrol. */
   accountant: { identifier: 'akua.sarpong@hakoremfarms.com', password: 'Mango-Season-2026!' },
+  /** Sales (F10i): quotes and the wholesale reads; no TOTP. */
+  sales: { identifier: 'kojo.antwi@hakoremfarms.com', password: 'Mango-Season-2026!' },
 } as const;
 
 /** The real auth client in a fresh browser, on a fresh fake auth server (ADR 0026). */

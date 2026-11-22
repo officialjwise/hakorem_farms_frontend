@@ -2,6 +2,7 @@ import { ListChecks } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { components } from '@hakorem/api-client';
 import { Button, Dialog, MoneyDisplay, WeightDisplay } from '@hakorem/ui';
+import { unitName, usePackUnits } from '../presentation';
 import type { SellingUnit } from './catalogue';
 
 type OfflineProduct = components['schemas']['OfflineProduct'];
@@ -25,6 +26,7 @@ export function ChooseDialog({
   onChooseSellingUnit?: (product: OfflineProduct, unit: SellingUnit) => void;
 }) {
   const { t } = useTranslation('pos');
+  const units = usePackUnits();
   if (choice.kind === 'sellingUnit') {
     return (
       <Dialog
@@ -47,7 +49,7 @@ export function ChooseDialog({
                 disabled={unit.priceBand === null || unit.quoteOnly}
                 onClick={() => onChooseSellingUnit?.(choice.product, unit)}
               >
-                <span>{t('choose.sellingUnit', { unit: unit.uom.toLowerCase() })}</span>
+                <span>{t('choose.sellingUnit', { unit: unitName(unit.uom, units, 'one') })}</span>
                 <span className="text-fg-muted">
                   {unit.priceBand === null || unit.quoteOnly ? (
                     t('choose.sellingUnitNoPrice')

@@ -9,10 +9,11 @@ import { getTill, useTill, type PinOutcome } from '../offline/till';
 import { PinInput, PinOutcomeAlert } from './PinCheck';
 
 /**
- * The locked till (OFFLINE_SYNC section 3, CR-032, ADR 0047): only the shift's cashier's PIN opens it,
- * checked on the device, so it opens with no network. Selling and paying stop while it is locked; the sale
- * under it stays as it was. There is no plain sign-out here (owner, 2026-11-17): a supervisor's PIN signs
- * the cashier out, and nothing else does. A lockout has no timer; online, the till can ask the server.
+ * The locked till (OFFLINE_SYNC section 3, CR-032, ADR 0047, ADR 0057): only the shift's cashier's PIN opens
+ * it, checked on the device, so it opens with no network. Selling and paying stop while it is locked; the
+ * sale under it stays as it was. There is no plain sign-out here (owner, 2026-11-17): once the cashier's
+ * PIN is locked, a supervisor's PIN signs the cashier out, and nothing else does. A locked PIN has no timer:
+ * it opens again only with a new PIN (2.17.0); online, the till can ask the server.
  */
 export function TillLocked() {
   const { t } = useTranslation('pos');
@@ -25,8 +26,8 @@ export function TillLocked() {
   const shift = snapshot?.shift ?? null;
   const policy = snapshot?.localAuth?.policy ?? null;
   if (shift === null) return null;
-  const lockedOut = snapshot?.meta.pinAttempts[shift.cashierId]?.lockedOut === true;
   const till = getTill();
+  const lockedOut = till.pinLocked(shift.cashierId);
   const canOpen = policy !== null && !lockedOut && !till.refusedVerifier(shift.cashierId);
 
   const submit = (event: FormEvent) => {
@@ -78,7 +79,8 @@ export function TillLocked() {
         <PinOutcomeAlert outcome={outcome} name={shift.cashierName} policy={policy} />
       )}
       {lockedOut ? <LockedOut name={shift.cashierName} /> : null}
-      <SupervisorSignOut cashierName={shift.cashierName} />
+      {/* The server takes a sign-out only once it holds the cashier's PIN locked (`CASHIER_NOT_LOCKED`). */}
+      {lockedOut ? <SupervisorSignOut cashierName={shift.cashierName} /> : null}
     </section>
   );
 }
@@ -112,11 +114,11 @@ function LockedOut({ name }: { name: string }) {
           {t('lock.server.check')}
         </Button>
       ) : (
-        <p className="text-sm text-fg-muted">{t('lock.server.offline')}</p>
+        <p className="text-sm text-fg-muted">{t('lock.server.offline', { name })}</p>
       )}
       {answer === null ? null : (
         <p role="status" className="text-sm">
-          {t(answer === 'still' ? 'lock.server.still' : 'lock.server.unreached')}
+          {t(answer === 'still' ? 'lock.server.still' : 'lock.server.unreached', { name })}
         </p>
       )}
     </div>

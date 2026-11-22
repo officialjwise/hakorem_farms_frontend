@@ -7,14 +7,16 @@
  * - **When no supervisor is signed in at the branch, the drop goes ahead marked unwitnessed** (2.6.0:
  *   `recordCashMovement` takes a drop with no `witnessId` then, and refuses one with `WITNESS_REQUIRED`
  *   while a supervisor is signed in).
- * - **Who is signed in comes from the server** (CR-050's read, behind its switch). Offline, or in a build
- *   without the read, the till cannot know: a PIN is taken if a supervisor is there, and without one the
- *   drop is sent unwitnessed and the server decides.
+ * - **Who is signed in comes from the server** (`listShiftWitnesses`, CR-050, 2.17.0). Offline, or before
+ *   the shift reaches the server, the till cannot know: a PIN is taken if a supervisor is there, and
+ *   without one the drop is sent unwitnessed and the server decides.
+ * - **A witnessed drop carries the witness's PIN version** (`witnessPinVersion`, required with `witnessId`
+ *   since 2.17.0): the server checks it was in force and not locked.
  *
  * Nothing here is sent anywhere: it decides what the form asks for.
  */
 import type { components } from '@hakorem/api-client';
-import type { PinVerifier } from '../../requested/tillPin';
+import type { PinVerifier } from '../pin/pin';
 
 type PrincipalRef = components['schemas']['PrincipalRef'];
 
@@ -39,7 +41,7 @@ export type WitnessRule =
 
 export interface WitnessFacts {
   online: boolean;
-  /** Whether the till may ask the server who is signed in: online, the shift on the server, CR-050 on. */
+  /** Whether the till may ask the server who is signed in: online, and the shift on the server. */
   canAsk: boolean;
   /** CR-050's answer while `canAsk`: undefined until it comes, or `'failed'`. */
   signedIn: PrincipalRef[] | undefined | 'failed';

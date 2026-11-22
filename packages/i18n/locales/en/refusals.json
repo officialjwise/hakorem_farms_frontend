@@ -159,8 +159,9 @@
     "ACCOUNT_ON_HOLD": "The buyer's account is on hold: no credit order is confirmed until an Owner or Manager releases it.",
     "CREDIT_LIMIT_EXCEEDED": "This order would take the buyer over their credit limit. Take a payment first, or ask for a credit override.",
     "CREDIT_TERMS_EXCEEDED": "The buyer has invoices past their payment terms. Take a payment first, or ask for a credit override.",
-    "DUNNING_POLICY_INVALID": "These reminder levels cannot be saved that way. Check each level's days and wording.",
-    "SYNC_BATCH_TOO_LARGE": "The till sent too many sales at once. It sends them again in smaller batches."
+    "DUNNING_POLICY_INVALID": "These reminder levels cannot be saved that way. Check each level's days and channels.",
+    "SYNC_BATCH_TOO_LARGE": "The till sent too many sales at once. It sends them again in smaller batches.",
+    "TILL_PIN_INVALID": "The till PIN was not set: the check this till made from it is weaker than the server takes. Try again; if it is refused again, tell a manager."
   },
   "rules": {
     "AMOUNT_EXCEEDS_LINE": "A line is credited for more than it charged.",
@@ -227,6 +228,12 @@
     "WITNESS_IS_MAKER": "The witness must be someone other than the cashier.",
     "WITNESS_NOT_SUPERVISOR": "The witness is not a supervisor at this branch.",
     "WITNESS_ONLY_ON_DROP": "Only a cash drop has a witness.",
+    "WITNESS_PIN_REQUIRED": "A witnessed cash drop needs the witness's till PIN, entered on the till.",
+    "WITNESS_PIN_UNKNOWN": "The server does not know the witness's till PIN that the till checked.",
+    "WITNESS_PIN_SUPERSEDED": "The witness has set a new till PIN since this till read theirs. Read the PINs again and ask them to enter it.",
+    "WITNESS_PIN_LOCKED": "The witness's till PIN is locked. They must set a new one before they can witness.",
+    "PIN_ITERATIONS_TOO_FEW": "The till made the PIN check with too little work.",
+    "PIN_SALT_REUSED": "The till used a salt the server has seen before. Try again.",
     "TILL_OVERDRAWN": "That is more cash than the till should hold.",
     "OCCURRED_AT_OUT_OF_WINDOW": "This device’s clock is more than five minutes from the server’s. Set its time and try again.",
     "OPENED_AT_OUT_OF_WINDOW": "This device’s clock is more than five minutes from the server’s. Set its time and try again.",
@@ -273,6 +280,9 @@
     "SHIFT_NOT_FORCE_CLOSED": "Only a shift a manager closed without a count is counted late.",
     "SHIFT_ALREADY_COUNTED": "This shift’s drawer is already counted.",
     "ORDER_LINE_UNKNOWN": "That order line could not be found on the order.",
-    "ORDER_LINE_OTHER_PRODUCT": "That order line is for another product."
+    "ORDER_LINE_OTHER_PRODUCT": "That order line is for another product.",
+    "LEVELS_NOT_CONSECUTIVE": "The levels must be numbered 1, 2, 3 in turn, with none missing.",
+    "DAYS_NOT_INCREASING": "Each level must be sent at more days overdue than the level before it.",
+    "CHANNEL_REPEATED": "A level names the same channel twice. Choose each channel once."
   }
 }

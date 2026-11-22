@@ -9,6 +9,8 @@ import {
   Syringe,
   Wheat,
   BadgeCent,
+  BellRing,
+  MailCheck,
   BookText,
   Receipt,
   ChartColumn,
@@ -136,6 +138,19 @@ export const BACK_OFFICE_GROUPS: readonly NavGroup[] = [
       },
       { key: 'statements', path: '/statements', permission: 'whl.statement.read', icon: BookText },
       { key: 'ageing', path: '/ageing', permission: 'whl.ageing.read', icon: Hourglass },
+      // Payment reminders (dunning, 2.16.0), with credit control.
+      {
+        key: 'dunningLevels',
+        path: '/dunning-policy',
+        permission: 'whl.dunning.read',
+        icon: BellRing,
+      },
+      {
+        key: 'dunningNotices',
+        path: '/dunning-notices',
+        permission: 'whl.dunning.read',
+        icon: MailCheck,
+      },
     ],
   },
   {

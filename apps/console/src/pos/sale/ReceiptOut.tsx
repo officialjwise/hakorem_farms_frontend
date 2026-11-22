@@ -127,6 +127,7 @@ function PrintReceipt({ entry, copy }: { entry: SaleEntry; copy: boolean }) {
           copy,
           link: receiptLink(snapshot?.pack ?? null, entry.id),
           words,
+          uoms: snapshot?.pack?.uoms ?? [],
         }),
       )
       .then(setPrinted);

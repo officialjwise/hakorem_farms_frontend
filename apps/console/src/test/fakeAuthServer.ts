@@ -118,6 +118,8 @@ const CASHIER_TILL_PERMISSIONS = [
   // A mobile money tender at the counter: the request to the customer's phone and the check that it cleared.
   'pay.payment.initiate',
   'pay.payment.read',
+  // 2.17.0, as seeded for the Cashier, the Manager and the Owner: one's own till PIN.
+  'pos.pin.set',
 ];
 
 /**
@@ -125,6 +127,7 @@ const CASHIER_TILL_PERMISSIONS = [
  * "a manager" in OFFLINE_SYNC section 3), signing a shift's close off, and force-closing one.
  */
 const MANAGER_TILL_PERMISSIONS = [
+  'pos.pin.set',
   'pos.register.read',
   'pos.device.read',
   'pos.device.enrol',
@@ -270,6 +273,8 @@ const WHOLESALE_PERMISSIONS = [
   'whl.account.release',
   'whl.credit.override',
   'whl.ageing.read',
+  'whl.dunning.read',
+  'whl.dunning.manage',
   'mdm.customer.read',
   'mdm.price.resolve',
   'mdm.price_list.read',
@@ -299,6 +304,8 @@ const SALES_PERMISSIONS = [
   'quo.quote.convert',
   'whl.account.read',
   'whl.ageing.read',
+  // 2.16.0: Sales reads the reminder levels and the reminders sent, and changes neither.
+  'whl.dunning.read',
 ];
 
 /** What the owner holds for the F5b screens: the dashboard, branches and locations, and the new lists. */
@@ -497,6 +504,7 @@ const ACCOUNTANT_PERMISSIONS = [
   'whl.account.read',
   'whl.account.hold',
   'whl.ageing.read',
+  'whl.dunning.read',
   'mdm.customer.read',
 ];
 

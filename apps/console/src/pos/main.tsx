@@ -6,11 +6,7 @@ import { browserStore, configureTill } from './offline/till';
 import { posRoutes } from './routes';
 
 // The till on this device (ADR 0043), and its credential on the operations that ask for it (ADR 0044).
-const till = configureTill({
-  store: browserStore(),
-  call: consoleApi.call,
-  callRequested: consoleApi.callRequested,
-});
+const till = configureTill({ store: browserStore(), call: consoleApi.call });
 attachDeviceCredential(() => till.getState().snapshot?.device?.credential ?? null);
 void till.start();
 

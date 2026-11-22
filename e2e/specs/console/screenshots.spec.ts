@@ -3,7 +3,7 @@ import { expect, test } from '../../support/test';
 import type { FakeApi } from '../../support/fakeApi';
 import { confirmStepUp, signInWithTotp, USERS } from '../../support/helpers';
 import { installTillServer, openTillShift, find } from '../../support/till';
-import { PEOPLE, installTillPins } from '../../support/requested';
+import { PEOPLE, installTillPins } from '../../support/tillPins';
 import {
   APPROVAL_ID,
   CLAIM_ID,

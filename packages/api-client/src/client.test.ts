@@ -145,11 +145,12 @@ describe('building the request from the contract', () => {
 });
 
 describe('an operation a contract request asks for (ADR 0046)', () => {
+  // A fixture no contract will carry, so the test does not break each time a real request lands.
   const requested = {
-    request: 'CR-032',
-    operationId: 'listTillPinVerifiers',
+    request: 'CR-000',
+    operationId: 'sampleRequestedRead',
     method: 'get',
-    path: '/registers/{id}/pin-verifiers',
+    path: '/registers/{id}/sample-requested-read',
     permission: 'pos.shift.open',
     idempotent: false,
     csrf: 'none',
@@ -170,7 +171,7 @@ describe('an operation a contract request asks for (ADR 0046)', () => {
     });
     const request = nth(seen, 0);
     expect(request.method).toBe('GET');
-    expect(request.url).toBe('http://api.test/v1/registers/r%2F1/pin-verifiers');
+    expect(request.url).toBe('http://api.test/v1/registers/r%2F1/sample-requested-read');
     expect(request.headers.get('X-Device-Credential')).toBe('hkdev_T1.test');
     expect(request.credentials).toBe('include');
     await expect(client.callRequested(requested, { path: { id: 'r1' } })).rejects.toBeInstanceOf(

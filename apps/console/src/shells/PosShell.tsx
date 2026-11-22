@@ -6,7 +6,7 @@ import { Alert, Button, Dialog, DialogActions, StatusBadge } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { pendingCount } from '../pos/offline/sync';
 import { getTill, hasTill, useTill } from '../pos/offline/till';
-import { LazyTillLocked } from '../pos/parts';
+import { LazySetTillPin, LazyTillLocked } from '../pos/parts';
 import { preloadTillScreens } from '../pos/routes';
 import { OfflineBanner, OfflineIndicator } from './OfflineIndicator';
 
@@ -89,6 +89,10 @@ export function PosShell() {
           </p>
         ) : null}
         <div className="ms-auto flex flex-wrap items-center justify-end gap-2">
+          {/* One's own till PIN, set with the server: never on a locked till (ADR 0057). */}
+          {device !== null && !locked && auth.session !== null && auth.can('pos.pin.set') ? (
+            <LazySetTillPin principalId={auth.session.principal.id} />
+          ) : null}
           {canLock && !locked ? (
             <Button variant="secondary" size="lg" onClick={() => void getTill().lock()}>
               <LockKeyhole aria-hidden="true" />

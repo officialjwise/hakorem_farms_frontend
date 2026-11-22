@@ -164,12 +164,7 @@ export interface OtherTender {
    * Mobile money taken offline on a supervisor's PIN, not verified (OFFLINE_SYNC 5.3 and 9.9): the
    * contract's `UnverifiedMobileMoneyInput`. Offered only where the pack lists the method offline.
    */
-  unverifiedMobileMoney?: {
-    payerPhone: string;
-    network: 'MTN' | 'TELECEL' | 'AIRTELTIGO';
-    providerReference?: string;
-    approvedById: string;
-  };
+  unverifiedMobileMoney?: components['schemas']['UnverifiedMobileMoneyInput'];
 }
 
 export interface TenderSplit {

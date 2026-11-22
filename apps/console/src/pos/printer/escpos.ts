@@ -8,8 +8,10 @@
  * Pure: words in, bytes out. The words come from the caller in the till's language; nothing here
  * computes money, it prints the receipt's own figures.
  */
-import { formatDateTime, formatMoney, formatQuantity, formatWeight } from '@hakorem/ui';
+import type { components } from '@hakorem/api-client';
+import { formatDateTime, formatMoney, formatWeight } from '@hakorem/ui';
 import type { ReceiptContent } from '../offline/types';
+import { quantityText } from '../units';
 
 export const COLUMNS = 32;
 
@@ -39,6 +41,8 @@ export interface PrintInput {
   /** The customer's receipt page (CR-033), printed in full, or null where the server offers none. */
   link: string | null;
   words: PrintWords;
+  /** The pack's unit names (CR-051): "6 eggs". Without them, the unit's code. */
+  uoms?: readonly components['schemas']['OfflineUom'][];
 }
 
 /** Plain ASCII: accents dropped, anything else a question mark, so a printer never prints garbage. */
@@ -117,7 +121,7 @@ export function receiptLines(input: PrintInput): {
     body.push(...wrap(line.name));
     const detail = [
       line.stockUnitIdentifier,
-      `${line.weightKg !== null ? formatWeight(line.weightKg) : `${formatQuantity(line.quantity, { places: 0 })} ${line.saleUom.toLowerCase()}`} @ ${money(line.unitPricePesewas)}`,
+      `${line.weightKg !== null ? formatWeight(line.weightKg) : quantityText(line.quantity, line.saleUom, input.uoms)} @ ${money(line.unitPricePesewas)}`,
     ]
       .filter((part) => part !== null)
       .join(' ');

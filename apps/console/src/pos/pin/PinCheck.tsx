@@ -2,7 +2,7 @@ import { KeyRound } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Button, Field, Input, Select } from '@hakorem/ui';
-import type { PinApproval, PinVerifier, TillPinPolicy } from '../../requested/tillPin';
+import type { PinApproval, PinVerifier, TillPinPolicy } from './pin';
 import { getTill, type PinOutcome } from '../offline/till';
 import type { PinApprovalRecord } from '../offline/types';
 
