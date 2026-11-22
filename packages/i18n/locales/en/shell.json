@@ -151,6 +151,8 @@
     "businessAccountNew": "Open a wholesale account",
     "businessAccount": "Wholesale account",
     "ageing": "Ageing",
+    "dunningLevels": "Reminder levels",
+    "dunningNotices": "Reminders sent",
     "orderFulfilment": "Picking and delivery",
     "fulfilments": "Picking",
     "fulfilment": "Pick list",

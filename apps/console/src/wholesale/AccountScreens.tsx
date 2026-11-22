@@ -49,6 +49,7 @@ import { useCursorPages } from '../lib/useCursorPages';
 import { ANY, FilterSelect, countSet, param } from '../stock/filters';
 import { AgeingBuckets } from './AgeingScreen';
 import { CustomerPicker } from './CustomerPicker';
+import { CustomerReminders } from './DunningScreens';
 import { ACCOUNT_STATUSES, AccountStatusBadge } from './presentation';
 
 type S = components['schemas'];
@@ -367,7 +368,8 @@ export function BusinessAccountNewScreen() {
 
 /**
  * One buyer's account: their limit, terms and price list, what they owe and how late (the ageing row the
- * API gives for them), whether they are on hold, and every credit override with who approved it.
+ * API gives for them), the payment reminders sent to them, whether they are on hold, and every credit
+ * override with who approved it.
  */
 export function BusinessAccountScreen() {
   const { t } = useTranslation(['wholesale', 'common']);
@@ -480,6 +482,7 @@ export function BusinessAccountScreen() {
             </CardBody>
           </Card>
           <CustomerAgeing customerId={a.customer.id} />
+          <CustomerReminders customerId={a.customer.id} />
           <AccountActions account={a} />
           <Overrides customerId={a.customer.id} />
         </article>

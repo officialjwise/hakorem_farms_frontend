@@ -273,6 +273,8 @@ const WHOLESALE_PERMISSIONS = [
   'whl.account.release',
   'whl.credit.override',
   'whl.ageing.read',
+  'whl.dunning.read',
+  'whl.dunning.manage',
   'mdm.customer.read',
   'mdm.price.resolve',
   'mdm.price_list.read',
@@ -302,6 +304,8 @@ const SALES_PERMISSIONS = [
   'quo.quote.convert',
   'whl.account.read',
   'whl.ageing.read',
+  // 2.16.0: Sales reads the reminder levels and the reminders sent, and changes neither.
+  'whl.dunning.read',
 ];
 
 /** What the owner holds for the F5b screens: the dashboard, branches and locations, and the new lists. */
@@ -500,6 +504,7 @@ const ACCOUNTANT_PERMISSIONS = [
   'whl.account.read',
   'whl.account.hold',
   'whl.ageing.read',
+  'whl.dunning.read',
   'mdm.customer.read',
 ];
 

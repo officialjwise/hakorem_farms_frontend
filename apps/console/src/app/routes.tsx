@@ -807,6 +807,21 @@ export const protectedRoutes: RouteObject[] = [
         element: lazyScreen(() => import('../wholesale/AgeingScreen').then((m) => m.AgeingScreen)),
         handle: back('whl.ageing.read', 'ageing'),
       },
+      // Payment reminders (dunning, 2.16.0): the levels, and the reminders sent.
+      {
+        path: 'dunning-policy',
+        element: lazyScreen(() =>
+          import('../wholesale/DunningScreens').then((m) => m.DunningLevelsScreen),
+        ),
+        handle: back('whl.dunning.read', 'dunningLevels'),
+      },
+      {
+        path: 'dunning-notices',
+        element: lazyScreen(() =>
+          import('../wholesale/DunningScreens').then((m) => m.DunningNoticesScreen),
+        ),
+        handle: back('whl.dunning.read', 'dunningNotices'),
+      },
       // F3. Each leaf's permission is the x-permission of the operation it reads (or, for a form, writes).
       {
         path: 'users',
