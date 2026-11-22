@@ -95,15 +95,15 @@ The list is in four groups: sales and stock, the ledger, eggs, and tax.
 
 ## Gates, each run on its own
 
-| Check                                                     | Exit | Count                                                                                      |
-| --------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------ |
-| `format:check`, `lint`, `typecheck` (every package)       | 0    |                                                                                            |
-| `sync-contract:check`                                     | 0    | 2.17.0, backend `475378e` (from main, PR #36)                                              |
-| `test:unit`                                               | 0    | console 352, ui 901, storefront 42, data 33, api-client 30, i18n 6                         |
-| `test:integration`                                        | 0    | console 280 (the exception report's 2, the reports' 5, the portal's 4); storefront 20      |
-| `budget:console`                                          | 0    | till 247.4 of 250 kB; back office 291.6 of 300 kB; investor portal 225.2 of 250 kB (below) |
-| `test:e2e`, full run                                      | —    | see the PR                                                                                 |
-| `tokens:check`, `fonts:check`, `icons:check`, `test:a11y` | n/r  | not run: no token, font, icon or `packages/ui` change                                      |
+| Check                                                     | Exit | Count                                                                                                                                        |
+| --------------------------------------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `format:check`, `lint`, `typecheck` (every package)       | 0    |                                                                                                                                              |
+| `sync-contract:check`                                     | 0    | 2.17.0, backend `475378e` (from main, PR #36)                                                                                                |
+| `test:unit`                                               | 0    | console 352, ui 901, storefront 42, data 33, api-client 30, i18n 6                                                                           |
+| `test:integration`                                        | 0    | console 280 (the exception report's 2, the reports' 5, the portal's 4); storefront 20                                                        |
+| `budget:console`                                          | 0    | till 247.4 of 250 kB; back office 291.6 of 300 kB; investor portal 225.2 of 250 kB (below)                                                   |
+| `test:e2e`, full run                                      | 0    | 352 of 352 in 8.0 minutes on 2.17.0, first run (F10n's 337, and this session's 15: the exception report 4, reports 7, the investor portal 4) |
+| `tokens:check`, `fonts:check`, `icons:check`, `test:a11y` | n/r  | not run: no token, font, icon or `packages/ui` change                                                                                        |
 
 **Fixed while getting here:**
 
