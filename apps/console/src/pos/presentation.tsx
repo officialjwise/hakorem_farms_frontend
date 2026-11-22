@@ -1,14 +1,15 @@
 import { CircleAlert, CircleCheck, Clock, CloudUpload, Copy, ShieldX } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import {
-  MoneyDisplay,
-  StatusBadge,
-  formatDateTime,
-  formatQuantity,
-  formatWeight,
-} from '@hakorem/ui';
+import { MoneyDisplay, StatusBadge, formatDateTime, formatWeight } from '@hakorem/ui';
+import type { components } from '@hakorem/api-client';
 import { needsAttention, totalDiffers } from './offline/sync';
+import { useTill } from './offline/till';
 import type { LocalStatus, QueueEntry, ReceiptContent } from './offline/types';
+import { quantityText } from './units';
+
+export { quantityText, unitName } from './units';
+
+type OfflineUom = components['schemas']['OfflineUom'];
 
 /** A queue record's state in words and icon, never colour alone (CLAUDE.md, "A control or state with no words"). */
 export function EntryStatus({ entry }: { entry: QueueEntry }) {
@@ -65,9 +66,9 @@ export function EntryStatus({ entry }: { entry: QueueEntry }) {
 
 export { needsAttention };
 
-/** A quantity in its unit: a count for countable units, three places for weight (ADR 0007). */
-export function quantityText(quantity: string, uom: string): string {
-  return `${formatQuantity(quantity, { places: 0 })} ${uom.toLowerCase()}`;
+/** The units the till's pack names, for `unitName` and `quantityText`. Empty before a pack is read. */
+export function usePackUnits(): readonly OfflineUom[] {
+  return useTill().snapshot?.pack?.uoms ?? [];
 }
 
 /**
@@ -87,6 +88,7 @@ export function Receipt({
   copy?: boolean;
 }) {
   const { t } = useTranslation('pos');
+  const units = usePackUnits();
   return (
     <article
       aria-label={t('receipt.label', { ref: receipt.provisionalRef })}
@@ -130,7 +132,7 @@ export function Receipt({
                   {line.stockUnitIdentifier !== null ? `${line.stockUnitIdentifier} · ` : ''}
                   {line.weightKg !== null
                     ? formatWeight(line.weightKg)
-                    : quantityText(line.quantity, line.saleUom)}
+                    : quantityText(line.quantity, line.saleUom, units)}
                   {' @ '}
                   <MoneyDisplay pesewas={line.unitPricePesewas} />
                 </span>

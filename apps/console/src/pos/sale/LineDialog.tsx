@@ -24,6 +24,7 @@ import {
   type WeightSource,
 } from '../offline/cart';
 import type { OfflinePack } from '../offline/types';
+import { unitName, usePackUnits } from '../presentation';
 
 /** What stops a line being paid for, before the price rules: a weighed line with no weight. */
 export function lineProblem(line: CartLine): 'NO_WEIGHT' | null {
@@ -53,6 +54,7 @@ export function LineDialog({
   onSave: (line: CartLine) => void;
 }) {
   const { t } = useTranslation('pos');
+  const units = usePackUnits();
   const [quantity, setQuantity] = useState(line.quantity.replace(/\.?0+$/, ''));
   const [weight, setWeight] = useState<string | null>(line.weightKg);
   const [source, setSource] = useState<WeightSource>(line.weightSource ?? 'MANUAL');
@@ -110,7 +112,7 @@ export function LineDialog({
           <p>{t('line.oneAnimal', { name: line.stockUnitIdentifier })}</p>
         ) : (
           <Field
-            label={t('line.quantity', { uom: line.saleUom.toLowerCase() })}
+            label={t('line.quantity', { uom: unitName(line.saleUom, units, 'many') })}
             error={tried ? quantityError : undefined}
           >
             <Input

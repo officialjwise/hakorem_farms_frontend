@@ -26,7 +26,7 @@ import { useOnlineStatus } from '../../lib/useOnlineStatus';
 import { cartTotal, lineAmount, type CartLine } from '../offline/cart';
 import { getTill, useTill } from '../offline/till';
 import type { OfflinePack, SaleEntry, TillSnapshot } from '../offline/types';
-import { quantityText } from '../presentation';
+import { quantityText, unitName, usePackUnits } from '../presentation';
 import {
   findInPack,
   isSoldByUnit,
@@ -527,13 +527,14 @@ function CartRow({
   onRemove: () => void;
 }) {
   const { t } = useTranslation('pos');
+  const units = usePackUnits();
   const problem = lineProblem(line);
   // A crate and single eggs of one product are two lines, told apart by their unit (CR-038).
   const name =
     line.stockUnitIdentifier !== null
       ? `${line.productName} ${line.stockUnitIdentifier}`
       : line.soldInUom !== null && line.soldInUom !== undefined
-        ? t('line.byUnit', { name: line.productName, unit: line.soldInUom.toLowerCase() })
+        ? t('line.byUnit', { name: line.productName, unit: unitName(line.soldInUom, units, 'one') })
         : line.productName;
   return (
     <li className="grid gap-1 rounded-md border border-border p-3" data-slot="cart-line">
@@ -551,7 +552,7 @@ function CartRow({
         {line.priceBasis === 'PER_KG' || line.weightKg !== null ? (
           <WeightDisplay kilograms={line.weightKg} notApplicableLabel={t('line.noWeight')} />
         ) : (
-          quantityText(line.quantity, line.saleUom)
+          quantityText(line.quantity, line.saleUom, units)
         )}
         {' · '}
         {t(`line.basis.${line.priceBasis}`, { price: '' })}
