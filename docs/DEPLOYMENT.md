@@ -2,7 +2,7 @@
 
 What a host must do to serve the frontend correctly. The pipeline, environments, Caddy configuration and release procedure are specified in the backend's `docs/DEPLOYMENT.md` (read it; this repository never edits it). This document holds the frontend's own requirements on that setup. **F13 applies every rule here** when it wires the deploy, and each rule says how to check it.
 
-## 1. The console is two documents (ADR 0030)
+## 1. The console is two documents (ADR 0030), and a third for investors (section 7)
 
 The console's static build (`apps/console/dist`) holds two HTML documents:
 
@@ -125,3 +125,11 @@ The console shows a quote's link once, after it is sent, to copy or send on What
 A build for any API but `/mock` without it **fails before building**, naming the variable: the token in a link is answered once, so a console that could not show it would lose it.
 
 **How to check it:** the deploy workflow's console build step sets `HK_SHOP_URL`; the smoke suite on staging sends a quote and finds its link beginning with the staging shop's address.
+
+## 7. The investor portal is a third document (ADR 0058)
+
+`apps/console/dist` also holds `investor.html`: a request for `/investor` or anything under `/investor/` that is not a file is answered with it. `entryFor` in `apps/console/src/app/entries.ts` is the source of truth, as for the till, and the dev and preview servers follow it. The portal's router sits under `/investor`, so its sign-in is `/investor/login`.
+
+**Why it matters:** a host that answers `index.html` at `/investor` serves the back office there: an investor would meet the staff sign-in, which refuses them.
+
+**How to check it:** the smoke suite opens `/investor` and expects the investor portal's sign-in (F13).

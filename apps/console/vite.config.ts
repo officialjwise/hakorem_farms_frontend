@@ -19,6 +19,8 @@ import { assertSwitchesAllowed } from './src/requested/switch.ts';
 const MOCK_PATH = '/mock';
 const PRISM = 'http://127.0.0.1:4010';
 const STAFF_COOKIE = '__Host-hk_s_at';
+/** The investor portal's cookie (ADR 0058), added beside the staff one for the investor operations. */
+const INVESTOR_COOKIE = '__Host-hk_i_at';
 const mockProxy: Record<string, ProxyOptions> = {
   [`^${MOCK_PATH}(/|$)`]: {
     target: PRISM,
@@ -27,8 +29,12 @@ const mockProxy: Record<string, ProxyOptions> = {
     configure: (proxy) => {
       proxy.on('proxyReq', (request) => {
         const cookie = String(request.getHeader('cookie') ?? '');
-        if (!cookie.includes(`${STAFF_COOKIE}=`)) {
-          request.setHeader('cookie', `${STAFF_COOKIE}=dev-mock${cookie ? `; ${cookie}` : ''}`);
+        const missing = [STAFF_COOKIE, INVESTOR_COOKIE].filter(
+          (name) => !cookie.includes(`${name}=`),
+        );
+        if (missing.length > 0) {
+          const added = missing.map((name) => `${name}=dev-mock`).join('; ');
+          request.setHeader('cookie', `${added}${cookie ? `; ${cookie}` : ''}`);
         }
       });
     },
@@ -43,7 +49,8 @@ const mockProxy: Record<string, ProxyOptions> = {
  */
 const routeToEntryDocument: Connect.NextHandleFunction = (request, _response, next) => {
   const url = new URL(request.url ?? '/', 'http://console.local');
-  if (entryFor(url.pathname) === 'pos') request.url = `/${ENTRY_DOCUMENT.pos}${url.search}`;
+  const entry = entryFor(url.pathname);
+  if (entry !== 'back-office') request.url = `/${ENTRY_DOCUMENT[entry]}${url.search}`;
   next();
 };
 const entryDocuments: Plugin = {
@@ -54,6 +61,7 @@ const entryDocuments: Plugin = {
 const input = {
   main: fileURLToPath(new URL(`./${ENTRY_DOCUMENT['back-office']}`, import.meta.url)),
   pos: fileURLToPath(new URL(`./${ENTRY_DOCUMENT.pos}`, import.meta.url)),
+  investor: fileURLToPath(new URL(`./${ENTRY_DOCUMENT.investor}`, import.meta.url)),
 };
 
 export default defineConfig(({ mode, isPreview }) => {

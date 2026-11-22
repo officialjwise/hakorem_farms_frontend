@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { I18nextProvider } from 'react-i18next';
 import { createBrowserRouter, RouterProvider, type RouteObject } from 'react-router';
 import { createI18n } from '@hakorem/i18n';
-import { AuthProvider } from '../auth/AuthProvider';
+import { AuthProvider, type SignInRealm } from '../auth/AuthProvider';
 import { authClient } from '../auth/client';
 import { ErrorBoundary } from './ErrorBoundary';
 import '../styles.css';
@@ -17,9 +17,15 @@ type Namespaces = Parameters<typeof createI18n>[0]['namespaces'];
 export async function boot({
   routes,
   namespaces,
+  realm = 'STAFF',
+  basename,
 }: {
   routes: RouteObject[];
   namespaces: Namespaces;
+  /** Who this document signs in (ADR 0058): staff, or an investor in the portal. */
+  realm?: SignInRealm;
+  /** The router's base, for a document whose every route sits under one path (the investor portal). */
+  basename?: string;
 }) {
   const i18n = await createI18n({ namespaces });
   const root = document.getElementById('root');
@@ -28,8 +34,10 @@ export async function boot({
     <StrictMode>
       <I18nextProvider i18n={i18n}>
         <ErrorBoundary>
-          <AuthProvider client={authClient}>
-            <RouterProvider router={createBrowserRouter(routes)} />
+          <AuthProvider client={authClient} realm={realm}>
+            <RouterProvider
+              router={createBrowserRouter(routes, basename === undefined ? {} : { basename })}
+            />
           </AuthProvider>
         </ErrorBoundary>
       </I18nextProvider>

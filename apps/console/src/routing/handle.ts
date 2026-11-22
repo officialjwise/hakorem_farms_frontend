@@ -9,13 +9,14 @@ export interface RouteHandle {
   /** The permission code the route needs, or null when any signed-in user may open it. */
   permission: string | null;
   /** Which shell the route renders in. Decides density, theme default and chrome. */
-  shell: 'back-office' | 'pos' | 'driver';
+  shell: 'back-office' | 'pos' | 'driver' | 'investor';
   /** Key into the `shell` namespace's `nav` group, used for the page title and the breadcrumb. */
   crumb: NavKey;
 }
 
 export type NavKey =
   | 'dashboard'
+  | 'investor'
   | 'exceptions'
   | 'stock'
   | 'products'

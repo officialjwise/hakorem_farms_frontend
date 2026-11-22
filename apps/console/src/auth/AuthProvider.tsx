@@ -37,6 +37,8 @@ export type PendingStep =
 
 export interface AuthApi {
   status: AuthStatus;
+  /** The realm this document signs in (ADR 0058). A session of another realm is shown in words, not used. */
+  realm: SignInRealm;
   session: SessionInfo | null;
   pending: PendingStep;
   /** True after the user chose to sign out, until the next sign-in. Decides whether sign-in remembers where they were. */
@@ -90,8 +92,13 @@ export const REFRESH_LEAD_MS = 60 * 1000;
 export const MIN_REFRESH_INTERVAL_MS = 30 * 1000;
 const RETRY_AFTER_NETWORK_ERROR_MS = 15 * 1000;
 
+/** The realms a console document signs in: staff in the back office and the till, investors in the portal. */
+export type SignInRealm = 'STAFF' | 'INVESTOR';
+
 export interface AuthProviderProps {
   client: AuthClient;
+  /** Which sign-in this document uses: `loginStaff` (default) or `loginInvestor` (ADR 0058). */
+  realm?: SignInRealm;
   children: ReactNode;
   /** Overridable for tests. */
   now?: () => number;
@@ -105,7 +112,12 @@ export interface AuthProviderProps {
  */
 const defaultNow = () => Date.now();
 
-export function AuthProvider({ client, children, now = defaultNow }: AuthProviderProps) {
+export function AuthProvider({
+  client,
+  children,
+  realm = 'STAFF',
+  now = defaultNow,
+}: AuthProviderProps) {
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [session, setSession] = useState<SessionInfo | null>(null);
   const [pending, setPending] = useState<PendingStep>(null);
@@ -221,7 +233,10 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
 
   const login = useCallback<AuthApi['login']>(
     async (identifier, password) => {
-      const result = await client.loginStaff({ identifier, password, deviceLabel: 'Console' });
+      const result =
+        realm === 'INVESTOR'
+          ? await client.loginInvestor({ identifier, password, deviceLabel: 'Investor portal' })
+          : await client.loginStaff({ identifier, password, deviceLabel: 'Console' });
       if (result.status === 'AUTHENTICATED' && result.session) {
         adopt(result.session);
       } else if (result.status === 'TOTP_REQUIRED' && result.challengeToken) {
@@ -241,7 +256,7 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
       }
       return result.status;
     },
-    [client, adopt],
+    [client, adopt, realm],
   );
 
   const verifyTotp = useCallback<AuthApi['verifyTotp']>(
@@ -314,6 +329,7 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
 
   const api = useMemo<AuthApi>(
     () => ({
+      realm,
       status,
       session,
       pending,
@@ -325,7 +341,7 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
       confirmTotpEnrolment,
       finishTotpEnrolment,
       changePassword,
-      requestPasswordReset: (identifier) => client.requestPasswordReset({ identifier }),
+      requestPasswordReset: (identifier) => client.requestPasswordReset({ identifier, realm }),
       resetPassword: (token, newPassword) => client.resetPassword({ token, newPassword }),
       logout,
       refreshSession,
@@ -338,6 +354,7 @@ export function AuthProvider({ client, children, now = defaultNow }: AuthProvide
       cancelPending: () => setPending(null),
     }),
     [
+      realm,
       status,
       session,
       pending,

@@ -24,6 +24,15 @@ export const USERS = {
   sales: { identifier: 'kojo.antwi@hakoremfarms.com', password: 'Mango-Season-2026!' },
 } as const;
 
+/** The investor portal's account in the fake (ADR 0058). */
+export const INVESTOR = { identifier: 'esi.bonsu@example.com', password: 'Cocoa-Harvest-2026!' };
+
+/** A client that holds a signed-in investor (`loginInvestor`). */
+export async function signedInInvestor(client: AuthClient = newClient()): Promise<AuthClient> {
+  await client.loginInvestor(INVESTOR);
+  return client;
+}
+
 /** The real auth client in a fresh browser, on a fresh fake auth server (ADR 0026). */
 export function newClient(): AuthClient {
   return fakeBrowser().client;
@@ -46,6 +55,8 @@ export async function renderApp(
   client: AuthClient,
   routes: RouteObject[] = appRoutes,
   state?: unknown,
+  /** The investor portal (ADR 0058): its realm and router base. */
+  document?: { realm: 'INVESTOR'; basename: string },
 ) {
   const i18n = await createI18n({
     namespaces: [
@@ -70,14 +81,17 @@ export async function renderApp(
       'payables',
       'wholesale',
       'refusals',
+      'exceptions',
+      'investor',
     ],
   });
   const router = createMemoryRouter(routes, {
     initialEntries: [state === undefined ? path : { pathname: path, state }],
+    ...(document === undefined ? {} : { basename: document.basename }),
   });
   const view = render(
     <I18nextProvider i18n={i18n}>
-      <AuthProvider client={client}>
+      <AuthProvider client={client} realm={document?.realm ?? 'STAFF'}>
         <RouterProvider router={router} />
       </AuthProvider>
     </I18nextProvider>,

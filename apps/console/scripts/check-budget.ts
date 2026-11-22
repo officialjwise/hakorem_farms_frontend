@@ -24,6 +24,8 @@ import { ENTRY_DOCUMENT, ENTRY_NAMESPACES, type ConsoleEntry } from '../src/app/
 export const CONSOLE_BUDGET: Record<ConsoleEntry, { script: number; style: number }> = {
   pos: { script: 250, style: 15 },
   'back-office': { script: 300, style: 15 },
+  // The investor portal opens on a phone (ADR 0058, A-F12-02): the till's budget.
+  investor: { script: 250, style: 15 },
 };
 
 interface ManifestChunk {
@@ -98,10 +100,11 @@ const kB = (files: Iterable<string>) =>
 const scripts = (keys: Set<string>) => [...keys].map((key) => chunk(key).file);
 const styles = (keys: Set<string>) => [...keys].flatMap((key) => chunk(key).css ?? []);
 
-const loads = { pos: load('pos'), 'back-office': load('back-office') } satisfies Record<
-  ConsoleEntry,
-  Load
->;
+const loads = {
+  pos: load('pos'),
+  'back-office': load('back-office'),
+  investor: load('investor'),
+} satisfies Record<ConsoleEntry, Load>;
 
 const failures: string[] = [];
 for (const entry of Object.keys(CONSOLE_BUDGET) as ConsoleEntry[]) {
@@ -109,7 +112,7 @@ for (const entry of Object.keys(CONSOLE_BUDGET) as ConsoleEntry[]) {
   const budget = CONSOLE_BUDGET[entry];
   const script = kB(scripts(initial));
   const style = kB(styles(initial));
-  const label = ENTRY_DOCUMENT[entry].padEnd(11);
+  const label = ENTRY_DOCUMENT[entry].padEnd(13);
   const line = (kind: string, size: number, limit: number) =>
     `${label} initial ${kind.padEnd(6)} ${size.toFixed(1).padStart(6)} kB of ${limit} kB`;
   console.log(line('script', script, budget.script));
@@ -122,11 +125,13 @@ for (const entry of Object.keys(CONSOLE_BUDGET) as ConsoleEntry[]) {
   if (style > budget.style) failures.push(`${line('style', style, budget.style)}: over budget`);
 }
 
-// The point of two documents: the till never downloads the back office's own code.
-if (scripts(loads.pos.initial).includes(loads['back-office'].entryFile)) {
-  failures.push(
-    `the till's initial load contains the back office's entry chunk ${loads['back-office'].entryFile}`,
-  );
+// The point of separate documents: neither the till nor an investor downloads the back office's own code.
+for (const entry of ['pos', 'investor'] as const) {
+  if (scripts(loads[entry].initial).includes(loads['back-office'].entryFile)) {
+    failures.push(
+      `${ENTRY_DOCUMENT[entry]}'s initial load contains the back office's entry chunk ${loads['back-office'].entryFile}`,
+    );
+  }
 }
 
 if (failures.length > 0) {

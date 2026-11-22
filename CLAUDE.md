@@ -8,17 +8,17 @@ Read this file, `docs/SHARED_BRIEF.md`, your session's section of `docs/BUILD_PR
 
 ## Which surface is which
 
-| Path                  | What it is                                                                                                                                                       |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/ui`         | The design system: tokens, components, formatters, forms, Storybook. Built (F0).                                                                                 |
-| `packages/i18n`       | react-i18next catalogue, one namespace per feature. Apps call `t()`; `packages/ui` never does.                                                                   |
-| `packages/api-client` | Generated from the contract: types, operation table, `call(operationId, …)`. Never hand-edited.                                                                  |
-| `packages/data`       | TanStack Query layer: `useApiQuery`, `useApiMutation`, keys, stale times, retry. See DATA_CONVENTIONS.                                                           |
-| `apps/storefront`     | Public shop, Next.js 15, server rendered, built for 3G. Shell built (F1); catalogue screens are F7.                                                              |
-| `apps/console`        | Installable PWA, Vite: two documents, `index.html` (back office) and `pos.html` (till) (ADR 0030); the real auth client; users, roles, sessions, audit log (F3). |
-| `e2e/`                | Playwright and axe specs, Chromium, 360 px, against production builds.                                                                                           |
-| `contract/`           | A synced copy of the backend's OpenAPI contract. Never hand-edited.                                                                                              |
-| `tooling/lint-tokens` | The `hakorem/token-usage` lint rule.                                                                                                                             |
+| Path                  | What it is                                                                                                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/ui`         | The design system: tokens, components, formatters, forms, Storybook. Built (F0).                                                                                    |
+| `packages/i18n`       | react-i18next catalogue, one namespace per feature. Apps call `t()`; `packages/ui` never does.                                                                      |
+| `packages/api-client` | Generated from the contract: types, operation table, `call(operationId, …)`. Never hand-edited.                                                                     |
+| `packages/data`       | TanStack Query layer: `useApiQuery`, `useApiMutation`, keys, stale times, retry. See DATA_CONVENTIONS.                                                              |
+| `apps/storefront`     | Public shop, Next.js 15, server rendered, built for 3G. Shell built (F1); catalogue screens are F7.                                                                 |
+| `apps/console`        | Installable PWA, Vite: three documents, `index.html` (back office), `pos.html` (till) and `investor.html` (investor portal) (ADR 0030, 0058); the real auth client. |
+| `e2e/`                | Playwright and axe specs, Chromium, 360 px, against production builds.                                                                                              |
+| `contract/`           | A synced copy of the backend's OpenAPI contract. Never hand-edited.                                                                                                 |
+| `tooling/lint-tokens` | The `hakorem/token-usage` lint rule.                                                                                                                                |
 
 ## The contract rule
 

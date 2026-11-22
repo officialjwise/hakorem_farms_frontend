@@ -77,7 +77,11 @@ globalThis.fetch = async (input, init) => {
   if (url.port !== '4010') return realFetch(request);
   mock.requests.push(url);
   if (!request.headers.has('Cookie'))
-    request.headers.set('Cookie', '__Host-hk_s_at=integration-test');
+    // The investor operations' cookie too (ADR 0058): Prism checks only that the scheme's cookie is there.
+    request.headers.set(
+      'Cookie',
+      '__Host-hk_s_at=integration-test; __Host-hk_i_at=integration-test',
+    );
   if (
     mock.prefer !== null &&
     (mock.preferPath === null || url.pathname.startsWith(mock.preferPath))
