@@ -37,7 +37,7 @@
 - No `Domain` on any session cookie.
 - The smoke checks.
 
-The owner named no subdomain, so `investors.` is an assumption to confirm before F13 points the DNS.
+The owner named no subdomain at first, so `investors.` was filed as an assumption. **The owner approved it the same day** (A-F12-04, resolved).
 
 ### The e2e suite
 
@@ -93,7 +93,7 @@ Recorded in PERFORMANCE_BUDGET.md, "F12b".
 - **ADR 0058, accepted with the owner's change**, renamed `0058-the-investor-portal-is-its-own-build-on-its-own-subdomain.md`.
 - **A-F12-01 resolved.**
 - **A-F12-02** stays open, with the new figure.
-- **A-F12-04:** the subdomain is `investors.hakoremfarms.com`.
+- **A-F12-04:** the subdomain is `investors.hakoremfarms.com`. Approved by the owner on 2026-11-23, resolved.
 - The F12 rows in ASSUMPTIONS.md had lost their last three columns; they have them again.
 
 ## Gates, each run on its own
@@ -112,7 +112,7 @@ Recorded in PERFORMANCE_BUDGET.md, "F12b".
 
 ## For the owner
 
-1. **The subdomain (A-F12-04).** `investors.hakoremfarms.com` is written into DEPLOYMENT.md section 7. Say if you want another name before F13 sets up the DNS.
+1. **The subdomain (A-F12-04), decided.** You approved `investors.hakoremfarms.com`; it is in DEPLOYMENT.md section 7 for F13's DNS.
 2. **Relay one Caddy block to the backend track** (DEPLOYMENT.md section 7): the portal's host, its `/api` path, and its origin in the API's allowed origins. The API must set no `Domain` on a session cookie.
 3. **Contract 2.31.0 is waiting on `main`.** It breaks fixtures in the driver's, the fulfilment and the quotes specs, and it carries the till's driver cash hand-in. The till session should take it.
 
@@ -130,7 +130,7 @@ Read ADR 0046, 0053 and 0058. No screenshots until F13.
    - CR-060, CR-061, CR-062 landed: nothing to switch. The reports run once listReportDefinitions lists
      their codes; check each code's columns in its named example.
    - B12 seeded: delete the rpt.* lines in NOT_SEEDED as they fail.
-2. The owner's answer on the portal's subdomain (A-F12-04).
+2. The portal's subdomain is decided: investors.hakoremfarms.com (A-F12-04, resolved).
 3. F13, as BUILD_PROMPT says, with DEPLOYMENT.md section 7: the portal is its own build and host, and the
    smoke suite opens https://investors.<domain>/ and expects the portal's sign-in.
 ```

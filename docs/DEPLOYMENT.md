@@ -130,10 +130,10 @@ A build for any API but `/mock` without it **fails before building**, naming the
 
 The owner (2026-11-23): the portal is its own build and is served on its own subdomain, with its own host-only session cookie, never under the console's address.
 
-| Build                 | Output                       | Host, production                                    | Host, staging                         |
-| --------------------- | ---------------------------- | --------------------------------------------------- | ------------------------------------- |
-| `pnpm build:console`  | `apps/console/dist`          | `https://app.hakoremfarms.com`                      | its own (section 4)                   |
-| `pnpm build:investor` | `apps/console/dist-investor` | **`https://investors.hakoremfarms.com`** (A-F12-04) | its own, beside the staging console's |
+| Build                 | Output                       | Host, production                                             | Host, staging                         |
+| --------------------- | ---------------------------- | ------------------------------------------------------------ | ------------------------------------- |
+| `pnpm build:console`  | `apps/console/dist`          | `https://app.hakoremfarms.com`                               | its own (section 4)                   |
+| `pnpm build:investor` | `apps/console/dist-investor` | **`https://investors.hakoremfarms.com`** (owner, 2026-11-23) | its own, beside the staging console's |
 
 **The rule:** on the portal's host, a request that is not a file is answered with `investor.html`; a file is served as itself. The portal's routes sit at the root of its host: the summary is `/`, the sign-in `/login`. The console's host never serves the portal: `/investor` there is the back office's address like any other, and `dist/` holds no `investor.html` (`pnpm budget:console` fails if it does).
 
