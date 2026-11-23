@@ -181,7 +181,8 @@ export class FakeApi {
       throw new Error(`${operation.operationId} is in the contract now: use respond().`);
     }
     const pattern = new RegExp(`^${operation.path.replace(/\{[^}]+\}/g, '[^/]+')}$`);
-    this.requested.push({ operation, pattern, answer, status });
+    // The latest answer installed wins, as `respond` replaces an earlier one.
+    this.requested.unshift({ operation, pattern, answer, status });
   }
 
   /** Asks Prism for one of the operation's own documented answers, for example `code=202`. */

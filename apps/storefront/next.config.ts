@@ -15,16 +15,16 @@ const config: NextConfig = {
   experimental: { optimizePackageImports: ['@hakorem/ui'] },
   poweredByHeader: false,
   // A quote's private link (/q/<token>): the token is the customer's acceptance key, so the page is never
-  // indexed and the link is never sent on as a referrer to anything it opens (CR-047).
+  // indexed and the link is never sent on as a referrer to anything it opens (CR-047). A receipt's link
+  // (/r/<token>, CR-033) is a customer's receipt, kept the same way.
   async headers() {
+    const privateLink = [
+      { key: 'Referrer-Policy', value: 'no-referrer' },
+      { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+    ];
     return [
-      {
-        source: '/q/:token*',
-        headers: [
-          { key: 'Referrer-Policy', value: 'no-referrer' },
-          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
-        ],
-      },
+      { source: '/q/:token*', headers: privateLink },
+      { source: '/r/:token*', headers: privateLink },
     ];
   },
   reactStrictMode: true,

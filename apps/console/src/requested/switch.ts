@@ -1,7 +1,7 @@
 /**
  * Which contract requests this build is built against (ADR 0046). A request in `docs/CONTRACT_REQUESTS.md`
  * that the contract does not carry yet is switched on only by `HK_REQUESTED_CONTRACT`, a comma-separated
- * list of request ids (`CR-032,CR-033`), read at build time like `HK_API_BASE_URL`. The end-to-end build
+ * list of request ids (`CR-059`), read at build time like `HK_API_BASE_URL`. The end-to-end build
  * switches them on and its fake server answers them in the requested shape; a build for a real API leaves
  * it unset, so the console never calls an operation the contract does not list, and each screen says in
  * words what waits for the backend.
@@ -12,7 +12,7 @@
 export const REQUESTED_CONTRACT_VARIABLE = 'HK_REQUESTED_CONTRACT';
 
 /** The requests the console can be built against. */
-export const CONTRACT_REQUESTS = ['CR-033', 'CR-059'] as const;
+export const CONTRACT_REQUESTS = ['CR-059', 'CR-063'] as const;
 export type ContractRequest = (typeof CONTRACT_REQUESTS)[number];
 
 export function parseRequestedContract(raw: string | undefined): ReadonlySet<ContractRequest> {

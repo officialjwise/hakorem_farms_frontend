@@ -6,6 +6,7 @@
 import type { components } from '@hakorem/api-client';
 import { newRecordId } from '../../lib/clientId';
 import {
+  approvalStands,
   cartDiscount,
   cartTotal,
   lineAmount,
@@ -14,12 +15,21 @@ import {
   type OtherTender,
 } from './cart';
 import { payloadHash, type Json } from './payloadHash';
-import type { DeviceRecord, OfflineSale, ReceiptContent, SaleEntry, ShiftRecord } from './types';
+import { newReceiptToken, receiptLink, templateUsable } from './receiptToken';
+import type {
+  DeviceRecord,
+  OfflineSale,
+  PinApprovalRecord,
+  ReceiptContent,
+  SaleEntry,
+  ShiftRecord,
+} from './types';
 
 type Schemas = components['schemas'];
 type PaymentMethodRef = Schemas['PaymentMethodRef'];
 type TenderInput = Schemas['TenderInput'];
 type CounterSaleLine = Schemas['CounterSaleLine'];
+type OfflineSaleLine = Schemas['OfflineSaleLine'];
 
 /** `P-<REGISTER>-<SHIFT SEQ>-<COUNTER>`, the counter padded to four digits (section 4.3). */
 export function provisionalRef(registerCode: string, shiftSeq: number, counter: number): string {
@@ -34,6 +44,35 @@ export function toCounterSaleLine(line: CartLine): CounterSaleLine {
   return line.soldInUom === null || line.soldInUom === undefined
     ? sale
     : { ...sale, uom: line.soldInUom };
+}
+
+/**
+ * The offline sale's line (2.17.0): the counter line, with the supervisor's approval of a price beyond the
+ * cashier's limit where one stands for this price. The server checks it at sync.
+ */
+export function toOfflineSaleLine(line: CartLine): OfflineSaleLine {
+  const sale = toCounterSaleLine(line);
+  return approvalStands(line) && line.overrideApproval != null
+    ? {
+        ...sale,
+        overrideApproval: {
+          approvedById: line.overrideApproval.approvedById,
+          approvedByPinVersion: line.overrideApproval.approvedByPinVersion,
+        },
+      }
+    : sale;
+}
+
+/** The till's own record of a line's price approval, for the queue screen. */
+export function lineApprovalRecord(line: CartLine): PinApprovalRecord | null {
+  if (!approvalStands(line) || line.overrideApproval == null) return null;
+  return {
+    approval: 'PRICE_OVERRIDE',
+    principalId: line.overrideApproval.approvedById,
+    displayName: line.overrideApproval.approvedByName,
+    verifierVersion: line.overrideApproval.approvedByPinVersion,
+    at: line.overrideApproval.approvedAt,
+  };
 }
 
 function lineWithoutUnit(line: CartLine): CounterSaleLine {
@@ -60,6 +99,8 @@ export interface SaleInput {
   others: (OtherTender & { method: PaymentMethodRef })[];
   cashHandedPesewas: number;
   customerPhone: string | null;
+  /** The pack's `receiptLinkTemplate` (2.24.0): with one, the sale gets its own token and link. */
+  receiptLinkTemplate?: string | null;
   now: Date;
 }
 
@@ -77,6 +118,7 @@ export async function buildSale(
   const counter = shift.lastCounter + 1;
   const ref = provisionalRef(device.registerCode, shift.referenceSeq, counter);
   const occurredAt = now.toISOString();
+  const token = templateUsable(input.receiptLinkTemplate) ? newReceiptToken() : null;
   const tenders: TenderInput[] = [
     ...others.map((tender) => ({
       paymentMethodId: tender.paymentMethodId,
@@ -102,8 +144,9 @@ export async function buildSale(
     provisionalRef: ref,
     occurredAt,
     ...(input.customerPhone !== null ? { customerPhone: input.customerPhone } : {}),
-    lines: lines.map(toCounterSaleLine),
+    lines: lines.map(toOfflineSaleLine),
     tenders,
+    ...(token !== null ? { receiptToken: token } : {}),
   };
   const hash = await payloadHash(sale as unknown as { [key: string]: Json });
   const receipt: ReceiptContent = {
@@ -147,6 +190,8 @@ export async function buildSale(
     ],
     changePesewas: split.changePesewas,
     customerPhone: input.customerPhone,
+    // Kept with the sale, so a reprint carries the link the customer was first given.
+    link: token !== null ? receiptLink(input.receiptLinkTemplate, token) : null,
   };
   return {
     entry: {

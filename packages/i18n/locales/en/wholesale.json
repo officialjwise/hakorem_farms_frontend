@@ -50,7 +50,8 @@
     "order": "Order",
     "exposure": "Owed when approved",
     "approvedBy": "Approved by",
-    "reason": "Reason"
+    "reason": "Reason",
+    "stock": "Stock when sent"
   },
   "filters": {
     "any": "Any",
@@ -71,6 +72,7 @@
   "versionStatus": {
     "DRAFT": "Draft",
     "PENDING_APPROVAL": "Waiting for margin approval",
+    "APPROVED": "Margin approved, not yet sent",
     "ISSUED": "Sent",
     "SUPERSEDED": "Replaced by a newer version",
     "ACCEPTED": "Accepted"
@@ -239,7 +241,7 @@
     "chooseBasis": "Choose",
     "agreedPrice": "Agreed price",
     "agreedPriceIn": "Agreed price per {{unit}}",
-    "agreedPriceHint": "The API's price, unless you agreed another. Below the margin floor, the quote waits for approval when it is sent.",
+    "agreedPriceHint": "The API's price, unless you agreed another. If the margin over the selling price falls below the farm's floor, the quote waits for approval when it is sent.",
     "priceMissing": "Get the API's price, or type the agreed price.",
     "per": "per {{unit}}"
   },
@@ -254,12 +256,16 @@
     "olderTitle": "An earlier version, as it was",
     "olderBody": "It is kept as it was sent and cannot be changed. The version in force is at the top of the list.",
     "belowFloor": "Below the margin floor",
-    "belowFloorBody": "Sending this version needs approval by someone other than you.",
+    "belowFloorBody": "Its margin over the selling price, on the product lines without the delivery fee, is below the farm's floor. Sending it needs approval by someone other than you.",
     "notIssued": "Not sent yet",
     "issuedBy": "By {{who}}, {{when}}",
     "acceptedBy": "By {{who}}, {{how}}, {{when}}",
     "lines": "The version's lines",
-    "noApiPrice": "None: priced by hand"
+    "noApiPrice": "None: priced by hand",
+    "belowFloorApproved": "Below the margin floor, and approved",
+    "belowFloorApprovedBody": "Someone other than its author approved its margin over the selling price. It is sent at the figures approved.",
+    "subjectToStock": "Sent subject to stock",
+    "subjectToStockBody": "Not everything was on hand when it was sent. It holds only what was there, and the customer reads that the rest is subject to stock. Each line says what was on hand and what it holds."
   },
   "totals": {
     "deliveryFee": "Delivery fee",
@@ -267,11 +273,13 @@
     "netInclusive": "Before tax (prices include tax)",
     "tax": "Tax and levies",
     "gross": "Total",
-    "margin": "Margin",
     "percent": "{{value}} percent",
     "estimate": "Estimated total",
     "paid": "Paid",
-    "outstanding": "Still owed"
+    "outstanding": "Still owed",
+    "markup": "Markup over cost",
+    "marginOverPrice": "Margin over the selling price",
+    "notKnown": "Not known: a cost is missing"
   },
   "actions": {
     "working": "Working",
@@ -282,7 +290,7 @@
     "issuing": "Sending",
     "notIssued": "The quote was not sent",
     "issueTitle": "Send {{name}}, version {{number}}?",
-    "issueBody": "Earlier versions are replaced and their links stop working. Once it is issued, its link is shown here once, to copy or send on WhatsApp.",
+    "issueBody": "Earlier versions are replaced and their links stop working. What is on hand is held for the quote; anything not on hand is promised subject to stock. Once it is issued, its link is shown here once, to copy or send on WhatsApp.",
     "channels": "Send the link by",
     "channelsNone": "Choose at least one way to send the link.",
     "revise": "Revise",
@@ -300,7 +308,10 @@
     "notConverted": "The order was not made",
     "cancel": "Withdraw",
     "cancelTitle": "Withdraw {{name}}?",
-    "cancelBody": "The customer's link stops working. Say why."
+    "cancelBody": "The customer's link stops working. Say why.",
+    "issueApproved": "Issue and send",
+    "issueApprovedTitle": "Issue and send {{name}}, version {{number}}?",
+    "issueApprovedBody": "Its margin was approved. It is issued at the figures approved: what is on hand is held, anything not on hand is subject to stock, and the link goes by the ways chosen below. Its link is shown here once. Whoever approved it cannot issue it."
   },
   "edit": {
     "title": "Editing version {{number}}",
@@ -319,7 +330,10 @@
     "converted": "{{name}} is now order {{order}}",
     "openOrder": "Open the order",
     "openApproval": "Open the approval",
-    "newLink": "A new link to {{name}} is ready to pass on"
+    "newLink": "A new link to {{name}} is ready to pass on",
+    "approved": "The margin of version {{number}} is approved: issue and send it",
+    "approvedBody": "Nothing is held or sent yet, and it has no link. Anyone who may send quotes, other than whoever approved it, issues it with \"Issue and send\".",
+    "issuedSubjectToStock": "{{name}} is issued subject to stock, and its link is ready to pass on"
   },
   "rfqs": {
     "title": "Requests for quote",
@@ -578,7 +592,7 @@
   "link": {
     "title": "The customer's link",
     "once": "This link is shown only once. Copy it or send it now: the farm keeps no copy of it.",
-    "again": "If it is lost, make a new link from this quote with \"Make a new link\". Links already given keep working until this version is replaced or expires.",
+    "again": "If it is lost, make a new link from this quote with \"Make a new link\". Links already given keep working until this version is replaced or expires, or until one is revoked under \"The version's links\".",
     "copy": "Copy the link",
     "whatsApp": "Send on WhatsApp to {{phone}}",
     "message": "Hello {{name}}, here is your quote {{number}} from HaKorem Farms. Open it to read and accept it: {{link}}",
@@ -588,5 +602,46 @@
     "makeBody": "The new link is shown once, to copy or send on WhatsApp. Nothing is sent to the customer, and links already given keep working.",
     "notMade": "The new link was not made",
     "noShop": "This console was built without the shop's address (HK_SHOP_URL), so it cannot show the quote's link."
+  },
+  "lineStock": {
+    "onHand": "On hand: {{qty}}",
+    "held": "Held: {{qty}}",
+    "subject": "Subject to stock",
+    "whole": "All of it held",
+    "notYet": "Nothing is held until it is sent",
+    "noProduct": "Not a stock line",
+    "inBaseUnit": "{{qty}} in the product's base unit"
+  },
+  "versionLinks": {
+    "title": "The version's links",
+    "intro": "Every link made for this version, oldest first, with what the customer meets through it now. The farm keeps no copy of a link itself.",
+    "empty": "No link is listed for this version.",
+    "table": "Each link of version {{number}}, oldest first",
+    "columns": {
+      "link": "Link",
+      "made": "Made",
+      "expires": "Opens until",
+      "state": "State",
+      "revoke": "Revoke"
+    },
+    "name": "Link {{number}}",
+    "made": "By {{who}}, {{when}}",
+    "state": {
+      "OPEN": "Open: it shows the quote",
+      "ACCEPTED": "Accepted through it",
+      "DECLINED": "Declined through it",
+      "EXPIRED": "Expired",
+      "REPLACED": "Closed: a newer version replaced it",
+      "WITHDRAWN": "Closed: the quote was withdrawn",
+      "REVOKED": "Revoked: it opens nothing"
+    },
+    "revokedBy": "Revoked by {{who}}, {{when}}: {{reason}}",
+    "revoke": "Revoke",
+    "revokeLabel": "Revoke link {{number}}",
+    "revokeTitle": "Revoke link {{number}} of {{name}}?",
+    "revokeBody": "From now on this link opens nothing, as if it never existed. The version's other links keep working. Say why, for example that it went to the wrong number.",
+    "revokeSubmit": "Revoke the link",
+    "revoked": "Link {{number}} is revoked. It opens nothing now.",
+    "notRevoked": "The link was not revoked"
   }
 }

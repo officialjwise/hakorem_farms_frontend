@@ -50,7 +50,8 @@ function priceWords(t: ShopT, line: Line): string {
 
 /**
  * The quote as the API answers it for its link: the lines, the delivery fee and the totals, every figure the
- * API's and nothing added here. A server component: the page needs no script to be read.
+ * API's and nothing added here, and which lines are subject to stock (2.23.0). A server component: the page
+ * needs no script to be read.
  */
 export function QuoteView({ quote, t }: { quote: PublicQuote; t: ShopT }) {
   return (
@@ -70,6 +71,12 @@ export function QuoteView({ quote, t }: { quote: PublicQuote; t: ShopT }) {
           {t('quote.validUntil', { when: formatDateTime(quote.validUntil) })}
         </p>
       </div>
+      {/* 2.23.0: issued with part of it not on hand. Said in words; the farm's stock level is never shown. */}
+      {quote.subjectToStock ? (
+        <Alert severity="info" title={t('quote.subjectToStockTitle')}>
+          {t('quote.subjectToStockBody')}
+        </Alert>
+      ) : null}
 
       <section aria-labelledby="quote-lines" className="grid gap-3">
         <h2 id="quote-lines" className="text-xl font-bold">
@@ -82,6 +89,11 @@ export function QuoteView({ quote, t }: { quote: PublicQuote; t: ShopT }) {
               className="grid gap-1 rounded-lg border border-border bg-surface p-4"
             >
               <p className="font-semibold">{line.description}</p>
+              {line.subjectToStock ? (
+                <p>
+                  <StatusBadge tone="warning" label={t('quote.lineSubjectToStock')} />
+                </p>
+              ) : null}
               <dl className="grid grid-cols-[minmax(0,1fr)_max-content] gap-x-4 gap-y-1">
                 <dt className="text-fg-muted">{t('quote.columns.quantity')}</dt>
                 <dd className="text-end">

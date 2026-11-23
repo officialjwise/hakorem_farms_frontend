@@ -123,6 +123,9 @@ export function eggOrder(status: S['SalesOrder']['status']): S['SalesOrder'] {
     notes: null,
     branchId: BRANCH,
     version: 4,
+    // 2.25.0, always sent.
+    fulfilments: [],
+    pendingConsent: null,
   };
 }
 
@@ -142,6 +145,13 @@ export function eggPickList(status: S['Fulfilment']['status']): S['Fulfilment'] 
         uom: 'CRATE',
         estimatedWeightKg: null,
         suggestedStockUnits: [],
+        // 2.25.0: nothing picked yet, and eggs are no catch-weight line.
+        status: 'OPEN',
+        pickedQty: '0.000',
+        pickedWeightKg: null,
+        minimumWeightKg: null,
+        maximumWeightKg: null,
+        toleranceState: null,
       },
       {
         orderLineId: EGG_LINE,
@@ -150,6 +160,13 @@ export function eggPickList(status: S['Fulfilment']['status']): S['Fulfilment'] 
         uom: 'EGG',
         estimatedWeightKg: null,
         suggestedStockUnits: [],
+        // 2.25.0: nothing picked yet, and eggs are no catch-weight line.
+        status: 'OPEN',
+        pickedQty: '0.000',
+        pickedWeightKg: null,
+        minimumWeightKg: null,
+        maximumWeightKg: null,
+        toleranceState: null,
       },
     ],
     lines: [],

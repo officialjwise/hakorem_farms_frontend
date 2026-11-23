@@ -41,33 +41,41 @@ test('a sale held offline stays on this till and comes back at the pack price', 
   await expect(page.locator('[data-slot="cart-total"]')).toHaveText(formatMoney(65000));
 });
 
-test('with the pack as 2.11.0 gives it, a goat is sold through quotes and orders, in words (CR-052)', async ({
+test('each goat sells at its own band, and one the pack cannot price says why (CR-052)', async ({
   page,
   api,
 }) => {
-  installTillServer(api, serverTotal, { contractPack: true });
+  const server = installTillServer(api, serverTotal);
   await openTillShift(page);
-  // Said on the tile before anything is tapped, never by a greyed-out tile alone.
-  const goat = page.getByRole('button', { name: 'Goat Sold through quotes and orders' });
-  await expect(goat).toBeVisible();
-  await goat.click();
-  await expect(
-    page.getByText('Goat is sold through quotes and orders, not at this till'),
-  ).toBeVisible();
-  await expect(page.getByText(/make a quote or an order for the customer/)).toBeVisible();
-  await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page.getByText('No items yet')).toBeVisible();
-  // Found by its tag, it says the same, and nothing goes on the sale.
-  await find(page, 'G-0142', /^Goat G-0142/);
-  await expect(
-    page.getByText('Goat is sold through quotes and orders, not at this till'),
-  ).toBeVisible();
-  await expect(page.getByText('No items yet')).toBeVisible();
-  // Everything else still sells.
-  await page.getByRole('button', { name: 'Tomatoes, crate' }).click();
-  await expect(page.locator('[data-slot="cart-total"]')).toHaveText(formatMoney(65000));
-  await expectNoHorizontalScroll(page);
+  await page.getByRole('button', { name: 'Goat', exact: true }).click();
+  const choose = page.getByRole('dialog', { name: /Goat/ });
+  // Each animal at its own price, from its own weight: never one price for "a goat".
+  await expect(choose.getByRole('button', { name: /^G-0142/ })).toContainText(formatMoney(65000));
+  await expect(choose.getByRole('button', { name: /^G-0157/ })).toContainText(formatMoney(120000));
+  const unweighed = choose.getByRole('button', { name: /^G-0190/ });
+  await expect(unweighed).toContainText('No price: it needs a grade or a weight first');
+  await expect(unweighed).toBeDisabled();
+  // Not for sale now: not offered at all.
+  await expect(choose.getByRole('button', { name: /^G-0163/ })).toHaveCount(0);
   await expectNoAxeViolations(page);
+  await choose.getByRole('button', { name: /^G-0157/ }).click();
+  await expect(page.locator('[data-slot="cart-total"]')).toHaveText(formatMoney(120000));
+  // Found by its tag, the unpriced goat says why, and nothing goes on the sale.
+  await find(page, 'G-0190', /^Goat G-0190/);
+  await expect(page.getByText('G-0190 has no price on this till')).toBeVisible();
+  await expect(page.locator('[data-slot="cart-total"]')).toHaveText(formatMoney(120000));
+
+  await page.getByRole('button', { name: 'Take payment' }).click();
+  await page.getByRole('textbox', { name: /^Cash handed over/ }).fill('1200');
+  await page.getByRole('button', { name: 'Review the sale' }).click();
+  await page.getByRole('button', { name: 'Complete the sale' }).click();
+  await expect(page.getByText(/Official receipt RCP-/)).toBeVisible();
+  expect(server.batches[0]?.sales[0]?.lines[0]).toMatchObject({
+    stockUnitId: '019a7a8f-7e29-7a85-bfbd-b12324342a01',
+    agreedUnitPricePesewas: 120000,
+    weightKg: '31.800',
+  });
+  await expectNoHorizontalScroll(page);
 });
 
 test('online, a held sale goes to the register with its lines', async ({ page, api }) => {
@@ -98,8 +106,9 @@ test('an agreed price needs a reason and stays inside the cashier limits', async
   await page.getByRole('button', { name: 'Change Goat G-0142' }).click();
   const line = page.getByRole('dialog', { name: 'Change G-0142' });
   const price = line.getByRole('textbox', { name: /^Agreed price a head/ });
-  // GH₵60.01 off is more than the GH₵50.00 a line the pack allows.
-  await price.fill('789.99');
+  // G-0142's own band lists GH₵650.00 (CR-052). GH₵60.01 off is more than the GH₵50.00 a line the pack
+  // allows.
+  await price.fill('589.99');
   await line.getByRole('combobox', { name: /^Why the price differs/ }).click();
   await page.getByRole('option', { name: 'Regular customer, agreed price' }).click();
   await line.getByRole('button', { name: 'Save the item' }).click();
@@ -107,18 +116,18 @@ test('an agreed price needs a reason and stays inside the cashier limits', async
   await expect(line).toContainText(
     'You may give up to GH₵50.00 off an item and GH₵200.00 on a shift.',
   );
-  await price.fill('800');
+  await price.fill('600');
   await line.getByRole('button', { name: 'Save the item' }).click();
   await expect(line).toBeHidden();
-  await expect(page.locator('[data-slot="cart-total"]')).toHaveText(formatMoney(80000));
+  await expect(page.locator('[data-slot="cart-total"]')).toHaveText(formatMoney(60000));
 
   await page.getByRole('button', { name: 'Take payment' }).click();
-  await page.getByRole('textbox', { name: /^Cash handed over/ }).fill('800');
+  await page.getByRole('textbox', { name: /^Cash handed over/ }).fill('600');
   await page.getByRole('button', { name: 'Review the sale' }).click();
   await page.getByRole('button', { name: 'Complete the sale' }).click();
   await expect(page.getByText(/Official receipt RCP-/)).toBeVisible();
   expect(server.batches[0]?.sales[0]?.lines[0]).toMatchObject({
-    agreedUnitPricePesewas: 80000,
+    agreedUnitPricePesewas: 60000,
     varianceReasonCode: 'REGULAR_CUSTOMER',
   });
 });

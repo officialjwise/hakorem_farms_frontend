@@ -719,10 +719,16 @@ export class Till {
     customerPhone: string | null;
     approvals?: PinApprovalRecord[];
   }): Promise<SaleEntry> {
-    const { device, shift } = this.snapshotOrThrow();
+    const { device, shift, pack } = this.snapshotOrThrow();
     if (device === null || shift === null) throw new Error('There is no open shift on this till.');
     const { approvals = [], ...sale } = input;
-    const built = await buildSale({ device, shift, ...sale, now: this.now() });
+    const built = await buildSale({
+      device,
+      shift,
+      ...sale,
+      receiptLinkTemplate: pack?.receiptLinkTemplate ?? null,
+      now: this.now(),
+    });
     const entry: SaleEntry = approvals.length > 0 ? { ...built.entry, approvals } : built.entry;
     const { discountGivenPesewas } = built;
     await this.store.commitSale(entry, discountGivenPesewas);

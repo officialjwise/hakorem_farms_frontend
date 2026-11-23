@@ -15,17 +15,8 @@ const NOT_SEEDED: Readonly<Record<string, string>> = {
   'rpt.report.read': 'reporting',
   'rpt.report.export': 'reporting',
   // Orders, fulfilment and delivery (B11, CR-056; A-F11-01).
-  'ord.fulfilment.read': 'B11',
-  'ord.fulfilment.pick': 'B11',
-  'ord.fulfilment.dispatch': 'B11',
-  'ord.order.update': 'B11',
-  'del.delivery.read': 'B11',
-  'del.delivery.assign': 'B11',
   'del.route.read': 'B11',
   'del.route.manage': 'B11',
-  'del.delivery.read.assigned': 'B11',
-  'del.delivery.update.assigned': 'B11',
-  'del.proof.create': 'B11',
 };
 
 /**
@@ -34,7 +25,7 @@ const NOT_SEEDED: Readonly<Record<string, string>> = {
  * the seed grants one to the role, its line fails: delete it.
  */
 const NOT_SEEDED_FOR_ROLE: Readonly<Record<string, readonly string[]>> = {
-  DRIVER: ['platform.file.upload', 'mdm.reason_code.read'],
+  DRIVER: ['platform.file.upload'],
   STOREKEEPER: ['ord.order.read'],
 };
 

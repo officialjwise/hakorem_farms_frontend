@@ -16,7 +16,9 @@
  *   was held there; its confirmations loading when the customer starts to answer took it to 158,952;
  * - the listing pages, 120 kB (owner, 2026-11-18; A-F0-06). Counted whole they loaded 124,315 bytes on
  *   F10m's first build; the header's basket button and search box in plain classes, without `Button` and
- *   `Input`, took them to 112,145.
+ *   `Input`, took them to 112,145;
+ * - the receipt by its link, 120 kB, the listing pages' limit (CR-033): it is read on the server and has
+ *   no island, so it loads what the layout loads and the error state's retry.
  *
  * Every other route is reported, not budgeted.
  */
@@ -34,11 +36,13 @@ interface RouteBudget {
 
 const QUOTE_PAGES = 170_000;
 const LISTING_PAGES = 120_000;
+const RECEIPT_PAGE = 120_000;
 const listing = { ceiling: LISTING_PAGES };
 
 const ROUTES: RouteBudget[] = [
   { route: '/quote', entry: '/quote/page', ceiling: QUOTE_PAGES },
   { route: '/q/[token]', entry: '/q/[token]/page', ceiling: QUOTE_PAGES },
+  { route: '/r/[token]', entry: '/r/[token]/page', ceiling: RECEIPT_PAGE },
   { route: '/', entry: '/page', ...listing },
   { route: '/c/[slug]', entry: '/c/[slug]/page', ...listing },
   { route: '/search', entry: '/search/page', ...listing },

@@ -56,6 +56,7 @@ const QUOTE_LOOK: Record<QuoteStatus, { tone: BadgeTone }> = {
 const VERSION_LOOK: Record<VersionStatus, { tone: BadgeTone }> = {
   DRAFT: { tone: 'info' },
   PENDING_APPROVAL: { tone: 'warning' },
+  APPROVED: { tone: 'info' },
   ISSUED: { tone: 'violet' },
   SUPERSEDED: { tone: 'slate' },
   ACCEPTED: { tone: 'good' },

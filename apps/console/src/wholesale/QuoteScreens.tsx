@@ -23,6 +23,7 @@ import {
   QueryBoundary,
   Select,
   Skeleton,
+  StatusBadge,
   Table,
   TableBody,
   TableCell,
@@ -33,7 +34,9 @@ import {
   TableRowHeader,
   Textarea,
   formatDateTime,
+  formatQuantity,
   useTableView,
+  type BadgeTone,
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { shownFailure } from '../auth/StepUp';
@@ -43,6 +46,7 @@ import { useApiAllPages, useApiMutation, useApiQuery } from '../data/api';
 import { isApprovalPending } from '../lib/approval';
 import { ConfirmDialog } from '../lib/ConfirmDialog';
 import { dayEnd } from '../lib/dateRange';
+import { lookup, UNKNOWN } from '../lib/lookup';
 import { LeaveGuardDialog, useLeaveGuard } from '../lib/LeaveGuard';
 import { useIntentKey } from '../lib/queries';
 import { ReadableId } from '../lib/ReadableId';
@@ -558,7 +562,7 @@ export function QuoteScreen() {
                 setSearch(versionId === q.currentVersion.id ? {} : { version: versionId })
               }
             />
-            <VersionView version={shown} current={current} />
+            <VersionView version={shown} current={current} name={quoteName(q)} />
             {current ? <QuoteActions quote={q} /> : null}
           </article>
         );
@@ -627,9 +631,19 @@ function VersionHistory({
 }
 
 /** One version: its lines at the API's prices, its totals, its margin and how it was accepted. */
-function VersionView({ version: v, current }: { version: Version; current: boolean }) {
+function VersionView({
+  version: v,
+  current,
+  name,
+}: {
+  version: Version;
+  current: boolean;
+  name: string;
+}) {
   const { t } = useTranslation(['wholesale', 'common']);
   const units = useUnits();
+  // What each line found and holds is the issue's record (2.23.0): a version not yet issued has none.
+  const stocked = v.issuedAt !== null && v.lines.some((line) => line.availableQuantity !== null);
   return (
     <section aria-labelledby="version-title" className="grid gap-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -643,9 +657,18 @@ function VersionView({ version: v, current }: { version: Version; current: boole
           {t('version.olderBody')}
         </Alert>
       )}
-      {v.belowMarginFloor ? (
+      {!v.belowMarginFloor ? null : v.status === 'APPROVED' ? (
+        <Alert severity="info" title={t('version.belowFloorApproved')}>
+          {t('version.belowFloorApprovedBody')}
+        </Alert>
+      ) : (
         <Alert severity="warning" title={t('version.belowFloor')}>
           {t('version.belowFloorBody')}
+        </Alert>
+      )}
+      {v.subjectToStock ? (
+        <Alert severity="warning" title={t('version.subjectToStock')}>
+          {t('version.subjectToStockBody')}
         </Alert>
       ) : null}
       <Card>
@@ -699,6 +722,7 @@ function VersionView({ version: v, current }: { version: Version; current: boole
               <TableHead numeric>{t('columns.apiPrice')}</TableHead>
               <TableHead numeric>{t('columns.agreedPrice')}</TableHead>
               <TableHead numeric>{t('columns.lineNet')}</TableHead>
+              {stocked ? <TableHead>{t('columns.stock')}</TableHead> : null}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -726,6 +750,11 @@ function VersionView({ version: v, current }: { version: Version; current: boole
                 <TableCell numeric label={t('columns.lineNet')}>
                   <MoneyDisplay pesewas={line.lineNetPesewas} />
                 </TableCell>
+                {stocked ? (
+                  <TableCell label={t('columns.stock')}>
+                    <LineStock line={line} />
+                  </TableCell>
+                ) : null}
               </TableRow>
             ))}
           </TableBody>
@@ -750,25 +779,228 @@ function VersionView({ version: v, current }: { version: Version; current: boole
             <dd className="text-end">
               <MoneyDisplay pesewas={v.grossPesewas} strong />
             </dd>
-            {v.marginPercent === null ? null : (
-              <>
-                <dt>{t('totals.margin')}</dt>
-                <dd className="text-end">{t('totals.percent', { value: v.marginPercent })}</dd>
-              </>
-            )}
+            {/* 2.29.0: markup is over cost and margin over the selling price, each the API's figure;
+                the deprecated `marginPercent` (markup under the old name) is never read. */}
+            <dt>{t('totals.markup')}</dt>
+            <dd className="text-end">
+              {v.markupPercent === null
+                ? t('totals.notKnown')
+                : t('totals.percent', { value: v.markupPercent })}
+            </dd>
+            <dt>{t('totals.marginOverPrice')}</dt>
+            <dd className="text-end">
+              {v.marginOverPricePercent === null
+                ? t('totals.notKnown')
+                : t('totals.percent', { value: v.marginOverPricePercent })}
+            </dd>
           </dl>
         </CardBody>
       </Card>
+      <VersionLinks key={v.id} version={v} name={name} />
+    </section>
+  );
+}
+
+/**
+ * What one line found and holds at issue (2.23.0), in the product's base unit: what was on hand, what the
+ * version holds, and whether the line is subject to stock. Both are null before issue and on a free-text
+ * line. The base unit's name is the product's (`getProduct`); nothing is compared or worked out here.
+ */
+function LineStock({ line }: { line: S['QuoteLine'] }) {
+  const { t } = useTranslation(['wholesale', 'common']);
+  const units = useUnits();
+  const issued = line.availableQuantity !== null && line.heldQuantity !== null;
+  const product = useApiQuery(
+    'getProduct',
+    { path: { id: line.product?.id ?? '' } },
+    { enabled: issued && line.product !== null, staleClass: 'reference' },
+  );
+  if (line.product === null) return <>{t('lineStock.noProduct')}</>;
+  if (line.availableQuantity === null || line.heldQuantity === null) {
+    return <>{t('lineStock.notYet')}</>;
+  }
+  const base = product.data?.baseUom ?? null;
+  const qty = (quantity: string) =>
+    base === null
+      ? t('lineStock.inBaseUnit', { qty: formatQuantity(quantity, { places: 3 }) })
+      : `${formatQuantity(quantity, { places: units.places(base) })} ${units.after(base, quantity)}`;
+  return (
+    <span className="grid justify-items-start gap-1">
+      <StatusBadge
+        tone={line.subjectToStock ? 'warning' : 'good'}
+        label={line.subjectToStock ? t('lineStock.subject') : t('lineStock.whole')}
+      />
+      <span>{t('lineStock.onHand', { qty: qty(line.availableQuantity) })}</span>
+      <span>{t('lineStock.held', { qty: qty(line.heldQuantity) })}</span>
+    </span>
+  );
+}
+
+const LINK_LOOK: Record<S['QuoteLink']['state'], { tone: BadgeTone }> = {
+  OPEN: { tone: 'info' },
+  ACCEPTED: { tone: 'good' },
+  DECLINED: { tone: 'warning' },
+  EXPIRED: { tone: 'slate' },
+  REPLACED: { tone: 'slate' },
+  WITHDRAWN: { tone: 'slate' },
+  REVOKED: { tone: 'critical' },
+};
+
+/**
+ * Every acceptance link of a version with its state (2.21.0): never a token, which was shown once when it
+ * was made. A holder of `quo.quote.issue` revokes an open one with a reason (`revokeQuoteLink`): from then
+ * on it opens nothing, and the version's other links keep working. One idempotency key per opening of the
+ * dialog, so "Try again" repeats the same revocation.
+ */
+function VersionLinks({ version: v, name }: { version: Version; name: string }) {
+  const { t } = useTranslation(['wholesale', 'common']);
+  const auth = useAuth();
+  const keyFor = useIntentKey();
+  const [revoking, setRevoking] = useState<{ link: S['QuoteLink']; number: number } | null>(null);
+  const [opening, setOpening] = useState(0);
+  const [done, setDone] = useState<number | null>(null);
+  const revoke = useApiMutation('revokeQuoteLink', {
+    invalidates: ['getQuote', 'listQuoteVersions', 'listQuotes'],
+  });
+  const failure = useStateLabels({
+    loading: t('actions.working'),
+    emptyTitle: t('versionLinks.notRevoked'),
+    errorTitle: t('versionLinks.notRevoked'),
+    deniedTitle: t('actions.denied'),
+  });
+  // A version before issue has no link, and says nothing about links.
+  if (v.links.length === 0 && v.issuedAt === null) return null;
+  const canRevoke = auth.can('quo.quote.issue');
+  return (
+    <section aria-labelledby={`links-${v.id}`} className="grid gap-3">
+      <h3 id={`links-${v.id}`} className="text-heading-sm font-semibold">
+        {t('versionLinks.title')}
+      </h3>
+      <p className="text-fg-muted">{t('versionLinks.intro')}</p>
+      {done === null ? null : (
+        <Alert severity="good" title={t('versionLinks.revoked', { number: done })} />
+      )}
+      {revoking === null ? (
+        <MutationFailure error={shownFailure(revoke.error)} labels={failure} />
+      ) : null}
+      {v.links.length === 0 ? (
+        <p>{t('versionLinks.empty')}</p>
+      ) : (
+        <TableContainer aria-label={t('versionLinks.table', { number: v.versionNo })}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('versionLinks.columns.link')}</TableHead>
+                <TableHead>{t('versionLinks.columns.made')}</TableHead>
+                <TableHead>{t('versionLinks.columns.expires')}</TableHead>
+                <TableHead>{t('versionLinks.columns.state')}</TableHead>
+                {canRevoke ? <TableHead>{t('versionLinks.columns.revoke')}</TableHead> : null}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {v.links.map((link, index) => {
+                const number = index + 1;
+                return (
+                  <TableRow key={link.id}>
+                    <TableRowHeader>{t('versionLinks.name', { number })}</TableRowHeader>
+                    <TableCell label={t('versionLinks.columns.made')}>
+                      {t('versionLinks.made', {
+                        who: link.createdBy.displayName,
+                        when: formatDateTime(link.createdAt),
+                      })}
+                    </TableCell>
+                    <TableCell label={t('versionLinks.columns.expires')}>
+                      {formatDateTime(link.expiresAt)}
+                    </TableCell>
+                    <TableCell label={t('versionLinks.columns.state')}>
+                      <span className="grid justify-items-start gap-1">
+                        <StatusBadge
+                          tone={lookup(LINK_LOOK, link.state, UNKNOWN).tone}
+                          label={t(`versionLinks.state.${link.state}`, {
+                            defaultValue: link.state,
+                          })}
+                        />
+                        {link.revokedAt === null ? null : (
+                          <span className="text-control-sm text-fg-muted">
+                            {t('versionLinks.revokedBy', {
+                              who: link.revokedBy?.displayName ?? NOT_APPLICABLE,
+                              when: formatDateTime(link.revokedAt),
+                              reason: link.revokeReason ?? NOT_APPLICABLE,
+                            })}
+                          </span>
+                        )}
+                      </span>
+                    </TableCell>
+                    {canRevoke ? (
+                      <TableCell label={t('versionLinks.columns.revoke')}>
+                        {link.state === 'OPEN' ? (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            aria-label={t('versionLinks.revokeLabel', { number })}
+                            onClick={() => {
+                              revoke.reset();
+                              setDone(null);
+                              setOpening((n) => n + 1);
+                              setRevoking({ link, number });
+                            }}
+                          >
+                            {t('versionLinks.revoke')}
+                          </Button>
+                        ) : (
+                          NOT_APPLICABLE
+                        )}
+                      </TableCell>
+                    ) : null}
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+      {revoking === null ? null : (
+        <ReasonDialog
+          open
+          onOpenChange={(next) => {
+            if (!next) setRevoking(null);
+          }}
+          title={t('versionLinks.revokeTitle', { number: revoking.number, name })}
+          body={t('versionLinks.revokeBody')}
+          submitLabel={t('versionLinks.revokeSubmit')}
+          destructive
+          error={shownFailure(revoke.error)}
+          failureLabels={failure}
+          onConfirm={async (reason) => {
+            const input = { path: { id: revoking.link.id }, body: { reason } };
+            await revoke.mutateAsync(input, { idempotencyKey: keyFor({ ...input, opening }) });
+            setDone(revoking.number);
+            setRevoking(null);
+          }}
+        />
+      )}
     </section>
   );
 }
 
 type Open =
-  'edit' | 'issue' | 'link' | 'revise' | 'accept' | 'decline' | 'cancel' | 'convert' | null;
+  | 'edit'
+  | 'issue'
+  | 'issueApproved'
+  | 'link'
+  | 'revise'
+  | 'accept'
+  | 'decline'
+  | 'cancel'
+  | 'convert'
+  | null;
 type Outcome =
   | { kind: 'saved' | 'revised' | 'accepted' | 'declined' | 'cancelled' }
-  /** Issued, or a new link made: the link's token, answered only this once (null if the server gave none). */
-  | { kind: 'issued' | 'newLink'; token: string | null }
+  /**
+   * Issued, or a new link made: the link's token, answered only this once (null if the server gave none),
+   * and whether the version went subject to stock (2.23.0).
+   */
+  | { kind: 'issued' | 'newLink'; token: string | null; subjectToStock: boolean }
   | { kind: 'margin'; approvalId: string }
   | { kind: 'converted'; order: S['SalesOrder'] };
 
@@ -797,9 +1029,13 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
   });
   const v = q.currentVersion;
   const draft = v.status === 'DRAFT';
+  // 2.19.0 (CR-058): a margin approval only approves. The version waits for someone other than its approver
+  // to issue it at the figures approved; the quote still reads DRAFT.
+  const approved = v.status === 'APPROVED';
   const live = q.status === 'ISSUED' && v.status === 'ISSUED';
   const canEdit = draft && auth.can('quo.quote.create');
   const canIssue = draft && auth.can('quo.quote.issue');
+  const canIssueApproved = approved && auth.can('quo.quote.issue');
   const canRevise =
     (q.status === 'ISSUED' || q.status === 'EXPIRED' || q.status === 'DECLINED') &&
     !draft &&
@@ -836,6 +1072,16 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
           </Link>
         </Alert>
       ) : null}
+      {approved && outcome === null ? (
+        <Alert severity="info" title={t('outcome.approved', { number: v.versionNo })}>
+          <p>{t('outcome.approvedBody')}</p>
+          {v.approvalRequestId === null ? null : (
+            <Link to={`/approvals/${v.approvalRequestId}`} className="text-accent-text underline">
+              {t('outcome.openApproval')}
+            </Link>
+          )}
+        </Alert>
+      ) : null}
       {open === null ? (
         <>
           <MutationFailure error={shownFailure(issue.error)} labels={failure} />
@@ -866,6 +1112,16 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
               }}
             >
               {t('actions.issue')}
+            </Button>
+          ) : null}
+          {canIssueApproved ? (
+            <Button
+              onClick={() => {
+                issue.reset();
+                setOpen('issueApproved');
+              }}
+            >
+              {t('actions.issueApproved')}
             </Button>
           ) : null}
           {canRevise ? (
@@ -918,12 +1174,22 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
         </div>
       )}
       <IssueDialog
-        open={open === 'issue'}
-        onOpenChange={(next) => setOpen(next ? 'issue' : null)}
+        open={open === 'issue' || open === 'issueApproved'}
+        onOpenChange={(next) => {
+          if (!next) setOpen(null);
+        }}
         pending={issue.isPending}
         error={shownFailure(issue.error)}
-        title={t('actions.issueTitle', { name: quoteName(q), number: v.versionNo })}
+        title={
+          approved
+            ? t('actions.issueApprovedTitle', { name: quoteName(q), number: v.versionNo })
+            : t('actions.issueTitle', { name: quoteName(q), number: v.versionNo })
+        }
+        body={approved ? t('actions.issueApprovedBody') : t('actions.issueBody')}
+        confirmLabel={approved ? t('actions.issueApproved') : t('actions.issue')}
         onIssue={(channels) => {
+          // The same call issues a draft and an approved version (2.19.0); only its approver is refused
+          // (APPROVER_CANNOT_ISSUE), and the refusal stays in the dialog and on the page in words.
           const input = { path: { id: v.id }, body: { channels } };
           issue
             .mutateAsync(input, { idempotencyKey: keyFor(input) })
@@ -932,7 +1198,11 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
               setOutcome(
                 isApprovalPending(answer)
                   ? { kind: 'margin', approvalId: answer.approvalRequestId }
-                  : { kind: 'issued', token: answer.acceptanceLinkToken },
+                  : {
+                      kind: 'issued',
+                      token: answer.acceptanceLinkToken,
+                      subjectToStock: answer.subjectToStock,
+                    },
               );
             })
             .catch(() => undefined);
@@ -959,7 +1229,11 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
               setLinks((n) => n + 1);
               setOpen(null);
               if (!isApprovalPending(answer)) {
-                setOutcome({ kind: 'newLink', token: answer.acceptanceLinkToken });
+                setOutcome({
+                  kind: 'newLink',
+                  token: answer.acceptanceLinkToken,
+                  subjectToStock: answer.subjectToStock,
+                });
               }
             })
             .catch(() => undefined);
@@ -1088,6 +1362,10 @@ function OutcomeAlert({ outcome, name }: { outcome: Outcome; name: string }) {
       </Alert>
     );
   }
+  if (outcome.kind === 'issued' && outcome.subjectToStock) {
+    // Issued all the same, holding only what was on hand (2.23.0): said, never shown as a refusal.
+    return <Alert severity="warning" title={t('outcome.issuedSubjectToStock', { name })} />;
+  }
   return <Alert severity="good" title={t(`outcome.${outcome.kind}`, { name })} />;
 }
 
@@ -1184,6 +1462,8 @@ function IssueDialog({
   pending,
   error,
   title,
+  body,
+  confirmLabel,
   onIssue,
   children,
 }: {
@@ -1192,6 +1472,8 @@ function IssueDialog({
   pending: boolean;
   error: ReturnType<typeof shownFailure>;
   title: string;
+  body: string;
+  confirmLabel: string;
   onIssue: (channels: Channel[]) => void;
   children: ReactNode;
 }) {
@@ -1203,8 +1485,8 @@ function IssueDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={title}
-      body={t('actions.issueBody')}
-      confirmLabel={t('actions.issue')}
+      body={body}
+      confirmLabel={confirmLabel}
       pendingLabel={t('actions.issuing')}
       pending={pending}
       error={error}

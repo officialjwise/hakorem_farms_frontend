@@ -248,7 +248,7 @@ describe('the till PIN (CR-032, as 2.17.0 carries it)', () => {
     const local = h.till.getState().snapshot?.localAuth;
     expect(local?.verifiers.map((v) => [v.displayName, v.role, v.approves.length])).toEqual([
       ['Adwoa Darko', 'OPERATOR', 0],
-      ['Akua Mensah', 'SUPERVISOR', 3],
+      ['Akua Mensah', 'SUPERVISOR', 4],
     ]);
     expect(local?.policy.maxAttempts).toBe(3);
     expect(h.till.canLock()).toBe(true);

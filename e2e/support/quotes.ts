@@ -97,6 +97,10 @@ function line(
     unitPricePesewas: PRICES[uom],
     lineNetPesewas,
     estimatedUnitCostPesewas: null,
+    // 2.23.0: nothing is held before issue, and the eggs are on hand.
+    availableQuantity: null,
+    heldQuantity: null,
+    subjectToStock: false,
   };
 }
 
@@ -116,6 +120,9 @@ export function version1(status: S['QuoteVersion']['status']): S['QuoteVersion']
     grossPesewas: 78600,
     estimatedCostPesewas: null,
     marginPercent: null,
+    markupPercent: null,
+    marginOverPricePercent: null,
+    subjectToStock: false,
     belowMarginFloor: false,
     approvalRequestId: null,
     changeNote: null,
@@ -125,6 +132,8 @@ export function version1(status: S['QuoteVersion']['status']): S['QuoteVersion']
     createdAt: '2026-11-17T10:20:00Z',
     version: 1,
     acceptanceLinkToken: null,
+    acceptanceLinkId: null,
+    links: [],
     lines: [
       line(
         '019a7f30-4d5e-7f6a-8b7c-000000000011',
@@ -411,5 +420,62 @@ export function chopBarAgeing(base: S['AgeingReport']): S['AgeingReport'] {
     },
     otherPartiesPesewas: 0,
     otherPartiesCreditPesewas: 0,
+  };
+}
+
+/** The margin approval of version 2 (2.19.0): decided by someone other than its author. */
+export const MARGIN_APPROVAL_ID = '019a7f33-6f7a-7b8c-8d9e-0f1a2b3c4d55';
+
+/**
+ * Version 2 below the margin floor and approved (2.19.0, CR-058): it holds nothing, has sent nothing and
+ * has no link, and waits for someone other than its approver to issue it. The quote reads DRAFT.
+ */
+export function approvedVersion2(): S['QuoteVersion'] {
+  return {
+    ...version2('APPROVED'),
+    belowMarginFloor: true,
+    approvalRequestId: MARGIN_APPROVAL_ID,
+    issuedAt: null,
+    issuedBy: null,
+  };
+}
+
+/**
+ * Version 2 issued subject to stock (2.23.0): 300 eggs asked for in 10 crates, 200 on hand and held; the
+ * 30 single eggs wholly on hand and held. The quantities are the server's, in the base unit (the egg).
+ */
+export function subjectToStockVersion2(): S['QuoteVersion'] {
+  const issued = version2('ISSUED');
+  const [crates, eggs] = issued.lines;
+  if (crates === undefined || eggs === undefined) throw new Error('Version 2 has two lines.');
+  return {
+    ...issued,
+    subjectToStock: true,
+    lines: [
+      { ...crates, availableQuantity: '200.000', heldQuantity: '200.000', subjectToStock: true },
+      { ...eggs, availableQuantity: '540.000', heldQuantity: '30.000', subjectToStock: false },
+    ],
+  };
+}
+
+export const LINK_1 = '019a7f34-7a8b-7c9d-8e0f-1a2b3c4d5e61';
+export const LINK_2 = '019a7f34-7a8b-7c9d-8e0f-1a2b3c4d5e62';
+
+/** A link of version 2 (2.21.0): its state, never a token. */
+export function versionLink(
+  id: string,
+  state: S['QuoteLink']['state'],
+  createdAt: string,
+): S['QuoteLink'] {
+  const revoked = state === 'REVOKED';
+  return {
+    id,
+    state,
+    createdAt,
+    createdBy: SALESPERSON,
+    expiresAt: '2026-11-24T23:59:59.999Z',
+    revokedAt: revoked ? '2026-11-17T11:40:00Z' : null,
+    revokedBy: revoked ? SALESPERSON : null,
+    revokeReason: revoked ? 'Sent to the wrong WhatsApp number' : null,
   };
 }

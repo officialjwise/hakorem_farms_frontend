@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { components } from '@hakorem/api-client';
 import { Button, Dialog, MoneyDisplay, WeightDisplay } from '@hakorem/ui';
 import { unitName, usePackUnits } from '../presentation';
-import type { SellingUnit } from './catalogue';
+import { stockUnitBand, unpricedReason, type SellingUnit } from './catalogue';
 
 type OfflineProduct = components['schemas']['OfflineProduct'];
 type OfflineStockUnit = components['schemas']['OfflineStockUnit'];
@@ -77,24 +77,38 @@ export function ChooseDialog({
       icon={ListChecks}
     >
       <ul className="grid gap-2">
-        {choice.units.map((unit) => (
-          <li key={unit.id}>
-            <Button
-              variant="secondary"
-              size="lg"
-              fullWidth
-              onClick={() => onChoose(choice.product, unit)}
-            >
-              <span>{unit.identifier}</span>
-              <span className="text-fg-muted">
-                <WeightDisplay
-                  kilograms={unit.lastWeightKg}
-                  notApplicableLabel={t('line.noWeight')}
-                />
-              </span>
-            </Button>
-          </li>
-        ))}
+        {choice.units.map((unit) => {
+          // 2.28.0 (CR-052): each animal at its own band, or the reason it has none here.
+          const band = stockUnitBand(choice.product, unit);
+          const reason = unpricedReason(choice.product, unit);
+          return (
+            <li key={unit.id}>
+              <Button
+                variant="secondary"
+                size="lg"
+                fullWidth
+                className="h-auto min-h-control-lg flex-wrap whitespace-normal py-2"
+                disabled={reason !== null}
+                onClick={() => onChoose(choice.product, unit)}
+              >
+                <span>{unit.identifier}</span>
+                <span className="text-fg-muted">
+                  <WeightDisplay
+                    kilograms={unit.lastWeightKg}
+                    notApplicableLabel={t('line.noWeight')}
+                  />
+                </span>
+                <span className="text-fg-muted" data-slot="unit-price">
+                  {band !== null ? (
+                    <MoneyDisplay pesewas={band.listPricePesewas} />
+                  ) : (
+                    t(`choose.unpriced.${reason ?? 'NO_PRICE'}`)
+                  )}
+                </span>
+              </Button>
+            </li>
+          );
+        })}
       </ul>
     </Dialog>
   );

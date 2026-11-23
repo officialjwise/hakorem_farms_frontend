@@ -9,7 +9,7 @@ export async function SiteFooter() {
   const [t, categories] = await Promise.all([getT('storefront'), getShopCategories()]);
   const top = categories.ok ? categories.data.data.filter((c) => c.parentCode === null) : [];
   return (
-    <footer aria-label={t('footer.label')} className="mt-auto" data-theme="dark">
+    <footer aria-label={t('footer.label')} className="mt-auto print:hidden" data-theme="dark">
       <div className="bg-panel text-fg">
         <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8 text-sm sm:grid-cols-[2fr_1fr]">
           <div className="grid content-start gap-3">

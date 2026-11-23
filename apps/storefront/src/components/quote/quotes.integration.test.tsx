@@ -2,10 +2,12 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import QuoteByLinkPage from '../../app/q/[token]/page';
-import { getWords } from '../../i18n/server';
+import { getT, getWords } from '../../i18n/server';
+import { load } from '../../lib/api';
 import { mock } from '../../test-integration-setup';
 import { Root } from '../../test-wrapper';
 import { QuoteRequestForm } from './QuoteRequestForm';
+import { QuoteView } from './QuoteView';
 
 // The app router is not mounted in jsdom; a refusal asks it to read the page again, which is a no-op here.
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: () => undefined }) }));
@@ -37,6 +39,20 @@ describe('a quote by its link, against the real Prism', () => {
     expect(
       await screen.findByText('Thank you. We will call you to arrange the deposit and delivery.'),
     ).toBeInTheDocument();
+  });
+
+  it('a quote issued subject to stock says so on the quote and its line, never the stock level (2.23.0)', async () => {
+    const answer = await load('viewQuoteByLink', { path: { token: TOKEN } });
+    if (!answer.ok) throw new Error('Prism did not answer the quote.');
+    const quote = {
+      ...answer.data,
+      subjectToStock: true,
+      lines: answer.data.lines.map((line) => ({ ...line, subjectToStock: true })),
+    };
+    render(<QuoteView quote={quote} t={await getT('storefront')} />, { wrapper: Root });
+    expect(screen.getByText('Part of this quote is subject to stock')).toBeInTheDocument();
+    expect(screen.getByRole('listitem')).toHaveTextContent('Subject to stock');
+    expect(screen.queryByText(/on hand/i)).toBeNull();
   });
 
   it('a link the server does not know says only that it is not valid', async () => {

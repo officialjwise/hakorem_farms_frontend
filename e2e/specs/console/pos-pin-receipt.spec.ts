@@ -2,7 +2,7 @@ import { formatMoney } from '../../../packages/ui/src/format/format';
 import { expectNoAxeViolations, expectNoHorizontalScroll } from '../../support/helpers';
 import { PEOPLE, installTillPins } from '../../support/tillPins';
 import { expect, test, type Page } from '../../support/test';
-import { installTillServer, openTillShift, type SentSale } from '../../support/till';
+import { find, installTillServer, openTillShift, type SentSale } from '../../support/till';
 
 /**
  * F10: the till PIN as 2.17.0 carries it (CR-032; ADR 0047, ADR 0057): lock and open offline, every try
@@ -281,6 +281,80 @@ test('offline mobile money on a supervisor’s PIN: not yet verified on the rece
   );
 });
 
+test('offline, a supervisor’s PIN approves a price beyond the cashier’s limit, up to their own, and it is reported at sync', async ({
+  page,
+  context,
+  api,
+}) => {
+  const server = installTillServer(api, serverTotal);
+  const pins = installTillPins(api);
+  await openTillShift(page);
+  await api.setNetwork(context, false);
+  await find(page, 'G-0142', /G-0142$/);
+  await page.getByRole('button', { name: 'Change Goat G-0142' }).click();
+  const line = page.getByRole('dialog', { name: 'Change G-0142' });
+  const price = line.getByRole('textbox', { name: /^Agreed price a head/ });
+  // GH₵110.00 off G-0142's GH₵650.00: past the cashier's GH₵50.00, and past the supervisor's GH₵100.00.
+  await price.fill('540');
+  await line.getByRole('combobox', { name: /^Why the price differs/ }).click();
+  await page.getByRole('option', { name: 'Regular customer, agreed price' }).click();
+  const approval = line.locator('[data-slot="price-approval"]');
+  await expect(approval).toContainText(
+    'No supervisor on this till may approve a discount of GH₵110.00: change the price to within your limit.',
+  );
+  // GH₵80.00 off: within the supervisor's own GH₵100.00 a line.
+  await price.fill('570');
+  await expect(approval).toContainText(
+    'A discount of GH₵80.00 on this item is more than you may give.',
+  );
+  // The cashier is never offered as their own supervisor.
+  const who = approval.getByRole('combobox', { name: /^Supervisor approving the price/ });
+  await expect(who).toContainText(PEOPLE.manager.name);
+  await who.click();
+  await expect(page.getByRole('option', { name: PEOPLE.cashier.name })).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await approval.getByLabel(/^PIN/).fill('000000');
+  await approval.getByRole('button', { name: 'Approve with this PIN' }).click();
+  await expect(
+    approval.getByText(/^Wrong PIN\. 2 more wrong tries lock Kwabena Owusu’s PIN/),
+  ).toBeVisible();
+  await approval.getByLabel(/^PIN/).fill(PEOPLE.manager.pin);
+  await approval.getByRole('button', { name: 'Approve with this PIN' }).click();
+  await expect(line.locator('[data-slot="price-approved"]')).toHaveText(
+    'Approved by Kwabena Owusu’s PIN: a discount of GH₵80.00 on this item.',
+  );
+  await expectNoAxeViolations(page);
+  await line.getByRole('button', { name: 'Save the item' }).click();
+  await expect(line).toBeHidden();
+  await expect(page.locator('[data-slot="cart-total"]')).toHaveText(formatMoney(57000));
+
+  await page.getByRole('button', { name: 'Take payment' }).click();
+  await page.getByRole('textbox', { name: /^Cash handed over/ }).fill('570');
+  await page.getByRole('button', { name: 'Review the sale' }).click();
+  await page.getByRole('button', { name: 'Complete the sale' }).click();
+
+  await api.setNetwork(context, true);
+  await expect(page.locator('[data-slot="queue-count"]')).toContainText('All sent');
+  expect(server.batches[0]?.sales[0]?.lines[0]).toMatchObject({
+    agreedUnitPricePesewas: 57000,
+    varianceReasonCode: 'REGULAR_CUSTOMER',
+    overrideApproval: { approvedById: PEOPLE.manager.id, approvedByPinVersion: 7 },
+  });
+  // Both tries were told to the server as approvals, the wrong one too.
+  const tries = pins.reports.flatMap((report) => report.events);
+  expect(
+    tries.filter((e) => e.principalId === PEOPLE.manager.id).map((e) => [e.outcome, e.purpose]),
+  ).toEqual([
+    ['FAILED', 'APPROVAL'],
+    ['SUCCEEDED', 'APPROVAL'],
+  ]);
+  await page.getByRole('link', { name: 'See sales to send' }).click();
+  await expect(page.locator('[data-slot="queue-approvals"]')).toHaveText(
+    "Price approved: Kwabena Owusu's PIN (version 7)",
+  );
+  await expectNoHorizontalScroll(page);
+});
+
 test('offline, a cash drop takes its witness’s PIN, and the witness goes with it', async ({
   page,
   context,
@@ -318,11 +392,11 @@ test('offline, a cash drop takes its witness’s PIN, and the witness goes with 
   expect(server.movements).toHaveLength(1);
 });
 
-test('the digital receipt: the SMS goes to the phone given, and the link is made on the till', async ({
+test('the digital receipt: the till makes the link from its own token and sends the token with the sale', async ({
   page,
   api,
 }) => {
-  installTillServer(api, serverTotal);
+  const server = installTillServer(api, serverTotal);
   await openTillShift(page);
   await page.getByRole('button', { name: 'Tomatoes, crate' }).click();
   await page
@@ -336,19 +410,26 @@ test('the digital receipt: the SMS goes to the phone given, and the link is made
     .fill('+233 24 455 0199');
   await pay.getByRole('button', { name: 'Review the sale' }).click();
   const confirm = page.getByRole('dialog', { name: 'Complete this sale?' });
-  await expect(confirm).toContainText('Receipt by SMS to +233244550199');
+  await expect(confirm).toContainText('Customer’s phone: +233244550199');
   await confirm.getByRole('button', { name: 'Complete the sale' }).click();
 
   const digital = page.locator('[data-slot="digital-receipt"]');
+  // 2.31.0 carries no receipt SMS (CR-033 point 3): the till promises none.
   await expect(digital.locator('[data-slot="sms-status"]')).toHaveText(
-    'Sent by SMS to +233244550199.',
+    'The phone number +233244550199 goes with the sale. Receipts are not sent by SMS yet.',
   );
   const link = digital.locator('[data-slot="receipt-link"]');
-  await expect(link).toHaveText(/^https:\/\/hakoremfarms\.com\/r\/[0-9a-f-]{36}$/);
-  const sale = (await link.textContent())?.split('/r/')[1];
-  const sent = api.log.filter((e) => e.operationId === 'syncOfflineSales');
+  await expect(link).toHaveText(/^https:\/\/hakoremfarms\.com\/r\/[A-Za-z0-9_-]{22}$/);
+  const token = (await link.textContent())?.split('/r/')[1] ?? '';
+  // The token is no id: not the sale's UUID, nor shaped like one.
+  expect(token).not.toMatch(/^[0-9a-f]{8}-/);
+  await expect(digital.locator('[data-slot="receipt-link-state"]')).toHaveText(
+    'The server has the sale, so the link works now.',
+  );
+  const sent = server.batches.flatMap((batch) => batch.sales);
   expect(sent.length).toBeGreaterThan(0);
-  expect(sale).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7/);
+  expect(sent.every((sale) => sale.receiptToken === token)).toBe(true);
+  expect(sent[0]?.id).not.toContain(token);
   await expectNoAxeViolations(page);
   await expectNoHorizontalScroll(page);
 });

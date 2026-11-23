@@ -15,15 +15,20 @@ import {
   WeightInput,
 } from '@hakorem/ui';
 import {
+  approvalStands,
   cartDiscount,
   checkAgreedPrice,
   lineAmount,
+  lineDiscount,
   toThreePlaces,
   type CartLine,
   type PriceRefusal,
   type WeightSource,
 } from '../offline/cart';
+import { useTill } from '../offline/till';
 import type { OfflinePack } from '../offline/types';
+import { PinApprovalField } from '../pin/PinCheck';
+import { priceApprovers } from '../pin/pin';
 import { unitName, usePackUnits } from '../presentation';
 
 /** What stops a line being paid for, before the price rules: a weighed line with no weight. */
@@ -36,7 +41,10 @@ const SOURCES: WeightSource[] = ['MANUAL', 'SCALE', 'ESTIMATE'];
 /**
  * One line's quantity, weight and agreed price. The agreed price is checked as the server will check it
  * (OFFLINE_SYNC 9.6): inside the band, a reason for any price but the list price, and a discount within the
- * cashier's cached limits, per line and for the shift (counting the other lines of this sale).
+ * cashier's cached limits, per line and for the shift (counting the other lines of this sale). A discount
+ * beyond the cashier's limits may be approved on the till by a supervisor's PIN, up to that supervisor's
+ * own per-line limit (2.17.0, `overrideApproval`); the server checks the approval at sync and raises every
+ * such price on the daily exception report. Never a price outside the band.
  */
 export function LineDialog({
   line,
@@ -60,7 +68,11 @@ export function LineDialog({
   const [source, setSource] = useState<WeightSource>(line.weightSource ?? 'MANUAL');
   const [price, setPrice] = useState<number | null>(line.agreedUnitPricePesewas);
   const [reason, setReason] = useState<string>(line.varianceReasonCode ?? '');
+  const [approval, setApproval] = useState<CartLine['overrideApproval']>(
+    line.overrideApproval ?? null,
+  );
   const [tried, setTried] = useState(false);
+  const { snapshot } = useTill();
 
   const serialised = line.stockUnitId !== null;
   const weighed = line.priceBasis === 'PER_KG';
@@ -76,11 +88,25 @@ export function LineDialog({
           weightSource: weight === null ? null : source,
           agreedUnitPricePesewas: price,
           varianceReasonCode: reason === '' || price === line.listUnitPricePesewas ? null : reason,
+          overrideApproval:
+            approval !== null && approval?.approvedPricePesewas === price ? approval : null,
         };
+  const shiftSoFar = shiftDiscountSoFar + cartDiscount(otherLines);
   const refusal: PriceRefusal | null =
+    candidate === null ? null : checkAgreedPrice(candidate, pack.policy, shiftSoFar);
+  // What the cashier alone may do: past their limits, a supervisor's PIN may approve the price.
+  const cashierRefusal: PriceRefusal | null =
     candidate === null
       ? null
-      : checkAgreedPrice(candidate, pack.policy, shiftDiscountSoFar + cartDiscount(otherLines));
+      : checkAgreedPrice({ ...candidate, overrideApproval: null }, pack.policy, shiftSoFar);
+  const approved = candidate !== null && approvalStands(candidate);
+  const needsSupervisor =
+    !approved && (cashierRefusal === 'OVER_LINE_LIMIT' || cashierRefusal === 'OVER_SHIFT_LIMIT');
+  const discount = candidate === null ? 0 : lineDiscount(candidate);
+  const localAuth = snapshot?.localAuth ?? null;
+  const cashierId = snapshot?.shift?.cashierId ?? '';
+  const supervisors =
+    localAuth === null ? [] : priceApprovers(localAuth.verifiers, cashierId, discount);
   const quantityError =
     !serialised && parsedQuantity === null ? t('line.errors.quantity') : undefined;
   const weightError = weighed && weight === null ? t('line.errors.weight') : undefined;
@@ -186,11 +212,59 @@ export function LineDialog({
         ) : null}
         {tried && refusal !== null && refusal !== 'REASON_REQUIRED' ? (
           <Alert severity="critical" title={t(`line.refusal.${refusal}`)}>
-            {t('line.refusalBody', {
-              line: formatMoney(pack.policy.priceOverrideLimitPerLinePesewas),
-              shift: formatMoney(pack.policy.priceOverrideLimitPerShiftPesewas),
-            })}
+            {approval != null && approved
+              ? t('line.overSupervisorLimit', {
+                  name: approval.approvedByName,
+                  limit: formatMoney(approval.limitPesewas),
+                })
+              : t('line.refusalBody', {
+                  line: formatMoney(pack.policy.priceOverrideLimitPerLinePesewas),
+                  shift: formatMoney(pack.policy.priceOverrideLimitPerShiftPesewas),
+                })}
           </Alert>
+        ) : null}
+        {approved && candidate.overrideApproval != null ? (
+          <p role="status" data-slot="price-approved">
+            {t('line.approvedBy', {
+              name: candidate.overrideApproval.approvedByName,
+              discount: formatMoney(discount),
+            })}
+          </p>
+        ) : null}
+        {needsSupervisor && candidate?.varianceReasonCode != null ? (
+          <fieldset
+            className="grid gap-3 rounded-md border border-border p-3"
+            data-slot="price-approval"
+          >
+            <legend className="px-1 font-semibold">{t('line.supervisorTitle')}</legend>
+            <p>{t('line.supervisorBody', { discount: formatMoney(discount) })}</p>
+            {localAuth === null || supervisors.length === 0 ? (
+              <Alert
+                severity="warning"
+                title={t('line.noSupervisor', { discount: formatMoney(discount) })}
+              />
+            ) : (
+              <PinApprovalField
+                key={price ?? 'none'}
+                approval="PRICE_OVERRIDE"
+                approvers={supervisors}
+                policy={localAuth.policy}
+                label={t('line.supervisor')}
+                onApproved={(record) => {
+                  const supervisor = supervisors.find((v) => v.principalId === record.principalId);
+                  if (price === null || supervisor === undefined) return;
+                  setApproval({
+                    approvedById: record.principalId,
+                    approvedByPinVersion: record.verifierVersion,
+                    approvedByName: record.displayName,
+                    approvedAt: record.at,
+                    approvedPricePesewas: price,
+                    limitPesewas: supervisor.priceOverrideLimitPerLinePesewas ?? 0,
+                  });
+                }}
+              />
+            )}
+          </fieldset>
         ) : null}
       </div>
     </Dialog>

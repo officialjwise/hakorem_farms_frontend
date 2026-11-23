@@ -142,6 +142,7 @@
     "kind": "What they were asked",
     "SUBSTITUTION": "A substitute, or less than they ordered",
     "HIGHER_TOTAL": "A weighed total above what they agreed",
+    "SHORT_PICK": "Less than they ordered, with nothing in its place",
     "answer": "Their answer",
     "yes": "They agreed",
     "no": "They declined",
@@ -166,7 +167,8 @@
     "doneDeclined": "Recorded: the customer declined.",
     "what": {
       "SUBSTITUTION": "a substitute, or less than they ordered",
-      "HIGHER_TOTAL": "a weighed total above what they agreed"
+      "HIGHER_TOTAL": "a weighed total above what they agreed",
+      "SHORT_PICK": "less than they ordered, with nothing in its place"
     }
   },
   "pickList": {

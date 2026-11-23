@@ -9,7 +9,8 @@
     "siteName": "HaKorem Farms",
     "quoteRequestTitle": "Ask for a quote",
     "quoteRequestDescription": "Buying eggs by the crate, live animals or meat in bulk? Tell HaKorem Farms what you need and we will send you a priced quote.",
-    "quoteTitle": "Your quote"
+    "quoteTitle": "Your quote",
+    "receiptTitle": "Your receipt"
   },
   "header": {
     "home": "HaKorem Farms, home",
@@ -590,6 +591,65 @@
     "whatsappLabel": "WhatsApp {{phone}} (opens WhatsApp)",
     "notFoundTitle": "This link is not valid",
     "notFoundBody": "Check that you opened the whole link from the message we sent. If it still does not open, ask the farm to send it again.",
-    "errorTitle": "The quote could not be loaded"
+    "errorTitle": "The quote could not be loaded",
+    "subjectToStockTitle": "Part of this quote is subject to stock",
+    "subjectToStockBody": "The farm holds what it has for you and confirms the rest before delivery. The lines marked subject to stock may not all be available.",
+    "lineSubjectToStock": "Subject to stock"
+  },
+  "receipt": {
+    "title": "Your receipt",
+    "business": "Sold by",
+    "call": "Call {{phone}}",
+    "receiptNo": "Receipt no.",
+    "saleReference": "Sale reference",
+    "soldAt": "Sold",
+    "when": "{{when}} (Accra time)",
+    "linesLabel": "What you bought",
+    "stockUnit": "Tag or lot {{id}}",
+    "columns": {
+      "quantity": "Quantity",
+      "weight": "Weight",
+      "unitPrice": "Unit price",
+      "amount": "Amount"
+    },
+    "uomOne": {
+      "CRATE": "crate",
+      "UNIT": "item",
+      "EGG": "egg",
+      "HEAD": "head",
+      "KG": "kg",
+      "PACK": "pack",
+      "BUNCH": "bunch",
+      "TUBER": "tuber",
+      "BAG": "bag",
+      "TRAY": "tray"
+    },
+    "uomOther": {
+      "CRATE": "crates",
+      "UNIT": "items",
+      "EGG": "eggs",
+      "HEAD": "head",
+      "KG": "kg",
+      "PACK": "packs",
+      "BUNCH": "bunches",
+      "TUBER": "tubers",
+      "BAG": "bags",
+      "TRAY": "trays"
+    },
+    "paymentLabel": "Total and payment",
+    "total": "Total",
+    "tendered": "Handed over",
+    "unverified": "Mobile money taken while the till was offline. The farm has still to confirm it.",
+    "change": "Change",
+    "validUntil": "This link works until {{when}} (Accra time).",
+    "notFoundTitle": "We cannot find this receipt",
+    "notFoundMistyped": "The link may be mistyped. Check that you opened the whole link, exactly as it was printed or shown at the counter.",
+    "notFoundNotYet": "If you bought just now, the sale may not have reached the farm yet. The link works once the till has sent the sale, so try again a little later.",
+    "contact": "Ask the shop",
+    "contactWithNumber": "Still not opening? Call or WhatsApp the shop with the sale reference from your receipt.",
+    "contactWithoutNumber": "Still not opening? Ask at the shop counter, with the sale reference from your receipt.",
+    "whatsapp": "WhatsApp {{phone}}",
+    "whatsappLabel": "WhatsApp {{phone}}, opens WhatsApp",
+    "errorTitle": "The receipt could not be loaded"
   }
 }

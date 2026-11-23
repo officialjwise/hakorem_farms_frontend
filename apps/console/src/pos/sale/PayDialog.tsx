@@ -24,6 +24,7 @@ import {
   type OtherTender,
 } from '../offline/cart';
 import { getTill, useTill } from '../offline/till';
+import { lineApprovalRecord } from '../offline/sale';
 import type { OfflinePack, PinApprovalRecord, SaleEntry } from '../offline/types';
 import { approvers } from '../pin/pin';
 import { PinApprovalField } from '../pin/PinCheck';
@@ -109,7 +110,14 @@ export function PayDialog({
         ),
         cashHandedPesewas: handed ?? 0,
         customerPhone: phone === '' ? null : phone,
-        approvals: cleared.flatMap((tender) => (tender.approval ? [tender.approval] : [])),
+        approvals: [
+          // A supervisor's PIN that approved a line's price (2.17.0), then the tenders'.
+          ...lines.flatMap((line) => {
+            const record = lineApprovalRecord(line);
+            return record === null ? [] : [record];
+          }),
+          ...cleared.flatMap((tender) => (tender.approval ? [tender.approval] : [])),
+        ],
       })
       .then(onDone)
       .catch((error: unknown) => setFailed(error instanceof Error ? error.message : String(error)))

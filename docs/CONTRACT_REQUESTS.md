@@ -36,7 +36,7 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-030 | 2026-11-16 | Answered (1.43.0)         |
 | CR-031 | 2026-11-16 | Planned shape (1.45.0)    |
 | CR-032 | 2026-11-16 | Answered (2.17.0), built  |
-| CR-033 | 2026-11-16 | Open, amended F10e        |
+| CR-033 | 2026-11-16 | Answered (2.24.0), built  |
 | CR-034 | 2026-11-17 | Answered (2.0.0), built   |
 | CR-035 | 2026-11-17 | Answered (2.3.0), built   |
 | CR-036 | 2026-11-17 | Answered (2.4.0), built   |
@@ -55,13 +55,14 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-049 | 2026-11-18 | Answered (2.12.0)         |
 | CR-050 | 2026-11-18 | Answered (2.17.0), built  |
 | CR-051 | 2026-11-18 | Answered (2.17.0), built  |
-| CR-052 | 2026-11-18 | Open                      |
+| CR-052 | 2026-11-18 | Answered (2.28.0), built  |
 | CR-053 | 2026-11-18 | Open                      |
 | CR-054 | 2026-11-18 | Open                      |
 | CR-055 | 2026-11-18 | Open                      |
 | CR-056 | 2026-11-18 | Open                      |
-| CR-057 | 2026-11-18 | Open                      |
-| CR-058 | 2026-11-22 | Open                      |
+| CR-057 | 2026-11-18 | Answered (2.31.0), built  |
+| CR-058 | 2026-11-22 | Answered (2.19.0), built  |
+| CR-063 | 2026-11-23 | Open                      |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -579,6 +580,12 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 - The PIN's length and the idle lock are not in the policy: the till's own constants (A-F10-14).
 - The till's switch is deleted.
 
+**Answered in 2.24.0 (F10o), points 1 and 2, and built:**
+
+- `OfflinePack.receiptLinkTemplate` holds `{token}`; the till makes a 16-byte base64url token per sale and sends it as `OfflineSale.receiptToken`, under `payloadHash`. `getPublicReceipt` reads it (the storefront's `/r/[token]`).
+- A token the server refuses (`RECEIPT_TOKEN_REFUSED`) leaves the sale recorded; the till then says the link was refused and to give the sale reference.
+- **Point 3, the receipt SMS (`SyncResultItem.receiptMessage`), is not in the contract** (B11's). The till promises no SMS; the phone number still goes with the sale. The switch is deleted: this point is built when the contract carries it.
+
 ## CR-034. The server generates each product's SKU (changed request body)
 
 - **Raised by:** frontend, the owner's decision (2026-11-17): "SKU stays, but the server generates it. Make it read-only on the product forms: never typed, shown once the product is saved."
@@ -895,6 +902,13 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 
 **Until this lands** (the owner, 2026-11-18: the backend adds each animal's price to the pack late in the till work): with the real pack, an animal's tile says "Sold through quotes and orders" before it is tapped, and a tap, or its tag found by search, says the animal is sold through quotes and orders, not at this till, and to make a quote or an order in the back office. Nothing goes on the sale, and everything else sells (`soldThroughQuotes` in `pos/sale/catalogue.ts`; `pos-till.spec.ts` with the pack as 2.11.0 answers it). The other till specs give the goat the per-head band of 2.10.0's example (`goatPricedPerHead` in `e2e/support/till.ts`), so they still run with an animal.
 
+**Answered in 2.28.0 (F10o), and built:**
+
+- `OfflineStockUnit.priceBand` and `priceListEntryId` are each animal's own, from its own grade and latest weight; `unpricedReason` says why one has none (`MISSING_GRADE_OR_WEIGHT`, `NO_RULE`, `QUOTE_ONLY`, `NOT_SELLABLE`). A lot carries none and sells at its product's band.
+- The till sells each animal at its own band, shows it beside the tag in the chooser, and greys out an unpriced animal with the reason in words. A recalled held sale takes the animal's band from the pack held now.
+- An animal weighed again since the pack is priced by the server from its latest weight; the till's price stands and any difference is raised (`OFFLINE_PACK_PRICE`).
+- `soldThroughQuotes` and its words, and `goatPricedPerHead` in the e2e fake, are deleted: the specs use the contract's own example pack.
+
 ## CR-053. An order names its pick lists and the answer it waits for (additive)
 
 - **Raised by:** frontend F11, the order's picking and delivery page (`/orders/:id/fulfilment`).
@@ -992,6 +1006,14 @@ The server returns the rest to stock (or keeps it on the van for a reattempt, as
 - the phone treats a 404 and an empty route alike ("No run for you today");
 - after a lost answer, the phone's own words say when cash differs from what was due.
 
+**Answered in 2.31.0 (F10o), differently from item 1, and built:**
+
+- A hand-in is its own till operation, `handInDriverCash` (`POST /shifts/{id}/driver-cash-hand-ins`, `pos.sale.create`, the device credential), on the cashier's own open shift. `createDriverCashReconciliation` and `postDriverCashReconciliation` are deprecated, never built.
+- Every collection the driver holds at the branch is handed in at once; the count is a cleared cash payment in the drawer, counted at the close. Short or over goes to the driver variance report.
+- The till's shift screen takes it: driver, blind count, a confirmation with the amount, then the server's expected, counted and short or over kept on screen. A refusal stays in words.
+- **The till cannot find the driver's id:** nothing the Cashier holds lists drivers. CR-063 asks for that read; until it lands the hand-in is behind its switch.
+- Items 2 and 3 (the driver's phone) are not answered by 2.31.0.
+
 ## CR-058. After a margin approval, the salesperson issues the quote and gets its link (behaviour, additive)
 
 - **Raised by:** frontend F10n, the quote page. The owner (2026-11-19): after a margin approval, the salesperson issues and sends the quote and sees its link; the backend is changing it.
@@ -1008,6 +1030,8 @@ The server returns the rest to stock (or keeps it on the van for a reattempt, as
 4. **Who may issue it:** a holder of `quo.quote.issue`, normally the version's author. Please state whether the approver may issue it too.
 
 **Until this lands:** nothing changes on the console. When the contract carries it, the quote page offers "Issue and send" on an approved version and shows the link once, as for any issue (F10m, section 3).
+
+**Answered in 2.19.0 (F10o), and built:** approving `QUOTE_BELOW_MARGIN` only approves; the version is `APPROVED` (point 2 as a status, not an object); `issueQuoteVersion` by anyone but its approver issues it at the figures approved and answers its token once; the approver is refused with 422 `QUOTE_INVALID` `APPROVER_CANNOT_ISSUE` (point 4). Point 3's second approval when prices or costs changed is not stated: the contract issues "at the figures approved". The quote page offers "Issue and send" on an approved version, with the issue flow's channels, and shows the link once; the approvals screen says a margin approval only approves.
 
 ## CR-059. The daily exception report: marking an item reviewed, and the controls that have no kind (additive, seed)
 
@@ -1085,3 +1109,20 @@ The server returns the rest to stock (or keeps it on the van for a reattempt, as
    - the Accountant holds them and `fin.report.read`.
 
 **Until this lands:** each screen offers "This page as CSV", built from the table on screen. Its Export menu offers XLSX and PDF only once `listReportDefinitions` lists the screen's code.
+
+## CR-063. The till lists the drivers who hold delivery cash at its branch (additive)
+
+- **Raised by:** frontend F10o, the till's shift screen, the driver's cash hand-in (`handInDriverCash`, 2.31.0, CR-057).
+- **Contract read first (2.31.0):**
+  - `handInDriverCash` needs `driverId`, and says every collection the driver holds at the branch is handed in.
+  - Nothing the Cashier holds lists drivers. `listUsers` needs `iam.user.read`; `getMyCashSummary` is the driver's own; `listDriverCashReconciliations` is the Manager's and the Owner's, and lists hand-ins already made; `SalesOrder.delivery` names no driver; the offline pack carries no people.
+- **Why it matters:** without the driver's id the cashier cannot take a driver's cash at all, so the owner's rule (handed in at a till shift, never as loose cash) cannot be followed at the till.
+
+**Request:**
+
+1. `listShiftDriverCashHolders`: `GET /shifts/{id}/driver-cash-holders`, `pos.sale.create`, the device credential, the shift's own cashier (as `listShiftWitnesses`).
+2. Answers `{ data: [{ driver: PrincipalRef, collections: integer }] }`: each driver holding at least one collection at the shift's branch that is not handed in, and how many.
+3. **No amount.** The cashier counts blind, as the close is counted; `handInDriverCash`'s answer then shows what was expected. Say so if the backend would rather show it.
+4. Another cashier's shift 403, a shift that is not open 422 `SHIFT_NOT_OPEN`, as `handInDriverCash`.
+
+**Until this lands:** the till's shift screen says it cannot list the drivers yet, so it cannot take a driver's cash. The e2e and CI builds are switched on for CR-063 (ADR 0046) and their fake answers this shape; the hand-in itself calls the real `handInDriverCash`.

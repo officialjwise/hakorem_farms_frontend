@@ -106,7 +106,7 @@ The till loads its shell and sale screen with the document. Every other till scr
 
 ## 5. Never set `HK_REQUESTED_CONTRACT` for a deployed console (ADR 0046)
 
-`HK_REQUESTED_CONTRACT` names the contract requests a build is built against before the contract carries them (`CR-033,CR-059` in the e2e and CI builds, whose fake answers them). A staging or production build leaves it **unset**: the console then calls nothing the contract lacks, and the till says in words that the receipt link waits for the server. A build that sets it with `HK_API_BASE_URL` anything but `/mock` **fails before building**, naming the switches (the owner's condition on ADR 0046).
+`HK_REQUESTED_CONTRACT` names the contract requests a build is built against before the contract carries them (`CR-059,CR-063` in the e2e and CI builds, whose fake answers them). A staging or production build leaves it **unset**: the console then calls nothing the contract lacks; the exception report says in words that reviewing waits for the backend, and the till that it cannot yet list the drivers whose cash it takes. A build that sets it with `HK_API_BASE_URL` anything but `/mock` **fails before building**, naming the switches (the owner's condition on ADR 0046).
 
 **How to check it:** the deploy workflow's console build step sets `HK_API_BASE_URL` and nothing named `HK_REQUESTED_CONTRACT`.
 

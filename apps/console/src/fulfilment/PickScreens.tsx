@@ -44,7 +44,7 @@ import { PageHeader } from '../lib/ScreenHeader';
 import { useStateLabels } from '../lib/states';
 import { TableCard } from '../lib/TableCard';
 import { useCursorPages } from '../lib/useCursorPages';
-import { ANY, FilterSelect, countSet, param } from '../stock/filters';
+import { ANY, FilterSelect, countSet } from '../stock/filters';
 import { ProductPicker, type ProductRef as PickedProduct } from '../stock/LinesEditor';
 import { compareQuantity, toQuantity, useUnits } from '../stock/units';
 import {
@@ -64,9 +64,11 @@ export function FulfilmentsScreen() {
   const { t } = useTranslation(['fulfilment', 'common']);
   const pages = useCursorPages();
   const [status, setStatus] = useState(ANY);
+  // 2.25.0 lists the states, so the filter sends only one of them.
+  const chosenStatus = FULFILMENT_STATUSES.find((s) => s === status);
   const list = useApiQuery('listFulfilments', {
     query: {
-      ...param('status', status),
+      ...(chosenStatus === undefined ? {} : { status: chosenStatus }),
       ...(pages.cursor === undefined ? {} : { cursor: pages.cursor }),
     },
   });
