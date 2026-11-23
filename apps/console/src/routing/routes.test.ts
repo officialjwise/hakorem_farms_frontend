@@ -64,17 +64,20 @@ describe('each document owns only its own addresses (ADR 0030)', () => {
     for (const { path } of till) expect(entryFor(path), path).toBe('pos');
   });
 
-  it('the investor portal declares only addresses under /investor, with no permission (ADR 0058)', () => {
-    const portal = leaves(investorProtectedRoutes, '/investor');
-    expect(portal.length).toBe(5);
+  it('the investor portal is its own build: its pages sit at its own root, with no permission (ADR 0058)', () => {
+    const portal = leaves(investorProtectedRoutes);
+    expect(portal.map(({ path }) => path).sort()).toEqual([
+      '/',
+      '/capital',
+      '/distributions',
+      '/documents',
+      '/statement',
+    ]);
     for (const { path, route } of portal) {
-      expect(entryFor(path), path).toBe('investor');
       expect(isRouteHandle(route.handle) && route.handle.permission, path).toBeNull();
     }
+    // The console's address never serves it: `/investor` there is the back office's, like any address.
     expect(['/investor', '/investor/', '/investor/login'].map(entryFor)).toEqual(
-      Array(3).fill('investor'),
-    );
-    expect(['/investors', '/investor.html', '/investor/x.js'].map(entryFor)).toEqual(
       Array(3).fill('back-office'),
     );
   });

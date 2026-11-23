@@ -15,7 +15,7 @@ Read this file, `docs/SHARED_BRIEF.md`, your session's section of `docs/BUILD_PR
 | `packages/api-client` | Generated from the contract: types, operation table, `call(operationId, …)`. Never hand-edited.                                                                     |
 | `packages/data`       | TanStack Query layer: `useApiQuery`, `useApiMutation`, keys, stale times, retry. See DATA_CONVENTIONS.                                                              |
 | `apps/storefront`     | Public shop, Next.js 15, server rendered, built for 3G. Shell built (F1); catalogue screens are F7.                                                                 |
-| `apps/console`        | Installable PWA, Vite: three documents, `index.html` (back office), `pos.html` (till) and `investor.html` (investor portal) (ADR 0030, 0058); the real auth client. |
+| `apps/console`        | Installable PWA, Vite: two documents, `index.html` (back office) and `pos.html` (till) (ADR 0030); real auth client. The investor portal: its own build (ADR 0058). |
 | `e2e/`                | Playwright and axe specs, Chromium, 360 px, against production builds.                                                                                              |
 | `contract/`           | A synced copy of the backend's OpenAPI contract. Never hand-edited.                                                                                                 |
 | `tooling/lint-tokens` | The `hakorem/token-usage` lint rule.                                                                                                                                |
@@ -40,7 +40,8 @@ pnpm build-storybook
 pnpm format:check
 pnpm dev:storefront    # Next.js on port 3000
 pnpm dev:console       # Vite on port 5173
-pnpm test:e2e          # builds both apps (console on HK_API_BASE_URL=/mock), then Playwright with axe
+pnpm dev:investor      # the investor portal's own Vite, on port 5174
+pnpm test:e2e          # builds the console, the investor portal and the shop (console and portal on HK_API_BASE_URL=/mock), then Playwright with axe
 pnpm test:e2e:quarantine  # only the quarantined specs (tag @quarantine, each with its issue)
 pnpm screenshots       # F13 only: builds both apps, then writes docs/screenshots/<phase>/<screen>-<width>.png
 pnpm budget:console    # after build:console: fails if the till's or back office's initial load is over budget

@@ -1,18 +1,17 @@
 /**
  * The investor portal (ADR 0058) against the REAL Prism mock: an investor signs in with `loginInvestor` at
- * `/investor/login`, reads their own figures, and a staff session is told it is in the wrong place. The
+ * `/login` on the portal's own host, reads their own figures, and a staff session is told it is in the wrong place. The
  * fake auth server holds the investor's account; Prism answers the investor operations from the contract.
  */
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
-import { INVESTOR_BASENAME } from '../app/entries';
 import { queryClient } from '../data/api';
 import { INVESTOR, newClient, renderApp, signedIn, signedInInvestor } from '../test/harness';
 import { mock } from '../test/integration-setup';
 import { investorRoutes } from './routes';
 
-const PORTAL = { realm: 'INVESTOR', basename: INVESTOR_BASENAME } as const;
+const PORTAL = { realm: 'INVESTOR' } as const;
 
 afterEach(() => {
   queryClient.clear();
@@ -22,7 +21,7 @@ describe('the investor portal', () => {
   it('an investor signs in at the portal and reads their own capital, share and returns', async () => {
     const user = userEvent.setup();
     const client = newClient();
-    await renderApp('/investor/login', client, investorRoutes, undefined, PORTAL);
+    await renderApp('/login', client, investorRoutes, undefined, PORTAL);
     await user.type(
       await screen.findByLabelText(/email or phone number/i, {}, { timeout: 5000 }),
       INVESTOR.identifier,
@@ -53,22 +52,22 @@ describe('the investor portal', () => {
       queryClient.clear();
       return renderApp(path, client, investorRoutes, undefined, PORTAL);
     };
-    let view = await open('/investor/capital');
+    let view = await open('/capital');
     await waitFor(() => expect(screen.getByRole('table')).toHaveTextContent('Contribution'), {
       timeout: 5000,
     });
     view.unmount();
-    view = await open('/investor/distributions');
+    view = await open('/distributions');
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Your share of each distribution' }),
     ).toBeInTheDocument();
     view.unmount();
-    view = await open('/investor/statement');
+    view = await open('/statement');
     expect(
       await screen.findByText('Capital at the start', {}, { timeout: 5000 }),
     ).toBeInTheDocument();
     view.unmount();
-    await open('/investor/documents');
+    await open('/documents');
     await waitFor(
       () => expect(screen.getByRole('table')).toHaveTextContent('Investment agreement'),
       {
@@ -78,7 +77,7 @@ describe('the investor portal', () => {
   });
 
   it('a staff session in the portal is told so in words, and sees nothing behind it', async () => {
-    await renderApp('/investor', await signedIn('owner'), investorRoutes, undefined, PORTAL);
+    await renderApp('/', await signedIn('owner'), investorRoutes, undefined, PORTAL);
     expect(
       await screen.findByText('You are signed in as staff', {}, { timeout: 5000 }),
     ).toBeInTheDocument();
@@ -90,7 +89,7 @@ describe('the investor portal', () => {
   it('the summary failing says so with its reference', async () => {
     mock.prefer = 'code=500';
     mock.preferPath = '/investor/me';
-    await renderApp('/investor', await signedInInvestor(), investorRoutes, undefined, PORTAL);
+    await renderApp('/', await signedInInvestor(), investorRoutes, undefined, PORTAL);
     await waitFor(
       () =>
         expect(

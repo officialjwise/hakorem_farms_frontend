@@ -1,12 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
+import { CONSOLE_URL, INVESTOR_URL } from './support/hosts';
 
 const CI = process.env.CI !== undefined;
 
 /**
  * End to end, in Chromium, at 360 px wide (the floor every screen must work at). The storefront uses port 3100 for tests because 3000 is a common dev port (it was a Docker container here). The console runs from its
  * production build through `vite preview`, so the service worker and the minified bundle are what is tested,
- * and the storefront from `next start`. Build both first: `pnpm test:e2e` does, with the console's
- * HK_API_BASE_URL set to /mock (ADR 0026).
+ * the investor portal from its own build (ADR 0058), and the storefront from `next start`. Build all three
+ * first: `pnpm test:e2e` does, with the console's and the portal's HK_API_BASE_URL set to /mock (ADR 0026).
  *
  * The screenshot specs are not part of this run: no screenshots until F13 (CLAUDE.md). They run only from
  * `playwright.screenshots.config.ts`, through `pnpm screenshots`. The 360 px checks every spec makes (no
@@ -31,7 +32,13 @@ export default defineConfig({
     {
       name: 'console',
       testMatch: 'console/**/*.spec.ts',
-      use: { baseURL: 'http://localhost:4173' },
+      use: { baseURL: CONSOLE_URL },
+    },
+    {
+      // The investor portal, its own build on its own host (ADR 0058).
+      name: 'investor',
+      testMatch: 'investor/**/*.spec.ts',
+      use: { baseURL: INVESTOR_URL },
     },
     {
       name: 'storefront',
@@ -60,7 +67,16 @@ export default defineConfig({
     {
       command: 'pnpm exec vite preview --port 4173 --strictPort',
       cwd: '../apps/console',
-      url: 'http://localhost:4173',
+      url: CONSOLE_URL,
+      reuseExistingServer: !CI,
+      timeout: 60_000,
+    },
+    {
+      // The investor portal's own build (`pnpm build:investor`), on a host name of its own.
+      command:
+        'pnpm exec vite preview --config vite.investor.config.ts --host 127.0.0.1 --port 4174 --strictPort',
+      cwd: '../apps/console',
+      url: INVESTOR_URL,
       reuseExistingServer: !CI,
       timeout: 60_000,
     },

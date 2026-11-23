@@ -1,15 +1,17 @@
 import { boot } from '../app/boot';
-import { ENTRY_NAMESPACES, INVESTOR_BASENAME } from '../app/entries';
+import { INVESTOR_NAMESPACES } from './entry';
 import { investorRoutes } from './routes';
 
 /**
- * The investor portal, investor.html (ADR 0058). It imports nothing from the back office's or the till's
- * routes. An investor signs in here with `loginInvestor`, under `/investor`, and reads only the investor
- * operations, which the server scopes to the session's investor.
+ * The investor portal (ADR 0058), its own build on its own host. It imports nothing from the back office's
+ * or the till's routes. An investor signs in here with `loginInvestor`, at `/login` on the portal's host,
+ * and reads only the investor operations, which the server scopes to the session's investor. It registers
+ * no service worker: the console's is for the till and the back office (ADR 0013), and an investor reads
+ * the portal online.
  */
 void boot({
   routes: investorRoutes,
-  namespaces: ENTRY_NAMESPACES.investor,
+  namespaces: INVESTOR_NAMESPACES,
   realm: 'INVESTOR',
-  basename: INVESTOR_BASENAME,
+  serviceWorker: false,
 });

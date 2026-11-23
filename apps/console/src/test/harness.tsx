@@ -55,8 +55,8 @@ export async function renderApp(
   client: AuthClient,
   routes: RouteObject[] = appRoutes,
   state?: unknown,
-  /** The investor portal (ADR 0058): its realm and router base. */
-  document?: { realm: 'INVESTOR'; basename: string },
+  /** The investor portal (ADR 0058): its realm. Its routes sit at the root of its own host. */
+  document?: { realm: 'INVESTOR' },
 ) {
   const i18n = await createI18n({
     namespaces: [
@@ -87,7 +87,6 @@ export async function renderApp(
   });
   const router = createMemoryRouter(routes, {
     initialEntries: [state === undefined ? path : { pathname: path, state }],
-    ...(document === undefined ? {} : { basename: document.basename }),
   });
   const view = render(
     <I18nextProvider i18n={i18n}>

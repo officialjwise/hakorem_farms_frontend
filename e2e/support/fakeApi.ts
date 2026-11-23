@@ -18,8 +18,10 @@
  *      page, or `useApiAllPages` would meet its hard cap on every read (ADR 0028). The integration
  *      tests' harness does the same.
  *
- * The cookie jar is the fake's, one per browser context, so nothing depends on how Chromium treats a
- * Set-Cookie on a fulfilled response. A reload keeps it; a new context starts empty, like a new browser.
+ * The cookie jar is the fake's, one per browser context and host, so nothing depends on how Chromium treats
+ * a Set-Cookie on a fulfilled response. A reload keeps it; a new context starts empty, like a new browser.
+ * The session cookies are host-only (`__Host-`), so a session signed in on the console's host is never sent
+ * from the investor portal's, and the other way round (ADR 0058): each host has its own jar.
  */
 import { operationManifest, type RequestedOperation } from '@hakorem/api-client';
 import type { BrowserContext, Page, Route } from '@playwright/test';
@@ -28,6 +30,7 @@ import {
   type CookieJar,
   type FakeAuthServer,
 } from '../../apps/console/src/test/fakeAuthServer';
+import { CONSOLE_URL } from './hosts';
 
 /** The same-origin path the e2e build's HK_API_BASE_URL names. */
 export const API_PATH = '/mock';
@@ -86,8 +89,23 @@ export type Outcome =
 
 export class FakeApi {
   readonly server: FakeAuthServer = createFakeAuthServer();
-  /** This browser's cookies for the API. */
-  readonly jar: CookieJar = {};
+  /** This browser's cookies for the API, one jar per host the page was served from (ADR 0058). */
+  private readonly jars = new Map<string, CookieJar>();
+
+  /** The cookies this browser holds on one host, for example `127.0.0.1:4174`. */
+  jarFor(host: string): CookieJar {
+    let jar = this.jars.get(host);
+    if (jar === undefined) {
+      jar = {};
+      this.jars.set(host, jar);
+    }
+    return jar;
+  }
+
+  /** This browser's cookies on the console's host. */
+  get jar(): CookieJar {
+    return this.jarFor(new URL(CONSOLE_URL).host);
+  }
   /** Every request seen, in order, and what answered it. */
   readonly log: { method: string; path: string; operationId: string | null; outcome: Outcome }[] =
     [];
@@ -205,6 +223,8 @@ export class FakeApi {
     if (this.networkOff) return route.abort('internetdisconnected');
     const path = url.pathname.slice(API_PATH.length);
     const method = request.method();
+    // The API is same-origin on each host (DEPLOYMENT.md section 4): its cookies are that host's.
+    const jar = this.jarFor(url.host);
     // A file upload (multipart/form-data) is not the fake's business and is not JSON: only JSON is parsed.
     const isJson = (request.headers()['content-type'] ?? '').startsWith('application/json');
     const text = isJson ? (request.postData() ?? '') : '';
@@ -216,7 +236,7 @@ export class FakeApi {
         headers: await request.allHeaders(),
         body: text === '' ? undefined : (JSON.parse(text) as unknown),
       },
-      this.jar,
+      jar,
     );
     if (answer !== null) {
       this.log.push({ method, path, operationId: null, outcome: 'fake' });
@@ -230,7 +250,7 @@ export class FakeApi {
     const requested = this.requested.find(
       (r) => r.operation.method.toUpperCase() === method && r.pattern.test(path),
     );
-    if (requested !== undefined) return this.answerRequested(route, requested, path, text);
+    if (requested !== undefined) return this.answerRequested(route, requested, path, text, jar);
 
     const operation = findOperation(method, path);
     const record = (outcome: Outcome) =>
@@ -239,7 +259,7 @@ export class FakeApi {
       record('prism');
       return route.continue();
     }
-    const session = this.server.sessionFor(this.jar);
+    const session = this.server.sessionFor(jar);
     // The investor operations take the investor's cookie and nothing else takes it (ADR 0058): a session of
     // the other realm is the contract's 401, as the real API's cookie check gives it.
     const investorOnly = operation.path.startsWith('/investor/');
@@ -259,7 +279,7 @@ export class FakeApi {
       record('prism-403');
       return route.continue({ headers: { ...request.headers(), prefer: 'code=403' } });
     }
-    const refusal = this.server.stepUpRefusal(this.jar, operation.id);
+    const refusal = this.server.stepUpRefusal(jar, operation.id);
     if (refusal !== null) {
       record('step-up-403');
       return route.fulfill({
@@ -318,6 +338,7 @@ export class FakeApi {
     requested: FakeApi['requested'][number],
     path: string,
     text: string,
+    jar: CookieJar,
   ): Promise<void> {
     const { operation } = requested;
     const method = operation.method.toUpperCase();
@@ -337,7 +358,7 @@ export class FakeApi {
       });
     };
     if (!operation.public) {
-      const session = this.server.sessionFor(this.jar);
+      const session = this.server.sessionFor(jar);
       if (session === null) return refuse(401, 'UNAUTHENTICATED', 'requested-401');
       if (operation.permission !== null && !session.permissions.includes(operation.permission)) {
         return refuse(403, 'FORBIDDEN', 'requested-403');

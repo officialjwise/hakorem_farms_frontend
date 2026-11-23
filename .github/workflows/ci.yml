@@ -57,6 +57,10 @@ jobs:
           HK_REQUESTED_CONTRACT: CR-033,CR-059
           # The shop's address in a quote's link (ADR 0056): the e2e suite's storefront.
           HK_SHOP_URL: http://127.0.0.1:3100
+      - name: Build the investor portal, its own build for its own host (ADR 0058)
+        run: pnpm build:investor
+        env:
+          HK_API_BASE_URL: /mock
       - name: Console bundle budget, per document (ADR 0030, PERFORMANCE_BUDGET.md)
         run: pnpm budget:console
       - name: Build the storefront (Next.js), against the e2e suite's shop API in front of Prism (ADR 0054)
