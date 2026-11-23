@@ -6,6 +6,9 @@
  * - answers `viewQuoteByLink` (`GET /shop/quotes/{token}`) from the fixtures below, keyed by the token in
  *   the path: one token per state the page must show, and any other token the contract's 404 envelope, as
  *   the server answers a wrong link;
+ * - answers `getPublicReceipt` (`GET /shop/receipts/{token}`) the same way (CR-033). A token without the
+ *   till's shape is answered 500, so a page that sent one would show its error state, not its 404: that
+ *   is how a spec sees the page made no request for it;
  * - passes every other request, preflights included, to Prism on 127.0.0.1:4010 unchanged.
  *
  * It keeps no state and has no control route: a fixture is chosen by its token alone, so tests running in
@@ -19,6 +22,7 @@ import { createServer, request as forward, type IncomingMessage } from 'node:htt
 import type { components } from '@hakorem/api-client';
 
 type PublicQuote = components['schemas']['PublicQuote'];
+type PublicReceipt = components['schemas']['PublicReceipt'];
 
 export const SHOP_API_PORT = 4011;
 const PRISM = { host: '127.0.0.1', port: 4010 };
@@ -101,10 +105,114 @@ export const QUOTES: Record<string, PublicQuote> = {
   [TOKENS.declined]: { ...ISSUED_QUOTE, quoteNo: 'QUO-2026-DDW-000089', status: 'DECLINED' },
 };
 
-const QUOTE_PATH = /^\/shop\/quotes\/([^/?]+)$/;
+/** Receipt links as the till makes them (CR-033): 16 random bytes, base64url, 22 characters. */
+export const RECEIPT_TOKENS = {
+  recorded: 'Rc7vN2kXc9TfL4mWb8RyQ1',
+  noBusiness: 'Nb4rT8wQz1XnV6cLm3YsB9',
+  /** The server fails (500), with a reference. */
+  failing: 'Fx3nB7kQr2ZtV9mLc4YfH1',
+  /** The connection drops before any answer. */
+  dropped: 'Dz8vN1kXc4TfL7mWb2RyH9',
+} as const;
 
-function answer(req: IncomingMessage): { status: number; body: unknown } | null {
+/** The till's shape, but never sent with a sale: the server's one 404. */
+export const UNKNOWN_RECEIPT_TOKEN = 'Uk2kW9pRc4NxT7vLm1ZsB8';
+
+/**
+ * A counter sale at the Dodowa shop: two crates of big eggs at GH₵55.00, a goat meat pack weighed at
+ * 14.850 kg at GH₵26.00 a kg, and a live goat by its tag at GH₵1,200.00. Paid GH₵1,000.00 by mobile money
+ * taken offline and GH₵696.10 in cash from GH₵700.00. The figures are the server's: 11,000 + 38,610 +
+ * 120,000 is GH₵1,696.10, and the change GH₵3.90.
+ */
+export const RECORDED_RECEIPT: PublicReceipt = {
+  state: 'RECORDED',
+  saleReference: 'SO-2026-DDW-004311',
+  receiptNo: 'RCP-2026-DDW-T1-006214',
+  occurredAt: '2026-11-21T10:05:41Z',
+  validUntil: '2027-11-21T10:05:41Z',
+  business: { name: 'HaKorem Farms', phone: '+233302123456', address: 'Akuse Road, Dodowa' },
+  lines: [
+    {
+      name: 'Eggs, big, by the crate of 30',
+      quantity: '2.000',
+      saleUom: 'CRATE',
+      weightKg: null,
+      stockUnitIdentifier: null,
+      unitPricePesewas: 5500,
+      amountPesewas: 11000,
+    },
+    {
+      name: 'Goat meat, 15 kg pack',
+      quantity: '1.000',
+      saleUom: 'PACK',
+      weightKg: '14.850',
+      stockUnitIdentifier: 'LOT-2026-DDW-0193',
+      unitPricePesewas: 2600,
+      amountPesewas: 38610,
+    },
+    {
+      name: 'Goat, West African Dwarf',
+      quantity: '1.000',
+      saleUom: 'HEAD',
+      weightKg: null,
+      stockUnitIdentifier: 'GH-DDW-0042',
+      unitPricePesewas: 120000,
+      amountPesewas: 120000,
+    },
+  ],
+  totalPesewas: 169610,
+  tenders: [
+    { name: 'MTN Mobile Money', amountPesewas: 100000, tenderedPesewas: null, unverified: true },
+    { name: 'Cash', amountPesewas: 69610, tenderedPesewas: 70000, unverified: false },
+  ],
+  changePesewas: 390,
+  currency: 'GHS',
+};
+
+export const RECEIPTS: Record<string, PublicReceipt> = {
+  [RECEIPT_TOKENS.recorded]: RECORDED_RECEIPT,
+  [RECEIPT_TOKENS.noBusiness]: { ...RECORDED_RECEIPT, business: null },
+};
+
+const QUOTE_PATH = /^\/shop\/quotes\/([^/?]+)$/;
+const RECEIPT_PATH = /^\/shop\/receipts\/([^/?]*)$/;
+const RECEIPT_TOKEN = /^[A-Za-z0-9_-]{22,86}$/;
+
+const NOT_FOUND = {
+  status: 404,
+  body: {
+    error: {
+      code: 'NOT_FOUND',
+      message: 'The resource was not found.',
+      correlationId: '019a7b40-0000-7000-8000-000000000404',
+      details: [],
+    },
+  },
+};
+
+function serverError(correlationId: string) {
+  return {
+    status: 500,
+    body: {
+      error: { code: 'INTERNAL', message: 'Something went wrong.', correlationId, details: [] },
+    },
+  };
+}
+
+/** A receipt by its link: the fixture for the token, a failure, or the one 404 for everything else. */
+function receiptAnswer(token: string): { status: number; body: unknown } | 'drop' {
+  if (!RECEIPT_TOKEN.test(token)) return serverError('019a7b40-0000-7000-8000-00000000bad0');
+  if (token === RECEIPT_TOKENS.failing) return serverError('019a7b40-0000-7000-8000-0000000f500a');
+  if (token === RECEIPT_TOKENS.dropped) return 'drop';
+  const receipt = RECEIPTS[token];
+  return receipt === undefined ? NOT_FOUND : { status: 200, body: receipt };
+}
+
+function answer(req: IncomingMessage): { status: number; body: unknown } | 'drop' | null {
   const path = (req.url ?? '').split('?')[0] ?? '';
+  const receipt = RECEIPT_PATH.exec(path);
+  if (req.method === 'GET' && receipt !== null)
+    return receiptAnswer(decodeURIComponent(receipt[1] ?? ''));
   const match = QUOTE_PATH.exec(path);
   if (req.method !== 'GET' || match === null) return null;
   const quote = QUOTES[decodeURIComponent(match[1] ?? '')];
@@ -142,6 +250,10 @@ function answer(req: IncomingMessage): { status: number; body: unknown } | null 
 export function startShopApi(port = SHOP_API_PORT) {
   const server = createServer((req, res) => {
     const fixed = answer(req);
+    if (fixed === 'drop') {
+      req.socket.destroy();
+      return;
+    }
     if (fixed !== null) {
       res.writeHead(fixed.status, {
         'content-type': 'application/json',
