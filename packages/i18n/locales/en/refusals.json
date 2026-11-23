@@ -161,7 +161,15 @@
     "CREDIT_TERMS_EXCEEDED": "The buyer has invoices past their payment terms. Take a payment first, or ask for a credit override.",
     "DUNNING_POLICY_INVALID": "These reminder levels cannot be saved that way. Check each level's days and channels.",
     "SYNC_BATCH_TOO_LARGE": "The till sent too many sales at once. It sends them again in smaller batches.",
-    "TILL_PIN_INVALID": "The till PIN was not set: the check this till made from it is weaker than the server takes. Try again; if it is refused again, tell a manager."
+    "TILL_PIN_INVALID": "The till PIN was not set: the check this till made from it is weaker than the server takes. Try again; if it is refused again, tell a manager.",
+    "BAD_DEBT_WRITE_OFF_INVALID": "This amount cannot be written off as bad debt as it is.",
+    "CONSENT_PENDING": "The order already waits for the customer’s answer to another question. Record that answer first.",
+    "DELIVERY_INVALID": "The delivery was not recorded as it is.",
+    "DRIVER_CASH_INVALID": "The driver’s cash was not handed in.",
+    "FULFILMENT_INVALID": "The pick list cannot be changed that way.",
+    "RECEIPT_LINK_INVALID": "The receipt link was not changed.",
+    "STANDING_ORDER_INVALID": "This standing order cannot be saved as it is.",
+    "TILL_INVOICE_PAYMENT_INVALID": "The invoice payment was not taken at the till."
   },
   "rules": {
     "AMOUNT_EXCEEDS_LINE": "A line is credited for more than it charged.",
@@ -283,6 +291,8 @@
     "ORDER_LINE_OTHER_PRODUCT": "That order line is for another product.",
     "LEVELS_NOT_CONSECUTIVE": "The levels must be numbered 1, 2, 3 in turn, with none missing.",
     "DAYS_NOT_INCREASING": "Each level must be sent at more days overdue than the level before it.",
-    "CHANNEL_REPEATED": "A level names the same channel twice. Choose each channel once."
+    "CHANNEL_REPEATED": "A level names the same channel twice. Choose each channel once.",
+    "NOTHING_HELD": "The driver holds no cash from deliveries at this branch, or it was already handed in.",
+    "RECEIVER_IS_DRIVER": "A driver cannot hand their own cash in to themselves: another cashier takes it."
   }
 }

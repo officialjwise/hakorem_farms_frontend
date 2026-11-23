@@ -14,6 +14,7 @@ import {
   type OtherTender,
 } from './cart';
 import { payloadHash, type Json } from './payloadHash';
+import { newReceiptToken, receiptLink, templateUsable } from './receiptToken';
 import type { DeviceRecord, OfflineSale, ReceiptContent, SaleEntry, ShiftRecord } from './types';
 
 type Schemas = components['schemas'];
@@ -60,6 +61,8 @@ export interface SaleInput {
   others: (OtherTender & { method: PaymentMethodRef })[];
   cashHandedPesewas: number;
   customerPhone: string | null;
+  /** The pack's `receiptLinkTemplate` (2.24.0): with one, the sale gets its own token and link. */
+  receiptLinkTemplate?: string | null;
   now: Date;
 }
 
@@ -77,6 +80,7 @@ export async function buildSale(
   const counter = shift.lastCounter + 1;
   const ref = provisionalRef(device.registerCode, shift.referenceSeq, counter);
   const occurredAt = now.toISOString();
+  const token = templateUsable(input.receiptLinkTemplate) ? newReceiptToken() : null;
   const tenders: TenderInput[] = [
     ...others.map((tender) => ({
       paymentMethodId: tender.paymentMethodId,
@@ -104,6 +108,7 @@ export async function buildSale(
     ...(input.customerPhone !== null ? { customerPhone: input.customerPhone } : {}),
     lines: lines.map(toCounterSaleLine),
     tenders,
+    ...(token !== null ? { receiptToken: token } : {}),
   };
   const hash = await payloadHash(sale as unknown as { [key: string]: Json });
   const receipt: ReceiptContent = {
@@ -147,6 +152,8 @@ export async function buildSale(
     ],
     changePesewas: split.changePesewas,
     customerPhone: input.customerPhone,
+    // Kept with the sale, so a reprint carries the link the customer was first given.
+    link: token !== null ? receiptLink(input.receiptLinkTemplate, token) : null,
   };
   return {
     entry: {

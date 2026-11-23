@@ -8,8 +8,10 @@ import { createHash } from 'node:crypto';
 import { expect, type Page } from '@playwright/test';
 import type { FakeApi } from './fakeApi';
 import { confirmStepUp, signIn, signInWithTotp, USERS } from './helpers';
-import { RECEIPT_LINK_TEMPLATE } from './requested';
 import { MOMO_METHOD_ID, PEOPLE } from './tillPins';
+
+/** 2.24.0 (CR-033): the receipt page the till fills with each sale's own token. */
+export const RECEIPT_LINK_TEMPLATE = 'https://hakoremfarms.com/r/{token}';
 
 export interface SentSale {
   id: string;
@@ -17,6 +19,7 @@ export interface SentSale {
   provisionalRef: string;
   occurredAt: string;
   customerPhone?: string;
+  receiptToken?: string;
   lines: Record<string, unknown>[];
   tenders: {
     paymentMethodId: string;
@@ -183,7 +186,7 @@ export function installTillServer(
           ? [...pack.policy.offlineTenderMethodIds, MOMO_METHOD_ID]
           : pack.policy.offlineTenderMethodIds,
       },
-      // CR-033, requested: the customer's receipt page (ADR 0046).
+      // 2.24.0 (CR-033): the customer's receipt page.
       receiptLinkTemplate: RECEIPT_LINK_TEMPLATE,
     };
   });
@@ -343,11 +346,6 @@ export function installTillServer(
           orderNo: `SO-2026-DDW-00${String(4300 + sale.deviceCounter)}`,
           receiptNo,
           exceptions: [],
-          // CR-033, requested: the server sends the SMS once, on the sale's first sync.
-          receiptMessage: {
-            channel: 'SMS',
-            status: sale.customerPhone === undefined ? 'NO_PHONE' : 'SENT',
-          },
         };
       }),
       cashMovementResults: [],

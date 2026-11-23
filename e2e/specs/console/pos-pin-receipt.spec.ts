@@ -318,11 +318,11 @@ test('offline, a cash drop takes its witness’s PIN, and the witness goes with 
   expect(server.movements).toHaveLength(1);
 });
 
-test('the digital receipt: the SMS goes to the phone given, and the link is made on the till', async ({
+test('the digital receipt: the till makes the link from its own token and sends the token with the sale', async ({
   page,
   api,
 }) => {
-  installTillServer(api, serverTotal);
+  const server = installTillServer(api, serverTotal);
   await openTillShift(page);
   await page.getByRole('button', { name: 'Tomatoes, crate' }).click();
   await page
@@ -336,19 +336,26 @@ test('the digital receipt: the SMS goes to the phone given, and the link is made
     .fill('+233 24 455 0199');
   await pay.getByRole('button', { name: 'Review the sale' }).click();
   const confirm = page.getByRole('dialog', { name: 'Complete this sale?' });
-  await expect(confirm).toContainText('Receipt by SMS to +233244550199');
+  await expect(confirm).toContainText('Customer’s phone: +233244550199');
   await confirm.getByRole('button', { name: 'Complete the sale' }).click();
 
   const digital = page.locator('[data-slot="digital-receipt"]');
+  // 2.31.0 carries no receipt SMS (CR-033 point 3): the till promises none.
   await expect(digital.locator('[data-slot="sms-status"]')).toHaveText(
-    'Sent by SMS to +233244550199.',
+    'The phone number +233244550199 goes with the sale. Receipts are not sent by SMS yet.',
   );
   const link = digital.locator('[data-slot="receipt-link"]');
-  await expect(link).toHaveText(/^https:\/\/hakoremfarms\.com\/r\/[0-9a-f-]{36}$/);
-  const sale = (await link.textContent())?.split('/r/')[1];
-  const sent = api.log.filter((e) => e.operationId === 'syncOfflineSales');
+  await expect(link).toHaveText(/^https:\/\/hakoremfarms\.com\/r\/[A-Za-z0-9_-]{22}$/);
+  const token = (await link.textContent())?.split('/r/')[1] ?? '';
+  // The token is no id: not the sale's UUID, nor shaped like one.
+  expect(token).not.toMatch(/^[0-9a-f]{8}-/);
+  await expect(digital.locator('[data-slot="receipt-link-state"]')).toHaveText(
+    'The server has the sale, so the link works now.',
+  );
+  const sent = server.batches.flatMap((batch) => batch.sales);
   expect(sent.length).toBeGreaterThan(0);
-  expect(sale).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7/);
+  expect(sent.every((sale) => sale.receiptToken === token)).toBe(true);
+  expect(sent[0]?.id).not.toContain(token);
   await expectNoAxeViolations(page);
   await expectNoHorizontalScroll(page);
 });

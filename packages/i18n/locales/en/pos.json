@@ -187,9 +187,9 @@
     "queuedOffline": "The till is offline: the sale waits on this till and is sent when it reconnects.",
     "failed": "The sale was not completed",
     "phone": "Customer's phone for the receipt (optional)",
-    "phoneHint": "With the country code, for example +233244512876. The receipt goes by SMS.",
+    "phoneHint": "With the country code, for example +233244512876. It goes with the sale, for a receipt by SMS once the farm sends them.",
     "phoneError": "A phone number starts with + and the country code.",
-    "phoneConfirm": "Receipt by SMS to {{phone}}"
+    "phoneConfirm": "Customer’s phone: {{phone}}"
   },
   "momo": {
     "amount": "Mobile money amount (GH₵)",
@@ -399,16 +399,14 @@
   },
   "digital": {
     "title": "Digital receipt",
-    "smsPending": "It goes by SMS to {{phone}} once the server has recorded the sale.",
-    "smsQueued": "The server is sending it by SMS to {{phone}}.",
-    "smsSent": "Sent by SMS to {{phone}}.",
-    "smsFailed": "The SMS to {{phone}} did not go",
-    "smsFailedBody": "Show the customer the receipt link, or read them the sale reference.",
-    "smsNoServer": "The phone number {{phone}} goes with the sale. This server does not send receipts by SMS yet.",
-    "noPhone": "No phone number was given, so no SMS goes.",
+    "smsNoServer": "The phone number {{phone}} goes with the sale. Receipts are not sent by SMS yet.",
+    "noPhone": "No phone number was given.",
     "link": "Receipt link",
-    "linkBody": "The customer opens it on their own phone. It shows the sale as being recorded until the server has it.",
-    "noLink": "This server offers no receipt link yet: the receipt is the one on this screen."
+    "linkBody": "The customer opens it on their own phone. It works once the sale reaches the server.",
+    "noLink": "This shop has no receipt link set up yet: the receipt is the one on this screen.",
+    "linkLive": "The server has the sale, so the link works now.",
+    "linkRefused": "The server refused this sale’s receipt link",
+    "linkRefusedBody": "The sale is recorded. Give the customer the sale reference instead."
   },
   "printer": {
     "title": "Receipt printer",

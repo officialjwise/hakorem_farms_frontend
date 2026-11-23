@@ -71,6 +71,7 @@
   "versionStatus": {
     "DRAFT": "Draft",
     "PENDING_APPROVAL": "Waiting for margin approval",
+    "APPROVED": "Margin approved, not yet sent",
     "ISSUED": "Sent",
     "SUPERSEDED": "Replaced by a newer version",
     "ACCEPTED": "Accepted"

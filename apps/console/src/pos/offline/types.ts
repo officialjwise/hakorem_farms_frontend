@@ -115,6 +115,11 @@ export interface ReceiptContent {
   }[];
   changePesewas: number;
   customerPhone: string | null;
+  /**
+   * The customer's receipt link (2.24.0), made from the pack's template and the sale's own token. Null where
+   * the pack had no template; absent on a sale queued before 2.24.0.
+   */
+  link?: string | null;
 }
 
 /**

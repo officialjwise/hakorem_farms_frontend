@@ -442,10 +442,13 @@ function ConsentCard({ order: o, onDone }: { order: Order; onDone: (accepted: bo
           <RadioGroup
             aria-labelledby="consent-kind"
             value={kind}
-            onValueChange={(v) => setKind(v === 'HIGHER_TOTAL' ? 'HIGHER_TOTAL' : 'SUBSTITUTION')}
+            onValueChange={(v) =>
+              setKind(v === 'HIGHER_TOTAL' || v === 'SHORT_PICK' ? v : 'SUBSTITUTION')
+            }
           >
             <Radio value="SUBSTITUTION" label={t('consent.SUBSTITUTION')} />
             <Radio value="HIGHER_TOTAL" label={t('consent.HIGHER_TOTAL')} />
+            <Radio value="SHORT_PICK" label={t('consent.SHORT_PICK')} />
           </RadioGroup>
         </fieldset>
         <fieldset className="grid gap-2">

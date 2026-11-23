@@ -2,16 +2,16 @@ import { Bluetooth, MessageSquareText, Printer as PrinterIcon } from 'lucide-rea
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Button } from '@hakorem/ui';
-import { receiptLink, receiptMessage } from '../../requested/digitalReceipt';
 import type { SaleEntry } from '../offline/types';
 import { useTill } from '../offline/till';
 import { getPrinter, usePrinter, type PrinterSupport } from '../printer/bluetooth';
 import { encodeReceipt, type PrintWords } from '../printer/escpos';
 
 /**
- * How the customer gets their receipt (ADR 0045): the digital receipt first, by SMS and by a link, which
- * works on every phone; then a 58 mm Bluetooth printer where this browser can drive one. Nothing here
- * holds up the sale or waits on the network: the sale is already complete when this shows.
+ * How the customer gets their receipt (ADR 0045): the digital receipt first, by a link that works on every
+ * phone (2.24.0); then a 58 mm Bluetooth printer where this browser can drive one. Nothing here holds up
+ * the sale or waits on the network: the sale is already complete when this shows. The contract carries no
+ * receipt SMS yet (CR-033 point 3), so the till promises none.
  */
 export function ReceiptOut({ entry, copy = false }: { entry: SaleEntry; copy?: boolean }) {
   const { t } = useTranslation('pos');
@@ -32,41 +32,33 @@ export function ReceiptOut({ entry, copy = false }: { entry: SaleEntry; copy?: b
 
 function DigitalReceipt({ entry }: { entry: SaleEntry }) {
   const { t } = useTranslation('pos');
-  const { snapshot } = useTill();
   const phone = entry.receipt.customerPhone;
-  const link = receiptLink(snapshot?.pack ?? null, entry.id);
-  const message = receiptMessage(entry.serverResult);
+  const link = entry.receipt.link ?? null;
   const recorded = entry.serverResult !== null;
+  const refused =
+    entry.serverResult?.exceptions.some((e) => e.kind === 'RECEIPT_TOKEN_REFUSED') === true;
   return (
     <div className="grid gap-2 rounded-md border border-border p-3" data-slot="digital-receipt">
       <p className="flex items-center gap-2 font-semibold">
         <MessageSquareText aria-hidden="true" className="size-icon-md" />
         {t('digital.title')}
       </p>
-      {phone === null ? (
-        <p>{t('digital.noPhone')}</p>
-      ) : message === 'FAILED' ? (
-        <Alert severity="warning" title={t('digital.smsFailed', { phone })}>
-          {t('digital.smsFailedBody')}
+      <p data-slot="sms-status">
+        {phone === null ? t('digital.noPhone') : t('digital.smsNoServer', { phone })}
+      </p>
+      {link !== null && refused ? (
+        <Alert severity="warning" title={t('digital.linkRefused')}>
+          {t('digital.linkRefusedBody')}
         </Alert>
-      ) : (
-        <p data-slot="sms-status">
-          {message === 'SENT'
-            ? t('digital.smsSent', { phone })
-            : message === 'QUEUED'
-              ? t('digital.smsQueued', { phone })
-              : link === null && recorded
-                ? t('digital.smsNoServer', { phone })
-                : t('digital.smsPending', { phone })}
-        </p>
-      )}
-      {link !== null ? (
+      ) : link !== null ? (
         <div className="grid gap-1">
           <p className="font-semibold">{t('digital.link')}</p>
           <a href={link} className="break-all text-accent-text underline" data-slot="receipt-link">
             {link}
           </a>
-          <p className="text-sm text-fg-muted">{t('digital.linkBody')}</p>
+          <p className="text-sm text-fg-muted" data-slot="receipt-link-state">
+            {recorded ? t('digital.linkLive') : t('digital.linkBody')}
+          </p>
         </div>
       ) : (
         <p className="text-sm text-fg-muted">{t('digital.noLink')}</p>
@@ -125,7 +117,7 @@ function PrintReceipt({ entry, copy }: { entry: SaleEntry; copy: boolean }) {
           receipt: entry.receipt,
           officialNo: entry.serverResult?.receiptNo ?? null,
           copy,
-          link: receiptLink(snapshot?.pack ?? null, entry.id),
+          link: entry.receipt.link ?? null,
           words,
           uoms: snapshot?.pack?.uoms ?? [],
         }),

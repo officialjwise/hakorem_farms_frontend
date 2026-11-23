@@ -55,8 +55,20 @@ export const STOPS: readonly Stop[] = [
     from: '09:00',
     to: '11:00',
     contents: [
-      { name: 'Eggs, big', quantity: '12.000', uom: 'CRATE', weightKg: null },
-      { name: 'Eggs, big', quantity: '30.000', uom: 'EGG', weightKg: null },
+      {
+        orderLineId: '019b1000-0000-7000-8000-000000000901',
+        name: 'Eggs, big',
+        quantity: '12.000',
+        uom: 'CRATE',
+        weightKg: null,
+      },
+      {
+        orderLineId: '019b1000-0000-7000-8000-000000000902',
+        name: 'Eggs, big',
+        quantity: '30.000',
+        uom: 'EGG',
+        weightKg: null,
+      },
     ],
     // The server's figure for 12 crates and 30 eggs, fixed at dispatch.
     codDuePesewas: 78600,
@@ -73,7 +85,15 @@ export const STOPS: readonly Stop[] = [
     city: 'Kumasi',
     from: '11:00',
     to: '13:00',
-    contents: [{ name: 'Eggs, big', quantity: '2.000', uom: 'CRATE', weightKg: null }],
+    contents: [
+      {
+        orderLineId: '019b1000-0000-7000-8000-000000000903',
+        name: 'Eggs, big',
+        quantity: '2.000',
+        uom: 'CRATE',
+        weightKg: null,
+      },
+    ],
     codDuePesewas: 12000,
   },
   {
@@ -88,7 +108,15 @@ export const STOPS: readonly Stop[] = [
     city: 'Kasoa',
     from: '13:00',
     to: '15:00',
-    contents: [{ name: 'Eggs, big', quantity: '1.000', uom: 'CRATE', weightKg: null }],
+    contents: [
+      {
+        orderLineId: '019b1000-0000-7000-8000-000000000904',
+        name: 'Eggs, big',
+        quantity: '1.000',
+        uom: 'CRATE',
+        weightKg: null,
+      },
+    ],
     codDuePesewas: 6000,
   },
 ];

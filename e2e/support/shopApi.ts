@@ -53,6 +53,10 @@ export const ISSUED_QUOTE: PublicQuote = {
   status: 'ISSUED',
   validUntil: '2026-11-24T18:00:00Z',
   customerName: 'Akosua Bakery',
+  // 2.21.0 and 2.23.0, always sent.
+  acceptedName: null,
+  decidedAt: null,
+  subjectToStock: false,
   lines: [
     {
       description: 'Eggs, big, by the crate of 30',
@@ -61,6 +65,7 @@ export const ISSUED_QUOTE: PublicQuote = {
       priceBasis: 'PER_UNIT',
       unitPricePesewas: 5500,
       lineNetPesewas: 55000,
+      subjectToStock: false,
     },
     {
       description: 'Eggs, big, single',
@@ -69,6 +74,7 @@ export const ISSUED_QUOTE: PublicQuote = {
       priceBasis: 'PER_UNIT',
       unitPricePesewas: 220,
       lineNetPesewas: 6600,
+      subjectToStock: false,
     },
   ],
   deliveryFeePesewas: 6000,

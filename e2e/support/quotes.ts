@@ -97,6 +97,10 @@ function line(
     unitPricePesewas: PRICES[uom],
     lineNetPesewas,
     estimatedUnitCostPesewas: null,
+    // 2.23.0: nothing is held before issue, and the eggs are on hand.
+    availableQuantity: null,
+    heldQuantity: null,
+    subjectToStock: false,
   };
 }
 
@@ -116,6 +120,9 @@ export function version1(status: S['QuoteVersion']['status']): S['QuoteVersion']
     grossPesewas: 78600,
     estimatedCostPesewas: null,
     marginPercent: null,
+    markupPercent: null,
+    marginOverPricePercent: null,
+    subjectToStock: false,
     belowMarginFloor: false,
     approvalRequestId: null,
     changeNote: null,
@@ -125,6 +132,8 @@ export function version1(status: S['QuoteVersion']['status']): S['QuoteVersion']
     createdAt: '2026-11-17T10:20:00Z',
     version: 1,
     acceptanceLinkToken: null,
+    acceptanceLinkId: null,
+    links: [],
     lines: [
       line(
         '019a7f30-4d5e-7f6a-8b7c-000000000011',
