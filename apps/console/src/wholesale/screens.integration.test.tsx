@@ -63,7 +63,7 @@ describe('quotes', () => {
     expect(screen.getByRole('button', { name: 'Record an acceptance' })).toBeVisible();
   });
 
-  it('markup over cost and margin over the selling price, as 2.29.0 names them', async () => {
+  it('markup and margin as 2.29.0 names them, and what each line holds (2.23.0)', async () => {
     await renderApp(`/quotes/${ANY_ID}`, await signedIn('owner'));
     expect(
       await screen.findByRole('heading', { name: 'QUO-2026-DDW-000088' }, { timeout: 5000 }),
@@ -73,6 +73,10 @@ describe('quotes', () => {
     expect(markup.nextElementSibling).toHaveTextContent('43.94 percent');
     const margin = screen.getByText('Margin over the selling price');
     expect(margin.nextElementSibling).toHaveTextContent('30.77 percent');
+    const lines = screen.getByRole('region', { name: "The version's lines" });
+    expect(lines).toHaveTextContent('Stock when sent');
+    expect(lines).toHaveTextContent('All of it held');
+    await waitFor(() => expect(lines).toHaveTextContent('Held: 18 head'));
   });
 
   it('a new quote is built from the contract, with no notice that a unit waits (CR-045, 2.12.0)', async () => {

@@ -23,6 +23,7 @@ import {
   QueryBoundary,
   Select,
   Skeleton,
+  StatusBadge,
   Table,
   TableBody,
   TableCell,
@@ -33,6 +34,7 @@ import {
   TableRowHeader,
   Textarea,
   formatDateTime,
+  formatQuantity,
   useTableView,
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
@@ -630,6 +632,8 @@ function VersionHistory({
 function VersionView({ version: v, current }: { version: Version; current: boolean }) {
   const { t } = useTranslation(['wholesale', 'common']);
   const units = useUnits();
+  // What each line found and holds is the issue's record (2.23.0): a version not yet issued has none.
+  const stocked = v.issuedAt !== null && v.lines.some((line) => line.availableQuantity !== null);
   return (
     <section aria-labelledby="version-title" className="grid gap-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -652,6 +656,11 @@ function VersionView({ version: v, current }: { version: Version; current: boole
           {t('version.belowFloorBody')}
         </Alert>
       )}
+      {v.subjectToStock ? (
+        <Alert severity="warning" title={t('version.subjectToStock')}>
+          {t('version.subjectToStockBody')}
+        </Alert>
+      ) : null}
       <Card>
         <CardBody>
           <Facts
@@ -703,6 +712,7 @@ function VersionView({ version: v, current }: { version: Version; current: boole
               <TableHead numeric>{t('columns.apiPrice')}</TableHead>
               <TableHead numeric>{t('columns.agreedPrice')}</TableHead>
               <TableHead numeric>{t('columns.lineNet')}</TableHead>
+              {stocked ? <TableHead>{t('columns.stock')}</TableHead> : null}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -730,6 +740,11 @@ function VersionView({ version: v, current }: { version: Version; current: boole
                 <TableCell numeric label={t('columns.lineNet')}>
                   <MoneyDisplay pesewas={line.lineNetPesewas} />
                 </TableCell>
+                {stocked ? (
+                  <TableCell label={t('columns.stock')}>
+                    <LineStock line={line} />
+                  </TableCell>
+                ) : null}
               </TableRow>
             ))}
           </TableBody>
@@ -775,6 +790,41 @@ function VersionView({ version: v, current }: { version: Version; current: boole
   );
 }
 
+/**
+ * What one line found and holds at issue (2.23.0), in the product's base unit: what was on hand, what the
+ * version holds, and whether the line is subject to stock. Both are null before issue and on a free-text
+ * line. The base unit's name is the product's (`getProduct`); nothing is compared or worked out here.
+ */
+function LineStock({ line }: { line: S['QuoteLine'] }) {
+  const { t } = useTranslation(['wholesale', 'common']);
+  const units = useUnits();
+  const issued = line.availableQuantity !== null && line.heldQuantity !== null;
+  const product = useApiQuery(
+    'getProduct',
+    { path: { id: line.product?.id ?? '' } },
+    { enabled: issued && line.product !== null, staleClass: 'reference' },
+  );
+  if (line.product === null) return <>{t('lineStock.noProduct')}</>;
+  if (line.availableQuantity === null || line.heldQuantity === null) {
+    return <>{t('lineStock.notYet')}</>;
+  }
+  const base = product.data?.baseUom ?? null;
+  const qty = (quantity: string) =>
+    base === null
+      ? t('lineStock.inBaseUnit', { qty: formatQuantity(quantity, { places: 3 }) })
+      : `${formatQuantity(quantity, { places: units.places(base) })} ${units.after(base, quantity)}`;
+  return (
+    <span className="grid justify-items-start gap-1">
+      <StatusBadge
+        tone={line.subjectToStock ? 'warning' : 'good'}
+        label={line.subjectToStock ? t('lineStock.subject') : t('lineStock.whole')}
+      />
+      <span>{t('lineStock.onHand', { qty: qty(line.availableQuantity) })}</span>
+      <span>{t('lineStock.held', { qty: qty(line.heldQuantity) })}</span>
+    </span>
+  );
+}
+
 type Open =
   | 'edit'
   | 'issue'
@@ -788,8 +838,11 @@ type Open =
   | null;
 type Outcome =
   | { kind: 'saved' | 'revised' | 'accepted' | 'declined' | 'cancelled' }
-  /** Issued, or a new link made: the link's token, answered only this once (null if the server gave none). */
-  | { kind: 'issued' | 'newLink'; token: string | null }
+  /**
+   * Issued, or a new link made: the link's token, answered only this once (null if the server gave none),
+   * and whether the version went subject to stock (2.23.0).
+   */
+  | { kind: 'issued' | 'newLink'; token: string | null; subjectToStock: boolean }
   | { kind: 'margin'; approvalId: string }
   | { kind: 'converted'; order: S['SalesOrder'] };
 
@@ -987,7 +1040,11 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
               setOutcome(
                 isApprovalPending(answer)
                   ? { kind: 'margin', approvalId: answer.approvalRequestId }
-                  : { kind: 'issued', token: answer.acceptanceLinkToken },
+                  : {
+                      kind: 'issued',
+                      token: answer.acceptanceLinkToken,
+                      subjectToStock: answer.subjectToStock,
+                    },
               );
             })
             .catch(() => undefined);
@@ -1014,7 +1071,11 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
               setLinks((n) => n + 1);
               setOpen(null);
               if (!isApprovalPending(answer)) {
-                setOutcome({ kind: 'newLink', token: answer.acceptanceLinkToken });
+                setOutcome({
+                  kind: 'newLink',
+                  token: answer.acceptanceLinkToken,
+                  subjectToStock: answer.subjectToStock,
+                });
               }
             })
             .catch(() => undefined);
@@ -1142,6 +1203,10 @@ function OutcomeAlert({ outcome, name }: { outcome: Outcome; name: string }) {
         </Link>
       </Alert>
     );
+  }
+  if (outcome.kind === 'issued' && outcome.subjectToStock) {
+    // Issued all the same, holding only what was on hand (2.23.0): said, never shown as a refusal.
+    return <Alert severity="warning" title={t('outcome.issuedSubjectToStock', { name })} />;
   }
   return <Alert severity="good" title={t(`outcome.${outcome.kind}`, { name })} />;
 }

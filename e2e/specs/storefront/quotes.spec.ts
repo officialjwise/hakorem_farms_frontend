@@ -149,6 +149,29 @@ test.describe('a quote from its link', () => {
     await expectNoAxeViolations(page);
   });
 
+  test('a quote subject to stock says so in words, on the quote and its line, and never the stock level', async ({
+    page,
+  }) => {
+    await page.goto(`/q/${TOKENS.subjectToStock}`);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Quote QUO-2026-DDW-000092');
+    await expect(page.getByText('Part of this quote is subject to stock')).toBeVisible();
+    await expect(page.getByText(/confirms the rest before delivery/)).toBeVisible();
+    const lines = page.getByRole('list').filter({ hasText: 'Eggs, big' });
+    await expect(lines.getByRole('listitem').first()).toContainText('Subject to stock');
+    await expect(lines.getByRole('listitem').nth(1)).not.toContainText('Subject to stock');
+    // It can still be accepted: subject to stock is not a refusal.
+    await expect(page.getByRole('button', { name: 'Accept this quote' })).toBeVisible();
+    await expect(page.getByText(/on hand|held/i)).toHaveCount(0);
+    await expectNoHorizontalScroll(page);
+    await expectNoAxeViolations(page);
+  });
+
+  test('a quote not subject to stock says nothing of stock', async ({ page }) => {
+    await page.goto(`/q/${TOKENS.issued}`);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Quote QUO-2026-DDW-000091');
+    await expect(page.getByText(/subject to stock/i)).toHaveCount(0);
+  });
+
   test('an accepted quote says so, and a declined one offers a new request', async ({ page }) => {
     await page.goto(`/q/${TOKENS.accepted}`);
     await expect(page.getByText('You accepted this quote')).toBeVisible();

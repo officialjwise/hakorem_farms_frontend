@@ -439,3 +439,21 @@ export function approvedVersion2(): S['QuoteVersion'] {
     issuedBy: null,
   };
 }
+
+/**
+ * Version 2 issued subject to stock (2.23.0): 300 eggs asked for in 10 crates, 200 on hand and held; the
+ * 30 single eggs wholly on hand and held. The quantities are the server's, in the base unit (the egg).
+ */
+export function subjectToStockVersion2(): S['QuoteVersion'] {
+  const issued = version2('ISSUED');
+  const [crates, eggs] = issued.lines;
+  if (crates === undefined || eggs === undefined) throw new Error('Version 2 has two lines.');
+  return {
+    ...issued,
+    subjectToStock: true,
+    lines: [
+      { ...crates, availableQuantity: '200.000', heldQuantity: '200.000', subjectToStock: true },
+      { ...eggs, availableQuantity: '540.000', heldQuantity: '30.000', subjectToStock: false },
+    ],
+  };
+}

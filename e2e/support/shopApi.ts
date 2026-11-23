@@ -34,6 +34,7 @@ export const TOKENS = {
   superseded: 'M3pXc8VtK1qZr6NwB9yLh4FsJ2dGa7UeTiOn5RkWbQx',
   accepted: 'bT6nQ1wZr8KxV3mLc9YfH2sPj7GaD4UeNoRi5XkEtWq',
   declined: 'Yh2kW9pRc4NxT7vLm1ZsB8fQj3GdA6UeKoEi5MnXtVr',
+  subjectToStock: 'Fc5jR2nWq8XtB1vLm6ZsK3hPy9GdA4UeNoTi7MkEwQr',
 } as const;
 
 /** Links the server has closed (2.12.0): 422 `QUOTE_LINK_CLOSED`, the reason in `details[0].code`. */
@@ -103,6 +104,13 @@ export const QUOTES: Record<string, PublicQuote> = {
   [TOKENS.superseded]: { ...ISSUED_QUOTE, versionNo: 1, status: 'SUPERSEDED' },
   [TOKENS.accepted]: { ...ISSUED_QUOTE, quoteNo: 'QUO-2026-DDW-000088', status: 'ACCEPTED' },
   [TOKENS.declined]: { ...ISSUED_QUOTE, quoteNo: 'QUO-2026-DDW-000089', status: 'DECLINED' },
+  // 2.23.0: issued with the crates not all on hand. The buyer reads that, never the farm's stock level.
+  [TOKENS.subjectToStock]: {
+    ...ISSUED_QUOTE,
+    quoteNo: 'QUO-2026-DDW-000092',
+    subjectToStock: true,
+    lines: ISSUED_QUOTE.lines.map((line, index) => ({ ...line, subjectToStock: index === 0 })),
+  },
 };
 
 /** Receipt links as the till makes them (CR-033): 16 random bytes, base64url, 22 characters. */

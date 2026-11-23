@@ -591,7 +591,10 @@
     "whatsappLabel": "WhatsApp {{phone}} (opens WhatsApp)",
     "notFoundTitle": "This link is not valid",
     "notFoundBody": "Check that you opened the whole link from the message we sent. If it still does not open, ask the farm to send it again.",
-    "errorTitle": "The quote could not be loaded"
+    "errorTitle": "The quote could not be loaded",
+    "subjectToStockTitle": "Part of this quote is subject to stock",
+    "subjectToStockBody": "The farm holds what it has for you and confirms the rest before delivery. The lines marked subject to stock may not all be available.",
+    "lineSubjectToStock": "Subject to stock"
   },
   "receipt": {
     "title": "Your receipt",

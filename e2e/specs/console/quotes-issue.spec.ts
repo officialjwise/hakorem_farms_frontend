@@ -1,4 +1,5 @@
 import type { components } from '@hakorem/api-client';
+import { seedEggs } from '../../support/eggs';
 import {
   expectNoAxeViolations,
   expectNoHorizontalScroll,
@@ -13,6 +14,7 @@ import {
   VERSION_2,
   approvedVersion2,
   eggQuote,
+  subjectToStockVersion2,
   version1,
   version2,
 } from '../../support/quotes';
@@ -20,8 +22,9 @@ import { expect, test } from '../../support/test';
 
 /**
  * Issuing a quote as contract 2.31.0 has it (F10o): a margin approval only approves, and the salesperson
- * then issues and sends the version (2.19.0, CR-058); and markup is over cost and margin over the selling
- * price (2.29.0). Asantewaa Chop Bar's eggs, at 360 px; every figure is the API's.
+ * then issues and sends the version (2.19.0, CR-058); markup is over cost and margin over the selling
+ * price (2.29.0); and stock not on hand is issued subject to stock, never refused (2.23.0). Asantewaa
+ * Chop Bar's eggs, at 360 px; every figure is the API's.
  */
 
 type S = components['schemas'];
@@ -178,5 +181,54 @@ test.describe('markup is not margin (2.29.0)', () => {
     await signInWithTotp(page, USERS.owner, `/quotes/${QUOTE_ID}`);
     const totals = page.locator('dl').filter({ hasText: 'Markup over cost' });
     await expect(totals.getByText('Not known: a cost is missing')).toHaveCount(2);
+  });
+});
+
+test.describe('subject to stock (2.23.0)', () => {
+  test('a version issued with stock not on hand says so, and each line what was on hand and what it holds', async ({
+    page,
+    api,
+  }) => {
+    seedEggs(api);
+    const issued = () => api.log.some((e) => e.operationId === 'issueQuoteVersion');
+    api.rewrite('getQuote', (body) =>
+      issued()
+        ? eggQuote(body as S['Quote'], 'ISSUED', subjectToStockVersion2(), 2)
+        : eggQuote(body as S['Quote'], 'ISSUED', version2('DRAFT'), 2),
+    );
+    api.rewrite('listQuoteVersions', (body) =>
+      pageOf(body, [
+        issued() ? subjectToStockVersion2() : version2('DRAFT'),
+        version1('SUPERSEDED'),
+      ]),
+    );
+    api.respond('issueQuoteVersion', () => ({
+      ...subjectToStockVersion2(),
+      acceptanceLinkToken: 'quo_SubjectToStock_m2Rk',
+    }));
+    await signInWithTotp(page, USERS.owner, `/quotes/${QUOTE_ID}`);
+    // Before issue, nothing is held and no line says anything of stock.
+    await expect(page.getByRole('columnheader', { name: 'Stock when sent' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Send to the customer' }).click();
+    const dialog = page.getByRole('dialog', { name: `Send ${QUOTE_NO}, version 2?` });
+    await expect(dialog).toContainText('anything not on hand is promised subject to stock');
+    await dialog.getByRole('button', { name: 'Send to the customer' }).click();
+    // Issued, not refused: the outcome says it went subject to stock, and the link is shown.
+    await expect(
+      page.getByText(`${QUOTE_NO} is issued subject to stock, and its link is ready to pass on`),
+    ).toBeVisible();
+    await expect(page.getByRole('region', { name: "The customer's link" })).toBeVisible();
+    await expect(page.getByText('Sent subject to stock', { exact: true })).toBeVisible();
+    const lines = page.getByRole('region', { name: "The version's lines" });
+    const crates = lines.getByRole('row').filter({ hasText: 'Eggs, big, crates of 30' });
+    await expect(crates).toContainText('Subject to stock');
+    await expect(crates).toContainText('On hand: 200 eggs');
+    await expect(crates).toContainText('Held: 200 eggs');
+    const single = lines.getByRole('row').filter({ hasText: 'Eggs, big, single' });
+    await expect(single).toContainText('All of it held');
+    await expect(single).toContainText('On hand: 540 eggs');
+    await expect(single).toContainText('Held: 30 eggs');
+    await expectNoHorizontalScroll(page);
+    await expectNoAxeViolations(page);
   });
 });

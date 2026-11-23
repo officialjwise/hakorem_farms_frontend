@@ -50,7 +50,8 @@
     "order": "Order",
     "exposure": "Owed when approved",
     "approvedBy": "Approved by",
-    "reason": "Reason"
+    "reason": "Reason",
+    "stock": "Stock when sent"
   },
   "filters": {
     "any": "Any",
@@ -262,7 +263,9 @@
     "lines": "The version's lines",
     "noApiPrice": "None: priced by hand",
     "belowFloorApproved": "Below the margin floor, and approved",
-    "belowFloorApprovedBody": "Someone other than its author approved its margin over the selling price. It is sent at the figures approved."
+    "belowFloorApprovedBody": "Someone other than its author approved its margin over the selling price. It is sent at the figures approved.",
+    "subjectToStock": "Sent subject to stock",
+    "subjectToStockBody": "Not everything was on hand when it was sent. It holds only what was there, and the customer reads that the rest is subject to stock. Each line says what was on hand and what it holds."
   },
   "totals": {
     "deliveryFee": "Delivery fee",
@@ -287,7 +290,7 @@
     "issuing": "Sending",
     "notIssued": "The quote was not sent",
     "issueTitle": "Send {{name}}, version {{number}}?",
-    "issueBody": "Earlier versions are replaced and their links stop working. Once it is issued, its link is shown here once, to copy or send on WhatsApp.",
+    "issueBody": "Earlier versions are replaced and their links stop working. What is on hand is held for the quote; anything not on hand is promised subject to stock. Once it is issued, its link is shown here once, to copy or send on WhatsApp.",
     "channels": "Send the link by",
     "channelsNone": "Choose at least one way to send the link.",
     "revise": "Revise",
@@ -329,7 +332,8 @@
     "openApproval": "Open the approval",
     "newLink": "A new link to {{name}} is ready to pass on",
     "approved": "The margin of version {{number}} is approved: issue and send it",
-    "approvedBody": "Nothing is held or sent yet, and it has no link. Anyone who may send quotes, other than whoever approved it, issues it with \"Issue and send\"."
+    "approvedBody": "Nothing is held or sent yet, and it has no link. Anyone who may send quotes, other than whoever approved it, issues it with \"Issue and send\".",
+    "issuedSubjectToStock": "{{name}} is issued subject to stock, and its link is ready to pass on"
   },
   "rfqs": {
     "title": "Requests for quote",
@@ -598,5 +602,14 @@
     "makeBody": "The new link is shown once, to copy or send on WhatsApp. Nothing is sent to the customer, and links already given keep working.",
     "notMade": "The new link was not made",
     "noShop": "This console was built without the shop's address (HK_SHOP_URL), so it cannot show the quote's link."
+  },
+  "lineStock": {
+    "onHand": "On hand: {{qty}}",
+    "held": "Held: {{qty}}",
+    "subject": "Subject to stock",
+    "whole": "All of it held",
+    "notYet": "Nothing is held until it is sent",
+    "noProduct": "Not a stock line",
+    "inBaseUnit": "{{qty}} in the product's base unit"
   }
 }
