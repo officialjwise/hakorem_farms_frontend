@@ -6,6 +6,7 @@
 import type { components } from '@hakorem/api-client';
 import { newRecordId } from '../../lib/clientId';
 import {
+  approvalStands,
   cartDiscount,
   cartTotal,
   lineAmount,
@@ -15,12 +16,20 @@ import {
 } from './cart';
 import { payloadHash, type Json } from './payloadHash';
 import { newReceiptToken, receiptLink, templateUsable } from './receiptToken';
-import type { DeviceRecord, OfflineSale, ReceiptContent, SaleEntry, ShiftRecord } from './types';
+import type {
+  DeviceRecord,
+  OfflineSale,
+  PinApprovalRecord,
+  ReceiptContent,
+  SaleEntry,
+  ShiftRecord,
+} from './types';
 
 type Schemas = components['schemas'];
 type PaymentMethodRef = Schemas['PaymentMethodRef'];
 type TenderInput = Schemas['TenderInput'];
 type CounterSaleLine = Schemas['CounterSaleLine'];
+type OfflineSaleLine = Schemas['OfflineSaleLine'];
 
 /** `P-<REGISTER>-<SHIFT SEQ>-<COUNTER>`, the counter padded to four digits (section 4.3). */
 export function provisionalRef(registerCode: string, shiftSeq: number, counter: number): string {
@@ -35,6 +44,35 @@ export function toCounterSaleLine(line: CartLine): CounterSaleLine {
   return line.soldInUom === null || line.soldInUom === undefined
     ? sale
     : { ...sale, uom: line.soldInUom };
+}
+
+/**
+ * The offline sale's line (2.17.0): the counter line, with the supervisor's approval of a price beyond the
+ * cashier's limit where one stands for this price. The server checks it at sync.
+ */
+export function toOfflineSaleLine(line: CartLine): OfflineSaleLine {
+  const sale = toCounterSaleLine(line);
+  return approvalStands(line) && line.overrideApproval != null
+    ? {
+        ...sale,
+        overrideApproval: {
+          approvedById: line.overrideApproval.approvedById,
+          approvedByPinVersion: line.overrideApproval.approvedByPinVersion,
+        },
+      }
+    : sale;
+}
+
+/** The till's own record of a line's price approval, for the queue screen. */
+export function lineApprovalRecord(line: CartLine): PinApprovalRecord | null {
+  if (!approvalStands(line) || line.overrideApproval == null) return null;
+  return {
+    approval: 'PRICE_OVERRIDE',
+    principalId: line.overrideApproval.approvedById,
+    displayName: line.overrideApproval.approvedByName,
+    verifierVersion: line.overrideApproval.approvedByPinVersion,
+    at: line.overrideApproval.approvedAt,
+  };
 }
 
 function lineWithoutUnit(line: CartLine): CounterSaleLine {
@@ -106,7 +144,7 @@ export async function buildSale(
     provisionalRef: ref,
     occurredAt,
     ...(input.customerPhone !== null ? { customerPhone: input.customerPhone } : {}),
-    lines: lines.map(toCounterSaleLine),
+    lines: lines.map(toOfflineSaleLine),
     tenders,
     ...(token !== null ? { receiptToken: token } : {}),
   };

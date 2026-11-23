@@ -38,9 +38,11 @@ export const IDLE_LOCK_SECONDS = 120;
 
 /**
  * What a PIN can approve on the till without the network. `SUPERVISOR_SIGN_OUT` signs a locked cashier out
- * and does nothing else: it never opens the till or sells as them (owner, 2026-11-17).
+ * and does nothing else: it never opens the till or sells as them (owner, 2026-11-17). `PRICE_OVERRIDE`
+ * approves one line's price beyond the cashier's own limit, up to the supervisor's own (2.17.0).
  */
-export type PinApproval = 'OFFLINE_MOBILE_MONEY' | 'CASH_DROP_WITNESS' | 'SUPERVISOR_SIGN_OUT';
+export type PinApproval =
+  'OFFLINE_MOBILE_MONEY' | 'CASH_DROP_WITNESS' | 'SUPERVISOR_SIGN_OUT' | 'PRICE_OVERRIDE';
 
 /** The rule every till applies, offline, the same way. */
 export interface TillPinPolicy {
@@ -70,12 +72,18 @@ export interface PinVerifier {
   locked: boolean;
   /** The wrong tries the server has counted against this version, on every till. */
   wrongTries: number;
+  /**
+   * The person's own price override limit per line at the branch: what their PIN may approve beyond a
+   * cashier's limit offline, never more (2.17.0). Absent on a verifier an earlier build stored: then none.
+   */
+  priceOverrideLimitPerLinePesewas?: number;
 }
 
 const SUPERVISOR_APPROVES: PinApproval[] = [
   'OFFLINE_MOBILE_MONEY',
   'CASH_DROP_WITNESS',
   'SUPERVISOR_SIGN_OUT',
+  'PRICE_OVERRIDE',
 ];
 
 export function fromContract(verifier: TillPinVerifier): PinVerifier {
@@ -91,6 +99,7 @@ export function fromContract(verifier: TillPinVerifier): PinVerifier {
     approves: verifier.role === 'SUPERVISOR' ? [...SUPERVISOR_APPROVES] : [],
     locked: verifier.locked,
     wrongTries: verifier.wrongTries,
+    priceOverrideLimitPerLinePesewas: verifier.priceOverrideLimitPerLinePesewas,
   };
 }
 
@@ -252,12 +261,31 @@ export function approvers(verifiers: readonly PinVerifier[], approval: PinApprov
   return verifiers.filter((verifier) => verifier.approves.includes(approval));
 }
 
+/**
+ * Who may approve a line's discount beyond the cashier's limit (2.17.0): a supervisor of the branch, never
+ * the shift's cashier, whose own per-line limit covers it. The server checks the same at sync.
+ */
+export function priceApprovers(
+  verifiers: readonly PinVerifier[],
+  cashierId: string,
+  discountPesewas: number,
+): PinVerifier[] {
+  return verifiers.filter(
+    (verifier) =>
+      verifier.approves.includes('PRICE_OVERRIDE') &&
+      verifier.principalId !== cashierId &&
+      !verifier.locked &&
+      (verifier.priceOverrideLimitPerLinePesewas ?? 0) >= discountPesewas,
+  );
+}
+
 /** What a try was for, in the contract's words (`TillPinEvent.purpose`). */
 export function purposeOf(approval: PinApproval | undefined): TillPinEvent['purpose'] {
   switch (approval) {
     case undefined:
       return 'UNLOCK';
     case 'OFFLINE_MOBILE_MONEY':
+    case 'PRICE_OVERRIDE':
       return 'APPROVAL';
     case 'CASH_DROP_WITNESS':
       return 'WITNESS';

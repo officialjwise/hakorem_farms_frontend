@@ -49,6 +49,22 @@ export interface CartLine {
   ceilingUnitPricePesewas: number;
   agreedUnitPricePesewas: number;
   varianceReasonCode: string | null;
+  /**
+   * A supervisor's PIN on the till approving this price beyond the cashier's own per-line limit (2.17.0,
+   * `OfflineSaleLine.overrideApproval`): who, and their PIN version, for the price it was given at.
+   * Absent on a line within the cashier's limit, and on a cart held before it existed.
+   */
+  overrideApproval?: {
+    approvedById: string;
+    approvedByPinVersion: number;
+    approvedByName: string;
+    /** When the PIN was checked, on the till's clock. */
+    approvedAt: string;
+    /** The agreed price it approved: a changed price needs approving again. */
+    approvedPricePesewas: number;
+    /** The supervisor's own per-line limit, which the approval may not pass. */
+    limitPesewas: number;
+  } | null;
 }
 
 const THREE_PLACES = /^(\d+)\.(\d{3})$/;
@@ -122,10 +138,20 @@ export function cartDiscount(lines: readonly CartLine[]): number {
 export type PriceRefusal =
   'BELOW_FLOOR' | 'ABOVE_CEILING' | 'REASON_REQUIRED' | 'OVER_LINE_LIMIT' | 'OVER_SHIFT_LIMIT';
 
+/** Whether the line's supervisor approval stands: given for this very price. */
+export function approvalStands(line: CartLine): boolean {
+  return (
+    line.overrideApproval != null &&
+    line.overrideApproval.approvedPricePesewas === line.agreedUnitPricePesewas
+  );
+}
+
 /**
  * Checks an agreed price against the band and the cashier's cached limits (OFFLINE_SYNC 5.1 and 9.6): it
  * must sit inside the band; any price other than the list price needs a reason; and the discount may not
- * pass the per-line limit, nor take the shift's discounts so far past the per-shift limit.
+ * pass the per-line limit, nor take the shift's discounts so far past the per-shift limit. A supervisor's
+ * PIN approval for this price (2.17.0) lets the line pass the cashier's limits, up to the supervisor's own
+ * per-line limit (A-F10-15); nothing lets a price outside the band.
  */
 export function checkAgreedPrice(
   line: CartLine,
@@ -144,6 +170,9 @@ export function checkAgreedPrice(
     return 'REASON_REQUIRED';
   }
   const discount = BigInt(lineDiscount(line));
+  if (approvalStands(line) && line.overrideApproval != null) {
+    return discount > BigInt(line.overrideApproval.limitPesewas) ? 'OVER_LINE_LIMIT' : null;
+  }
   if (discount > BigInt(policy.priceOverrideLimitPerLinePesewas)) return 'OVER_LINE_LIMIT';
   if (
     BigInt(shiftDiscountSoFarPesewas) + discount >

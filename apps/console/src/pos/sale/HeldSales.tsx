@@ -57,6 +57,8 @@ export function repriced(lines: CartLine[], pack: OfflinePack): CartLine[] {
         ceilingUnitPricePesewas: band.ceilingPricePesewas,
         agreedUnitPricePesewas: band.listPricePesewas,
         varianceReasonCode: null,
+        // An agreed price is asked again, so is its supervisor's approval.
+        overrideApproval: null,
       },
     ];
   });
