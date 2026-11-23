@@ -643,11 +643,15 @@ function VersionView({ version: v, current }: { version: Version; current: boole
           {t('version.olderBody')}
         </Alert>
       )}
-      {v.belowMarginFloor ? (
+      {!v.belowMarginFloor ? null : v.status === 'APPROVED' ? (
+        <Alert severity="info" title={t('version.belowFloorApproved')}>
+          {t('version.belowFloorApprovedBody')}
+        </Alert>
+      ) : (
         <Alert severity="warning" title={t('version.belowFloor')}>
           {t('version.belowFloorBody')}
         </Alert>
-      ) : null}
+      )}
       <Card>
         <CardBody>
           <Facts
@@ -772,7 +776,16 @@ function VersionView({ version: v, current }: { version: Version; current: boole
 }
 
 type Open =
-  'edit' | 'issue' | 'link' | 'revise' | 'accept' | 'decline' | 'cancel' | 'convert' | null;
+  | 'edit'
+  | 'issue'
+  | 'issueApproved'
+  | 'link'
+  | 'revise'
+  | 'accept'
+  | 'decline'
+  | 'cancel'
+  | 'convert'
+  | null;
 type Outcome =
   | { kind: 'saved' | 'revised' | 'accepted' | 'declined' | 'cancelled' }
   /** Issued, or a new link made: the link's token, answered only this once (null if the server gave none). */
@@ -805,9 +818,13 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
   });
   const v = q.currentVersion;
   const draft = v.status === 'DRAFT';
+  // 2.19.0 (CR-058): a margin approval only approves. The version waits for someone other than its approver
+  // to issue it at the figures approved; the quote still reads DRAFT.
+  const approved = v.status === 'APPROVED';
   const live = q.status === 'ISSUED' && v.status === 'ISSUED';
   const canEdit = draft && auth.can('quo.quote.create');
   const canIssue = draft && auth.can('quo.quote.issue');
+  const canIssueApproved = approved && auth.can('quo.quote.issue');
   const canRevise =
     (q.status === 'ISSUED' || q.status === 'EXPIRED' || q.status === 'DECLINED') &&
     !draft &&
@@ -844,6 +861,16 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
           </Link>
         </Alert>
       ) : null}
+      {approved && outcome === null ? (
+        <Alert severity="info" title={t('outcome.approved', { number: v.versionNo })}>
+          <p>{t('outcome.approvedBody')}</p>
+          {v.approvalRequestId === null ? null : (
+            <Link to={`/approvals/${v.approvalRequestId}`} className="text-accent-text underline">
+              {t('outcome.openApproval')}
+            </Link>
+          )}
+        </Alert>
+      ) : null}
       {open === null ? (
         <>
           <MutationFailure error={shownFailure(issue.error)} labels={failure} />
@@ -874,6 +901,16 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
               }}
             >
               {t('actions.issue')}
+            </Button>
+          ) : null}
+          {canIssueApproved ? (
+            <Button
+              onClick={() => {
+                issue.reset();
+                setOpen('issueApproved');
+              }}
+            >
+              {t('actions.issueApproved')}
             </Button>
           ) : null}
           {canRevise ? (
@@ -926,12 +963,22 @@ function QuoteActions({ quote: q }: { quote: Quote }) {
         </div>
       )}
       <IssueDialog
-        open={open === 'issue'}
-        onOpenChange={(next) => setOpen(next ? 'issue' : null)}
+        open={open === 'issue' || open === 'issueApproved'}
+        onOpenChange={(next) => {
+          if (!next) setOpen(null);
+        }}
         pending={issue.isPending}
         error={shownFailure(issue.error)}
-        title={t('actions.issueTitle', { name: quoteName(q), number: v.versionNo })}
+        title={
+          approved
+            ? t('actions.issueApprovedTitle', { name: quoteName(q), number: v.versionNo })
+            : t('actions.issueTitle', { name: quoteName(q), number: v.versionNo })
+        }
+        body={approved ? t('actions.issueApprovedBody') : t('actions.issueBody')}
+        confirmLabel={approved ? t('actions.issueApproved') : t('actions.issue')}
         onIssue={(channels) => {
+          // The same call issues a draft and an approved version (2.19.0); only its approver is refused
+          // (APPROVER_CANNOT_ISSUE), and the refusal stays in the dialog and on the page in words.
           const input = { path: { id: v.id }, body: { channels } };
           issue
             .mutateAsync(input, { idempotencyKey: keyFor(input) })
@@ -1192,6 +1239,8 @@ function IssueDialog({
   pending,
   error,
   title,
+  body,
+  confirmLabel,
   onIssue,
   children,
 }: {
@@ -1200,6 +1249,8 @@ function IssueDialog({
   pending: boolean;
   error: ReturnType<typeof shownFailure>;
   title: string;
+  body: string;
+  confirmLabel: string;
   onIssue: (channels: Channel[]) => void;
   children: ReactNode;
 }) {
@@ -1211,8 +1262,8 @@ function IssueDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={title}
-      body={t('actions.issueBody')}
-      confirmLabel={t('actions.issue')}
+      body={body}
+      confirmLabel={confirmLabel}
       pendingLabel={t('actions.issuing')}
       pending={pending}
       error={error}

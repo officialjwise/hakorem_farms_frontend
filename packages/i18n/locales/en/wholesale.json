@@ -260,7 +260,9 @@
     "issuedBy": "By {{who}}, {{when}}",
     "acceptedBy": "By {{who}}, {{how}}, {{when}}",
     "lines": "The version's lines",
-    "noApiPrice": "None: priced by hand"
+    "noApiPrice": "None: priced by hand",
+    "belowFloorApproved": "Below the margin floor, and approved",
+    "belowFloorApprovedBody": "Someone other than its author approved its margin over the selling price. It is sent at the figures approved."
   },
   "totals": {
     "deliveryFee": "Delivery fee",
@@ -303,7 +305,10 @@
     "notConverted": "The order was not made",
     "cancel": "Withdraw",
     "cancelTitle": "Withdraw {{name}}?",
-    "cancelBody": "The customer's link stops working. Say why."
+    "cancelBody": "The customer's link stops working. Say why.",
+    "issueApproved": "Issue and send",
+    "issueApprovedTitle": "Issue and send {{name}}, version {{number}}?",
+    "issueApprovedBody": "Its margin was approved. It is issued at the figures approved: what is on hand is held, anything not on hand is subject to stock, and the link goes by the ways chosen below. Its link is shown here once. Whoever approved it cannot issue it."
   },
   "edit": {
     "title": "Editing version {{number}}",
@@ -322,7 +327,9 @@
     "converted": "{{name}} is now order {{order}}",
     "openOrder": "Open the order",
     "openApproval": "Open the approval",
-    "newLink": "A new link to {{name}} is ready to pass on"
+    "newLink": "A new link to {{name}} is ready to pass on",
+    "approved": "The margin of version {{number}} is approved: issue and send it",
+    "approvedBody": "Nothing is held or sent yet, and it has no link. Anyone who may send quotes, other than whoever approved it, issues it with \"Issue and send\"."
   },
   "rfqs": {
     "title": "Requests for quote",

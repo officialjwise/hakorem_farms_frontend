@@ -422,3 +422,20 @@ export function chopBarAgeing(base: S['AgeingReport']): S['AgeingReport'] {
     otherPartiesCreditPesewas: 0,
   };
 }
+
+/** The margin approval of version 2 (2.19.0): decided by someone other than its author. */
+export const MARGIN_APPROVAL_ID = '019a7f33-6f7a-7b8c-8d9e-0f1a2b3c4d55';
+
+/**
+ * Version 2 below the margin floor and approved (2.19.0, CR-058): it holds nothing, has sent nothing and
+ * has no link, and waits for someone other than its approver to issue it. The quote reads DRAFT.
+ */
+export function approvedVersion2(): S['QuoteVersion'] {
+  return {
+    ...version2('APPROVED'),
+    belowMarginFloor: true,
+    approvalRequestId: MARGIN_APPROVAL_ID,
+    issuedAt: null,
+    issuedBy: null,
+  };
+}

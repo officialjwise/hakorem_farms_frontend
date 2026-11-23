@@ -293,6 +293,7 @@
     "DAYS_NOT_INCREASING": "Each level must be sent at more days overdue than the level before it.",
     "CHANNEL_REPEATED": "A level names the same channel twice. Choose each channel once.",
     "NOTHING_HELD": "The driver holds no cash from deliveries at this branch, or it was already handed in.",
-    "RECEIVER_IS_DRIVER": "A driver cannot hand their own cash in to themselves: another cashier takes it."
+    "RECEIVER_IS_DRIVER": "A driver cannot hand their own cash in to themselves: another cashier takes it.",
+    "APPROVER_CANNOT_ISSUE": "You approved this version's margin, so someone else who may send quotes issues it."
   }
 }

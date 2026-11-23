@@ -97,6 +97,19 @@ describe('refusals in words (ADR 0038)', () => {
     expect(said.details[0]?.field).toBe('/levels/1/daysOverdue');
   });
 
+  it('says why the approver of a margin may not issue the version (2.19.0)', () => {
+    expect(contract).toContain('`APPROVER_CANNOT_ISSUE`');
+    const said = inWords(
+      refusal('QUOTE_INVALID', 'Refused.', [
+        { field: null, code: 'APPROVER_CANNOT_ISSUE', message: 'approver' },
+      ]),
+      say,
+    );
+    expect(said.message).toBe(
+      "This quote cannot be saved or sent as it is. You approved this version's margin, so someone else who may send quotes issues it.",
+    );
+  });
+
   it('leaves a detail on a field to the field, in the server’s words', () => {
     const detail = { field: '/name', code: 'MIN_LENGTH', message: 'At least two letters.' };
     const said = inWords(refusal('VALIDATION_FAILED', 'Invalid.', [detail]), say);
