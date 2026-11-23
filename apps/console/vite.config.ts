@@ -2,44 +2,16 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'node:url';
 import { loadEnv } from 'vite';
-import type { Connect, Plugin, ProxyOptions } from 'vite';
+import type { Connect, Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
 import { ENTRY_DOCUMENT, entryFor } from './src/app/entries.ts';
+import { INVESTOR_DOCUMENT } from './src/investor/entry.ts';
 import { assertShopUrlSet } from './src/lib/shopAddress.ts';
 import { assertSwitchesAllowed } from './src/requested/switch.ts';
+import { buildDefines, mockProxy, STAFF_COOKIE } from './vite.shared.ts';
 
-/**
- * The Prism mock in a browser (ADR 0025). Prism answers a credentialed cross-origin request properly, but
- * the contract describes no Set-Cookie, so a browser never holds the staff cookie Prism's security check
- * looks for, and every staff operation answers 401. This same-origin path forwards to `pnpm dev:mock` and
- * adds that cookie when the request has none. It only exists on Vite's dev and preview servers.
- *
- * It decides nothing: a build talks to it only when HK_API_BASE_URL is `/mock` (ADR 0019).
- */
-const MOCK_PATH = '/mock';
-const PRISM = 'http://127.0.0.1:4010';
-const STAFF_COOKIE = '__Host-hk_s_at';
-/** The investor portal's cookie (ADR 0058), added beside the staff one for the investor operations. */
-const INVESTOR_COOKIE = '__Host-hk_i_at';
-const mockProxy: Record<string, ProxyOptions> = {
-  [`^${MOCK_PATH}(/|$)`]: {
-    target: PRISM,
-    changeOrigin: true,
-    rewrite: (path) => path.slice(MOCK_PATH.length) || '/',
-    configure: (proxy) => {
-      proxy.on('proxyReq', (request) => {
-        const cookie = String(request.getHeader('cookie') ?? '');
-        const missing = [STAFF_COOKIE, INVESTOR_COOKIE].filter(
-          (name) => !cookie.includes(`${name}=`),
-        );
-        if (missing.length > 0) {
-          const added = missing.map((name) => `${name}=dev-mock`).join('; ');
-          request.setHeader('cookie', `${added}${cookie ? `; ${cookie}` : ''}`);
-        }
-      });
-    },
-  },
-};
+/** The console's hosts hold the staff cookie only (ADR 0058): the portal is its own build and host. */
+const consoleMockProxy = mockProxy(STAFF_COOKIE);
 
 /**
  * Two documents, two entries (ADR 0030): index.html is the back office and pos.html is the till. The dev
@@ -49,6 +21,9 @@ const mockProxy: Record<string, ProxyOptions> = {
  */
 const routeToEntryDocument: Connect.NextHandleFunction = (request, _response, next) => {
   const url = new URL(request.url ?? '/', 'http://console.local');
+  // The investor portal's document sits beside these in the source tree, but it is its own build and
+  // host (ADR 0058): the console's dev server never serves it either.
+  if (url.pathname === `/${INVESTOR_DOCUMENT}`) request.url = `/${ENTRY_DOCUMENT['back-office']}`;
   const entry = entryFor(url.pathname);
   if (entry !== 'back-office') request.url = `/${ENTRY_DOCUMENT[entry]}${url.search}`;
   next();
@@ -61,7 +36,6 @@ const entryDocuments: Plugin = {
 const input = {
   main: fileURLToPath(new URL(`./${ENTRY_DOCUMENT['back-office']}`, import.meta.url)),
   pos: fileURLToPath(new URL(`./${ENTRY_DOCUMENT.pos}`, import.meta.url)),
-  investor: fileURLToPath(new URL(`./${ENTRY_DOCUMENT.investor}`, import.meta.url)),
 };
 
 export default defineConfig(({ mode, isPreview }) => {
@@ -80,17 +54,8 @@ export default defineConfig(({ mode, isPreview }) => {
   return {
     plugins: [react(), tailwindcss(), entryDocuments],
     // HK_REQUESTED_CONTRACT names the contract requests this build is built against (ADR 0046): the
-    // end-to-end build's fake server answers them; a build for a real API leaves it unset. Unit tests
-    // (mode `test`) read it live, so a test can switch a request on.
-    define: {
-      'process.env.HK_API_BASE_URL': JSON.stringify(env['HK_API_BASE_URL'] ?? ''),
-      ...(mode === 'test'
-        ? {}
-        : {
-            'process.env.HK_REQUESTED_CONTRACT': JSON.stringify(env['HK_REQUESTED_CONTRACT'] ?? ''),
-            'process.env.HK_SHOP_URL': JSON.stringify(env['HK_SHOP_URL'] ?? ''),
-          }),
-    },
+    // end-to-end build's fake server answers them; a build for a real API leaves it unset.
+    define: buildDefines(env, mode),
     build: {
       sourcemap: true,
       // dist/.vite/manifest.json: the chunk graph `pnpm budget:console` reads to tell a document's initial
@@ -113,8 +78,8 @@ export default defineConfig(({ mode, isPreview }) => {
       // in docs/PERFORMANCE_BUDGET.md, and `pnpm budget:console` fails when a document goes over it.
       chunkSizeWarningLimit: Number.POSITIVE_INFINITY,
     },
-    server: { proxy: mockProxy },
-    preview: { proxy: mockProxy },
+    server: { proxy: consoleMockProxy },
+    preview: { proxy: consoleMockProxy },
     test: {
       environment: 'jsdom',
       globals: true,

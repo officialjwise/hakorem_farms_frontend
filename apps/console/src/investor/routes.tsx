@@ -18,8 +18,8 @@ const SCREENS = {
 };
 
 /**
- * The portal's protected routes, under the router's `/investor` base (ADR 0058). Each leaf declares its
- * handle, as in the other documents (routes.test.ts checks).
+ * The portal's protected routes, at the root of the portal's own host (ADR 0058). Each leaf declares its
+ * handle, as in the console's documents (routes.test.ts checks).
  */
 export const investorProtectedRoutes: RouteObject[] = [
   {
@@ -36,10 +36,10 @@ export const investorProtectedRoutes: RouteObject[] = [
 ];
 
 /**
- * The portal's routes. It renders the shared sign-in screens itself under its base, so an investor signs in
- * at `/investor/login` with `loginInvestor` and never meets the staff sign-in. They load with the document,
- * as the back office's do: on demand they split the code all three documents share into more chunks, and
- * the till's first load grew by 1.5 kB more (A-F12-02).
+ * The portal's routes. It renders the shared sign-in screens itself, so an investor signs in at `/login` on
+ * the portal's host with `loginInvestor` and never meets the staff sign-in. They load with the document, as
+ * the back office's do. The portal is its own build, so how it splits its code changes nothing in the
+ * console's (ADR 0058).
  */
 export const investorRoutes: RouteObject[] = appRoutes({
   publicRoutes: authRoutes,

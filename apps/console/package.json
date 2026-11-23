@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 5173",
+    "dev:investor": "vite --config vite.investor.config.ts --port 5174",
     "build": "tsc --noEmit -p tsconfig.json && vite build",
+    "build:investor": "vite build --config vite.investor.config.ts",
     "preview": "vite preview --port 4173 --strictPort",
+    "preview:investor": "vite preview --config vite.investor.config.ts --port 4174 --strictPort",
     "budget": "tsx scripts/check-budget.ts",
     "icons": "tsx scripts/build-icons.ts",
     "icons:check": "tsx scripts/build-icons.ts --check",

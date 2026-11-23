@@ -18,14 +18,14 @@ export async function boot({
   routes,
   namespaces,
   realm = 'STAFF',
-  basename,
+  serviceWorker = true,
 }: {
   routes: RouteObject[];
   namespaces: Namespaces;
   /** Who this document signs in (ADR 0058): staff, or an investor in the portal. */
   realm?: SignInRealm;
-  /** The router's base, for a document whose every route sits under one path (the investor portal). */
-  basename?: string;
+  /** Whether this document registers the console's service worker. The investor portal does not (ADR 0058). */
+  serviceWorker?: boolean;
 }) {
   const i18n = await createI18n({ namespaces });
   const root = document.getElementById('root');
@@ -35,15 +35,13 @@ export async function boot({
       <I18nextProvider i18n={i18n}>
         <ErrorBoundary>
           <AuthProvider client={authClient} realm={realm}>
-            <RouterProvider
-              router={createBrowserRouter(routes, basename === undefined ? {} : { basename })}
-            />
+            <RouterProvider router={createBrowserRouter(routes)} />
           </AuthProvider>
         </ErrorBoundary>
       </I18nextProvider>
     </StrictMode>,
   );
-  registerServiceWorker();
+  if (serviceWorker) registerServiceWorker();
 }
 
 /** A minimal service worker so the console is installable. Its caching strategy is F13 (ADR 0013). */
