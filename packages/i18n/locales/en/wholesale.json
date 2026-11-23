@@ -240,7 +240,7 @@
     "chooseBasis": "Choose",
     "agreedPrice": "Agreed price",
     "agreedPriceIn": "Agreed price per {{unit}}",
-    "agreedPriceHint": "The API's price, unless you agreed another. Below the margin floor, the quote waits for approval when it is sent.",
+    "agreedPriceHint": "The API's price, unless you agreed another. If the margin over the selling price falls below the farm's floor, the quote waits for approval when it is sent.",
     "priceMissing": "Get the API's price, or type the agreed price.",
     "per": "per {{unit}}"
   },
@@ -255,7 +255,7 @@
     "olderTitle": "An earlier version, as it was",
     "olderBody": "It is kept as it was sent and cannot be changed. The version in force is at the top of the list.",
     "belowFloor": "Below the margin floor",
-    "belowFloorBody": "Sending this version needs approval by someone other than you.",
+    "belowFloorBody": "Its margin over the selling price, on the product lines without the delivery fee, is below the farm's floor. Sending it needs approval by someone other than you.",
     "notIssued": "Not sent yet",
     "issuedBy": "By {{who}}, {{when}}",
     "acceptedBy": "By {{who}}, {{how}}, {{when}}",
@@ -268,11 +268,13 @@
     "netInclusive": "Before tax (prices include tax)",
     "tax": "Tax and levies",
     "gross": "Total",
-    "margin": "Margin",
     "percent": "{{value}} percent",
     "estimate": "Estimated total",
     "paid": "Paid",
-    "outstanding": "Still owed"
+    "outstanding": "Still owed",
+    "markup": "Markup over cost",
+    "marginOverPrice": "Margin over the selling price",
+    "notKnown": "Not known: a cost is missing"
   },
   "actions": {
     "working": "Working",

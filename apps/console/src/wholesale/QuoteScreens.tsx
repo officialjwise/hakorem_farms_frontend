@@ -750,12 +750,20 @@ function VersionView({ version: v, current }: { version: Version; current: boole
             <dd className="text-end">
               <MoneyDisplay pesewas={v.grossPesewas} strong />
             </dd>
-            {v.marginPercent === null ? null : (
-              <>
-                <dt>{t('totals.margin')}</dt>
-                <dd className="text-end">{t('totals.percent', { value: v.marginPercent })}</dd>
-              </>
-            )}
+            {/* 2.29.0: markup is over cost and margin over the selling price, each the API's figure;
+                the deprecated `marginPercent` (markup under the old name) is never read. */}
+            <dt>{t('totals.markup')}</dt>
+            <dd className="text-end">
+              {v.markupPercent === null
+                ? t('totals.notKnown')
+                : t('totals.percent', { value: v.markupPercent })}
+            </dd>
+            <dt>{t('totals.marginOverPrice')}</dt>
+            <dd className="text-end">
+              {v.marginOverPricePercent === null
+                ? t('totals.notKnown')
+                : t('totals.percent', { value: v.marginOverPricePercent })}
+            </dd>
           </dl>
         </CardBody>
       </Card>

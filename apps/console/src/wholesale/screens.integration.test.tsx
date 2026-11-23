@@ -63,6 +63,18 @@ describe('quotes', () => {
     expect(screen.getByRole('button', { name: 'Record an acceptance' })).toBeVisible();
   });
 
+  it('markup over cost and margin over the selling price, as 2.29.0 names them', async () => {
+    await renderApp(`/quotes/${ANY_ID}`, await signedIn('owner'));
+    expect(
+      await screen.findByRole('heading', { name: 'QUO-2026-DDW-000088' }, { timeout: 5000 }),
+    ).toBeInTheDocument();
+    // The contract's example: 43.94 percent markup over cost, 30.77 percent margin over the price.
+    const markup = screen.getByText('Markup over cost');
+    expect(markup.nextElementSibling).toHaveTextContent('43.94 percent');
+    const margin = screen.getByText('Margin over the selling price');
+    expect(margin.nextElementSibling).toHaveTextContent('30.77 percent');
+  });
+
   it('a new quote is built from the contract, with no notice that a unit waits (CR-045, 2.12.0)', async () => {
     await renderApp('/quotes/new', await signedIn('owner'));
     expect(await screen.findByRole('heading', { name: 'Lines' }, { timeout: 5000 })).toBeVisible();
