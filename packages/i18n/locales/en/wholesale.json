@@ -592,7 +592,7 @@
   "link": {
     "title": "The customer's link",
     "once": "This link is shown only once. Copy it or send it now: the farm keeps no copy of it.",
-    "again": "If it is lost, make a new link from this quote with \"Make a new link\". Links already given keep working until this version is replaced or expires.",
+    "again": "If it is lost, make a new link from this quote with \"Make a new link\". Links already given keep working until this version is replaced or expires, or until one is revoked under \"The version's links\".",
     "copy": "Copy the link",
     "whatsApp": "Send on WhatsApp to {{phone}}",
     "message": "Hello {{name}}, here is your quote {{number}} from HaKorem Farms. Open it to read and accept it: {{link}}",
@@ -611,5 +611,37 @@
     "notYet": "Nothing is held until it is sent",
     "noProduct": "Not a stock line",
     "inBaseUnit": "{{qty}} in the product's base unit"
+  },
+  "versionLinks": {
+    "title": "The version's links",
+    "intro": "Every link made for this version, oldest first, with what the customer meets through it now. The farm keeps no copy of a link itself.",
+    "empty": "No link is listed for this version.",
+    "table": "Each link of version {{number}}, oldest first",
+    "columns": {
+      "link": "Link",
+      "made": "Made",
+      "expires": "Opens until",
+      "state": "State",
+      "revoke": "Revoke"
+    },
+    "name": "Link {{number}}",
+    "made": "By {{who}}, {{when}}",
+    "state": {
+      "OPEN": "Open: it shows the quote",
+      "ACCEPTED": "Accepted through it",
+      "DECLINED": "Declined through it",
+      "EXPIRED": "Expired",
+      "REPLACED": "Closed: a newer version replaced it",
+      "WITHDRAWN": "Closed: the quote was withdrawn",
+      "REVOKED": "Revoked: it opens nothing"
+    },
+    "revokedBy": "Revoked by {{who}}, {{when}}: {{reason}}",
+    "revoke": "Revoke",
+    "revokeLabel": "Revoke link {{number}}",
+    "revokeTitle": "Revoke link {{number}} of {{name}}?",
+    "revokeBody": "From now on this link opens nothing, as if it never existed. The version's other links keep working. Say why, for example that it went to the wrong number.",
+    "revokeSubmit": "Revoke the link",
+    "revoked": "Link {{number}} is revoked. It opens nothing now.",
+    "notRevoked": "The link was not revoked"
   }
 }

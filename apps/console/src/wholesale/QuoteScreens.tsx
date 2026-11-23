@@ -36,6 +36,7 @@ import {
   formatDateTime,
   formatQuantity,
   useTableView,
+  type BadgeTone,
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { shownFailure } from '../auth/StepUp';
@@ -45,6 +46,7 @@ import { useApiAllPages, useApiMutation, useApiQuery } from '../data/api';
 import { isApprovalPending } from '../lib/approval';
 import { ConfirmDialog } from '../lib/ConfirmDialog';
 import { dayEnd } from '../lib/dateRange';
+import { lookup, UNKNOWN } from '../lib/lookup';
 import { LeaveGuardDialog, useLeaveGuard } from '../lib/LeaveGuard';
 import { useIntentKey } from '../lib/queries';
 import { ReadableId } from '../lib/ReadableId';
@@ -560,7 +562,7 @@ export function QuoteScreen() {
                 setSearch(versionId === q.currentVersion.id ? {} : { version: versionId })
               }
             />
-            <VersionView version={shown} current={current} />
+            <VersionView version={shown} current={current} name={quoteName(q)} />
             {current ? <QuoteActions quote={q} /> : null}
           </article>
         );
@@ -629,7 +631,15 @@ function VersionHistory({
 }
 
 /** One version: its lines at the API's prices, its totals, its margin and how it was accepted. */
-function VersionView({ version: v, current }: { version: Version; current: boolean }) {
+function VersionView({
+  version: v,
+  current,
+  name,
+}: {
+  version: Version;
+  current: boolean;
+  name: string;
+}) {
   const { t } = useTranslation(['wholesale', 'common']);
   const units = useUnits();
   // What each line found and holds is the issue's record (2.23.0): a version not yet issued has none.
@@ -786,6 +796,7 @@ function VersionView({ version: v, current }: { version: Version; current: boole
           </dl>
         </CardBody>
       </Card>
+      <VersionLinks key={v.id} version={v} name={name} />
     </section>
   );
 }
@@ -822,6 +833,153 @@ function LineStock({ line }: { line: S['QuoteLine'] }) {
       <span>{t('lineStock.onHand', { qty: qty(line.availableQuantity) })}</span>
       <span>{t('lineStock.held', { qty: qty(line.heldQuantity) })}</span>
     </span>
+  );
+}
+
+const LINK_LOOK: Record<S['QuoteLink']['state'], { tone: BadgeTone }> = {
+  OPEN: { tone: 'info' },
+  ACCEPTED: { tone: 'good' },
+  DECLINED: { tone: 'warning' },
+  EXPIRED: { tone: 'slate' },
+  REPLACED: { tone: 'slate' },
+  WITHDRAWN: { tone: 'slate' },
+  REVOKED: { tone: 'critical' },
+};
+
+/**
+ * Every acceptance link of a version with its state (2.21.0): never a token, which was shown once when it
+ * was made. A holder of `quo.quote.issue` revokes an open one with a reason (`revokeQuoteLink`): from then
+ * on it opens nothing, and the version's other links keep working. One idempotency key per opening of the
+ * dialog, so "Try again" repeats the same revocation.
+ */
+function VersionLinks({ version: v, name }: { version: Version; name: string }) {
+  const { t } = useTranslation(['wholesale', 'common']);
+  const auth = useAuth();
+  const keyFor = useIntentKey();
+  const [revoking, setRevoking] = useState<{ link: S['QuoteLink']; number: number } | null>(null);
+  const [opening, setOpening] = useState(0);
+  const [done, setDone] = useState<number | null>(null);
+  const revoke = useApiMutation('revokeQuoteLink', {
+    invalidates: ['getQuote', 'listQuoteVersions', 'listQuotes'],
+  });
+  const failure = useStateLabels({
+    loading: t('actions.working'),
+    emptyTitle: t('versionLinks.notRevoked'),
+    errorTitle: t('versionLinks.notRevoked'),
+    deniedTitle: t('actions.denied'),
+  });
+  // A version before issue has no link, and says nothing about links.
+  if (v.links.length === 0 && v.issuedAt === null) return null;
+  const canRevoke = auth.can('quo.quote.issue');
+  return (
+    <section aria-labelledby={`links-${v.id}`} className="grid gap-3">
+      <h3 id={`links-${v.id}`} className="text-heading-sm font-semibold">
+        {t('versionLinks.title')}
+      </h3>
+      <p className="text-fg-muted">{t('versionLinks.intro')}</p>
+      {done === null ? null : (
+        <Alert severity="good" title={t('versionLinks.revoked', { number: done })} />
+      )}
+      {revoking === null ? (
+        <MutationFailure error={shownFailure(revoke.error)} labels={failure} />
+      ) : null}
+      {v.links.length === 0 ? (
+        <p>{t('versionLinks.empty')}</p>
+      ) : (
+        <TableContainer aria-label={t('versionLinks.table', { number: v.versionNo })}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('versionLinks.columns.link')}</TableHead>
+                <TableHead>{t('versionLinks.columns.made')}</TableHead>
+                <TableHead>{t('versionLinks.columns.expires')}</TableHead>
+                <TableHead>{t('versionLinks.columns.state')}</TableHead>
+                {canRevoke ? <TableHead>{t('versionLinks.columns.revoke')}</TableHead> : null}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {v.links.map((link, index) => {
+                const number = index + 1;
+                return (
+                  <TableRow key={link.id}>
+                    <TableRowHeader>{t('versionLinks.name', { number })}</TableRowHeader>
+                    <TableCell label={t('versionLinks.columns.made')}>
+                      {t('versionLinks.made', {
+                        who: link.createdBy.displayName,
+                        when: formatDateTime(link.createdAt),
+                      })}
+                    </TableCell>
+                    <TableCell label={t('versionLinks.columns.expires')}>
+                      {formatDateTime(link.expiresAt)}
+                    </TableCell>
+                    <TableCell label={t('versionLinks.columns.state')}>
+                      <span className="grid justify-items-start gap-1">
+                        <StatusBadge
+                          tone={lookup(LINK_LOOK, link.state, UNKNOWN).tone}
+                          label={t(`versionLinks.state.${link.state}`, {
+                            defaultValue: link.state,
+                          })}
+                        />
+                        {link.revokedAt === null ? null : (
+                          <span className="text-control-sm text-fg-muted">
+                            {t('versionLinks.revokedBy', {
+                              who: link.revokedBy?.displayName ?? NOT_APPLICABLE,
+                              when: formatDateTime(link.revokedAt),
+                              reason: link.revokeReason ?? NOT_APPLICABLE,
+                            })}
+                          </span>
+                        )}
+                      </span>
+                    </TableCell>
+                    {canRevoke ? (
+                      <TableCell label={t('versionLinks.columns.revoke')}>
+                        {link.state === 'OPEN' ? (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            aria-label={t('versionLinks.revokeLabel', { number })}
+                            onClick={() => {
+                              revoke.reset();
+                              setDone(null);
+                              setOpening((n) => n + 1);
+                              setRevoking({ link, number });
+                            }}
+                          >
+                            {t('versionLinks.revoke')}
+                          </Button>
+                        ) : (
+                          NOT_APPLICABLE
+                        )}
+                      </TableCell>
+                    ) : null}
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+      {revoking === null ? null : (
+        <ReasonDialog
+          open
+          onOpenChange={(next) => {
+            if (!next) setRevoking(null);
+          }}
+          title={t('versionLinks.revokeTitle', { number: revoking.number, name })}
+          body={t('versionLinks.revokeBody')}
+          submitLabel={t('versionLinks.revokeSubmit')}
+          destructive
+          error={shownFailure(revoke.error)}
+          failureLabels={failure}
+          onConfirm={async (reason) => {
+            const input = { path: { id: revoking.link.id }, body: { reason } };
+            await revoke.mutateAsync(input, { idempotencyKey: keyFor({ ...input, opening }) });
+            setDone(revoking.number);
+            setRevoking(null);
+          }}
+        />
+      )}
+    </section>
   );
 }
 

@@ -457,3 +457,25 @@ export function subjectToStockVersion2(): S['QuoteVersion'] {
     ],
   };
 }
+
+export const LINK_1 = '019a7f34-7a8b-7c9d-8e0f-1a2b3c4d5e61';
+export const LINK_2 = '019a7f34-7a8b-7c9d-8e0f-1a2b3c4d5e62';
+
+/** A link of version 2 (2.21.0): its state, never a token. */
+export function versionLink(
+  id: string,
+  state: S['QuoteLink']['state'],
+  createdAt: string,
+): S['QuoteLink'] {
+  const revoked = state === 'REVOKED';
+  return {
+    id,
+    state,
+    createdAt,
+    createdBy: SALESPERSON,
+    expiresAt: '2026-11-24T23:59:59.999Z',
+    revokedAt: revoked ? '2026-11-17T11:40:00Z' : null,
+    revokedBy: revoked ? SALESPERSON : null,
+    revokeReason: revoked ? 'Sent to the wrong WhatsApp number' : null,
+  };
+}

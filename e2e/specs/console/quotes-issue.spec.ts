@@ -8,6 +8,8 @@ import {
   USERS,
 } from '../../support/helpers';
 import {
+  LINK_1,
+  LINK_2,
   MARGIN_APPROVAL_ID,
   QUOTE_ID,
   QUOTE_NO,
@@ -17,14 +19,16 @@ import {
   subjectToStockVersion2,
   version1,
   version2,
+  versionLink,
 } from '../../support/quotes';
 import { expect, test } from '../../support/test';
 
 /**
  * Issuing a quote as contract 2.31.0 has it (F10o): a margin approval only approves, and the salesperson
- * then issues and sends the version (2.19.0, CR-058); markup is over cost and margin over the selling
- * price (2.29.0); and stock not on hand is issued subject to stock, never refused (2.23.0). Asantewaa
- * Chop Bar's eggs, at 360 px; every figure is the API's.
+ * then issues and sends the version (2.19.0, CR-058); markup is over cost and margin over the selling price
+ * (2.29.0); stock not on hand is issued subject to stock, never refused (2.23.0); and every link of a
+ * version is listed with its state, one revoked with a reason (2.21.0). Asantewaa Chop Bar's eggs, at
+ * 360 px; every figure is the API's.
  */
 
 type S = components['schemas'];
@@ -62,6 +66,8 @@ test.describe('after a margin approval (2.19.0, CR-058)', () => {
     api.respond('issueQuoteVersion', () => ({
       ...version2('ISSUED'),
       acceptanceLinkToken: token,
+      acceptanceLinkId: LINK_1,
+      links: [versionLink(LINK_1, 'OPEN', '2026-11-17T11:00:00Z')],
     }));
 
     await signIn(page, USERS.sales, `/quotes/${QUOTE_ID}`);
@@ -205,6 +211,8 @@ test.describe('subject to stock (2.23.0)', () => {
     api.respond('issueQuoteVersion', () => ({
       ...subjectToStockVersion2(),
       acceptanceLinkToken: 'quo_SubjectToStock_m2Rk',
+      acceptanceLinkId: LINK_1,
+      links: [versionLink(LINK_1, 'OPEN', '2026-11-17T11:00:00Z')],
     }));
     await signInWithTotp(page, USERS.owner, `/quotes/${QUOTE_ID}`);
     // Before issue, nothing is held and no line says anything of stock.
@@ -229,6 +237,99 @@ test.describe('subject to stock (2.23.0)', () => {
     await expect(single).toContainText('On hand: 540 eggs');
     await expect(single).toContainText('Held: 30 eggs');
     await expectNoHorizontalScroll(page);
+    await expectNoAxeViolations(page);
+  });
+});
+
+test.describe("a version's links (2.21.0)", () => {
+  test('are listed with their states, and one is revoked with a reason, one key per opening', async ({
+    page,
+    api,
+  }) => {
+    const revokes: string[] = [];
+    const live = () =>
+      revokes.includes(LINK_1)
+        ? versionLink(LINK_1, 'REVOKED', '2026-11-17T11:00:00Z')
+        : versionLink(LINK_1, 'OPEN', '2026-11-17T11:00:00Z');
+    const issuedV2 = (): S['QuoteVersion'] => ({
+      ...version2('ISSUED'),
+      links: [live(), versionLink(LINK_2, 'OPEN', '2026-11-17T11:20:00Z')],
+    });
+    api.rewrite('getQuote', (body) => eggQuote(body as S['Quote'], 'ISSUED', issuedV2(), 2));
+    api.rewrite('listQuoteVersions', (body) =>
+      pageOf(body, [issuedV2(), { ...version1('SUPERSEDED'), links: [] }]),
+    );
+    api.respond('revokeQuoteLink', (_request, path) => {
+      revokes.push(path.split('/')[2] ?? '');
+      return issuedV2();
+    });
+    // Link 2 is refused as a link revoked elsewhere meanwhile would be: 422, the state named.
+    const keys: string[] = [];
+    await page.route(`**/mock/quote-links/${LINK_2}/revoke`, (route) => {
+      keys.push(route.request().headers()['idempotency-key'] ?? '');
+      return route.fulfill({
+        status: 422,
+        contentType: 'application/json',
+        body: JSON.stringify(
+          refusal('INVALID_STATE_TRANSITION', 'REVOKED', 'This quote link is already revoked.'),
+        ),
+      });
+    });
+
+    await signInWithTotp(page, USERS.owner, `/quotes/${QUOTE_ID}`);
+    const section = page.getByRole('region', { name: 'Each link of version 2, oldest first' });
+    await expect(section.getByRole('row')).toHaveCount(3);
+    const first = section.getByRole('row').filter({ hasText: 'Link 1' });
+    await expect(first).toContainText('Open: it shows the quote');
+    await expect(first).toContainText('By Ama Mensah');
+    // No token is ever shown: only the state.
+    await expect(page.getByText(/quo_/)).toHaveCount(0);
+    await expectNoHorizontalScroll(page);
+    await expectNoAxeViolations(page);
+
+    await page.getByRole('button', { name: 'Revoke link 1' }).click();
+    const dialog = page.getByRole('dialog', { name: `Revoke link 1 of ${QUOTE_NO}?` });
+    await expect(dialog).toContainText("The version's other links keep working.");
+    await dialog.getByRole('button', { name: 'Revoke the link' }).click();
+    // No reason, no call.
+    await expect(dialog.getByText('Give a reason')).toBeVisible();
+    expect(api.log.some((e) => e.operationId === 'revokeQuoteLink')).toBe(false);
+    await dialog.getByRole('textbox').fill('Sent to the wrong WhatsApp number');
+    const sent = page.waitForRequest(posted(`/quote-links/${LINK_1}/revoke`));
+    await dialog.getByRole('button', { name: 'Revoke the link' }).click();
+    const request = await sent;
+    expect(request.postDataJSON()).toEqual({ reason: 'Sent to the wrong WhatsApp number' });
+    expect(request.headers()['idempotency-key']).toBeTruthy();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByText('Link 1 is revoked. It opens nothing now.')).toBeVisible();
+    await expect(first).toContainText('Revoked: it opens nothing');
+    await expect(first).toContainText('Sent to the wrong WhatsApp number');
+    await expect(page.getByRole('button', { name: 'Revoke link 1' })).toHaveCount(0);
+    await expect(section.getByRole('row').filter({ hasText: 'Link 2' })).toContainText(
+      'Open: it shows the quote',
+    );
+
+    // A refusal stays in words; trying again in the same opening is the same intent, a new opening a new one.
+    await page.getByRole('button', { name: 'Revoke link 2' }).click();
+    const second = page.getByRole('dialog', { name: `Revoke link 2 of ${QUOTE_NO}?` });
+    await second.getByRole('textbox').fill('Wrong number again');
+    await second.getByRole('button', { name: 'Revoke the link' }).click();
+    await expect(
+      second.getByRole('alert').filter({ hasText: 'The link was not revoked' }),
+    ).toBeVisible();
+    await second.getByRole('button', { name: 'Revoke the link' }).click();
+    await expect.poll(() => keys.length).toBe(2);
+    await second.getByRole('button', { name: 'Cancel' }).first().click();
+    await expect(second).toBeHidden();
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'The link was not revoked' }),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Revoke link 2' }).click();
+    await second.getByRole('textbox').fill('Wrong number again');
+    await second.getByRole('button', { name: 'Revoke the link' }).click();
+    await expect.poll(() => keys.length).toBe(3);
+    expect(keys[0]).toBe(keys[1]);
+    expect(keys[2]).not.toBe(keys[0]);
     await expectNoAxeViolations(page);
   });
 });

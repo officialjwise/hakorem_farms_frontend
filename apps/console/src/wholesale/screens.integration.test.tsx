@@ -63,7 +63,7 @@ describe('quotes', () => {
     expect(screen.getByRole('button', { name: 'Record an acceptance' })).toBeVisible();
   });
 
-  it('markup and margin as 2.29.0 names them, and what each line holds (2.23.0)', async () => {
+  it('markup and margin as 2.29.0 names them, what each line holds, and the links (2.21.0, 2.23.0)', async () => {
     await renderApp(`/quotes/${ANY_ID}`, await signedIn('owner'));
     expect(
       await screen.findByRole('heading', { name: 'QUO-2026-DDW-000088' }, { timeout: 5000 }),
@@ -77,6 +77,8 @@ describe('quotes', () => {
     expect(lines).toHaveTextContent('Stock when sent');
     expect(lines).toHaveTextContent('All of it held');
     await waitFor(() => expect(lines).toHaveTextContent('Held: 18 head'));
+    expect(screen.getByRole('heading', { name: "The version's links" })).toBeVisible();
+    expect(screen.getByText('No link is listed for this version.')).toBeVisible();
   });
 
   it('a new quote is built from the contract, with no notice that a unit waits (CR-045, 2.12.0)', async () => {
