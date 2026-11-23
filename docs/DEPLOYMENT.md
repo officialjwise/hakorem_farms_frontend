@@ -2,9 +2,9 @@
 
 What a host must do to serve the frontend correctly. The pipeline, environments, Caddy configuration and release procedure are specified in the backend's `docs/DEPLOYMENT.md` (read it; this repository never edits it). This document holds the frontend's own requirements on that setup. **F13 applies every rule here** when it wires the deploy, and each rule says how to check it.
 
-## 1. The console is two documents (ADR 0030), and a third for investors (section 7)
+## 1. The console is two documents (ADR 0030)
 
-The console's static build (`apps/console/dist`) holds two HTML documents:
+The console's static build (`apps/console/dist`) holds two HTML documents. The investor portal is not one of them: it is its own build, on its own host (section 7).
 
 | Address                     | Document     | What it is  |
 | --------------------------- | ------------ | ----------- |
@@ -126,10 +126,45 @@ A build for any API but `/mock` without it **fails before building**, naming the
 
 **How to check it:** the deploy workflow's console build step sets `HK_SHOP_URL`; the smoke suite on staging sends a quote and finds its link beginning with the staging shop's address.
 
-## 7. The investor portal is a third document (ADR 0058)
+## 7. The investor portal is its own build, on its own subdomain (ADR 0058)
 
-`apps/console/dist` also holds `investor.html`: a request for `/investor` or anything under `/investor/` that is not a file is answered with it. `entryFor` in `apps/console/src/app/entries.ts` is the source of truth, as for the till, and the dev and preview servers follow it. The portal's router sits under `/investor`, so its sign-in is `/investor/login`.
+The owner (2026-11-23): the portal is its own build and is served on its own subdomain, with its own host-only session cookie, never under the console's address.
 
-**Why it matters:** a host that answers `index.html` at `/investor` serves the back office there: an investor would meet the staff sign-in, which refuses them.
+| Build                 | Output                       | Host, production                                    | Host, staging                         |
+| --------------------- | ---------------------------- | --------------------------------------------------- | ------------------------------------- |
+| `pnpm build:console`  | `apps/console/dist`          | `https://app.hakoremfarms.com`                      | its own (section 4)                   |
+| `pnpm build:investor` | `apps/console/dist-investor` | **`https://investors.hakoremfarms.com`** (A-F12-04) | its own, beside the staging console's |
 
-**How to check it:** the smoke suite opens `/investor` and expects the investor portal's sign-in (F13).
+**The rule:** on the portal's host, a request that is not a file is answered with `investor.html`; a file is served as itself. The portal's routes sit at the root of its host: the summary is `/`, the sign-in `/login`. The console's host never serves the portal: `/investor` there is the back office's address like any other, and `dist/` holds no `investor.html` (`pnpm budget:console` fails if it does).
+
+**What F13 does:**
+
+1. **DNS and TLS.** `investors.hakoremfarms.com` points at the VPS like `app.`, and Caddy gets its certificate.
+2. **Build it, with the same variables as the console** (sections 4 to 6): `HK_API_BASE_URL=/api/v1`, and never `HK_REQUESTED_CONTRACT`. It needs no `HK_SHOP_URL`: the portal shows no link to the shop.
+3. **Ship `dist-investor` on its own** (for example `/srv/investor/current`), not inside the console's folder.
+4. **A Caddy block of its own**, in the backend's `docs/DEPLOYMENT.md` section 5.1 beside the console's. The owner relays it to the backend track, as with section 1:
+
+   ```caddyfile
+   investors.hakoremfarms.com {
+   	handle_path /api/* {
+   		reverse_proxy api:3000
+   	}
+   	handle {
+   		root * /srv/investor/current
+   		try_files {path} /investor.html
+   		file_server
+   	}
+   }
+   ```
+
+5. **The API on the portal's own host.** `/api` goes to the API from the portal's host as from the console's and the shop's (section 4), so the browser's calls are same-origin and there is no CORS. The API's allowed origins hold `https://investors.hakoremfarms.com` (and staging's) for the `Origin` check on writes.
+6. **Its own cookies.** `loginInvestor` sets `__Host-hk_i_at` and its refresh cookie `__Host-hk_i_rt` on the portal's host only (`__Host-` is host-only, `Secure`, `Path=/`, no `Domain`). They are never sent to `app.`, and the staff cookies are never sent to `investors.`. The API must not set a `Domain` on any session cookie: that would share it across the subdomains.
+
+**Why it matters:** a portal served under the console's address would put the investor's and the staff cookies on one host, and the console's build would split its shared code around a third document (it cost the till 2.5 kB, PERFORMANCE_BUDGET.md, F12). A host that answers `index.html` on the portal's subdomain, the usual fallback, serves nothing: `dist-investor` has no `index.html`.
+
+**How to check it** (F13 smoke suite, against staging and after every deploy):
+
+- `GET https://investors.<domain>/` and `GET https://investors.<domain>/capital` return HTML with `<title>HaKorem Farms investor portal</title>`; `GET https://investors.<domain>/api/v1/health` answers from the API.
+- `GET https://app.<domain>/investor` and `GET https://app.<domain>/investor.html` return `<title>HaKorem Farms console</title>`.
+- Signing in on the portal sets `__Host-hk_i_at` on the portal's host and no cookie on `app.`; signing in on the console sets nothing on `investors.`.
+- `e2e/specs/investor/portal.spec.ts` checks the same against the two preview servers.

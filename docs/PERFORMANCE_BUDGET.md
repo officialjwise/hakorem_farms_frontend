@@ -147,13 +147,13 @@ The till's **initial load is its shell and the sale screen** (the `/pos` index r
 
 Gzipped, for each document's **initial load**: what the browser must fetch before the first screen renders. That is the entry chunk, every chunk it imports statically, the catalogue namespaces it loads at boot (`ENTRY_NAMESPACES` in `apps/console/src/app/entries.ts`) and its stylesheet. 1 kB is 1,000 bytes. What loads on demand is reported beside it, not budgeted.
 
-| Document                                              | Script budget | Style budget | Measured (initial script, style; on demand) |
-| ----------------------------------------------------- | ------------- | ------------ | ------------------------------------------- |
-| The till, `pos.html`                                  | 250 kB        | 15 kB        | 195.8 kB, 10.7 kB; 42.8 kB in 7 chunks      |
-| Back office, `index.html`                             | 300 kB        | 15 kB        | 266.1 kB, 10.7 kB; none                     |
-| Investor portal, `investor.html` (ADR 0058, A-F12-02) | 250 kB        | 15 kB        | 225.2 kB, 12.7 kB; 110.4 kB on demand (F12) |
+| Document                                                             | Script budget | Style budget | Measured (initial script, style; on demand)             |
+| -------------------------------------------------------------------- | ------------- | ------------ | ------------------------------------------------------- |
+| The till, `pos.html`                                                 | 250 kB        | 15 kB        | 195.8 kB, 10.7 kB; 42.8 kB in 7 chunks                  |
+| Back office, `index.html`                                            | 300 kB        | 15 kB        | 266.1 kB, 10.7 kB; none                                 |
+| Investor portal, `investor.html`, its own build (ADR 0058, A-F12-02) | 250 kB        | 15 kB        | 213.3 kB, 12.7 kB; 54.8 kB in 8 chunks on demand (F12b) |
 
-And one rule that is not a number: **neither the till's nor the investor portal's initial load contains the back office's entry chunk.**
+And two rules that are not numbers: **the till's initial load does not contain the back office's entry chunk**, and **the investor portal is its own build**: the console's build holds no `investor.html`, and the portal's holds no entry of the console's (ADR 0058, F12b).
 
 How the measurement got here:
 
@@ -164,6 +164,15 @@ How the measurement got here:
 - **F9: the till grew from 190.8 kB to 240.2 kB** (`pnpm budget:console`, 2026-11-16), 9.8 kB under its budget. The sale screen now sells: the offline store, queue and sync, the cart arithmetic and hash, the `pos` words, and the sale's own dialogs (an item's weight and price, payment, hold and recall), which bring Radix Select and the money and weight inputs into the initial load. They load with the document on purpose: the sale must complete with the network off even if the connection drops a second after the till starts, before anything could be fetched on demand. The till's other screens (setup, shift, the queue, returns) load on demand, 68.1 kB in 26 chunks, and are fetched once the till is ready (ADR 0043). The next till feature that adds to the sale screen should look here first: the headroom is small.
 - **F10j: the till fell from 247.1 kB to 241.8 kB** (`pnpm budget:console`, 2026-11-18), with the same build switches as CI. The refusal words (`refusals`, 12 kB of sentences, out of `common`) and the shift screens' words (`posShift`, out of `pos`) are namespaces of their own, fetched with the till's other screens once the sale screen is up (`TILL_NAMESPACES` in `apps/console/src/pos/routes.tsx`). A refusal that arrives before then waits for its words. The back office loads `refusals` at boot, 279.8 kB to 281.0 kB. The shift screens on 2.5.0 then added 0.3 kB to the till's queue, which must load with it (a fresh cash movement sent alone, a refused open let go): **242.1 kB**, 7.9 kB under budget. The shift screens themselves load on demand.
 - **F12: a third document costs the other two.** The investor portal (ADR 0058) shares the design system, the data layer and the sign-in screens with both. The bundler splits that shared code into more, smaller chunks, which compress less well. The till went from 244.9 kB to **247.4 kB** and the back office from 287.4 kB to **291.6 kB**, with the same build without the portal as the comparison. The portal's sign-in screens load with it, as the back office's do: on demand they cost the till 1.5 kB more. The till has 2.6 kB of headroom left. Merging the small shared chunks (Rolldown's `codeSplitting` groups) is the lever, and a decision for the owner.
+- **F12b: the portal is its own build, and the till gets its headroom back** (`pnpm budget:console`, 2026-11-23, with the same build switches as CI). The owner approved ADR 0058 with one change: the portal is its own build on its own subdomain. The console's build now holds only the till and the back office, so its shared code splits as it did before F12:
+
+  | Document                  | F12, three documents in one build | F12b, the portal on its own | Change   | Headroom          |
+  | ------------------------- | --------------------------------- | --------------------------- | -------- | ----------------- |
+  | The till, `pos.html`      | 247.4 kB                          | **244.9 kB**                | −2.5 kB  | 2.6 → **5.1 kB**  |
+  | Back office, `index.html` | 291.6 kB                          | **287.4 kB**                | −4.2 kB  | 8.4 → **12.6 kB** |
+  | Investor portal           | 225.2 kB                          | **213.3 kB**                | −11.9 kB | 24.8 → 36.7 kB    |
+
+  Styles are 12.7 kB in each, unchanged. The till's and the back office's figures are exactly F12's "without the portal" comparison. The portal falls further because its own build no longer shares chunks with the till's sale screen. What the till loads on demand is unchanged (80.4 kB in 34 chunks); the back office's falls from 294.7 kB in 159 chunks to 293.8 kB in 156. The chunk-merging lever is not needed for this and was not tried.
 
 Not counted: the service worker and the icons.
 
@@ -171,9 +180,9 @@ Not counted: the service worker and the icons.
 
 `pnpm budget:console`, after `pnpm build:console`, in CI and by hand.
 
-- **What it reads:** `apps/console/dist/.vite/manifest.json`, the chunk graph Vite writes with `build.manifest`.
+- **What it reads:** `apps/console/dist/.vite/manifest.json` and `apps/console/dist-investor/.vite/manifest.json`, the chunk graphs Vite writes with `build.manifest` for the console's build and the portal's (`pnpm build:investor`, ADR 0058). Build both first.
 - **What it does:** walks each document's static imports, adds the boot namespaces, gzips the files, and prints the initial load against the budget, with the on-demand total beside it.
-- **When it fails:** exit 1 if an initial load is over budget, or if the till's initial load contains the back office's entry chunk.
+- **When it fails:** exit 1 if an initial load is over budget, if the till's initial load contains the back office's entry chunk, if the console's build holds `investor.html`, or if the portal's build holds an entry of the console's.
 - **Where the numbers live:** `CONSOLE_BUDGET` in `apps/console/scripts/check-budget.ts` and the table above. Change both together.
 - **On the wire:** `e2e/specs/console/entries.spec.ts` checks the same rules from the requests a fresh till makes. It never requests the back office's chunk or its words, a signed-in till never fetches the sign-in chunk, and signing out fetches it.
 
