@@ -24,7 +24,8 @@ export async function SiteHeader({ query = '' }: { query?: string }) {
   const navLink =
     'inline-flex h-control-md shrink-0 items-center rounded-full px-3 text-control-md font-medium text-fg underline-offset-4 outline-focus hover-enabled:bg-surface-hover hover:underline focus-visible:outline-2';
   return (
-    <header>
+    // Not printed: a printed page (a receipt, CR-033) is its content alone.
+    <header className="print:hidden">
       <div data-theme="dark" className="bg-panel text-fg">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 pt-3 pb-2">
           <Link
