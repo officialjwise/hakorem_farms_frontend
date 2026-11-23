@@ -165,5 +165,47 @@
       "PAY_OUT": "Pay-out",
       "PAY_IN": "Pay-in"
     }
+  },
+  "driverCash": {
+    "title": "A driver’s cash from deliveries",
+    "body": "A driver hands in all the cash they collected on delivery here, once. Count it, then enter what you counted: the till shows what was expected only after you send the count. The cash goes into this drawer and is counted at the close.",
+    "noList": "This till cannot list the drivers yet",
+    "noListBody": "A driver’s cash is handed in at a till shift, but the server does not yet tell the till who holds any. Until it does, the till cannot take a driver’s cash: ask a manager.",
+    "offline": "The till is offline. A driver’s cash is handed in only while the till reaches the server.",
+    "notOnServer": "The server does not have this shift yet. A driver’s cash can be handed in once it does.",
+    "loading": "Finding the drivers who hold cash…",
+    "listFailed": "The till could not find out which drivers hold cash",
+    "retry": "Try again",
+    "none": "No driver holds cash from deliveries at this branch.",
+    "driver": "Driver",
+    "driverPlaceholder": "Choose the driver",
+    "driverOption_one": "{{name}}, {{count}} delivery",
+    "driverOption_other": "{{name}}, {{count}} deliveries",
+    "driverError": "Choose the driver handing the cash in.",
+    "counted": "Cash counted (GH₵)",
+    "countedHint": "What you counted. Enter 0 if the driver hands in nothing.",
+    "countedError": "Enter what you counted, or 0.",
+    "noteHint": "Optional. What the driver said about any difference.",
+    "noteTooLong": "Keep the note to {{max}} characters.",
+    "review": "Review the hand-in",
+    "confirmTitle": "Hand in this driver’s cash?",
+    "confirmBody": "Every collection {{name}} holds at this branch is handed in now, once.",
+    "consequence": "The counted cash goes into this drawer. If it is less than the driver collected, the driver is reported short.",
+    "confirm": "Hand in the cash",
+    "sending": "Handing in…",
+    "failed": "The driver’s cash was not handed in",
+    "done": "Handed in: {{name}}’s cash from deliveries",
+    "expected": "Collected on delivery",
+    "variance": {
+      "EXACT": "Difference: none",
+      "SHORT": "Short by",
+      "OVER": "Over by"
+    },
+    "shortTitle": "The count is short of what the driver collected",
+    "shortBody": "The driver is reported short on the driver variance report. The drawer holds only what you counted.",
+    "collections_one": "{{count}} delivery handed in",
+    "collections_other": "{{count}} deliveries handed in",
+    "collection": "{{delivery}}, {{recipient}}, {{at}}",
+    "unnumbered": "A delivery"
   }
 }

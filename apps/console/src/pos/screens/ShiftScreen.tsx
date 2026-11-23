@@ -34,6 +34,7 @@ import {
 } from '../offline/types';
 import { CashMoved } from '../shift/CashMoved';
 import { CashMovementForm } from '../shift/CashMovementForm';
+import { DriverCashHandIn } from '../shift/DriverCashHandIn';
 
 type Shift = components['schemas']['Shift'];
 type ShiftReport = components['schemas']['ShiftReport'];
@@ -136,6 +137,9 @@ function OpenShift({
       </section>
       {status === 'OPEN' && isCashier && auth.can('pos.cash.move') ? (
         <CashMovementForm shift={shift} pack={pack} online={online} />
+      ) : null}
+      {status === 'OPEN' && isCashier && auth.can('pos.sale.create') ? (
+        <DriverCashHandIn shift={shift} online={online} />
       ) : null}
       {online && shift.confirmed && auth.can('pos.shift.read') ? (
         <CashMoved
