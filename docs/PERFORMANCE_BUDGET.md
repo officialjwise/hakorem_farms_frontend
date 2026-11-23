@@ -119,6 +119,7 @@ The owner's decision (2026-11-18, on F10l): **the 120 kB limit covers the whole 
 | ---------------------------------------------- | ------------------------- | ------ | ------------------ |
 | `/`, `/c/[slug]`, `/search`, the listing pages | 124,315 B → **112,145 B** | 120 kB | **yes, at 120 kB** |
 | `/q/[token]`, the quote by its link            | 173,365 B → **158,952 B** | 170 kB | **yes, at 170 kB** |
+| `/r/[token]`, the receipt by its link (F10o)   | **111,771 B**             | 120 kB | **yes, at 120 kB** |
 | `/quote`, the request-for-quote form           | 166,901 B → **165,426 B** | 170 kB | yes                |
 | `/p/[slug]`                                    | 157,159 B → 155,764 B     | none   | no                 |
 | `/checkout`                                    | 207,849 B → 206,274 B     | none   | no                 |
@@ -173,6 +174,9 @@ How the measurement got here:
   | Investor portal           | 225.2 kB                          | **213.3 kB**                | −11.9 kB | 24.8 → 36.7 kB    |
 
   Styles are 12.7 kB in each, unchanged. The till's and the back office's figures are exactly F12's "without the portal" comparison. The portal falls further because its own build no longer shares chunks with the till's sale screen. What the till loads on demand is unchanged (80.4 kB in 34 chunks); the back office's falls from 294.7 kB in 159 chunks to 293.8 kB in 156. The chunk-merging lever is not needed for this and was not tried.
+
+- **F10o: the till grew from 244.9 kB to 246.2 kB** (`pnpm budget:console`, 2026-11-23, with the same build switches as CI), 3.8 kB under its budget. The sale screen gained the supervisor's PIN approval in the line editor (the PIN field and its check, already in the till for offline mobile money, now reached from the line editor too), the receipt token and each animal's band. The driver's cash hand-in is on the shift screen, which loads on demand. The back office is 288.0 kB (+0.6 kB, the quote links and stock words). The headroom is now small: the next sale-screen feature should look at the chunk-merging lever first.
+- **The receipt by its link (CR-033) is under the listing pages' 120 kB, enforced.** It is read on the server and has no island: it loads the layout's scripts and the error state's retry, 111,771 B counted whole, its own page 423 B.
 
 Not counted: the service worker and the icons.
 

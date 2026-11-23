@@ -61,7 +61,7 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-055 | 2026-11-18 | Open                      |
 | CR-056 | 2026-11-18 | Open                      |
 | CR-057 | 2026-11-18 | Answered (2.31.0), built  |
-| CR-058 | 2026-11-22 | Open                      |
+| CR-058 | 2026-11-22 | Answered (2.19.0), built  |
 | CR-063 | 2026-11-23 | Open                      |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
@@ -1030,6 +1030,8 @@ The server returns the rest to stock (or keeps it on the van for a reattempt, as
 4. **Who may issue it:** a holder of `quo.quote.issue`, normally the version's author. Please state whether the approver may issue it too.
 
 **Until this lands:** nothing changes on the console. When the contract carries it, the quote page offers "Issue and send" on an approved version and shows the link once, as for any issue (F10m, section 3).
+
+**Answered in 2.19.0 (F10o), and built:** approving `QUOTE_BELOW_MARGIN` only approves; the version is `APPROVED` (point 2 as a status, not an object); `issueQuoteVersion` by anyone but its approver issues it at the figures approved and answers its token once; the approver is refused with 422 `QUOTE_INVALID` `APPROVER_CANNOT_ISSUE` (point 4). Point 3's second approval when prices or costs changed is not stated: the contract issues "at the figures approved". The quote page offers "Issue and send" on an approved version, with the issue flow's channels, and shows the link once; the approvals screen says a margin approval only approves.
 
 ## CR-059. The daily exception report: marking an item reviewed, and the controls that have no kind (additive, seed)
 
