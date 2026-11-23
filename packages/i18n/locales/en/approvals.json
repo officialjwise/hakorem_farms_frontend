@@ -119,6 +119,7 @@
     "reject": "Reject",
     "approveTitle": "Approve this {{kind}}?",
     "approveBody": "It takes effect at once, in the same step as your approval, and is recorded with your name.",
+    "approveMarginBody": "It approves the version’s margin and is recorded with your name. Nothing is sent yet: the salesperson, not you, then issues and sends the version.",
     "rejectTitle": "Reject this {{kind}}?",
     "rejectBody": "Nothing takes effect. The person who asked is told, with your reason.",
     "reason": "Reason",

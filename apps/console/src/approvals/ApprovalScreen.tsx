@@ -404,7 +404,12 @@ function Decision({
           open
           onOpenChange={(next) => setOpen(next ? 'approve' : null)}
           title={t('decide.approveTitle', { kind })}
-          body={t('decide.approveBody')}
+          body={
+            // 2.19.0: a margin approval only approves; the salesperson then issues the version.
+            request.kind === 'QUOTE_BELOW_MARGIN'
+              ? t('decide.approveMarginBody')
+              : t('decide.approveBody')
+          }
           confirmLabel={t('decide.approve')}
           pendingLabel={t('decide.approving')}
           pending={approve.isPending}
