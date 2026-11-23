@@ -100,7 +100,7 @@ test("a driver's cash is counted blind into the shift, and the short stays on sc
 
   await part.getByRole('combobox', { name: /^Driver/ }).click();
   await page.getByRole('option', { name: 'Kwesi Appiah, 2 deliveries' }).click();
-  await part.getByRole('textbox', { name: /^Cash counted/ }).fill('1440');
+  await part.getByRole('textbox', { name: /^Driver’s cash counted/ }).fill('1440');
   await part.getByRole('textbox', { name: /^Note/ }).fill('Says the chop bar paid GHS 140.00');
   await part.getByRole('button', { name: 'Review the hand-in' }).click();
 
@@ -115,7 +115,7 @@ test("a driver's cash is counted blind into the shift, and the short stays on sc
   const done = part.locator('[data-slot="driver-cash-done"]');
   await expect(done).toContainText('Handed in: Kwesi Appiah’s cash from deliveries');
   await expect(done).toContainText('Collected on deliveryGH₵1,540.00');
-  await expect(done).toContainText('Cash counted (GH₵)GH₵1,440.00');
+  await expect(done).toContainText('Driver’s cash counted (GH₵)GH₵1,440.00');
   await expect(done).toContainText('Short byGH₵100.00');
   await expect(done).toContainText('The count is short of what the driver collected');
   await done.getByText('2 deliveries handed in').click();
@@ -147,7 +147,7 @@ test('a refused hand-in stays on screen in words, with its reference', async ({ 
   const part = page.locator('[data-slot="driver-cash"]');
   await part.getByRole('combobox', { name: /^Driver/ }).click();
   await page.getByRole('option', { name: 'Kwesi Appiah, 2 deliveries' }).click();
-  await part.getByRole('textbox', { name: /^Cash counted/ }).fill('0');
+  await part.getByRole('textbox', { name: /^Driver’s cash counted/ }).fill('0');
   await part.getByRole('button', { name: 'Review the hand-in' }).click();
   const confirm = page.getByRole('dialog', { name: 'Hand in this driver’s cash?' });
   await confirm.getByRole('button', { name: 'Hand in the cash' }).click();

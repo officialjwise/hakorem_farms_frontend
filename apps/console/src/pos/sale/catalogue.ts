@@ -46,15 +46,6 @@ export function isSoldByUnit(pack: OfflinePack, product: OfflineProduct): boolea
   return pack.stockUnits.some((unit) => unit.productId === product.product.id);
 }
 
-/**
- * An animal sold by its tag that the pack gives no band: 2.11.0 prices a product priced by grade or weight
- * at no single band ("a live animal has no single band"). Until each animal carries its own (CR-052), the
- * till sells it through a quote or an order in the back office, and says so (the owner, 2026-11-18).
- */
-export function soldThroughQuotes(pack: OfflinePack, product: OfflineProduct): boolean {
-  return isSoldByUnit(pack, product) && product.priceBand === null;
-}
-
 export function sellableUnits(pack: OfflinePack, product: OfflineProduct): OfflineStockUnit[] {
   return pack.stockUnits.filter((unit) => unit.productId === product.product.id && unit.sellable);
 }
@@ -118,15 +109,39 @@ export function bandFor(
 }
 
 /**
- * A new line at the list price, in the selling unit chosen or the product's own. A unit's last recorded
- * weight is carried as an estimate.
+ * The band an animal or a lot is priced from (2.28.0, CR-052): an animal carries its own, resolved from its
+ * own grade and latest weight; a lot sells at its product's. Null for an animal the pack gives no price,
+ * with `unpricedReason` saying why.
+ */
+export function stockUnitBand(
+  product: OfflineProduct,
+  unit: OfflineStockUnit,
+  soldInUom?: string | null,
+): OfflineProduct['priceBand'] {
+  if (unit.priceBand != null) return unit.priceBand;
+  return unit.unpricedReason == null ? bandFor(product, soldInUom) : null;
+}
+
+/** Why an animal cannot be priced at this till, or null when it can. */
+export function unpricedReason(
+  product: OfflineProduct,
+  unit: OfflineStockUnit,
+): NonNullable<OfflineStockUnit['unpricedReason']> | 'NO_PRICE' | null {
+  if (stockUnitBand(product, unit) !== null) return null;
+  return unit.unpricedReason ?? 'NO_PRICE';
+}
+
+/**
+ * A new line at the list price, in the selling unit chosen or the product's own; an animal at its own band.
+ * A unit's last recorded weight is carried as an estimate, which the server prices from too.
  */
 export function newLine(
   product: OfflineProduct,
   unit: OfflineStockUnit | null,
   selling: SellingUnit | null = null,
 ): CartLine | null {
-  const band = bandFor(product, selling?.uom);
+  const band =
+    unit === null ? bandFor(product, selling?.uom) : stockUnitBand(product, unit, selling?.uom);
   if (band === null) return null;
   return {
     key: newRecordId(),

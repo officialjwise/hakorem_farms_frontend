@@ -33,10 +33,10 @@ import {
   newLine,
   unitChoices,
   sellableUnits,
-  soldThroughQuotes,
   sellingBlock,
   tiles,
   type SellingBlock,
+  unpricedReason,
 } from '../sale/catalogue';
 import { ChooseDialog, type Choice } from '../sale/ChooseDialog';
 import { HeldSales } from '../sale/HeldSales';
@@ -236,14 +236,6 @@ function Selling({
         });
         return;
       }
-      if (soldThroughQuotes(pack, product)) {
-        setNotice({
-          severity: 'warning',
-          title: t('sale.notice.throughQuotes', { name: product.product.name }),
-          body: t('sale.notice.throughQuotesBody'),
-        });
-        return;
-      }
       if (isSoldByUnit(pack, product)) {
         const units = sellableUnits(pack, product).filter(
           (unit) => !lines.some((l) => l.stockUnitId === unit.id),
@@ -330,31 +322,37 @@ function Selling({
                     </Alert>
                   </li>
                 ))}
-                {results.units.map(({ product, unit }) => (
-                  <li key={unit.id}>
-                    <Button
-                      variant="secondary"
-                      size="lg"
-                      fullWidth
-                      disabled={block !== null}
-                      onClick={() => {
-                        if (soldThroughQuotes(pack, product)) pick(product.product.id);
-                        else add(newLine(product, unit), product.product.name);
-                        setQuery('');
-                      }}
-                    >
-                      <TileWords
-                        name={t('sale.find.unit', {
-                          name: product.product.name,
-                          tag: unit.identifier,
-                        })}
-                        note={
-                          soldThroughQuotes(pack, product) ? t('sale.tile.throughQuotes') : null
-                        }
-                      />
-                    </Button>
-                  </li>
-                ))}
+                {results.units.map(({ product, unit }) => {
+                  const reason = unpricedReason(product, unit);
+                  return (
+                    <li key={unit.id}>
+                      <Button
+                        variant="secondary"
+                        size="lg"
+                        fullWidth
+                        disabled={block !== null}
+                        onClick={() => {
+                          if (reason !== null) {
+                            setNotice({
+                              severity: 'warning',
+                              title: t('sale.notice.noPrice', { name: unit.identifier }),
+                              body: t(`choose.unpriced.${reason}`),
+                            });
+                          } else add(newLine(product, unit), product.product.name);
+                          setQuery('');
+                        }}
+                      >
+                        <TileWords
+                          name={t('sale.find.unit', {
+                            name: product.product.name,
+                            tag: unit.identifier,
+                          })}
+                          note={reason === null ? null : t(`choose.unpriced.${reason}`)}
+                        />
+                      </Button>
+                    </li>
+                  );
+                })}
                 {results.products.map((product) => (
                   <li key={product.product.id}>
                     <Button
@@ -392,13 +390,7 @@ function Selling({
                     >
                       <TileWords
                         name={product.product.name}
-                        note={
-                          product.quoteOnly
-                            ? t('sale.tile.quoteOnly')
-                            : soldThroughQuotes(pack, product)
-                              ? t('sale.tile.throughQuotes')
-                              : null
-                        }
+                        note={product.quoteOnly ? t('sale.tile.quoteOnly') : null}
                       />
                     </Button>
                   </li>

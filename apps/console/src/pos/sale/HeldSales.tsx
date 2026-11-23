@@ -17,7 +17,7 @@ import { newRecordId } from '../../lib/clientId';
 import type { CartLine } from '../offline/cart';
 import { getTill } from '../offline/till';
 import type { HeldLocal, OfflinePack, TillSnapshot } from '../offline/types';
-import { bandFor, productById } from './catalogue';
+import { bandFor, productById, stockUnitBand } from './catalogue';
 
 type HeldSale = components['schemas']['HeldSale'];
 
@@ -34,8 +34,19 @@ function linesOf(payload: Record<string, unknown>): CartLine[] {
 export function repriced(lines: CartLine[], pack: OfflinePack): CartLine[] {
   return lines.flatMap((line) => {
     const product = productById(pack, line.productId);
-    // A crate is re-priced as a crate and a single egg as an egg (CR-038).
-    const band = product === null ? null : bandFor(product, line.soldInUom);
+    // A crate is re-priced as a crate and a single egg as an egg (CR-038); an animal at its own band (CR-052).
+    const unit =
+      line.stockUnitId === null
+        ? undefined
+        : pack.stockUnits.find((candidate) => candidate.id === line.stockUnitId);
+    const band =
+      product === null
+        ? null
+        : unit === undefined
+          ? line.stockUnitId === null
+            ? bandFor(product, line.soldInUom)
+            : null
+          : stockUnitBand(product, unit, line.soldInUom);
     if (band === null) return [];
     return [
       {

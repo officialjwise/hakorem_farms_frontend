@@ -17,7 +17,7 @@ import {
  * network returns it sends the sale once, and a second pass sends nothing more.
  */
 
-const GOAT = 85000; // G-0142, the pack's list price a head
+const GOAT = 65000; // G-0142's own band in the pack (2.28.0, CR-052), a head
 const BEEF = 45750; // 15.250 kg at GH₵30.00 a kilogram
 const TOTAL = GOAT + BEEF;
 const HANDED = 140000;
@@ -39,7 +39,7 @@ test('the F9 gate: a full sale with the network off, synced exactly once on reco
   await expect(page.getByText('Offline').first()).toBeVisible();
   const syncsBefore = api.log.filter((e) => e.operationId === 'syncOfflineSales').length;
 
-  // A goat by its tag: the pack's list price, its last weight carried as an estimate.
+  // A goat by its tag: its own list price in the pack, its last weight carried as an estimate.
   await find(page, 'G-0142', /G-0142$/);
   await expect(page.getByText('Added G-0142')).toBeVisible();
   // Beef by the kilogram: its line opens for the weight at once.

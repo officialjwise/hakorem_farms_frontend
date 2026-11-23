@@ -182,7 +182,7 @@
     "driverOption_one": "{{name}}, {{count}} delivery",
     "driverOption_other": "{{name}}, {{count}} deliveries",
     "driverError": "Choose the driver handing the cash in.",
-    "counted": "Cash counted (GH₵)",
+    "counted": "Driver’s cash counted (GH₵)",
     "countedHint": "What you counted. Enter 0 if the driver hands in nothing.",
     "countedError": "Enter what you counted, or 0.",
     "noteHint": "Optional. What the driver said about any difference.",

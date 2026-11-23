@@ -5,6 +5,7 @@
  * and the order read back carrying the total the till sent. Everything else is Prism's.
  */
 import { createHash } from 'node:crypto';
+import { LIST_DRIVER_CASH_HOLDERS } from '../../apps/console/src/requested/driverCashHolders';
 import { expect, type Page } from '@playwright/test';
 import type { FakeApi } from './fakeApi';
 import { confirmStepUp, signIn, signInWithTotp, USERS } from './helpers';
@@ -83,8 +84,6 @@ export interface TillServerOptions {
   offlineMobileMoney?: boolean;
   /** Changes the pack's products, for a state its example cannot show (the egg session: two units). */
   products?: (products: Record<string, unknown>[]) => Record<string, unknown>[];
-  /** The pack exactly as 2.11.0 answers it: the goat with no band (CR-052), not `goatPricedPerHead`. */
-  contractPack?: boolean;
   /** CR-050, requested: the supervisors signed in at the branch. The manager, unless a test says none. */
   witnesses?: { id: string; displayName: string }[];
 }
@@ -97,35 +96,6 @@ const CASH_REASONS = [
   { code: 'OTHER_PAYOUT', description: 'Another expense paid from the till', requiresNote: true },
   { code: 'FLOAT_TOP_UP', description: 'Float topped up', requiresNote: false },
 ].map((reason) => ({ ...reason, domain: 'CASH_MOVEMENT', lossAccountGroup: null }));
-
-/**
- * 2.11.0's pack gives the goat no band: "a product priced by grade or weight (a live animal) has no single
- * band", so as built a till cannot sell one (CR-052). These specs test the till, not the goat's price, so
- * the goat keeps the per-head band 2.10.0's example gave it, its first unit's as the pack says.
- */
-const GOAT_ID = '019a7a8d-137d-74bf-b9f8-54cda260cdab';
-const GOAT_BAND = {
-  listPricePesewas: 85000,
-  floorPricePesewas: 12000,
-  ceilingPricePesewas: 195000,
-  basis: 'PER_HEAD',
-};
-const GOAT_ENTRY = '019a7afb-e198-708b-85c3-118489658a62';
-
-export function goatPricedPerHead(products: Record<string, unknown>[]): Record<string, unknown>[] {
-  return products.map((entry) =>
-    (entry.product as { id: string }).id !== GOAT_ID || entry.priceBand !== null
-      ? entry
-      : {
-          ...entry,
-          priceBand: GOAT_BAND,
-          priceListEntryId: GOAT_ENTRY,
-          sellingUnits: [
-            { uom: 'HEAD', priceListEntryId: GOAT_ENTRY, priceBand: GOAT_BAND, quoteOnly: false },
-          ],
-        },
-  );
-}
 
 const CASHIER = { id: PEOPLE.cashier.id, displayName: PEOPLE.cashier.name };
 const MANAGER = { id: PEOPLE.manager.id, displayName: PEOPLE.manager.name };
@@ -160,6 +130,8 @@ export function installTillServer(
     locked: [],
     serverTime: new Date().toISOString(),
   }));
+  // CR-063, requested: no driver holds delivery cash unless a test says so.
+  api.respondRequested(LIST_DRIVER_CASH_HOLDERS, () => ({ data: [] }));
   let receipt = 6200;
   api.rewrite('getOfflinePack', (body) => {
     const pack = body as {
@@ -173,11 +145,8 @@ export function installTillServer(
         ...pack.reasonCodes.filter((reason) => reason.domain !== 'CASH_MOVEMENT'),
         ...CASH_REASONS,
       ],
-      products: options.contractPack
-        ? pack.products
-        : options.products === undefined
-          ? goatPricedPerHead(pack.products)
-          : options.products(goatPricedPerHead(pack.products)),
+      // 2.28.0 (CR-052): each goat carries its own band in `stockUnits`, as the contract's example does.
+      products: options.products === undefined ? pack.products : options.products(pack.products),
       generatedAt: new Date().toISOString(),
       validUntil: new Date(Date.now() + 24 * 3_600_000).toISOString(),
       policy: {

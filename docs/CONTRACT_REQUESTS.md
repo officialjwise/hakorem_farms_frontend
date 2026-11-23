@@ -55,7 +55,7 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-049 | 2026-11-18 | Answered (2.12.0)         |
 | CR-050 | 2026-11-18 | Answered (2.17.0), built  |
 | CR-051 | 2026-11-18 | Answered (2.17.0), built  |
-| CR-052 | 2026-11-18 | Open                      |
+| CR-052 | 2026-11-18 | Answered (2.28.0), built  |
 | CR-053 | 2026-11-18 | Open                      |
 | CR-054 | 2026-11-18 | Open                      |
 | CR-055 | 2026-11-18 | Open                      |
@@ -901,6 +901,13 @@ Within the branches the caller holds the permission at, as `listSupplierInvoices
 **Request:** the band each sellable animal is sold at, resolved as the server would at the counter (the register's lists, a buyer with no account, its grade and its weight band from `lastWeightKg`): `OfflineStockUnit.priceBand: PriceBand | null` and `OfflineStockUnit.priceListEntryId: uuid | null`, null when the animal has no price at this register. A product priced per kilogram keeps its own band, and the scale gives the weight. Say in `syncOfflineSales` how an animal re-weighed at the sale is priced if its weight moved it to another band.
 
 **Until this lands** (the owner, 2026-11-18: the backend adds each animal's price to the pack late in the till work): with the real pack, an animal's tile says "Sold through quotes and orders" before it is tapped, and a tap, or its tag found by search, says the animal is sold through quotes and orders, not at this till, and to make a quote or an order in the back office. Nothing goes on the sale, and everything else sells (`soldThroughQuotes` in `pos/sale/catalogue.ts`; `pos-till.spec.ts` with the pack as 2.11.0 answers it). The other till specs give the goat the per-head band of 2.10.0's example (`goatPricedPerHead` in `e2e/support/till.ts`), so they still run with an animal.
+
+**Answered in 2.28.0 (F10o), and built:**
+
+- `OfflineStockUnit.priceBand` and `priceListEntryId` are each animal's own, from its own grade and latest weight; `unpricedReason` says why one has none (`MISSING_GRADE_OR_WEIGHT`, `NO_RULE`, `QUOTE_ONLY`, `NOT_SELLABLE`). A lot carries none and sells at its product's band.
+- The till sells each animal at its own band, shows it beside the tag in the chooser, and greys out an unpriced animal with the reason in words. A recalled held sale takes the animal's band from the pack held now.
+- An animal weighed again since the pack is priced by the server from its latest weight; the till's price stands and any difference is raised (`OFFLINE_PACK_PRICE`).
+- `soldThroughQuotes` and its words, and `goatPricedPerHead` in the e2e fake, are deleted: the specs use the contract's own example pack.
 
 ## CR-053. An order names its pick lists and the answer it waits for (additive)
 
