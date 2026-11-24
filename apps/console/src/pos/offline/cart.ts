@@ -151,7 +151,9 @@ export function approvalStands(line: CartLine): boolean {
  * must sit inside the band; any price other than the list price needs a reason; and the discount may not
  * pass the per-line limit, nor take the shift's discounts so far past the per-shift limit. A supervisor's
  * PIN approval for this price (2.17.0) lets the line pass the cashier's limits, up to the supervisor's own
- * per-line limit (A-F10-15); nothing lets a price outside the band.
+ * per-line limit, and its discount still counts toward the shift's, so once the shift's total is used every
+ * further discount needs a supervisor (A-F10-15, accepted by the owner on 2026-11-24). A line with no
+ * discount passes whatever the shift has given; nothing lets a price outside the band.
  */
 export function checkAgreedPrice(
   line: CartLine,
@@ -170,6 +172,8 @@ export function checkAgreedPrice(
     return 'REASON_REQUIRED';
   }
   const discount = BigInt(lineDiscount(line));
+  // No discount needs no limit: a shift past its total (approved discounts count) still sells at list.
+  if (discount === 0n) return null;
   if (approvalStands(line) && line.overrideApproval != null) {
     return discount > BigInt(line.overrideApproval.limitPesewas) ? 'OVER_LINE_LIMIT' : null;
   }
