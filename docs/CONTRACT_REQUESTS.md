@@ -36,13 +36,13 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-030 | 2026-11-16 | Answered (1.43.0)         |
 | CR-031 | 2026-11-16 | Planned shape (1.45.0)    |
 | CR-032 | 2026-11-16 | Answered (2.17.0), built  |
-| CR-033 | 2026-11-16 | Answered (2.24.0), built  |
+| CR-033 | 2026-11-16 | Answered (2.24.0, 2.41.0) |
 | CR-034 | 2026-11-17 | Answered (2.0.0), built   |
 | CR-035 | 2026-11-17 | Answered (2.3.0), built   |
 | CR-036 | 2026-11-17 | Answered (2.4.0), built   |
 | CR-037 | 2026-11-17 | Answered (2.4.0)          |
 | CR-038 | 2026-11-17 | Answered in 2.11.0, built |
-| CR-039 | 2026-11-17 | Open                      |
+| CR-039 | 2026-11-17 | Answered (2.42.0)         |
 | CR-040 | 2026-11-17 | Answered (2.9.0), built   |
 | CR-041 | 2026-11-17 | Answered (2.12.0), built  |
 | CR-042 | 2026-11-17 | Answered (2.9.0), built   |
@@ -58,11 +58,11 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-052 | 2026-11-18 | Answered (2.28.0), built  |
 | CR-053 | 2026-11-18 | Open                      |
 | CR-054 | 2026-11-18 | Open                      |
-| CR-055 | 2026-11-18 | Open                      |
+| CR-055 | 2026-11-18 | Answered (2.35.0)         |
 | CR-056 | 2026-11-18 | Open                      |
 | CR-057 | 2026-11-18 | Answered (2.31.0), built  |
 | CR-058 | 2026-11-22 | Answered (2.19.0), built  |
-| CR-063 | 2026-11-23 | Open                      |
+| CR-063 | 2026-11-23 | Answered (2.35.0), built  |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -585,6 +585,8 @@ Field names are a suggestion; the frontend will read whatever B05x names them. W
 - `OfflinePack.receiptLinkTemplate` holds `{token}`; the till makes a 16-byte base64url token per sale and sends it as `OfflineSale.receiptToken`, under `payloadHash`. `getPublicReceipt` reads it (the storefront's `/r/[token]`).
 - A token the server refuses (`RECEIPT_TOKEN_REFUSED`) leaves the sale recorded; the till then says the link was refused and to give the sale reference.
 - **Point 3, the receipt SMS (`SyncResultItem.receiptMessage`), is not in the contract** (B11's). The till promises no SMS; the phone number still goes with the sale. The switch is deleted: this point is built when the contract carries it.
+
+**Point 3 answered in 2.41.0, without its item 3.** The farm sends the receipt link by SMS when a sale that names a phone and whose till token was kept syncs; `SyncResultItem.receiptMessage` was not added (backend BL-119), so the till cannot say whether the SMS went. Built in F10p: the till says when the SMS goes, that none goes for a sale with no link or a refused one, and never that it arrived.
 
 ## CR-034. The server generates each product's SKU (changed request body)
 
@@ -1126,3 +1128,5 @@ The server returns the rest to stock (or keeps it on the van for a reattempt, as
 4. Another cashier's shift 403, a shift that is not open 422 `SHIFT_NOT_OPEN`, as `handInDriverCash`.
 
 **Until this lands:** the till's shift screen says it cannot list the drivers yet, so it cannot take a driver's cash. The e2e and CI builds are switched on for CR-063 (ADR 0046) and their fake answers this shape; the hand-in itself calls the real `handInDriverCash`.
+
+**Answered in 2.35.0, as asked** (`DriverCashHolder`, `DriverCashHolderList`; the caller is never listed). Built in F10p: the shift screen reads it through `useApiQuery`, and the switch is deleted. The count stays blind (point 3, the owner's answer of 2026-11-24).

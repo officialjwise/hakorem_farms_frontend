@@ -13,11 +13,10 @@ import {
   formatDateTime,
   type FailureLike,
 } from '@hakorem/ui';
-import { useApiMutation } from '../../data/api';
+import { useApiMutation, useApiQuery } from '../../data/api';
 import { ConfirmDialog } from '../../lib/ConfirmDialog';
 import { useIntentKey } from '../../lib/queries';
 import { RequestReference } from '../../lib/RequestReference';
-import { driverCashHoldersOn, useDriverCashHolders } from '../../requested/driverCashHolders';
 import type { ShiftRecord } from '../offline/types';
 
 type HandIn = components['schemas']['DriverCashReconciliation'];
@@ -29,12 +28,17 @@ const NOTE_MAX = 500;
  * cashier counts it blind into their own open shift, every collection the driver holds at the branch is
  * handed in once, and the server answers what was expected and any short or over. The count goes into the
  * drawer and is counted at the close like any cash the shift took. Online only: the operation is not in the
- * offline batch. The drivers come from CR-063 until the contract lists them for the till.
+ * offline batch. The drivers are `listShiftDriverCashHolders` (2.35.0, CR-063): names and counts, never an
+ * amount, so the count stays blind (A-F10-19, accepted by the owner on 2026-11-24).
  */
 export function DriverCashHandIn({ shift, online }: { shift: ShiftRecord; online: boolean }) {
   const { t } = useTranslation(['posShift', 'pos']);
   const canAsk = online && shift.confirmed;
-  const holders = useDriverCashHolders(shift.id, canAsk);
+  const holders = useApiQuery(
+    'listShiftDriverCashHolders',
+    { path: { id: shift.id } },
+    { enabled: canAsk, staleClass: 'live' },
+  );
   const handIn = useApiMutation('handInDriverCash', {
     invalidates: ['getShift', 'getShiftXReport', 'listDriverCashReconciliations'],
   });
@@ -71,11 +75,7 @@ export function DriverCashHandIn({ shift, online }: { shift: ShiftRecord; online
       {done.map((answer) => (
         <HandedIn key={answer.id} answer={answer} />
       ))}
-      {!driverCashHoldersOn() ? (
-        <Alert severity="info" title={t('driverCash.noList')}>
-          {t('driverCash.noListBody')}
-        </Alert>
-      ) : !canAsk ? (
+      {!canAsk ? (
         <Alert
           severity="warning"
           title={online ? t('driverCash.notOnServer') : t('driverCash.offline')}

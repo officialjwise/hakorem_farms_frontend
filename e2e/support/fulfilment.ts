@@ -399,7 +399,14 @@ export function installDispatchServer(api: FakeApi): Sent {
         },
       };
     }),
+    // 2.32.0, always sent.
+    stopsOnVan: order.length,
     codDueTotalPesewas: 84600,
+    codCollectedPesewas: 0,
+    codHeldPesewas: 0,
+    handIns: [],
+    startedAt: status === 'PLANNED' ? null : '2026-11-18T07:30:00Z',
+    completedAt: null,
     currency: 'GHS',
     branchId: BRANCH,
     version: 1,

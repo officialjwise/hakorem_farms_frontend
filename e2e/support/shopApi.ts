@@ -71,6 +71,9 @@ export const ISSUED_QUOTE: PublicQuote = {
       unitPricePesewas: 5500,
       lineNetPesewas: 55000,
       subjectToStock: false,
+      // 2.43.0, always sent.
+      availableNowQuantity: '300.000',
+      availableNowUom: 'EGG',
     },
     {
       description: 'Eggs, big, single',
@@ -80,6 +83,8 @@ export const ISSUED_QUOTE: PublicQuote = {
       unitPricePesewas: 220,
       lineNetPesewas: 6600,
       subjectToStock: false,
+      availableNowQuantity: '30.000',
+      availableNowUom: 'EGG',
     },
   ],
   deliveryFeePesewas: 6000,

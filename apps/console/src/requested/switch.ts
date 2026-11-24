@@ -12,7 +12,7 @@
 export const REQUESTED_CONTRACT_VARIABLE = 'HK_REQUESTED_CONTRACT';
 
 /** The requests the console can be built against. */
-export const CONTRACT_REQUESTS = ['CR-059', 'CR-063'] as const;
+export const CONTRACT_REQUESTS = ['CR-059'] as const;
 export type ContractRequest = (typeof CONTRACT_REQUESTS)[number];
 
 export function parseRequestedContract(raw: string | undefined): ReadonlySet<ContractRequest> {

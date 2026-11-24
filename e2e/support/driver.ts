@@ -212,7 +212,14 @@ export function installDriverServer(api: FakeApi, { loseFirstSync = false } = {}
         slotEndsAt: stop.to,
       },
     })),
+    // 2.32.0, always sent.
+    stopsOnVan: STOPS.filter((stop) => statusOf(stop) !== 'DELIVERED').length,
     codDueTotalPesewas: RUN_COD_PESEWAS,
+    codCollectedPesewas: 0,
+    codHeldPesewas: 0,
+    handIns: [],
+    startedAt: '2026-11-18T07:30:00Z',
+    completedAt: null,
     currency: 'GHS',
     branchId: BRANCH,
     version: 3,
@@ -286,6 +293,8 @@ export function installDriverServer(api: FakeApi, { loseFirstSync = false } = {}
             ? ('APPLIED_WITH_EXCEPTION' as const)
             : ('APPLIED' as const),
         reason: differs && !seen ? 'Cash collected differs from the amount due.' : null,
+        // 2.35.0: the first answer, on a duplicate only.
+        firstOutcome: seen ? ('APPLIED' as const) : null,
       };
     });
     if (loseFirstSync && syncs === 1) {

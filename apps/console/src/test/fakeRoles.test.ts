@@ -14,9 +14,6 @@ const NOT_SEEDED: Readonly<Record<string, string>> = {
   'rpt.exceptions.read': 'reporting',
   'rpt.report.read': 'reporting',
   'rpt.report.export': 'reporting',
-  // Orders, fulfilment and delivery (B11, CR-056; A-F11-01).
-  'del.route.read': 'B11',
-  'del.route.manage': 'B11',
 };
 
 /**

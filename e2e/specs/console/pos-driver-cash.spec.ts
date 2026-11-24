@@ -1,14 +1,12 @@
 import type { Page } from '@playwright/test';
 import type { components } from '@hakorem/api-client';
-import { LIST_DRIVER_CASH_HOLDERS } from '../../../apps/console/src/requested/driverCashHolders';
 import { expectNoAxeViolations, expectNoHorizontalScroll } from '../../support/helpers';
 import { expect, test } from '../../support/test';
 import { installTillServer, openTillShift, type SentSale } from '../../support/till';
 
 /**
  * A driver's cash from deliveries handed in at the till's shift at 360 px (2.31.0, CR-057,
- * `handInDriverCash`): the cashier chooses the driver (CR-063, requested: the contract lists no drivers for
- * the till), counts the cash blind, confirms the exact amount, and the server's answer stays on screen with
+ * `handInDriverCash`): the cashier chooses the driver (`listShiftDriverCashHolders`, 2.35.0, CR-063), counts the cash blind, confirms the exact amount, and the server's answer stays on screen with
  * what was expected and the short in words. A refusal stays in words with its reference.
  */
 
@@ -21,7 +19,7 @@ const DRIVER = { id: '019a7a87-46ad-7a19-bf51-aa66d1302344', displayName: 'Kwesi
 /** The drivers holding cash, until the first hand-in empties the list, as the server would. */
 function installHolders(api: Parameters<typeof installTillServer>[0]) {
   let handedIn = false;
-  api.respondRequested(LIST_DRIVER_CASH_HOLDERS, () => ({
+  api.respond('listShiftDriverCashHolders', () => ({
     data: handedIn ? [] : [{ driver: DRIVER, collections: 2 }],
   }));
   const bodies: { path: string; body: Body }[] = [];
@@ -132,8 +130,10 @@ test("a driver's cash is counted blind into the shift, and the short stays on sc
     declaredPesewas: 144000,
     note: 'Says the chop bar paid GHS 140.00',
   });
+  // The contract's own read (2.35.0), before the hand-in and again after it, never refused.
   const listed = api.log.filter((e) => e.operationId === 'listShiftDriverCashHolders');
-  expect(listed.every((e) => e.outcome === 'requested')).toBe(true);
+  expect(listed.length).toBeGreaterThanOrEqual(2);
+  expect(listed.every((e) => !e.outcome.endsWith('401') && !e.outcome.endsWith('403'))).toBe(true);
   await expectNoAxeViolations(page);
   await expectNoHorizontalScroll(page);
 });
