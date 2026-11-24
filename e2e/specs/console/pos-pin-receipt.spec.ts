@@ -414,9 +414,9 @@ test('the digital receipt: the till makes the link from its own token and sends 
   await confirm.getByRole('button', { name: 'Complete the sale' }).click();
 
   const digital = page.locator('[data-slot="digital-receipt"]');
-  // 2.31.0 carries no receipt SMS (CR-033 point 3): the till promises none.
+  // 2.41.0 (CR-033 point 3): the farm sends the link by SMS at sync; the till is not told whether it arrives.
   await expect(digital.locator('[data-slot="sms-status"]')).toHaveText(
-    'The phone number +233244550199 goes with the sale. Receipts are not sent by SMS yet.',
+    'The server has the sale, so the farm sends the receipt link by SMS to +233244550199. The till is not told whether it arrives.',
   );
   const link = digital.locator('[data-slot="receipt-link"]');
   await expect(link).toHaveText(/^https:\/\/hakoremfarms\.com\/r\/[A-Za-z0-9_-]{22}$/);

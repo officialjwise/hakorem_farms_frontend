@@ -197,7 +197,7 @@
     "queuedOffline": "The till is offline: the sale waits on this till and is sent when it reconnects.",
     "failed": "The sale was not completed",
     "phone": "Customer's phone for the receipt (optional)",
-    "phoneHint": "With the country code, for example +233244512876. It goes with the sale, for a receipt by SMS once the farm sends them.",
+    "phoneHint": "With the country code, for example +233244512876. The farm sends the receipt link to it by SMS once the sale reaches the server.",
     "phoneError": "A phone number starts with + and the country code.",
     "phoneConfirm": "Customer’s phone: {{phone}}"
   },
@@ -410,7 +410,9 @@
   },
   "digital": {
     "title": "Digital receipt",
-    "smsNoServer": "The phone number {{phone}} goes with the sale. Receipts are not sent by SMS yet.",
+    "smsWaiting": "An SMS with the receipt link goes to {{phone}} once the sale reaches the server.",
+    "smsSent": "The server has the sale, so the farm sends the receipt link by SMS to {{phone}}. The till is not told whether it arrives.",
+    "smsNoLink": "No SMS goes to {{phone}}: the SMS carries the receipt link, and this sale has none. Give the customer the sale reference.",
     "noPhone": "No phone number was given.",
     "link": "Receipt link",
     "linkBody": "The customer opens it on their own phone. It works once the sale reaches the server.",

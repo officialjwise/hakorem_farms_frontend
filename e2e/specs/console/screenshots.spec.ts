@@ -746,11 +746,7 @@ const TEN_SHOTS: TenShot[] = [
     name: 'sale-done-digital-receipt',
     act: async (page) => {
       await sellTomatoes(page, '+233244550199');
-      await expect(
-        page.getByText(
-          'The phone number +233244550199 goes with the sale. Receipts are not sent by SMS yet.',
-        ),
-      ).toBeVisible();
+      await expect(page.locator('[data-slot="sms-status"]')).toContainText('+233244550199');
       await expect(page.locator('[data-slot="printer-unsupported"]')).toBeVisible();
     },
   },
