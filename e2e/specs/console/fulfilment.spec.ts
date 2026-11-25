@@ -5,6 +5,7 @@ import {
   EGG_LINE,
   EGGS,
   EGG_STORE,
+  ELEVEN_CRATES,
   FULFILMENT_ID,
   ORDER_ID,
   VAN,
@@ -22,8 +23,8 @@ import { expect, test } from '../../support/test';
 
 /**
  * F11 in the back office, at 360 px: an online order of eggs from the list to its pick list; picking in the
- * order's units, with cracked eggs written off and a short line offered to the customer first; the
- * Storekeeper reading the order through the store's view, with no money on screen (2.29.0); the
+ * order's units, with cracked eggs written off and a short pick proposed to the customer first (2.25.0);
+ * the Storekeeper reading the order through the store's view, with no money on screen (2.29.0); the
  * customer's answer; and a run planned for a driver and a van, put in order and started. Every amount on
  * screen is the API's.
  */
@@ -62,7 +63,7 @@ test('the order list opens an order in its own units, and a confirmed order star
   expect(sent['createFulfilment']).toEqual([{ pickLocationId: EGG_STORE.id }]);
 });
 
-test('picking: short is refused, cracked eggs are written off, a smaller quantity is offered, then picked', async ({
+test('picking: short is refused, cracked eggs are written off, a short pick is proposed, then picked', async ({
   page,
   api,
 }) => {
@@ -100,26 +101,52 @@ test('picking: short is refused, cracked eggs are written off, a smaller quantit
     },
   ]);
 
-  // No crate is left to replace them: eleven crates are offered to the customer.
-  await page.getByRole('button', { name: 'Short? Offer a substitute' }).first().click();
+  // The same eggs are no substitute: fewer of them is a short pick, said before anything is sent.
+  await page.getByRole('button', { name: 'Offer a substitute' }).first().click();
   const offer = page.getByRole('dialog', {
     name: `Offer the customer something else: ${EGGS.name}`,
   });
   await expect(offer).toContainText('The line asks for 12 crates');
-  await offer.getByRole('textbox', { name: /^How many crates/ }).fill('11');
-  await offer.getByRole('textbox', { name: /^Why/ }).fill('A crate was cracked and none are left.');
+  await offer.getByRole('combobox', { name: /^Instead, offer/ }).fill('Eggs');
+  await page.getByRole('option', { name: `${EGGS.name} (${EGGS.sku})` }).click();
+  await expect(offer).toContainText(
+    'That is the same product. To send fewer of it, propose a short pick instead.',
+  );
   await offer.getByRole('button', { name: 'Offer it to the customer' }).click();
-  await expect(offer).toContainText('Offered. The order waits for the customer');
-  await offer.getByRole('button', { name: 'Close' }).click();
-  expect(sent['proposeSubstitution']).toEqual([
-    {
-      lineId: CRATE_LINE,
-      productId: EGGS.id,
-      quantity: '11.000',
-      note: 'A crate was cracked and none are left.',
-    },
+  expect(sent['proposeSubstitution']).toBeUndefined();
+  await page.keyboard.press('Escape');
+  await expect(offer).toHaveCount(0);
+
+  // No crate is left to replace them: eleven of the twelve crates are proposed to the customer.
+  await page.getByRole('button', { name: 'Propose a short pick to the customer' }).first().click();
+  const short = page.getByRole('dialog', { name: `Propose a short pick: ${EGGS.name}` });
+  await expect(short).toContainText('Ordered12 crates');
+  const canSend = short.getByRole('textbox', { name: /^How many crates can be sent/ });
+  await canSend.fill('12');
+  await short.getByRole('textbox', { name: /^Why/ }).fill('A crate was cracked and none are left.');
+  await short.getByRole('button', { name: 'Check' }).click();
+  await expect(short).toContainText('That is not fewer than the 12 crates ordered.');
+  await canSend.fill('11');
+  await short.getByRole('button', { name: 'Check' }).click();
+  await expect(short).toContainText('Can be sent:11 crates');
+  await expect(short).toContainText('Short by:1 crate');
+  await expect(short).toContainText('Nothing is packed or sent until they answer');
+  await expectNoAxeViolations(page);
+  await expectNoHorizontalScroll(page);
+  await short.getByRole('button', { name: 'Propose it to the customer' }).click();
+  await expect(short).toContainText("Proposed. The order waits for the customer's answer");
+  // The Storekeeper cannot open the order's page, so it is told who records the answer.
+  await expect(short).toContainText('Someone who may update orders records their answer.');
+  await short.getByRole('button', { name: 'Close' }).click();
+  expect(sent['proposeShortPick']).toEqual([
+    { lineId: CRATE_LINE, quantity: '11.000', note: 'A crate was cracked and none are left.' },
   ]);
   await expect(page.getByText('The order waits for the customer')).toBeVisible();
+  await expect(page.getByText('Nothing is packed or sent until they answer.')).toBeVisible();
+  // One question at a time: nothing more is proposed while the order waits.
+  await expect(
+    page.getByRole('button', { name: 'Propose a short pick to the customer' }),
+  ).toHaveCount(0);
 
   // The eggs line is picked in full, in eggs; one client id per pick.
   await crates.fill('');
@@ -156,6 +183,54 @@ test('the Storekeeper reads the order it picks through the store’s view, with 
   expect(reads.length).toBeGreaterThan(0);
   expect(reads.every((e) => e.outcome === 'prism')).toBe(true);
   expect(api.log.some((e) => e.operationId === 'getOrder')).toBe(false);
+  await expectNoAxeViolations(page);
+  await expectNoHorizontalScroll(page);
+});
+
+test('a refused short pick stays on screen in words, with its reference', async ({ page, api }) => {
+  installOrderServer(api, 'PICKING');
+  api.refuse('proposeShortPick', 422, 'FULFILMENT_INVALID', 'Refused.', [
+    { field: '/quantity', code: 'INEXACT_QUANTITY', message: 'Not exact in the base unit.' },
+  ]);
+  await signIn(page, USERS.storekeeper, `/fulfilments/${FULFILMENT_ID}`);
+  await page.getByRole('button', { name: 'Propose a short pick to the customer' }).first().click();
+  const short = page.getByRole('dialog', { name: `Propose a short pick: ${EGGS.name}` });
+  await short.getByRole('textbox', { name: /^How many crates can be sent/ }).fill('10.333');
+  await short.getByRole('textbox', { name: /^Why/ }).fill('Some eggs were cracked.');
+  await short.getByRole('button', { name: 'Check' }).click();
+  await short.getByRole('button', { name: 'Propose it to the customer' }).click();
+  const alert = short.getByRole('alert');
+  await expect(alert).toContainText('The short pick was not proposed');
+  await expect(alert).toContainText(
+    "The pick list cannot be changed that way. That quantity does not convert exactly into the product's base unit.",
+  );
+  await expect(alert).toContainText('35ea bc69');
+  await expectNoAxeViolations(page);
+  // Closed, the refusal stays on the line in words, and the order waits for nobody.
+  await page.keyboard.press('Escape');
+  await expect(short).toHaveCount(0);
+  const failed = page.getByRole('alert').filter({ hasText: 'The short pick was not proposed' });
+  await expect(failed).toContainText('That quantity does not convert exactly');
+  await expect(failed).toContainText('35ea bc69');
+  await expect(page.getByText('The order waits for the customer')).toHaveCount(0);
+  await expectNoAxeViolations(page);
+  await expectNoHorizontalScroll(page);
+});
+
+test('someone who reads the whole order sees what the customer was asked', async ({
+  page,
+  api,
+}) => {
+  installOrderServer(api, 'AWAITING_CUSTOMER', ELEVEN_CRATES);
+  await signInWithTotp(page, USERS.manager, `/fulfilments/${FULFILMENT_ID}`);
+  await expect(
+    page.getByText(
+      'The order waits for the customer to agree to 11 crates of Eggs, big. Nothing is packed or sent until they answer.',
+    ),
+  ).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Record their answer on the order' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Record it packed' })).toBeDisabled();
+  expect(api.log.some((e) => e.operationId === 'getOrderFulfilmentView')).toBe(false);
   await expectNoAxeViolations(page);
   await expectNoHorizontalScroll(page);
 });

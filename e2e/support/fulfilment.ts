@@ -73,7 +73,10 @@ function line(
   };
 }
 
-export function eggOrder(status: S['SalesOrder']['status']): S['SalesOrder'] {
+export function eggOrder(
+  status: S['SalesOrder']['status'],
+  pendingConsent: S['SalesOrder']['pendingConsent'] = null,
+): S['SalesOrder'] {
   return {
     id: ORDER_ID,
     orderNo: 'SO-2026-KSA-004310',
@@ -125,7 +128,7 @@ export function eggOrder(status: S['SalesOrder']['status']): S['SalesOrder'] {
     version: 4,
     // 2.25.0, always sent.
     fulfilments: [],
-    pendingConsent: null,
+    pendingConsent,
   };
 }
 
@@ -167,6 +170,17 @@ export function eggOrderView(status: S['SalesOrder']['status']): S['OrderFulfilm
     })),
   };
 }
+
+/** What the order waits for once eleven of its twelve crates are proposed (2.25.0, `SHORT_PICK`). */
+export const ELEVEN_CRATES: NonNullable<S['SalesOrder']['pendingConsent']> = {
+  id: '019b2000-0000-7000-8000-0000000000c9',
+  kind: 'SHORT_PICK',
+  lineId: CRATE_LINE,
+  proposed: { productId: EGGS.id, productName: EGGS.name, quantity: '11.000', uom: 'CRATE' },
+  proposedTotalPesewas: null,
+  weighedTotalPesewas: null,
+  askedAt: '2026-11-18T08:05:00Z',
+};
 
 export function eggPickList(status: S['Fulfilment']['status']): S['Fulfilment'] {
   return {
@@ -228,13 +242,16 @@ export type Sent = Record<string, unknown[]>;
 export function installOrderServer(
   api: FakeApi,
   status: S['SalesOrder']['status'] = 'CONFIRMED',
+  /** What an order already waiting for its customer was asked. */
+  waitingFor: S['SalesOrder']['pendingConsent'] = null,
 ): Sent {
   const sent: Sent = {};
   const keep = (op: string) => (request: unknown) => {
     (sent[op] ??= []).push(request);
   };
   let orderStatus = status;
-  api.respond('getOrder', () => eggOrder(orderStatus));
+  let consent = waitingFor;
+  api.respond('getOrder', () => eggOrder(orderStatus, consent));
   // 2.29.0: the Storekeeper's read of the order, with no money in it.
   api.respond('getOrderFulfilmentView', () => eggOrderView(orderStatus));
   api.rewrite('listOrders', (body) => ({
@@ -273,10 +290,22 @@ export function installOrderServer(
     orderStatus = 'AWAITING_CUSTOMER';
     return eggOrder(orderStatus);
   });
+  api.respond('proposeShortPick', (request) => {
+    keep('proposeShortPick')(request);
+    orderStatus = 'AWAITING_CUSTOMER';
+    consent = ELEVEN_CRATES;
+    return eggOrder(orderStatus, consent);
+  });
   api.respond('recordCustomerConsent', (request) => {
     keep('recordCustomerConsent')(request);
     orderStatus = 'PICKING';
+    consent = null;
     return eggOrder(orderStatus);
+  });
+  // A search for a product finds the eggs themselves, the line's own product.
+  api.rewrite('listProducts', (body) => {
+    const page = body as S['ProductPage'];
+    return { ...page, data: page.data.slice(0, 1).map((p) => ({ ...p, ...EGGS })) };
   });
   api.rewrite('listLocations', (body) => ({
     ...(body as S['LocationPage']),
