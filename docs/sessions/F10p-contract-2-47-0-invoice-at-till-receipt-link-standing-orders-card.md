@@ -200,6 +200,8 @@
 | `test:a11y`                                  | 0    | 322 stories, 65 files                                                                                          |
 | `screenshots`                                | n/r  | not run: no screenshots until F13                                                                              |
 
+**A note on CI.** The first CI run (`9df3924`) failed two of 400 e2e tests, both in `checkout-card.spec.ts`, on `expectNoHorizontalScroll` at 360 px (11 px and 14 px). Two Buttons whose labels never wrap, "Pay GH₵450.00 by card" and "Open the card page", filled their column to the pixel with this container's fonts, and CI's fonts are a little wider. A larger total would overflow anywhere. Both buttons now wrap, and the spec also checks the page with lettering 5 percent wider, a check that fails without the fix. The cause was written on the PR before the fix was pushed.
+
 **A note on the integration run.** The first run, while the three agents were building and testing on the same machine, failed 77 of 281. 76 of those were Prism unreachable or slow. One was real: the mock's count, now 668. Run again with the machine to itself, all 281 passed.
 
 ## For the owner
