@@ -1014,6 +1014,9 @@ The server returns the rest to stock (or keeps it on the van for a reattempt, as
 - Every collection the driver holds at the branch is handed in at once; the count is a cleared cash payment in the drawer, counted at the close. Short or over goes to the driver variance report.
 - The till's shift screen takes it: driver, blind count, a confirmation with the amount, then the server's expected, counted and short or over kept on screen. A refusal stays in words.
 - **The till cannot find the driver's id:** nothing the Cashier holds lists drivers. CR-063 asks for that read; until it lands the hand-in is behind its switch.
+
+**Points 2 and 3 answered in 2.32.0 and 2.35.0, and built in F10p:** `getMyRoute` answers 404 for a driver with no run that day (the phone already said "No run for you today" for it); a resend's `DriverSyncItem` carries `firstOutcome`, so the phone keeps the first answer's outcome, an exception included, after a lost answer.
+
 - Items 2 and 3 (the driver's phone) are not answered by 2.31.0.
 
 ## CR-058. After a margin approval, the salesperson issues the quote and gets its link (behaviour, additive)

@@ -294,7 +294,11 @@ export function installDriverServer(api: FakeApi, { loseFirstSync = false } = {}
             : ('APPLIED' as const),
         reason: differs && !seen ? 'Cash collected differs from the amount due.' : null,
         // 2.35.0: the first answer, on a duplicate only.
-        firstOutcome: seen ? ('APPLIED' as const) : null,
+        firstOutcome: seen
+          ? differs
+            ? ('APPLIED_WITH_EXCEPTION' as const)
+            : ('APPLIED' as const)
+          : null,
       };
     });
     if (loseFirstSync && syncs === 1) {

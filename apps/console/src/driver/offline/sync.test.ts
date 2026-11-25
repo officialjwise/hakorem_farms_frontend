@@ -21,8 +21,9 @@ type Script = (sent: Sent) => unknown;
  * A server that applies each proof and failure once by its client id, answers a resend `DUPLICATE`, and can
  * be told to lose an answer after acting on it, or to be unreachable.
  */
-function server() {
+function server({ firstException = false } = {}) {
   const applied = new Map<string, number>();
+  const EXCEPTION = 'Cash collected differs from the amount due.';
   let loseNext = false;
   let down = false;
   const script: Script = (sent) => {
@@ -41,7 +42,14 @@ function server() {
       const results = items.map((item) => {
         const seen = applied.has(item.clientId);
         applied.set(item.clientId, (applied.get(item.clientId) ?? 0) + (seen ? 0 : 1));
-        return { ...item, outcome: seen ? 'DUPLICATE' : 'APPLIED', reason: null };
+        const first = firstException ? 'APPLIED_WITH_EXCEPTION' : 'APPLIED';
+        return {
+          ...item,
+          outcome: seen ? 'DUPLICATE' : first,
+          reason: firstException ? EXCEPTION : null,
+          // 2.35.0: a resend carries the first answer's outcome.
+          firstOutcome: seen ? first : null,
+        };
       });
       if (loseNext) {
         loseNext = false;
@@ -180,8 +188,22 @@ describe('the driver queue (ADR 0055)', () => {
     expect(h.sent.filter((s) => s.operation === 'uploadFile')).toHaveLength(1);
     const after = (await h.store.read()).entries[0];
     expect(after?.localStatus).toBe('APPLIED');
-    expect(after?.serverOutcome).toBe('DUPLICATE');
+    // The resend's answer is the first one's (2.35.0, `firstOutcome`).
+    expect(after?.serverOutcome).toBe('APPLIED');
     expect(api.applied.get(entry.id)).toBe(1);
+  });
+
+  it("keeps the first answer's exception when that answer was lost and the resend is a duplicate", async () => {
+    const api = server({ firstException: true });
+    const h = harness(api.script);
+    const photoId = await h.run.keepPhoto(new Blob(['jpeg']));
+    api.loseNextAnswer();
+    await h.run.recordProof(proof(DELIVERY_A, photoId));
+    await h.run.flush();
+    const after = (await h.store.read()).entries[0];
+    expect(after?.localStatus).toBe('APPLIED');
+    expect(after?.serverOutcome).toBe('APPLIED_WITH_EXCEPTION');
+    expect(after?.serverReason).toBe('Cash collected differs from the amount due.');
   });
 
   it('keeps a refusal in the server’s words, and an exception beside an applied proof', async () => {
