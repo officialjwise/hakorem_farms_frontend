@@ -182,7 +182,9 @@ How the measurement got here:
   - One group of the initial modules shared by two entries or more, or of `packages/ui` and the icons only: the till grows to 254.5 to 288.4 kB, over its budget, because the group gives it code only back-office screens use.
   - The storefront is a separate Next build and none of this touches it: its figures are unchanged.
 
-  **So the lever is not kept, and the console's build is as it was.** The till stays at 246.3 kB, 3.7 kB under its budget. Till features in F10p load on demand (the shift screen and the queue), not in the sale screen. The next lever is the owner's: what the sale screen loads at boot, or the till's budget, both owner decisions.
+  **So the lever is not kept, and the console's build is as it was.** The next lever is the owner's: what the sale screen loads at boot, or the till's budget, both owner decisions.
+
+- **F10p: the till grew from 246.3 kB to 247.1 kB** (`pnpm budget:console`, 2026-11-25), 2.9 kB under its budget: a business buyer's name and TIN in the payment dialog (2.26.0), which must work with the network off, so it is in the sale screen. The invoice paid at the till is on the shift screen, on demand. The back office is 288.8 kB (+0.8 kB: the refusal words it loads at boot, and the routes of the standing orders), its on-demand code 303.9 kB in 157 chunks. The investor portal is unchanged at 213.6 kB. The shop's checkout is 207.1 kB (+0.5 kB, card), not budgeted; every budgeted shop page is unchanged.
 
 - **The receipt by its link (CR-033) is under the listing pages' 120 kB, enforced.** It is read on the server and has no island: it loads the layout's scripts and the error state's retry, 111,771 B counted whole, its own page 423 B.
 
