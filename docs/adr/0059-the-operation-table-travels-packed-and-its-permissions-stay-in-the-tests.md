@@ -26,7 +26,7 @@ Option 3.
 
 ## Consequences
 
-- **Measured** (`pnpm budget:console`, 2026-11-25, with CI's build switches): the till 247.0 to 242.7 kB, the back office 288.8 to 284.5 kB and the investor portal 213.6 to 209.2 kB, from this change alone. The shop's pages call no operation through this table at first load and are unchanged.
+- **Measured** (`pnpm budget:console`, 2026-11-25, with CI's build switches): the till 247.0 to 242.7 kB, the back office 288.8 to 284.5 kB and the investor portal 213.6 to 209.2 kB, from this change alone. The shop's pages that call the API through the browser's client shrink as well (`pnpm budget:storefront`): `/quote` 165.8 to 161.7 kB, `/q/[token]` 159.4 to 155.2 kB and `/checkout` 207.1 to 203.5 kB, including F10q's own change to the checkout. The listing pages and `/r/[token]` call none through it and are unchanged.
 - Unpacking 669 lines when the module loads takes under a millisecond.
 - A contract change still reads as a one-line diff in `operations.ts`, in the packed block and in the interface.
 - A path holding white space, a backtick, a dollar sign or a backslash fails the generator, so the string cannot be broken. No contract path holds any of them.

@@ -62,9 +62,11 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-056 | 2026-11-18 | Open                      |
 | CR-057 | 2026-11-18 | Answered (2.31.0), built  |
 | CR-058 | 2026-11-22 | Answered (2.19.0), built  |
+| CR-059 | 2026-11-19 | Answered (2.48.0), built  |
 | CR-063 | 2026-11-23 | Answered (2.35.0), built  |
-| CR-064 | 2026-11-25 | Open                      |
+| CR-064 | 2026-11-25 | Answered (2.52.0)         |
 | CR-065 | 2026-11-25 | Open                      |
+| CR-066 | 2026-11-25 | Open                      |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -1067,6 +1069,8 @@ The server returns the rest to stock (or keeps it on the van for a reattempt, as
 - an e2e build switched on for CR-059 sends `reviewException` and reads `review` (`requested/exceptionReview.ts`, ADR 0046, ADR 0053);
 - the five kinds have their words ready, and any kind the build does not know shows its code.
 
+**Answered in 2.48.0** (points 1 to 4: a second review is 409 `ALREADY_REVIEWED` and the first stands; the person an item names cannot review it, 422 `REVIEWER_IS_ACTOR`); the seed (point 5) in 2.49.0. Built in F10q: the report calls `reviewException` through the generated client and reads `ExceptionItem.review`, the switch and `requested/exceptionReview.ts` are deleted, and the 44 new kinds have words.
+
 ## CR-060. The egg reports: sales by shop, margin per crate after breakage, breakage by reason and shop, stock valuation (additive)
 
 - **Raised by:** frontend F12, the reports section (`/reports`). The owner's F12 brief names the four.
@@ -1148,6 +1152,8 @@ The server returns the rest to stock (or keeps it on the van for a reattempt, as
 
 **Until this lands:** the Storekeeper's pick screen says the order waits for the customer, and not what was asked.
 
+**Answered in 2.52.0** (`OrderFulfilmentView.pendingConsent`, `FulfilmentPendingConsent`; `proposeShortPick`'s `x-error-codes`).
+
 ## CR-065. Paying by card at the shop: where the customer comes back, and which order a 503 placed (additive, description)
 
 - **Raised by:** frontend F10p, the shop's checkout, card (`placeOrder`, 2.30.0).
@@ -1161,3 +1167,17 @@ The server returns the rest to stock (or keeps it on the van for a reattempt, as
 2. The 503 with the order placed carries the order's number and its tracking token in `details`, so the shop can name the order it placed.
 
 **Until this lands:** the shop says the order is placed but does not name it on a 503, and builds nothing for the customer's return from the card page.
+
+## CR-066. Paying by card at the shop: a replayed key opens nothing for another browser (description)
+
+- **Raised by:** frontend F10q, the shop's checkout, card (`placeOrder`, 2.30.0). The owner (2026-11-25): keep the card request's key in the tab's session storage for that one checkout, so a reload during a 503 can still open the card page; "the key alone must open nothing; the server checks it belongs to this browser's checkout."
+- **Contract read first (2.52.0):**
+  - `placeOrder` says "the guest cookie proves the checkout", and `getCheckout` that any other checkout is 404.
+  - It also says "a replay with the same Idempotency-Key answers the same order", with `payment.redirectUrl`. It does not say that the guest cookie is checked before a stored answer is replayed.
+
+**Request:** state in `placeOrder`'s description, and keep true, that:
+
+1. a replay is answered only to the browser whose guest cookie proves the checkout. Without that cookie, or with another checkout's, it is 404, as for a first request, whatever the key;
+2. an `Idempotency-Key` is bound to the checkout it was first sent for. The same key on another checkout is refused, and never answers the first checkout's order or card page.
+
+**Until this lands:** the shop keeps the key in session storage only, for one checkout, and sends it only as `placeOrder`'s `Idempotency-Key` on that checkout with its guest cookie (`apps/storefront/src/lib/cardRequest.ts`, ADR 0060). Nothing waits on the backend: this asks it to state, and keep, what the shop relies on.
