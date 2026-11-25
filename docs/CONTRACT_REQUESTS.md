@@ -63,6 +63,8 @@ Things the frontend needs that `contract/openapi.yaml` does not yet offer, or mu
 | CR-057 | 2026-11-18 | Answered (2.31.0), built  |
 | CR-058 | 2026-11-22 | Answered (2.19.0), built  |
 | CR-063 | 2026-11-23 | Answered (2.35.0), built  |
+| CR-064 | 2026-11-25 | Open                      |
+| CR-065 | 2026-11-25 | Open                      |
 
 ## CR-001. Stock valuation is at cost, and cost and price are never the same field
 
@@ -1133,3 +1135,29 @@ The server returns the rest to stock (or keeps it on the van for a reattempt, as
 **Until this lands:** the till's shift screen says it cannot list the drivers yet, so it cannot take a driver's cash. The e2e and CI builds are switched on for CR-063 (ADR 0046) and their fake answers this shape; the hand-in itself calls the real `handInDriverCash`.
 
 **Answered in 2.35.0, as asked** (`DriverCashHolder`, `DriverCashHolderList`; the caller is never listed). Built in F10p: the shift screen reads it through `useApiQuery`, and the switch is deleted. The count stays blind (point 3, the owner's answer of 2026-11-24).
+
+## CR-064. The store's view of an order says what the customer is asked (additive)
+
+- **Raised by:** frontend F10p, the pick screen, for the Storekeeper.
+- **Contract read first (2.47.0):** `getOrderFulfilmentView` (2.29.0) answers `OrderFulfilmentView`, the Storekeeper's read of the order it picks, with no money. It says the order waits for the customer (`AWAITING_CUSTOMER`) but carries no `pendingConsent`, so the Storekeeper who proposed a short pick (`proposeShortPick`, 2.25.0) cannot see what the customer was asked. `proposeShortPick` also lists no `x-error-codes`: its codes are only in its description.
+
+**Request:**
+
+1. `OrderFulfilmentView.pendingConsent`: the same `PendingConsent` as `SalesOrder.pendingConsent`, kind, line and quantity, with no money.
+2. `proposeShortPick`'s `x-error-codes`, as its description names them.
+
+**Until this lands:** the Storekeeper's pick screen says the order waits for the customer, and not what was asked.
+
+## CR-065. Paying by card at the shop: where the customer comes back, and which order a 503 placed (additive, description)
+
+- **Raised by:** frontend F10p, the shop's checkout, card (`placeOrder`, 2.30.0).
+- **Contract read first (2.47.0):**
+  - `placeOrder` with `CARD` answers Paystack's page in `payment.redirectUrl` and says the provider sends the customer back to "the server's return address", but not which shop route that is, nor what it carries.
+  - A 503 `PAYMENT_PROVIDER_UNAVAILABLE` with the order placed names no order: no number and no tracking token.
+
+**Request:**
+
+1. Name the shop route the provider returns the customer to (for example `/checkout/return`) and what it carries (the order's tracking token, never a payment secret), so the shop can say whether the card was paid.
+2. The 503 with the order placed carries the order's number and its tracking token in `details`, so the shop can name the order it placed.
+
+**Until this lands:** the shop says the order is placed but does not name it on a 503, and builds nothing for the customer's return from the card page.
