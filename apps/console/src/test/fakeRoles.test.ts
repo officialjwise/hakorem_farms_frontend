@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { operationManifest, seededRoles } from '@hakorem/api-client';
+import { operationPermissions, seededRoles } from '@hakorem/api-client';
 import { FAKE_USERS } from './fakeAuthServer';
 
 /**
@@ -33,8 +33,8 @@ const seeded = new Set<string>(seededRoles.flatMap((role) => [...role.permission
 
 /** Every permission named on an operation, including a compound one ("rpt.report.read, plus rpt.report.export"). */
 const named = new Set(
-  Object.values(operationManifest).flatMap((row) =>
-    row.permission === null ? [] : (row.permission.match(/[a-z_]+(?:\.[a-z_]+)+/g) ?? []),
+  Object.values(operationPermissions).flatMap((permission: string | null) =>
+    permission === null ? [] : (permission.match(/[a-z_]+(?:\.[a-z_]+)+/g) ?? []),
   ),
 );
 

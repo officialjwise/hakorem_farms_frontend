@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { operationManifest } from '@hakorem/api-client';
+import { operationPermissions } from '@hakorem/api-client';
 import { isValidElement } from 'react';
 import type { RouteObject } from 'react-router';
 import { entryFor } from '../app/entries';
@@ -114,9 +114,9 @@ describe('the till loads its sale screen and nothing else (PERFORMANCE_BUDGET)',
 
 describe('F3 routes declare the permission of the operation they use', () => {
   // Each screen's route permission is the contract's x-permission for its main read (a list or record
-  // screen) or its write (a form whose whole purpose is the write). Taken from the generated manifest, so a
+  // screen) or its write (a form whose whole purpose is the write). Taken from the generated table, so a
   // contract change that renames a permission fails here.
-  const EXPECTED: Record<string, keyof typeof operationManifest> = {
+  const EXPECTED: Record<string, keyof typeof operationPermissions> = {
     '/users': 'listUsers',
     '/users/new': 'createUser',
     '/users/:id': 'getUser',
@@ -133,7 +133,7 @@ describe('F3 routes declare the permission of the operation they use', () => {
     expect(leaf, `${path} is not a route`).toBeDefined();
     const handle = leaf?.route.handle;
     expect(isRouteHandle(handle) ? handle.permission : undefined).toBe(
-      operationManifest[operation].permission,
+      operationPermissions[operation],
     );
   });
 });
