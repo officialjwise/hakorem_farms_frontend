@@ -36,7 +36,8 @@
     "noScreenUnnumbered": "A {{doc}}, which has no screen in the back office yet",
     "noRecord": "No record is attached",
     "abuseCases_one": "Threat model case {{cases}}",
-    "abuseCases_other": "Threat model cases {{cases}}"
+    "abuseCases_other": "Threat model cases {{cases}}",
+    "companyWide": "Company-wide"
   },
   "review": {
     "reviewed": "Reviewed",
@@ -51,7 +52,6 @@
     "save": "Mark reviewed",
     "saving": "Saving the review",
     "failed": "The review was not saved",
-    "waits": "Marking an exception reviewed waits for the backend (CR-059). Every item shows as not reviewed until then.",
     "cannot": "Only an Owner or a Manager marks an exception reviewed."
   },
   "counts": {
@@ -110,7 +110,47 @@
     "MORTALITY_PHOTO_REUSED": "Death photograph reused",
     "QUOTE_ACCEPTED_BY_STAFF": "Quote accepted in a staff session",
     "CASH_HANDED_IN_LATE": "Cash handed in late",
-    "NEGATIVE_STOCK": "Stock below zero"
+    "NEGATIVE_STOCK": "Stock below zero",
+    "DELIVERY_PHOTO_REUSED": "Delivery photo used twice",
+    "GOODS_RECEIPT_UNMATCHED": "Goods received with no order",
+    "ORDER_SPLITTING": "Order split under a limit",
+    "SUPPLIER_VARIANCE": "Supplier invoice differs from the receipt",
+    "SUPPLIER_CREDIT_NOTE": "Supplier credit note",
+    "PROCESSING_REVERSAL": "Processing reversed",
+    "ASSET_DISPOSAL": "Asset disposed of",
+    "CREDIT_NOTE": "Credit note issued",
+    "PAYMENT_REVERSAL": "Payment reversed",
+    "RECEIPT_CLAIM": "Receipt claimed",
+    "RECEIPT_TOKEN_REFUSED": "Till receipt link refused",
+    "OFFLINE_SALE_REVIEW": "Offline sale to review",
+    "BAD_DEBT_WRITE_OFF": "Bad debt written off",
+    "WRITTEN_OFF_CUSTOMER_PAID": "Paid after a write-off",
+    "CONSENT_RECORDED_BY_STAFF": "Customer answer recorded by staff",
+    "DELIVERY_FAILURE": "Delivery failed",
+    "DELIVERY_WRITE_OFF": "Delivery written off",
+    "DELIVERY_RETURN": "Delivery returned to stock",
+    "DELIVERY_REASSIGNED": "Delivery given to another driver",
+    "PART_DELIVERY": "Part delivered",
+    "DELIVERY_CANCELLED": "Delivery cancelled",
+    "BACKORDER_HELD": "Backorder held",
+    "SALE_RETURN": "Sale returned",
+    "MESSAGE_REPORT_REJECTED": "Message report rejected",
+    "MESSAGE_SUPPRESSED": "Message held back",
+    "MESSAGE_FAILED": "Message not sent",
+    "DOCUMENT_SENT": "Document sent",
+    "QUOTE_HOLD": "Stock held for a quote",
+    "QUOTE_WITHDRAWN": "Quote withdrawn",
+    "ACCEPTED_QUOTE_LAPSED": "Accepted quote lapsed",
+    "PAYMENT_AFTER_PAYOUT_CHANGE": "Paid soon after payout details changed",
+    "CAPITAL_WITHDRAWAL": "Capital withdrawn",
+    "DISTRIBUTION": "Profit distributed",
+    "BACKDATED_CONTRIBUTION": "Backdated contribution",
+    "RETENTION_RATE": "Retention rate changed",
+    "LOAN_OR_GRANT": "Loan or grant recorded",
+    "ACCRUAL_BLOCKED": "Accrual blocked",
+    "OVERHEAD_ALLOCATION": "Overheads allocated",
+    "PROJECTION_DRIFT": "Projection drifted",
+    "CHECKOUT_HOLDING": "Checkouts left unpaid"
   },
   "docType": {
     "SALES_ORDER": "sale",
@@ -139,5 +179,15 @@
     "SHIFT": "till shift",
     "CASH_MOVEMENT": "cash movement"
   },
-  "unknownDoc": "record"
+  "unknownDoc": "record",
+  "countLines": {
+    "title": "What was counted, not listed",
+    "description": "Controls the report counts per branch rather than listing each one, with the API's words.",
+    "table": "Counted controls by branch",
+    "control": "Control",
+    "summary": "What it means",
+    "code": {
+      "TILL_SALES_WITHOUT_RECEIPT_TOKEN": "Till sales with no receipt link"
+    }
+  }
 }

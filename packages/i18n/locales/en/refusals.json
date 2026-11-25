@@ -184,7 +184,9 @@
     "ROUTE_INVALID": "The driver’s run was not changed as it is.",
     "TEMPLATE_INVALID": "The message template was not saved as it is.",
     "TEMPLATE_NOT_ACTIVATABLE": "This template cannot be made active.",
-    "TRIGGER_INVALID": "The notification setting was not saved as it is."
+    "TRIGGER_INVALID": "The notification setting was not saved as it is.",
+    "ALREADY_REVIEWED": "Someone has already marked this exception reviewed. Their note stands. Reload to read it.",
+    "REVIEWER_IS_ACTOR": "This exception names you, so you cannot mark it reviewed. Someone else who reviews exceptions must do it."
   },
   "rules": {
     "AMOUNT_EXCEEDS_LINE": "A line is credited for more than it charged.",
