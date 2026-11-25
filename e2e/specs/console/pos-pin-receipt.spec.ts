@@ -332,6 +332,9 @@ test('offline, a supervisor’s PIN approves a price beyond the cashier’s limi
   await page.getByRole('textbox', { name: /^Cash handed over/ }).fill('570');
   await page.getByRole('button', { name: 'Review the sale' }).click();
   await page.getByRole('button', { name: 'Complete the sale' }).click();
+  // The sale is on the till's queue before the network comes back: otherwise "All sent" can read true for
+  // an empty queue before the sale is kept, and nothing has been sent yet.
+  await expect(page.locator('[data-slot="queue-count"]')).toContainText('1 to send');
 
   await api.setNetwork(context, true);
   await expect(page.locator('[data-slot="queue-count"]')).toContainText('All sent');
