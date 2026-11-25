@@ -803,10 +803,31 @@ export const protectedRoutes: RouteObject[] = [
           },
           {
             path: ':customerId',
-            element: lazyScreen(() =>
-              import('../wholesale/AccountScreens').then((m) => m.BusinessAccountScreen),
-            ),
             handle: back('whl.account.read', 'businessAccount'),
+            children: [
+              {
+                index: true,
+                element: lazyScreen(() =>
+                  import('../wholesale/AccountScreens').then((m) => m.BusinessAccountScreen),
+                ),
+                handle: back('whl.account.read', 'businessAccount'),
+              },
+              // Standing orders (2.18.0): set up for the account, and each one with its runs.
+              {
+                path: 'standing-orders/new',
+                element: lazyScreen(() =>
+                  import('../wholesale/StandingOrderScreens').then((m) => m.StandingOrderNewScreen),
+                ),
+                handle: back('whl.standing_order.manage', 'standingOrderNew'),
+              },
+              {
+                path: 'standing-orders/:id',
+                element: lazyScreen(() =>
+                  import('../wholesale/StandingOrderScreens').then((m) => m.StandingOrderScreen),
+                ),
+                handle: back('whl.standing_order.read', 'standingOrder'),
+              },
+            ],
           },
         ],
       },

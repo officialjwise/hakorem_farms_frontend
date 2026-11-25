@@ -156,6 +156,8 @@
     "businessAccounts": "Wholesale accounts",
     "businessAccountNew": "Open a wholesale account",
     "businessAccount": "Wholesale account",
+    "standingOrderNew": "Set up a standing order",
+    "standingOrder": "Standing order",
     "ageing": "Ageing",
     "dunningLevels": "Reminder levels",
     "dunningNotices": "Reminders sent",

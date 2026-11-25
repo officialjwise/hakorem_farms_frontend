@@ -51,6 +51,7 @@ import { AgeingBuckets } from './AgeingScreen';
 import { CustomerPicker } from './CustomerPicker';
 import { CustomerReminders } from './DunningScreens';
 import { ACCOUNT_STATUSES, AccountStatusBadge } from './presentation';
+import { CustomerStandingOrders } from './StandingOrderScreens';
 
 type S = components['schemas'];
 type Account = S['BusinessAccount'];
@@ -368,8 +369,8 @@ export function BusinessAccountNewScreen() {
 
 /**
  * One buyer's account: their limit, terms and price list, what they owe and how late (the ageing row the
- * API gives for them), the payment reminders sent to them, whether they are on hold, and every credit
- * override with who approved it.
+ * API gives for them), the payment reminders sent to them, whether they are on hold, their standing
+ * orders, and every credit override with who approved it.
  */
 export function BusinessAccountScreen() {
   const { t } = useTranslation(['wholesale', 'common']);
@@ -484,6 +485,10 @@ export function BusinessAccountScreen() {
           <CustomerAgeing customerId={a.customer.id} />
           <CustomerReminders customerId={a.customer.id} />
           <AccountActions account={a} />
+          <CustomerStandingOrders
+            customerId={a.customer.id}
+            accountClosed={a.status === 'CLOSED'}
+          />
           <Overrides customerId={a.customer.id} />
         </article>
       )}

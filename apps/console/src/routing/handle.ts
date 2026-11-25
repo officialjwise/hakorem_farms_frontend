@@ -92,6 +92,8 @@ export type NavKey =
   | 'businessAccounts'
   | 'businessAccountNew'
   | 'businessAccount'
+  | 'standingOrderNew'
+  | 'standingOrder'
   | 'ageing'
   | 'dunningLevels'
   | 'dunningNotices'
