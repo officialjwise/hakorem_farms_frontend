@@ -99,6 +99,8 @@ export interface SaleInput {
   others: (OtherTender & { method: PaymentMethodRef })[];
   cashHandedPesewas: number;
   customerPhone: string | null;
+  /** A business buyer's name and TIN on the receipt (2.26.0), never a customer. */
+  buyer?: components['schemas']['CounterSaleBuyer'] | null;
   /** The pack's `receiptLinkTemplate` (2.24.0): with one, the sale gets its own token and link. */
   receiptLinkTemplate?: string | null;
   now: Date;
@@ -144,6 +146,7 @@ export async function buildSale(
     provisionalRef: ref,
     occurredAt,
     ...(input.customerPhone !== null ? { customerPhone: input.customerPhone } : {}),
+    ...(input.buyer != null ? { buyer: input.buyer } : {}),
     lines: lines.map(toOfflineSaleLine),
     tenders,
     ...(token !== null ? { receiptToken: token } : {}),
@@ -190,6 +193,7 @@ export async function buildSale(
     ],
     changePesewas: split.changePesewas,
     customerPhone: input.customerPhone,
+    buyer: input.buyer ?? null,
     // Kept with the sale, so a reprint carries the link the customer was first given.
     link: token !== null ? receiptLink(input.receiptLinkTemplate, token) : null,
   };

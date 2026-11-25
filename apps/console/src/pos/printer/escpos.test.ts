@@ -7,6 +7,7 @@ const WORDS: PrintWords = {
   copy: 'COPY: reprint, not a new sale',
   register: 'Shop till 1 (T1)',
   cashier: 'Cashier: Adwoa Darko',
+  buyer: null,
   saleReference: 'Sale reference',
   receiptNo: 'Receipt no.',
   receiptNoFollows: 'Follows by SMS',
@@ -107,6 +108,26 @@ describe('the 58 mm receipt (ADR 0045)', () => {
       'Receipt no.',
       '          RCP-2026-DDW-T1-006201',
     ]);
+  });
+
+  it("prints a business buyer's name and TIN under the cashier (2.26.0), and nothing without one", () => {
+    const words = { ...WORDS, buyer: 'Buyer: Akosua Bakery, TIN C0000000042' };
+    const { header } = receiptLines({
+      receipt: RECEIPT,
+      officialNo: null,
+      copy: false,
+      link: null,
+      words,
+    });
+    expect(header.slice(-2)).toEqual(['Buyer: Akosua Bakery, TIN', 'C0000000042']);
+    const none = receiptLines({
+      receipt: RECEIPT,
+      officialNo: null,
+      copy: false,
+      link: null,
+      words: WORDS,
+    });
+    expect(none.header.at(-1)).toBe('Cashier: Adwoa Darko');
   });
 
   it('says an unverified mobile money tender is not yet verified, with its reference', () => {

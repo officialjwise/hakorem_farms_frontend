@@ -20,6 +20,8 @@ export interface PrintWords {
   copy: string;
   register: string;
   cashier: string;
+  /** The business buyer named on the receipt (2.26.0), or null for none. */
+  buyer: string | null;
   saleReference: string;
   receiptNo: string;
   receiptNoFollows: string;
@@ -110,6 +112,7 @@ export function receiptLines(input: PrintInput): {
     ...wrap(words.register),
     ascii(formatDateTime(receipt.occurredAt)),
     ...wrap(words.cashier),
+    ...(words.buyer !== null ? wrap(words.buyer) : []),
   ];
   const body: string[] = [
     RULE,

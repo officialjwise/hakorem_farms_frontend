@@ -87,6 +87,10 @@ function usePrintWords(entry: SaleEntry): PrintWords {
       code: entry.receipt.registerCode,
     }),
     cashier: t('receipt.cashier', { name: entry.receipt.cashierName }),
+    buyer:
+      entry.receipt.buyer != null
+        ? t('receipt.buyer', { name: entry.receipt.buyer.name, tin: entry.receipt.buyer.tin })
+        : null,
     saleReference: t('receipt.provisional'),
     receiptNo: t('receipt.official'),
     receiptNoFollows: t('receipt.officialFollows'),

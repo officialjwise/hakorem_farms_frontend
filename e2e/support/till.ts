@@ -20,6 +20,7 @@ export interface SentSale {
   occurredAt: string;
   customerPhone?: string;
   receiptToken?: string;
+  buyer?: { name: string; tin: string };
   lines: Record<string, unknown>[];
   tenders: {
     paymentMethodId: string;

@@ -199,7 +199,19 @@
     "phone": "Customer's phone for the receipt (optional)",
     "phoneHint": "With the country code, for example +233244512876. The farm sends the receipt link to it by SMS once the sale reaches the server.",
     "phoneError": "A phone number starts with + and the country code.",
-    "phoneConfirm": "Customer’s phone: {{phone}}"
+    "buyer": "A business buyer on the receipt",
+    "buyerHint": "Optional. For a business that needs its name and TIN on the receipt. It makes no customer account.",
+    "buyerName": "Business name",
+    "buyerTin": "Its TIN",
+    "buyerTinHint": "A GRA TIN such as C0000000042, or a Ghana Card PIN such as GHA-123456789-0.",
+    "buyerProblem": {
+      "NAME_WITHOUT_TIN": "Enter the business’s TIN too, or clear the name.",
+      "TIN_WITHOUT_NAME": "Enter the business name too, or clear the TIN.",
+      "NAME_INVALID": "Keep the name to 160 characters, on one line.",
+      "TIN_INVALID": "This is not a GRA TIN or a Ghana Card PIN."
+    },
+    "phoneConfirm": "Customer’s phone: {{phone}}",
+    "buyerConfirm": "On the receipt as the buyer: {{name}}, TIN {{tin}}."
   },
   "momo": {
     "amount": "Mobile money amount (GH₵)",
@@ -251,7 +263,8 @@
     "unverified": "Mobile money, not yet verified",
     "reference": "Ref.",
     "printCopy": "COPY: reprint, not a new sale",
-    "link": "Your receipt online:"
+    "link": "Your receipt online:",
+    "buyer": "Buyer: {{name}}, TIN {{tin}}"
   },
   "held": {
     "hold": "Hold this sale",
