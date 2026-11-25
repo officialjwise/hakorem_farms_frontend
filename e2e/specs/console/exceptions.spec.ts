@@ -1,4 +1,3 @@
-import { REVIEW_EXCEPTION } from '../../../apps/console/src/requested/exceptionReview';
 import { expect, test } from '../../support/test';
 import {
   expectNoAxeViolations,
@@ -17,7 +16,7 @@ type Body = Record<string, unknown>;
 /**
  * F12's gate, the part that is what went wrong: the owner opens today's exception report without asking
  * anyone, reads the urgent items first with who, when, how much and the record behind each, and marks one
- * reviewed with a note (CR-059, answered here in the requested shape).
+ * reviewed with a note (`reviewException`, CR-059, 2.48.0).
  */
 for (const scheme of ['light', 'dark'] as const) {
   test.describe(`the daily exception report, ${scheme} theme`, () => {
@@ -28,7 +27,8 @@ for (const scheme of ['light', 'dark'] as const) {
       api,
     }) => {
       const reviews = new Map<string, Body>();
-      api.respondRequested(REVIEW_EXCEPTION, (request, path) => {
+      const items = new Map<string, Body>();
+      api.respond('reviewException', (request, path) => {
         const id = path.split('/')[2] ?? '';
         const review = {
           reviewedBy: OWNER,
@@ -36,10 +36,11 @@ for (const scheme of ['light', 'dark'] as const) {
           note: (request as { note: string }).note,
         };
         reviews.set(id, review);
-        return { id, review };
+        return { ...items.get(id), review };
       });
       api.rewrite('getDailyExceptionReport', (body) => {
         const report = body as Body & { items: Body[] };
+        for (const item of report.items) items.set(String(item.id), item);
         return {
           ...report,
           items: report.items.map((item) => ({
@@ -88,7 +89,7 @@ for (const scheme of ['light', 'dark'] as const) {
       await expect(cards.nth(1)).toContainText('Goat G-0171 sold offline at till T2');
       const sent = api.log.filter((entry) => entry.operationId === 'reviewException');
       expect(sent.map((entry) => entry.path)).toEqual([`/exceptions/${STOCK_CONFLICT}/review`]);
-      expect(sent[0]?.outcome).toBe('requested');
+      expect(sent[0]?.outcome).toBe('prism');
     });
   });
 }
@@ -101,6 +102,31 @@ test('a day with nothing raised says so in words', async ({ page, api }) => {
   }));
   await signInWithTotp(page, USERS.owner, '/exceptions');
   await expect(page.getByText('Nothing went wrong on this day')).toBeVisible();
+  await expectNoAxeViolations(page);
+});
+
+test('an item that names the reader is not offered to them: someone else reviews it', async ({
+  page,
+  api,
+}) => {
+  api.rewrite('getDailyExceptionReport', (body) => {
+    const report = body as Body & { items: Body[] };
+    return {
+      ...report,
+      items: report.items.map((item) =>
+        item['kind'] === 'PRICE_OVERRIDE' ? { ...item, actor: OWNER, review: null } : item,
+      ),
+    };
+  });
+  await signInWithTotp(page, USERS.owner, '/exceptions');
+  const mine = page
+    .getByRole('list', { name: 'Exceptions, urgent first' })
+    .getByRole('listitem')
+    .filter({ hasText: 'Price different from the list' });
+  await expect(mine).toContainText(
+    'This names you, so someone else who reviews exceptions marks it reviewed.',
+  );
+  await expect(mine.getByRole('button', { name: /^Mark reviewed/ })).toHaveCount(0);
   await expectNoAxeViolations(page);
 });
 

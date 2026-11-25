@@ -224,8 +224,14 @@ export function PickScreen() {
     deniedTitle: t('pick.orderDenied'),
     deniedDescription: t('pick.orderDeniedBody'),
   });
-  const proposed =
-    money?.pendingConsent?.kind === 'SHORT_PICK' ? money.pendingConsent.proposed : null;
+  // What the customer is asked, from either read: the store's view carries it without money (2.52.0, CR-064).
+  const consent =
+    read === 'full'
+      ? (money?.pendingConsent ?? null)
+      : read === 'store'
+        ? (store.data?.pendingConsent ?? null)
+        : null;
+  const proposed = consent?.kind === 'SHORT_PICK' ? consent.proposed : null;
   const back = (
     <Link to="/fulfilments" className="text-accent-text underline">
       {t('pick.back')}

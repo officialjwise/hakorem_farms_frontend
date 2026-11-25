@@ -1,7 +1,8 @@
 /**
  * The daily exception report against the REAL Prism mock (ADR 0019): the contract's example day, urgent
- * first, each item with its branch, who, when, amount and record; then error and denied. The empty day and
- * marking an item reviewed (CR-059) are in the e2e spec, where the fake API can answer them.
+ * first, each item with its branch, who, when, amount and record, its review (CR-059, 2.48.0) and the count
+ * lines (2.52.0); then error and denied. The empty day and marking an item reviewed are in the e2e spec,
+ * where the fake API can answer them.
  */
 import { screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -43,9 +44,18 @@ describe('the daily exception report', () => {
       within(voidCard as HTMLElement).getByRole('link', { name: 'Open the sale' }),
     ).toHaveAttribute('href', '/orders/019a7b12-5b3e-7fd0-a508-05d2f3ff7eb0');
     expect(shortCard).toHaveTextContent('which has no screen in the back office yet');
-    // Reviewing waits for CR-059 in a build without its switch, and says so once.
-    expect(screen.getByText(/waits for the backend \(CR-059\)/)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Mark reviewed/ })).toBeNull();
+    // The example's void is reviewed, with who and the note; every other item can be marked reviewed.
+    expect(voidCard).toHaveTextContent('Reviewed by Kwabena Owusu');
+    expect(
+      within(voidCard as HTMLElement).queryByRole('button', { name: /Mark reviewed/ }),
+    ).toBeNull();
+    expect(screen.getAllByRole('button', { name: /^Mark reviewed/ })).toHaveLength(
+      cards.length - 1,
+    );
+    // The till sales that sent no receipt token are counted, not listed (2.52.0).
+    expect(screen.getByRole('region', { name: 'Counted controls by branch' })).toHaveTextContent(
+      '5 till sales sent no receipt token',
+    );
     // What each control raised, and who did what how often, are the API's own figures.
     expect(screen.getByRole('region', { name: 'Exceptions by control' })).toHaveTextContent(
       'GH₵1,275.00',

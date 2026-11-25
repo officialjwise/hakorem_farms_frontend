@@ -14,9 +14,10 @@ import type { FakeApi } from '../../support/fakeApi';
  * Standing orders and bad debt on a wholesale account (contract 2.18.0). Asantewaa Chop Bar takes goat meat
  * every Friday. Sales sets up a second standing order for big eggs on Mondays and Thursdays, changes it,
  * pauses, resumes and ends it, each with a reason, and reads each run with what happened and why. A refusal
- * stays on the form in words with its reference. An Accountant asks for an overdue invoice to be written
- * off as bad debt: confirmed first with the exact amount and a reason, the server answers that it waits for
- * the Owner, and that stays on screen. Holders of neither permission are told so in words. The suite runs at
+ * stays on the form in words with its reference. An Accountant asks for all or part of an overdue invoice to
+ * be written off as bad debt: the amount first, at most what is owed, then confirmed with the exact amount,
+ * whether it is all or part, a reason and the second person who decides; the server answers that it waits
+ * for the Owner, and that stays on screen. Holders of neither permission are told so in words. The suite runs at
  * 360 px. Every amount and date shown is the API's.
  */
 
@@ -425,10 +426,23 @@ test.describe('bad debt on an open invoice', () => {
     await checkEveryLook(page);
 
     await page.getByRole('button', { name: 'Write off INV-2026-DDW-001159 as bad debt' }).click();
+    // First how much: all of what is owed unless a part is entered.
+    const howMuch = page.getByRole('dialog', {
+      name: 'How much of INV-2026-DDW-001159 to write off',
+    });
+    await expect(howMuch.getByRole('textbox', { name: /^To write off/ })).toHaveValue('1860.00');
+    await checkEveryLook(page);
+    await howMuch.getByRole('button', { name: 'Next: the reason' }).click();
     const confirm = page.getByRole('dialog', {
       name: 'Write off GH₵1,860.00 of INV-2026-DDW-001159 as bad debt?',
     });
     await expect(confirm).toContainText('Nothing changes until the Owner approves it');
+    await expect(confirm.locator('[data-slot="write-off-extent"]')).toHaveText(
+      'This is all of what is still owed on the document.',
+    );
+    await expect(confirm.locator('[data-slot="write-off-approval"]')).toHaveText(
+      'It needs a second person: the Owner approves or rejects it, and the Owner who decides cannot be you.',
+    );
     await expect(confirm).toContainText('To write off');
     await expect(confirm).toContainText('1,860.00');
     // A reason is asked for, as the contract does.
@@ -442,7 +456,7 @@ test.describe('bad debt on an open invoice', () => {
     const asked = page.waitForRequest(sent('POST', '/receivables/write-offs'));
     await confirm.getByRole('button', { name: 'Ask for the write-off' }).click();
     const request = await asked;
-    // All of what is still owed, as the API states it; the key made for this intent.
+    // All of what is still owed, as the API states it, the amount step's default; the key made for this intent.
     expect(request.postDataJSON()).toEqual({
       billingDocumentId: INVOICE_ID,
       amountPesewas: 186000,
@@ -481,6 +495,10 @@ test.describe('bad debt on an open invoice', () => {
     );
     await signInWithTotp(page, USERS.accountantEnrolled, ACCOUNT);
     await page.getByRole('button', { name: 'Write off INV-2026-DDW-001159 as bad debt' }).click();
+    await page
+      .getByRole('dialog', { name: 'How much of INV-2026-DDW-001159 to write off' })
+      .getByRole('button', { name: 'Next: the reason' })
+      .click();
     const confirm = page.getByRole('dialog', {
       name: 'Write off GH₵1,860.00 of INV-2026-DDW-001159 as bad debt?',
     });
@@ -498,6 +516,81 @@ test.describe('bad debt on an open invoice', () => {
     await expect(onPage).toContainText('This amount cannot be written off as bad debt as it is.');
     await expect(page.getByText(/waits for the Owner's approval/)).toHaveCount(0);
     await checkEveryLook(page);
+  });
+
+  test('part of what is owed: at most what is owed, confirmed as part, with the reason and the second person', async ({
+    page,
+    api,
+  }) => {
+    asantewaa(api);
+    const bodies: unknown[] = [];
+    api.respond(
+      'writeOffBadDebt',
+      (request) => {
+        bodies.push(request);
+        return {
+          status: 'PENDING_APPROVAL',
+          approvalRequestId: APPROVAL_ID,
+          kind: 'BAD_DEBT_WRITE_OFF',
+          subject: {
+            id: '019a7f41-3c4d-7e5f-8a6b-7c8d9e0f1a23',
+            docType: 'BAD_DEBT_WRITE_OFF',
+            number: null,
+          },
+          summary:
+            'Write off GHS 500.00 of INV-2026-DDW-001159 owed by Asantewaa Chop Bar as bad debt. Reason: Half the crates came back broken',
+          requestedAt: '2026-11-25T10:12:00Z',
+        } satisfies S['ApprovalPending'];
+      },
+      202,
+    );
+    await signInWithTotp(page, USERS.accountantEnrolled, ACCOUNT);
+    await page.getByRole('button', { name: 'Write off INV-2026-DDW-001159 as bad debt' }).click();
+    const howMuch = page.getByRole('dialog', {
+      name: 'How much of INV-2026-DDW-001159 to write off',
+    });
+    const amount = howMuch.getByRole('textbox', { name: /^To write off/ });
+    // More than is owed is refused in words, before anything is sent.
+    await amount.fill('2000');
+    await howMuch.getByRole('button', { name: 'Next: the reason' }).click();
+    await expect(howMuch).toContainText(
+      'That is more than is still owed. Enter at most GH₵1,860.00.',
+    );
+    await amount.fill('0');
+    await howMuch.getByRole('button', { name: 'Next: the reason' }).click();
+    await expect(howMuch).toContainText('Enter the amount to write off.');
+    await checkEveryLook(page);
+    await amount.fill('500');
+    await howMuch.getByRole('button', { name: 'Next: the reason' }).click();
+    const confirm = page.getByRole('dialog', {
+      name: 'Write off GH₵500.00 of INV-2026-DDW-001159 as bad debt?',
+    });
+    await expect(confirm).toContainText('Still owed now');
+    await expect(confirm).toContainText('1,860.00');
+    await expect(confirm.locator('[data-slot="write-off-extent"]')).toHaveText(
+      'This is part of what is still owed. The rest stays owed on the document.',
+    );
+    await expect(confirm.locator('[data-slot="write-off-approval"]')).toContainText(
+      'It needs a second person',
+    );
+    await confirm
+      .getByLabel(/^Why it cannot be collected/)
+      .fill('Half the crates came back broken');
+    await checkEveryLook(page);
+    const asked = page.waitForRequest(sent('POST', '/receivables/write-offs'));
+    await confirm.getByRole('button', { name: 'Ask for the write-off' }).click();
+    expect((await asked).postDataJSON()).toEqual({
+      billingDocumentId: INVOICE_ID,
+      amountPesewas: 50000,
+      reason: 'Half the crates came back broken',
+    });
+    await expect(
+      page.getByText(
+        "The write-off of GH₵500.00 on INV-2026-DDW-001159 waits for the Owner's approval. Someone other than you decides it.",
+      ),
+    ).toBeVisible();
+    await expect(page.getByText(/Write off GHS 500\.00 of INV-2026-DDW-001159/)).toBeVisible();
+    expect(bodies).toHaveLength(1);
   });
 });
 

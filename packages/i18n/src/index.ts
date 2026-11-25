@@ -17,6 +17,7 @@ import type driverNs from '../locales/en/driver.json';
 import type fulfilmentNs from '../locales/en/fulfilment.json';
 import type posNs from '../locales/en/pos.json';
 import type posShiftNs from '../locales/en/posShift.json';
+import type posScreensNs from '../locales/en/posScreens.json';
 import type refusalsNs from '../locales/en/refusals.json';
 import type audit from '../locales/en/audit.json';
 import type auth from '../locales/en/auth.json';
@@ -35,6 +36,7 @@ import type processingNs from '../locales/en/processing.json';
 import type common from '../locales/en/common.json';
 import type iam from '../locales/en/iam.json';
 import type shell from '../locales/en/shell.json';
+import type navNs from '../locales/en/nav.json';
 import type storefront from '../locales/en/storefront.json';
 
 export const LANGUAGES = ['en'] as const;
@@ -49,6 +51,7 @@ export const DEFAULT_LANGUAGE: Language = 'en';
 export const NAMESPACES = [
   'common',
   'shell',
+  'nav',
   'auth',
   'storefront',
   'iam',
@@ -69,6 +72,7 @@ export const NAMESPACES = [
   'billing',
   'pos',
   'posShift',
+  'posScreens',
   'buying',
   'payables',
   'wholesale',
@@ -87,6 +91,7 @@ export const catalogue: Record<
   en: {
     common: () => import('../locales/en/common.json'),
     shell: () => import('../locales/en/shell.json'),
+    nav: () => import('../locales/en/nav.json'),
     auth: () => import('../locales/en/auth.json'),
     storefront: () => import('../locales/en/storefront.json'),
     iam: () => import('../locales/en/iam.json'),
@@ -107,6 +112,7 @@ export const catalogue: Record<
     billing: () => import('../locales/en/billing.json'),
     pos: () => import('../locales/en/pos.json'),
     posShift: () => import('../locales/en/posShift.json'),
+    posScreens: () => import('../locales/en/posScreens.json'),
     buying: () => import('../locales/en/buying.json'),
     payables: () => import('../locales/en/payables.json'),
     wholesale: () => import('../locales/en/wholesale.json'),
@@ -170,6 +176,7 @@ declare module 'i18next' {
     resources: {
       common: typeof common;
       shell: typeof shell;
+      nav: typeof navNs;
       auth: typeof auth;
       storefront: typeof storefront;
       iam: typeof iam;
@@ -190,6 +197,7 @@ declare module 'i18next' {
       billing: typeof billingNs;
       pos: typeof posNs;
       posShift: typeof posShiftNs;
+      posScreens: typeof posScreensNs;
       buying: typeof buyingNs;
       payables: typeof payablesNs;
       wholesale: typeof wholesaleNs;

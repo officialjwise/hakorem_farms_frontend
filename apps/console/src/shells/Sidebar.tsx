@@ -30,7 +30,7 @@ export function SidebarLinks({
   narrow?: boolean;
   onNavigate?: () => void;
 }) {
-  const { t } = useTranslation('shell');
+  const { t } = useTranslation(['shell', 'nav']);
   const auth = useAuth();
   const folded = usePreference(foldedGroups).split(',');
   const toggle = (key: NavGroupKey) => {
@@ -83,12 +83,12 @@ export function SidebarLinks({
                         className="size-icon-md text-fg-muted group-aria-[current=page]:text-accent-fg"
                       />
                     </span>
-                    <span className={cn(narrow && 'sr-only')}>{t(`nav.${key}`)}</span>
+                    <span className={cn(narrow && 'sr-only')}>{t(`nav:${key}`)}</span>
                   </NavLink>
                 );
                 return (
                   <li key={key}>
-                    {narrow ? <Tooltip content={t(`nav.${key}`)}>{link}</Tooltip> : link}
+                    {narrow ? <Tooltip content={t(`nav:${key}`)}>{link}</Tooltip> : link}
                   </li>
                 );
               })}
@@ -102,7 +102,7 @@ export function SidebarLinks({
 
 /** The sidebar on a wide screen, with its own narrow and wide toggle. */
 export function Sidebar() {
-  const { t } = useTranslation('shell');
+  const { t } = useTranslation(['shell', 'nav']);
   const width = usePreference(sidebarPreference);
   const narrow = width === 'narrow';
   return (

@@ -1,7 +1,7 @@
 import type { BrowserContext, Page, Route } from '@playwright/test';
 import { expect, test } from '../../support/test';
 import { expectNoAxeViolations, expectNoHorizontalScroll } from '../../support/helpers';
-import { fillDetails, refusePhotos, throttle3G, withCart } from '../../support/shop';
+import { EXAMPLE_CART, fillDetails, refusePhotos, throttle3G, withCart } from '../../support/shop';
 
 /**
  * Paying by card at the shop's checkout (contract 2.30.0, `placeOrder`). The order is placed and the API
@@ -207,6 +207,77 @@ test.describe('paying by card', () => {
     expect(keys.size).toBe(1);
     expect([...keys][0]).toMatch(/^[0-9a-f-]{36}$/);
     for (const attempt of sent) expect(attempt.body).toEqual({ paymentMethod: 'CARD' });
+  });
+
+  test('a reload while the card page did not open: the same request is kept for this checkout and replayed', async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    let opens = false;
+    const sent = await answerPlacement(page, CARD_PAGE, () => !opens);
+    const cardPage = await answerCardPage(page);
+    await reviewByCard(page);
+    const placeUrl = page.waitForRequest((request) =>
+      /\/shop\/checkouts\/[^/]+\/place$/.test(request.url()),
+    );
+    await page.getByRole('button', { name: 'Pay GH₵450.00 by card' }).click();
+    const checkoutId = new URL((await placeUrl).url()).pathname.split('/').at(-2) ?? '';
+    const notOpened = page
+      .getByRole('alert')
+      .filter({ hasText: 'Your order is placed, but the card page did not open' });
+    await expect(notOpened).toBeVisible({ timeout: 60_000 });
+    const key = sent[0]?.key ?? '';
+    // Kept in this tab's session storage for this checkout only: never in local storage or the address.
+    const kept = await page.evaluate(() => ({
+      session: window.sessionStorage.getItem('hk_card_request'),
+      local: Object.keys(window.localStorage),
+    }));
+    expect(JSON.parse(kept.session ?? 'null')).toEqual({
+      checkoutId,
+      said: JSON.stringify({ paymentMethod: 'CARD' }),
+      key,
+      notOpened: true,
+    });
+    expect(kept.local).toEqual(['hk_cart']);
+
+    // After the reload the server still says the cart is at this checkout, waiting for its payment.
+    const holdEnds = new Date(Date.now() + 10 * 60_000).toISOString();
+    await page.route(`**/shop/carts/${EXAMPLE_CART}`, async (route) => {
+      const response = await route.fetch();
+      const cart = (await response.json()) as Record<string, unknown>;
+      await route.fulfill({ response, json: { ...cart, status: 'CHECKOUT', checkoutId } });
+    });
+    await page.route(`**/shop/checkouts/${checkoutId}`, async (route) => {
+      const response = await route.fetch();
+      const checkout = (await response.json()) as Record<string, unknown>;
+      await route.fulfill({
+        response,
+        json: {
+          ...checkout,
+          id: checkoutId,
+          cartId: EXAMPLE_CART,
+          status: 'AWAITING_PAYMENT',
+          reservedUntil: holdEnds,
+        },
+      });
+    });
+    await page.reload();
+    await expect(notOpened).toBeVisible({ timeout: 60_000 });
+    expect(page.url()).not.toContain(key);
+    await expect(page.getByRole('button', { name: /^Pay GH₵/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Change these details' })).toBeDisabled();
+    await expectNoAxeViolations(page);
+    await expectNoHorizontalScroll(page);
+
+    const attempts = sent.length;
+    opens = true;
+    await notOpened.getByRole('button', { name: 'Open the card page' }).click();
+    await expect.poll(cardPage.asked, { timeout: 30_000 }).toEqual([CARD_PAGE]);
+    // The same request with the same key: one order, one page. Then the kept request is gone.
+    expect(sent).toHaveLength(attempts + 1);
+    expect(sent.at(-1)).toEqual({ key, body: { paymentMethod: 'CARD' } });
+    expect(new Set(sent.map((attempt) => attempt.key))).toEqual(new Set([key]));
+    expect(await page.evaluate(() => window.sessionStorage.getItem('hk_card_request'))).toBeNull();
   });
 
   test('a card page on any other host is refused in words and never opened', async ({ page }) => {

@@ -53,7 +53,7 @@ export function CashMovementForm({
   pack: OfflinePack;
   online: boolean;
 }) {
-  const { t } = useTranslation(['posShift', 'pos']);
+  const { t } = useTranslation(['posShift', 'pos', 'posScreens']);
   const { snapshot } = useTill();
   const [kind, setKind] = useState<MovementKind>('CASH_DROP');
   const [amount, setAmount] = useState<number | null>(null);
@@ -100,7 +100,7 @@ export function CashMovementForm({
   const witness = isDrop && asksForPin(rule) ? pinWitness : null;
   const unwitnessed = isDrop && witness === null;
 
-  const kindLabel = t(`pos:queue.cash.${kind}`);
+  const kindLabel = t(`posScreens:queue.cash.${kind}`);
   const ready =
     amount !== null &&
     amount > 0 &&
@@ -128,7 +128,7 @@ export function CashMovementForm({
           }}
           options={MOVEMENT_KINDS.map((value) => ({
             value,
-            label: t(`pos:queue.cash.${value}`),
+            label: t(`posScreens:queue.cash.${value}`),
           }))}
         />
       </Field>
@@ -334,8 +334,8 @@ function WitnessPart({
 
 /** What became of the last movement recorded here, in words, until the next one. */
 function Outcome({ entry, online }: { entry: CashMovementEntry; online: boolean }) {
-  const { t } = useTranslation(['posShift', 'pos']);
-  const kind = t(`pos:queue.cash.${entry.payload.kind}`);
+  const { t } = useTranslation(['posShift', 'pos', 'posScreens']);
+  const kind = t(`posScreens:queue.cash.${entry.payload.kind}`);
   const unwitnessed = entry.payload.kind === 'CASH_DROP' && entry.payload.witnessId === undefined;
   if (entry.failure !== null) {
     return (

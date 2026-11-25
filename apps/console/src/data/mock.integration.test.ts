@@ -28,7 +28,7 @@ async function ask(method: string, path: string): Promise<Response> {
 
 describe('the Prism mock covers the whole contract', () => {
   it('lists the operations it is going to ask for', () => {
-    // 668 published in contract 2.47.0 (CONTRACT_CHANGELOG): 600 in 1.17.0; 1.21.0 adds eight tiles and two
+    // 669 published in contract 2.52.0 (CONTRACT_CHANGELOG): 600 in 1.17.0; 1.21.0 adds eight tiles and two
     // label reads (610); 1.23.0 adds the price list preview (611); 1.26.0 the sixteen care operations (627);
     // 1.27.0 the three unit conversions (630); 1.29.0 the payout details read (631); 1.30.0 three purchase
     // operations (634); 1.31.0 the tag lookup (635); 1.54.0 the shop's public profile (636); 2.4.0 the six
@@ -40,8 +40,8 @@ describe('the Prism mock covers the whole contract', () => {
     // (657); 2.29.0 the storekeeper's order view (658); 2.31.0 the driver's cash hand-in (659, CR-057);
     // 2.32.0 a run's close and the driver list (661); 2.33.0 a van's write-off and the goods variances (663);
     // 2.35.0 the drivers holding cash (664, CR-063); 2.36.0 the extra delivery fee (665); 2.42.0 a shared
-    // document's public read (666); 2.46.0 an investor's payout details and statement (668, 2.47.0).
-    expect(operations.length).toBe(668);
+    // document's public read (666); 2.46.0 an investor's payout details and statement (668); 2.48.0 an exception's review (669, CR-059).
+    expect(operations.length).toBe(669);
     expect(reads.length).toBeGreaterThan(250);
   });
 

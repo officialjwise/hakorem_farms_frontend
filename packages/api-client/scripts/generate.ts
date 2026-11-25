@@ -2,9 +2,12 @@
  * Regenerates packages/api-client/src/generated from contract/openapi.yaml (ADR 0018).
  *
  *   schema.ts      the contract's types, written by openapi-typescript
- *   operations.ts  one row per operation id: method, path, permission, and which headers the contract
- *                  requires (Idempotency-Key, X-CSRF-Token). The data layer derives query keys and
- *                  mutation headers from this table, so nothing about an operation is written by hand.
+ *   operations.ts  one row per operation id: method, path, and which headers the contract requires
+ *                  (Idempotency-Key, X-CSRF-Token). The data layer derives query keys and mutation
+ *                  headers from this table, so nothing about an operation is written by hand. The rows
+ *                  are typed by an interface and travel as one packed string (ADR 0059, `src/manifest.ts`).
+ *
+ *   permissions.ts each operation's `x-permission`, for the tests and the e2e fake. No app imports it.
  *
  *   seededRoles.ts the roles the backend seeds, from `components.x-seeded-roles` (CR-023): each role's code,
  *                  name, TOTP rule and permissions, so the test fakes can be checked against the real seed.
@@ -22,6 +25,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import openapiTS, { astToString } from 'openapi-typescript';
 import ts from 'typescript';
 import { parse } from 'yaml';
+import { packOperations, type PackedRow } from '../src/manifest';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const packageRoot = join(here, '..');
@@ -64,18 +68,24 @@ function buildSeededRoles(document: RawDocument): RawSeededRole[] {
     .sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
 }
 
-interface ManifestRow {
+interface ManifestRow extends PackedRow {
   method: (typeof METHODS)[number];
-  path: string;
   permission: string | null;
-  idempotent: boolean;
-  csrf: 'required' | 'optional' | 'none';
-  /** The operation declares `security: []`: it needs no session, so a 401 from it is not an expired session. */
-  public: boolean;
-  /** How the request body travels: JSON, `multipart/form-data` (a file upload), or no body at all. */
-  body: 'json' | 'multipart' | 'none';
-  /** A security requirement names `deviceCredential`: an enrolled till sends `X-Device-Credential` (ADR 0044). */
-  device: boolean;
+}
+
+/** The row's type, every field a literal, for the interface the bundler drops. */
+function rowType(row: PackedRow): string {
+  const fields = (
+    ['method', 'path', 'idempotent', 'csrf', 'public', 'body', 'device'] as const
+  ).map((key) => `readonly ${key}: ${JSON.stringify(row[key])}`);
+  return `{ ${fields.join('; ')} }`;
+}
+
+/** The packed rows as a template literal, one operation a line, so a contract change reads as a line diff. */
+function packedLiteral(rows: Record<string, PackedRow>): string {
+  const packed = packOperations(rows);
+  if (/[`$\\]/.test(packed)) throw new Error('A path holds a backtick, a dollar or a backslash.');
+  return `\`${packed}\``;
 }
 
 function bodyOf(operation: RawOperation): ManifestRow['body'] {
@@ -144,13 +154,53 @@ export async function generate(): Promise<Record<string, string>> {
   const schema = `${head}${astToString(ast)}`;
 
   const manifest = buildManifest(document);
+  const rows = Object.fromEntries(
+    Object.entries(manifest).map(([id, row]) => [
+      id,
+      {
+        method: row.method,
+        path: row.path,
+        idempotent: row.idempotent,
+        csrf: row.csrf,
+        public: row.public,
+        body: row.body,
+        device: row.device,
+      } satisfies PackedRow,
+    ]),
+  ) as Record<string, PackedRow>;
   const operations = [
     head,
+    "import { unpackOperations } from '../manifest';",
+    '',
     '/** The contract version this client was generated from. */',
     `export const CONTRACT_VERSION = ${JSON.stringify(document.info.version)} as const;`,
     '',
+    '/** Every operation in the contract, by operation id: how each is sent, every field a literal type. */',
+    'export interface OperationManifest {',
+    ...Object.entries(rows).map(
+      ([id, row]) => `  readonly ${JSON.stringify(id)}: ${rowType(row)};`,
+    ),
+    '}',
+    '',
+    '/** The same rows, packed one operation a line (ADR 0059): `<id> <method> <path> <flags> <csrf> <body>`. */',
+    `const PACKED = ${packedLiteral(rows)};`,
+    '',
     '/** Every operation in the contract, by operation id. */',
-    `export const operationManifest = ${JSON.stringify(manifest, null, 2)} as const;`,
+    'export const operationManifest = unpackOperations(PACKED) as unknown as OperationManifest;',
+    '',
+  ].join('\n');
+
+  const permissions = [
+    head,
+    '/**',
+    " * Each operation's `x-permission`, by operation id (ADR 0059). For the tests and the e2e fake, which check",
+    " * routes and roles against it. No app imports this: a screen decides by the session's permissions.",
+    ' */',
+    `export const operationPermissions = ${JSON.stringify(
+      Object.fromEntries(Object.entries(manifest).map(([id, row]) => [id, row.permission])),
+      null,
+      2,
+    )} as const;`,
     '',
   ].join('\n');
 
@@ -164,7 +214,12 @@ export async function generate(): Promise<Record<string, string>> {
     '',
   ].join('\n');
 
-  return { 'schema.ts': schema, 'operations.ts': operations, 'seededRoles.ts': seededRoles };
+  return {
+    'schema.ts': schema,
+    'operations.ts': operations,
+    'permissions.ts': permissions,
+    'seededRoles.ts': seededRoles,
+  };
 }
 
 async function main() {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { operationManifest, seededRoles } from '@hakorem/api-client';
+import { operationPermissions, seededRoles } from '@hakorem/api-client';
 import { FAKE_USERS } from './fakeAuthServer';
 
 /**
@@ -10,10 +10,6 @@ import { FAKE_USERS } from './fakeAuthServer';
 const NOT_SEEDED: Readonly<Record<string, string>> = {
   // The audit log: `listAuditEvents` says "readable by Owner and Accountant only"; no role is seeded with it.
   'aud.audit.read': 'the audit log',
-  // Reports and the exception list.
-  'rpt.exceptions.read': 'reporting',
-  'rpt.report.read': 'reporting',
-  'rpt.report.export': 'reporting',
 };
 
 /**
@@ -31,16 +27,14 @@ const NOT_SEEDED_FOR_ROLE: Readonly<Record<string, readonly string[]>> = {
  * hold them so an e2e build switched on for the request can use it. When the contract names one, its line
  * fails: move it to NOT_SEEDED until the seed grants it, then delete it.
  */
-const REQUESTED: Readonly<Record<string, string>> = {
-  'rpt.exceptions.review': 'CR-059',
-};
+const REQUESTED: Readonly<Record<string, string>> = {};
 
 const seeded = new Set<string>(seededRoles.flatMap((role) => [...role.permissions]));
 
 /** Every permission named on an operation, including a compound one ("rpt.report.read, plus rpt.report.export"). */
 const named = new Set(
-  Object.values(operationManifest).flatMap((row) =>
-    row.permission === null ? [] : (row.permission.match(/[a-z_]+(?:\.[a-z_]+)+/g) ?? []),
+  Object.values(operationPermissions).flatMap((permission: string | null) =>
+    permission === null ? [] : (permission.match(/[a-z_]+(?:\.[a-z_]+)+/g) ?? []),
   ),
 );
 

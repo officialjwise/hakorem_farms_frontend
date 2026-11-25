@@ -68,7 +68,7 @@ const ELSEWHERE = [
  * gate refuses it otherwise.
  */
 export function SettingsLayout() {
-  const { t } = useTranslation(['settings', 'shell']);
+  const { t } = useTranslation(['settings', 'shell', 'nav']);
   const auth = useAuth();
   const allowed = (permission: string | null) => permission === null || auth.can(permission);
   const link = (active: boolean) =>
@@ -107,7 +107,7 @@ export function SettingsLayout() {
                 <li key={item.to}>
                   <NavLink to={item.to} className={({ isActive }) => link(isActive)}>
                     <IconChip icon={item.icon} tone="slate" size="sm" />
-                    {t(`shell:nav.${item.nav}`)}
+                    {t(`nav:${item.nav}`)}
                   </NavLink>
                 </li>
               ))}
@@ -133,7 +133,7 @@ function Pane({ children }: { children: React.ReactNode }) {
 
 /** Display: the theme and the menu width, kept in this browser (ADR 0034's viewer preferences). */
 export function DisplaySettingsScreen() {
-  const { t } = useTranslation(['settings', 'shell']);
+  const { t } = useTranslation(['settings', 'shell', 'nav']);
   const theme = usePreference(themePreference);
   const width = usePreference(sidebarPreference);
   return (

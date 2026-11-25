@@ -337,7 +337,7 @@ const OWNER_F5B_PERMISSIONS = [
 
 /**
  * F12, the owner's brief (2026-11-19): an Owner or a Manager marks a daily exception reviewed with a note
- * (CR-059, not in the contract yet: `fakeRoles.test.ts` lists it as requested).
+ * (CR-059, `reviewException`, 2.48.0).
  */
 const EXCEPTION_REVIEW_PERMISSIONS = ['rpt.exceptions.read', 'rpt.exceptions.review'];
 

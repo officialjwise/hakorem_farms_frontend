@@ -395,7 +395,13 @@ test('offline, a cash drop takes its witness’s PIN, and the witness goes with 
   expect(server.movements).toHaveLength(1);
 });
 
-test('the digital receipt: the till makes the link from its own token and sends the token with the sale', async ({
+/**
+ * The owner (2026-11-25, contract 2.51.0): every till sale with a phone number gets its receipt text, a sale
+ * made online too. The till makes every sale through its queue (ADR 0043), online or not, so a sale made
+ * with the network on reaches the server through `syncOfflineSales` carrying its `receiptToken`, never as
+ * a live `completeCounterSale` without one (`NO_LINK`, counted on the exception report since 2.52.0).
+ */
+test('the digital receipt: a sale made online sends the till’s own token with the sale, so its text can go', async ({
   page,
   api,
 }) => {
@@ -433,6 +439,9 @@ test('the digital receipt: the till makes the link from its own token and sends 
   expect(sent.length).toBeGreaterThan(0);
   expect(sent.every((sale) => sale.receiptToken === token)).toBe(true);
   expect(sent[0]?.id).not.toContain(token);
+  expect(sent.every((sale) => sale.customerPhone === '+233244550199')).toBe(true);
+  // The network was on throughout, and no sale went any other way.
+  expect(api.log.filter((entry) => entry.operationId === 'completeCounterSale')).toEqual([]);
   await expectNoAxeViolations(page);
   await expectNoHorizontalScroll(page);
 });

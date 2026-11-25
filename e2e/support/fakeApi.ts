@@ -23,7 +23,12 @@
  * The session cookies are host-only (`__Host-`), so a session signed in on the console's host is never sent
  * from the investor portal's, and the other way round (ADR 0058): each host has its own jar.
  */
-import { operationManifest, type RequestedOperation, type components } from '@hakorem/api-client';
+import {
+  operationManifest,
+  operationPermissions,
+  type RequestedOperation,
+  type components,
+} from '@hakorem/api-client';
 import type { BrowserContext, Page, Route } from '@playwright/test';
 import {
   createFakeAuthServer,
@@ -56,7 +61,7 @@ const OPERATIONS: Operation[] = Object.entries(operationManifest).map(([id, row]
   path: row.path,
   pattern: new RegExp(`^${row.path.replace(/\{[^}]+\}/g, '[^/]+')}$`),
   params: (row.path.match(/\{/g) ?? []).length,
-  permission: row.permission,
+  permission: operationPermissions[id as keyof typeof operationPermissions],
   public: row.public,
 }));
 

@@ -43,7 +43,7 @@ interface Entered {
  * refund limit it waits for a different person (202). Nothing is totalled here.
  */
 export function ReturnsScreen() {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posScreens', 'pos']);
   const online = useOnlineStatus();
   const [typed, setTyped] = useState('');
   const [documentNo, setDocumentNo] = useState<string | null>(null);
@@ -85,7 +85,7 @@ export function ReturnsScreen() {
 }
 
 function FoundReceipt({ documentNo }: { documentNo: string }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posScreens', 'pos']);
   const found = useApiQuery('listBillingDocuments', {
     query: { documentNo, kind: 'RECEIPT', limit: 5 },
   });
@@ -127,7 +127,7 @@ function matching<T extends { documentNo: string | null }>(
 }
 
 function OrderToReturn({ orderId, receiptNo }: { orderId: string; receiptNo: string }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posScreens', 'pos']);
   const order = useApiQuery('getOrder', { path: { id: orderId } });
   const labels = useStateLabels({
     loading: t('returns.loadingOrder'),
@@ -147,7 +147,7 @@ function sold(line: OrderLine): string {
 }
 
 function ReturnForm({ order, receiptNo }: { order: SalesOrder; receiptNo: string }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posScreens', 'pos']);
   const reasons = useApiAllPages('listReasonCodes', { query: { domain: 'RETURN' } });
   const create = useApiMutation('createReturn', { invalidates: ['listReturns'] });
   const submit = useApiMutation('submitReturn', { invalidates: ['listReturns', 'listApprovals'] });
@@ -235,7 +235,7 @@ function ReturnForm({ order, receiptNo }: { order: SalesOrder; receiptNo: string
                     {' · '}
                     <WeightDisplay
                       kilograms={line.fulfilledWeightKg}
-                      notApplicableLabel={t('line.noWeight')}
+                      notApplicableLabel={t('pos:line.noWeight')}
                     />
                   </>
                 ) : null}
@@ -262,7 +262,7 @@ function ReturnForm({ order, receiptNo }: { order: SalesOrder; receiptNo: string
                     label={t('returns.weight', { name: line.product.name })}
                     error={
                       tried && qty !== null && row?.weightKg == null
-                        ? t('line.errors.weight')
+                        ? t('pos:line.errors.weight')
                         : undefined
                     }
                   >

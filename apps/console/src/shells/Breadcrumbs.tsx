@@ -6,7 +6,7 @@ import { isRouteHandle } from '../routing/handle';
 
 /** Breadcrumbs from the matched routes' `handle.crumb`. The last one is the current page. */
 export function Breadcrumbs() {
-  const { t } = useTranslation('shell');
+  const { t } = useTranslation(['nav', 'shell']);
   const matches = useMatches();
   const trail = matches.flatMap((match) =>
     isRouteHandle(match.handle) ? [{ path: match.pathname, key: match.handle.crumb }] : [],
@@ -19,7 +19,7 @@ export function Breadcrumbs() {
   );
 
   return (
-    <nav aria-label={t('backOffice.breadcrumb')} data-slot="breadcrumbs">
+    <nav aria-label={t('shell:backOffice.breadcrumb')} data-slot="breadcrumbs">
       <ol className="flex flex-wrap items-center gap-2 text-sm text-fg-muted">
         {unique.map((crumb, index) => {
           const last = index === unique.length - 1;
@@ -28,7 +28,7 @@ export function Breadcrumbs() {
               <li>
                 {last ? (
                   <span aria-current="page" className="font-medium text-fg">
-                    {t(`nav.${crumb.key}`)}
+                    {t(crumb.key)}
                   </span>
                 ) : (
                   <Link
@@ -40,7 +40,7 @@ export function Breadcrumbs() {
                         <House aria-hidden="true" className="size-icon-sm stroke-accent" />
                       </span>
                     ) : null}
-                    {t(`nav.${crumb.key}`)}
+                    {t(crumb.key)}
                   </Link>
                 )}
               </li>

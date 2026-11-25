@@ -20,7 +20,12 @@ export {
   type ApiErrorInit,
 } from './errors';
 export { newIdempotencyKey } from './idempotency';
-export { operationManifest, CONTRACT_VERSION } from './generated/operations';
+export {
+  operationManifest,
+  CONTRACT_VERSION,
+  type OperationManifest,
+} from './generated/operations';
+export { operationPermissions } from './generated/permissions';
 export { seededRoles } from './generated/seededRoles';
 export type { components, operations, paths } from './generated/schema';
 export { createSessionRefresher, type RefreshOutcome, type SessionHooks } from './singleFlight';

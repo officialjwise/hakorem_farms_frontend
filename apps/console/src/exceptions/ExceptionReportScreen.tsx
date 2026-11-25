@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import type { components } from '@hakorem/api-client';
 import {
-  Alert,
   Button,
   Card,
   CardBody,
@@ -28,7 +27,7 @@ import {
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { useBranchScope } from '../branch/branchScope';
-import { useApiQuery } from '../data/api';
+import { useApiMutation, useApiQuery } from '../data/api';
 import { When } from '../iam/presentation';
 import { lookup } from '../lib/lookup';
 import { useIntentKey } from '../lib/queries';
@@ -37,18 +36,14 @@ import { PageHeader } from '../lib/ScreenHeader';
 import { useStateLabels } from '../lib/states';
 import { useStatementExport } from '../reports/exporting';
 import { accraToday } from '../reports/period';
-import {
-  exceptionReviewOn,
-  reviewOf,
-  useReviewException,
-  type ExceptionReview,
-} from '../requested/exceptionReview';
 import { byUrgency, recordPath } from './records';
 
 type Schemas = components['schemas'];
 type Report = Schemas['DailyExceptionReport'];
 type Item = Schemas['ExceptionItem'];
 type RateByUser = Schemas['RateByUser'];
+type ExceptionReview = Schemas['ExceptionReview'];
+type CountLine = Schemas['ExceptionCountLine'];
 
 const SEVERITY_TONE: Record<Item['severity'], StatusTone> = {
   URGENT: 'critical',
@@ -134,12 +129,10 @@ export function ExceptionReportScreen() {
 function ReportBody({ report }: { report: Report }) {
   const { t } = useTranslation(['exceptions', 'common']);
   const auth = useAuth();
-  const reviewing = exceptionReviewOn();
-  const items = byUrgency(report.items, (item) => reviewOf(item) !== null);
+  const items = byUrgency(report.items, (item) => item.review !== null);
   return (
     <div className="grid gap-6">
-      {reviewing ? null : <Alert severity="info" title={t('review.waits')} />}
-      {reviewing && !auth.can('rpt.exceptions.review') ? (
+      {!auth.can('rpt.exceptions.review') ? (
         <p className="text-sm text-fg-muted">{t('review.cannot')}</p>
       ) : null}
       <section aria-labelledby="exceptions-items" className="grid gap-3">
@@ -162,6 +155,7 @@ function ReportBody({ report }: { report: Report }) {
         )}
       </section>
       <Counts report={report} />
+      <CountLines lines={report.countLines ?? []} />
       <Patterns report={report} />
       <p className="text-control-sm text-fg-muted">
         {t('generated', { when: formatDateTime(report.generatedAt) })}
@@ -174,7 +168,7 @@ function ExceptionCard({ item }: { item: Item }) {
   const { t } = useTranslation(['exceptions', 'common']);
   const kindName = useKindName();
   const scope = useBranchScope();
-  const review = reviewOf(item);
+  const review = item.review;
   const branch = scope.branches.find((b) => b.id === item.branchId);
   const titleId = `exception-${item.id}`;
   return (
@@ -200,7 +194,9 @@ function ExceptionCard({ item }: { item: Item }) {
         <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
           <div className="grid gap-0.5">
             <dt className="text-fg-muted">{t('item.branch')}</dt>
-            <dd>{branch?.name ?? item.branchId}</dd>
+            <dd>
+              {item.branchId === null ? t('item.companyWide') : (branch?.name ?? item.branchId)}
+            </dd>
           </div>
           <div className="grid gap-0.5">
             <dt className="text-fg-muted">{t('item.who')}</dt>
@@ -273,7 +269,9 @@ function ReviewPart({ item, review }: { item: Item; review: ExceptionReview | nu
   const { t } = useTranslation(['exceptions', 'common']);
   const auth = useAuth();
   const [open, setOpen] = useState(false);
-  const mutation = useReviewException();
+  const mutation = useApiMutation('reviewException', {
+    invalidates: ['getDailyExceptionReport', 'listExceptions'],
+  });
   const keyFor = useIntentKey();
   const failureLabels = useStateLabels({
     loading: t('review.saving'),
@@ -297,7 +295,11 @@ function ReviewPart({ item, review }: { item: Item; review: ExceptionReview | nu
       </div>
     );
   }
-  if (!exceptionReviewOn() || !auth.can('rpt.exceptions.review')) return null;
+  if (!auth.can('rpt.exceptions.review')) return null;
+  // The person an item names never reviews it (REVIEWER_IS_ACTOR): said here instead of offered and refused.
+  if (item.actor !== null && item.actor.id === auth.session?.principal.id) {
+    return <p className="text-sm text-fg-muted">{t('review.namesYou')}</p>;
+  }
   return (
     <div className="grid gap-2">
       <div>
@@ -366,6 +368,54 @@ function Counts({ report }: { report: Report }) {
                 <TableCell numeric label={t('counts.amount')}>
                   <MoneyDisplay pesewas={count.amountPesewas} />
                 </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </section>
+  );
+}
+
+/**
+ * The controls the report counts rather than lists (2.52.0): one line per branch, the API's count and its
+ * words. Today the only one is the till sales whose till sent no receipt token, so no receipt text went.
+ */
+function CountLines({ lines }: { lines: readonly CountLine[] }) {
+  const { t } = useTranslation(['exceptions', 'common']);
+  const scope = useBranchScope();
+  if (lines.length === 0) return null;
+  return (
+    <section aria-labelledby="exceptions-count-lines" className="grid gap-3">
+      <div className="grid gap-1">
+        <h2 id="exceptions-count-lines" className="text-lg font-semibold">
+          {t('countLines.title')}
+        </h2>
+        <p className="text-sm text-fg-muted">{t('countLines.description')}</p>
+      </div>
+      <TableContainer aria-label={t('countLines.table')}>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t('countLines.control')}</TableHead>
+              <TableHead>{t('item.branch')}</TableHead>
+              <TableHead numeric>{t('counts.count')}</TableHead>
+              <TableHead>{t('countLines.summary')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {lines.map((line) => (
+              <TableRow key={`${line.code}-${line.branchId}`}>
+                <TableRowHeader>
+                  {t(`countLines.code.${line.code}`, { defaultValue: line.code })}
+                </TableRowHeader>
+                <TableCell label={t('item.branch')}>
+                  {scope.branches.find((b) => b.id === line.branchId)?.name ?? line.branchId}
+                </TableCell>
+                <TableCell numeric label={t('counts.count')}>
+                  {line.count}
+                </TableCell>
+                <TableCell label={t('countLines.summary')}>{line.summary}</TableCell>
               </TableRow>
             ))}
           </TableBody>
