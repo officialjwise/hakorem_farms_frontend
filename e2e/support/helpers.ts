@@ -82,3 +82,11 @@ export async function expectNoHorizontalScroll(page: Page) {
   );
   expect(overflow, 'the page scrolls sideways').toBeLessThanOrEqual(0);
 }
+
+/**
+ * A calendar day counted from today in Accra, which is UTC all year (ADR 0027), as `YYYY-MM-DD`. For a form
+ * that refuses a day in the past, so a spec never types a date that expires.
+ */
+export function accraDay(daysFromToday: number): string {
+  return new Date(Date.now() + daysFromToday * 86_400_000).toISOString().slice(0, 10);
+}

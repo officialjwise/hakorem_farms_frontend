@@ -1,7 +1,8 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '../../support/test';
 import type { FakeApi } from '../../support/fakeApi';
-import { confirmStepUp, signInWithTotp, USERS } from '../../support/helpers';
+import { accraDay, confirmStepUp, signInWithTotp, USERS } from '../../support/helpers';
+
 import { installTillServer, openTillShift, find } from '../../support/till';
 import { PEOPLE, installTillPins } from '../../support/tillPins';
 import {
@@ -46,6 +47,9 @@ import {
   seedEggs,
   SUPPLIER,
 } from '../../support/eggs';
+
+/** A week from today: the quote form refuses a day in the past. */
+const VALID_UNTIL = accraDay(7);
 
 /**
  * Screenshots of every screen a phase built, for the owner to review from a phone (owner, 2026-11-15).
@@ -1324,7 +1328,7 @@ const WHOLESALE_SHOTS: Shot[] = [
     act: async (page) => {
       await page.getByRole('combobox', { name: /^Customer/ }).fill('Asantewaa');
       await page.getByRole('option', { name: /^Asantewaa Chop Bar/ }).click();
-      await page.getByLabel(/^Valid until/).fill('2026-11-24');
+      await page.getByLabel(/^Valid until/).fill(VALID_UNTIL);
       const line1 = page.getByRole('heading', { name: 'Line 1' }).locator('..').locator('..');
       await line1.getByRole('combobox', { name: /^Product/ }).fill('Eggs');
       await page.getByRole('option', { name: /^Eggs, big/ }).click();
