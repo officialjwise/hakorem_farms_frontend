@@ -21,7 +21,8 @@ const till = (permission: string, crumb: RouteHandle['crumb']): RouteHandle => (
  * The till's screens that load on demand. `preloadTillScreens` fetches them all once the till is ready, so
  * a till that loses its network afterwards still opens every one (ADR 0043); a reload with no network is
  * the service worker's (F13, DEPLOYMENT.md section 2). The words they need that the sale screen does not,
- * the shift screens' and the refusals', are namespaces fetched with them (`TILL_NAMESPACES`).
+ * the shift screens', the other screens' and parts' (`posScreens`: the queue, returns, setup, the lock and
+ * the receipt's printer and link) and the refusals', are namespaces fetched with them (`TILL_NAMESPACES`).
  */
 const SCREENS = {
   setup: () => import('./screens/TillSetupScreen').then((m) => m.TillSetupScreen),
@@ -32,7 +33,11 @@ const SCREENS = {
 };
 
 /** Catalogue namespaces the till fetches after its first screen, never in its first load. */
-export const TILL_NAMESPACES = ['posShift', 'refusals'] as const satisfies readonly Namespace[];
+export const TILL_NAMESPACES = [
+  'posShift',
+  'posScreens',
+  'refusals',
+] as const satisfies readonly Namespace[];
 
 export function preloadTillScreens(i18n?: Pick<i18n, 'loadNamespaces'>): Promise<unknown> {
   return Promise.allSettled([

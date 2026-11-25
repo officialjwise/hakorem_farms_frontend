@@ -36,6 +36,6 @@ export const ENTRY_DOCUMENT: Record<ConsoleEntry, string> = {
  * once its sale screen is up (`preloadTillScreens`). `pnpm budget:console` counts these in the initial load.
  */
 export const ENTRY_NAMESPACES: Record<ConsoleEntry, Namespace[]> = {
-  'back-office': ['common', 'shell', 'auth', 'iam', 'audit', 'refusals'],
+  'back-office': ['common', 'shell', 'nav', 'auth', 'iam', 'audit', 'refusals'],
   pos: ['common', 'shell', 'auth', 'pos'],
 };

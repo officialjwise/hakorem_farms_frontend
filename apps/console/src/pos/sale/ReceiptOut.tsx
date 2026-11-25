@@ -18,7 +18,7 @@ import { encodeReceipt, type PrintWords } from '../printer/escpos';
  * with no link or a refused one.
  */
 export function ReceiptOut({ entry, copy = false }: { entry: SaleEntry; copy?: boolean }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posScreens', 'pos']);
   return (
     <section
       aria-labelledby={`receipt-out-${entry.id}`}
@@ -26,7 +26,7 @@ export function ReceiptOut({ entry, copy = false }: { entry: SaleEntry; copy?: b
       data-slot="receipt-out"
     >
       <h3 id={`receipt-out-${entry.id}`} className="text-lg font-semibold">
-        {t('done.receiptHeading')}
+        {t('pos:done.receiptHeading')}
       </h3>
       <DigitalReceipt entry={entry} />
       <PrintReceipt entry={entry} copy={copy} />
@@ -35,7 +35,7 @@ export function ReceiptOut({ entry, copy = false }: { entry: SaleEntry; copy?: b
 }
 
 function DigitalReceipt({ entry }: { entry: SaleEntry }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posScreens', 'pos']);
   const phone = entry.receipt.customerPhone;
   const link = entry.receipt.link ?? null;
   const recorded = entry.serverResult !== null;
@@ -78,34 +78,34 @@ function DigitalReceipt({ entry }: { entry: SaleEntry }) {
 }
 
 function usePrintWords(entry: SaleEntry): PrintWords {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posScreens', 'pos']);
   return {
-    business: t('receipt.business'),
-    copy: t('receipt.printCopy'),
-    register: t('receipt.register', {
+    business: t('pos:receipt.business'),
+    copy: t('pos:receipt.printCopy'),
+    register: t('pos:receipt.register', {
       name: entry.receipt.registerName,
       code: entry.receipt.registerCode,
     }),
-    cashier: t('receipt.cashier', { name: entry.receipt.cashierName }),
+    cashier: t('pos:receipt.cashier', { name: entry.receipt.cashierName }),
     buyer:
       entry.receipt.buyer != null
-        ? t('receipt.buyer', { name: entry.receipt.buyer.name, tin: entry.receipt.buyer.tin })
+        ? t('pos:receipt.buyer', { name: entry.receipt.buyer.name, tin: entry.receipt.buyer.tin })
         : null,
-    saleReference: t('receipt.provisional'),
-    receiptNo: t('receipt.official'),
-    receiptNoFollows: t('receipt.officialFollows'),
-    total: t('receipt.total'),
-    change: t('receipt.change'),
-    handed: (name) => t('receipt.handed', { name }),
-    unverified: t('receipt.unverified'),
-    reference: t('receipt.reference'),
-    link: t('receipt.link'),
-    thanks: t('receipt.thanks'),
+    saleReference: t('pos:receipt.provisional'),
+    receiptNo: t('pos:receipt.official'),
+    receiptNoFollows: t('pos:receipt.officialFollows'),
+    total: t('pos:receipt.total'),
+    change: t('pos:receipt.change'),
+    handed: (name) => t('pos:receipt.handed', { name }),
+    unverified: t('pos:receipt.unverified'),
+    reference: t('pos:receipt.reference'),
+    link: t('pos:receipt.link'),
+    thanks: t('pos:receipt.thanks'),
   };
 }
 
 function PrintReceipt({ entry, copy }: { entry: SaleEntry; copy: boolean }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posScreens', 'pos']);
   const state = usePrinter();
   const { snapshot } = useTill();
   const words = usePrintWords(entry);

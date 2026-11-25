@@ -62,6 +62,7 @@ export async function renderApp(
     namespaces: [
       'common',
       'shell',
+      'nav',
       'auth',
       'iam',
       'audit',

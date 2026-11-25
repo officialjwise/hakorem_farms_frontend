@@ -16,7 +16,7 @@ import { getTill, useTill } from '../offline/till';
  * Online only. Permission: `pos.device.enrol` (the route's).
  */
 export function TillSetupScreen() {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posScreens', 'pos']);
   const till = useTill();
   const device = till.snapshot?.device ?? null;
 
@@ -54,7 +54,7 @@ export function TillSetupScreen() {
 }
 
 function Enrol() {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posScreens', 'pos']);
   const registers = useApiAllPages('listRegisters', {});
   const enrol = useApiMutation('enrolDevice', {
     invalidates: ['listRegisterDevices', 'listRegisters'],

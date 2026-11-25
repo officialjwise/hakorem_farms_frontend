@@ -19,12 +19,12 @@ import { RequestReference } from '../../lib/RequestReference';
  * a copy. Permission: the till's (`pos.sale.create`).
  */
 export function QueueScreen() {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posScreens', 'pos']);
   const till = useTill();
   const online = useOnlineStatus();
   const [copy, setCopy] = useState<SaleEntry | null>(null);
   const snapshot = till.snapshot;
-  if (snapshot === null) return <Skeleton label={t('sale.loading')} shape="block" />;
+  if (snapshot === null) return <Skeleton label={t('pos:sale.loading')} shape="block" />;
   const waiting = pendingCount(snapshot);
   const attention = snapshot.entries.filter(needsAttention);
   const { sync } = till;
@@ -76,7 +76,7 @@ export function QueueScreen() {
             {sync.blocked.correlationId !== '' ? (
               <>
                 {' '}
-                {t('referenceLabel')} <RequestReference value={sync.blocked.correlationId} />
+                {t('pos:referenceLabel')} <RequestReference value={sync.blocked.correlationId} />
               </>
             ) : null}
           </Alert>
@@ -112,7 +112,7 @@ export function QueueScreen() {
         <section aria-label={t('queue.copyTitle')} className="grid gap-2">
           <div className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setCopy(null)}>
-              {t('close')}
+              {t('pos:close')}
             </Button>
           </div>
           <Receipt receipt={copy.receipt} officialNo={copy.serverResult?.receiptNo ?? null} copy />
@@ -124,7 +124,7 @@ export function QueueScreen() {
 }
 
 function Row({ entry, onCopy }: { entry: QueueEntry; onCopy: (entry: SaleEntry) => void }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posScreens', 'pos']);
   return (
     <li
       className="grid gap-1 rounded-md border border-border bg-surface p-3"
@@ -209,7 +209,7 @@ function Row({ entry, onCopy }: { entry: QueueEntry; onCopy: (entry: SaleEntry) 
           {entry.failure.correlationId !== '' ? (
             <>
               {' '}
-              {t('referenceLabel')} <RequestReference value={entry.failure.correlationId} />
+              {t('pos:referenceLabel')} <RequestReference value={entry.failure.correlationId} />
             </>
           ) : null}
         </Alert>

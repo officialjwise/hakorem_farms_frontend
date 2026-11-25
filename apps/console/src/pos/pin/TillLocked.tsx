@@ -16,7 +16,7 @@ import { PinInput, PinOutcomeAlert } from './PinCheck';
  * it opens again only with a new PIN (2.17.0); online, the till can ask the server.
  */
 export function TillLocked() {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posScreens', 'pos']);
   const { snapshot } = useTill();
   const heading = useRef<HTMLHeadingElement>(null);
   const [pin, setPin] = useState('');
@@ -87,14 +87,14 @@ export function TillLocked() {
 
 /** A locked-out cashier: said in words, and online the till can ask the server whether it has ended. */
 function LockedOut({ name }: { name: string }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posScreens', 'pos']);
   const online = useOnlineStatus();
   const [checking, setChecking] = useState(false);
   const [answer, setAnswer] = useState<'unreached' | 'still' | null>(null);
   return (
     <div className="grid gap-2" data-slot="locked-out">
       <Alert severity="critical" title={t('lock.server.title')}>
-        {t('pin.lockedOut', { name })}
+        {t('pos:pin.lockedOut', { name })}
       </Alert>
       {online ? (
         <Button
@@ -130,7 +130,7 @@ function LockedOut({ name }: { name: string }) {
  * does nothing but sign out, and is recorded with who did it and when. Without one, the cashier stays.
  */
 function SupervisorSignOut({ cashierName }: { cashierName: string }) {
-  const { t } = useTranslation('pos');
+  const { t } = useTranslation(['posScreens', 'pos']);
   const auth = useAuth();
   const navigate = useNavigate();
   const till = getTill();

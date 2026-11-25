@@ -10,7 +10,7 @@ export interface RouteHandle {
   permission: string | null;
   /** Which shell the route renders in. Decides density, theme default and chrome. */
   shell: 'back-office' | 'pos' | 'driver' | 'investor';
-  /** Key into the `shell` namespace's `nav` group, used for the page title and the breadcrumb. */
+  /** Key into the `nav` namespace (the back office's words, never the till's), for the breadcrumb. */
   crumb: NavKey;
 }
 
