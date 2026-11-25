@@ -845,7 +845,7 @@
     "writeOff": "Write off",
     "writeOffFor": "Write off {{document}} as bad debt",
     "writeOffTitle": "Write off {{amount}} of {{document}} as bad debt?",
-    "writeOffBody": "Nothing changes until the Owner approves it, and the Owner who decides cannot be you. Once approved, the amount comes off what {{name}} owes on {{document}} and is posted to bad debts. No payment or credit note can then be put onto it. Say why it cannot be collected.",
+    "writeOffBody": "Nothing changes until the Owner approves it. Once approved, the amount comes off what {{name}} owes on {{document}} and is posted to bad debts. No payment or credit note can then be put onto that amount. Say why it cannot be collected.",
     "writeOffDocument": "Document",
     "writeOffOutstanding": "Still owed now",
     "writeOffAmount": "To write off",
@@ -855,6 +855,16 @@
     "notWrittenOff": "The write-off was not asked for",
     "deniedWriteOff": "You cannot write off bad debt (whl.bad_debt.write_off).",
     "waiting": "The write-off of {{amount}} on {{document}} waits for the Owner's approval. Someone other than you decides it.",
-    "waitingBody": "Nothing has changed yet: the document still owes it until the write-off is approved."
+    "waitingBody": "Nothing has changed yet: the document still owes it until the write-off is approved.",
+    "writeOffHowMuch": "How much of {{document}} to write off",
+    "writeOffHowMuchBody": "All of what is still owed, {{amount}}, or part of it. Nothing is asked for until you confirm on the next step.",
+    "writeOffAmountHint": "At most what is still owed. Part of it leaves the rest owed as before.",
+    "writeOffAmountMissing": "Enter the amount to write off.",
+    "writeOffAmountOver": "That is more than is still owed. Enter at most {{amount}}.",
+    "writeOffWhole": "Write off all of it, {{amount}}",
+    "writeOffNext": "Next: the reason",
+    "writeOffAll": "This is all of what is still owed on the document.",
+    "writeOffPart": "This is part of what is still owed. The rest stays owed on the document.",
+    "writeOffApproval": "It needs a second person: the Owner approves or rejects it, and the Owner who decides cannot be you."
   }
 }

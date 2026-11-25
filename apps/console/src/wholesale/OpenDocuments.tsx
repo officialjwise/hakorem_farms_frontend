@@ -1,3 +1,4 @@
+import { Scale } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -5,7 +6,11 @@ import type { components } from '@hakorem/api-client';
 import {
   Alert,
   Button,
+  Dialog,
+  DialogActions,
+  Field,
   MoneyDisplay,
+  MoneyInput,
   MutationFailure,
   QueryBoundary,
   formatMoney,
@@ -35,10 +40,11 @@ interface Waiting {
 /**
  * The buyer's open documents (`listOpenItems` for the customer): each invoice, receipt or debit note with
  * something still owed, how late it is, and what is owed on it now, as the server works it out; the
- * server's own total under them. A holder of `whl.bad_debt.write_off` asks for what is still owed on one to
- * be written off as bad debt (2.18.0): confirmed first with the exact amount and a reason, it always waits
- * for the Owner, who is not the person asking, and says so on screen until the page is left. A refusal stays
- * on screen in its words with its reference, in the dialog and after it closes.
+ * server's own total under them. A holder of `whl.bad_debt.write_off` asks for all or part of what is
+ * still owed on one to be written off as bad debt (2.18.0; the owner, 2026-11-25): first the amount, at most
+ * what is owed, then a confirmation with the exact amount, whether it is all or part, and a reason. It always
+ * waits for the Owner, who is not the person asking, and says so on screen until the page is left. A refusal
+ * stays on screen in its words with its reference, in the dialog and after it closes.
  */
 export function OpenDocuments({ customerId, name }: { customerId: string; name: string }) {
   const { t } = useTranslation(['wholesale', 'common']);
@@ -53,7 +59,11 @@ export function OpenDocuments({ customerId, name }: { customerId: string; name: 
     { enabled: canRead },
   );
   const writeOff = useApiMutation('writeOffBadDebt');
-  const [asking, setAsking] = useState<OpenItem | null>(null);
+  // The document chosen, then the amount chosen for it: the amount step, then the confirmation.
+  const [choosing, setChoosing] = useState<OpenItem | null>(null);
+  const [amount, setAmount] = useState<number | null>(null);
+  const [tried, setTried] = useState(false);
+  const [asking, setAsking] = useState<{ item: OpenItem; amountPesewas: number } | null>(null);
   const [waiting, setWaiting] = useState<Waiting[]>([]);
   const labels = useStateLabels({
     loading: t('openItems.loading'),
@@ -138,7 +148,9 @@ export function OpenDocuments({ customerId, name }: { customerId: string; name: 
                 aria-label={t('openItems.writeOffFor', { document: documentName(item) })}
                 onClick={() => {
                   writeOff.reset();
-                  setAsking(item);
+                  setAmount(item.outstandingPesewas);
+                  setTried(false);
+                  setChoosing(item);
                 }}
               >
                 {t('openItems.writeOff')}
@@ -170,7 +182,7 @@ export function OpenDocuments({ customerId, name }: { customerId: string; name: 
           </Link>
         </Alert>
       ))}
-      {asking === null ? (
+      {asking === null && choosing === null ? (
         <MutationFailure error={shownFailure(writeOff.error)} labels={failure} />
       ) : null}
       {canRead ? (
@@ -197,6 +209,24 @@ export function OpenDocuments({ customerId, name }: { customerId: string; name: 
           {() => null}
         </QueryBoundary>
       )}
+      {choosing === null ? null : (
+        <WriteOffAmount
+          item={choosing}
+          document={documentName(choosing)}
+          amount={amount}
+          onAmount={setAmount}
+          tried={tried}
+          onCancel={() => setChoosing(null)}
+          onNext={() => {
+            setTried(true);
+            // Compared with what the API says is owed, never worked out: the server judges it again.
+            if (amount === null || amount <= 0 || amount > choosing.outstandingPesewas) return;
+            writeOff.reset();
+            setAsking({ item: choosing, amountPesewas: amount });
+            setChoosing(null);
+          }}
+        />
+      )}
       {asking === null ? null : (
         <ReasonDialog
           open
@@ -204,23 +234,31 @@ export function OpenDocuments({ customerId, name }: { customerId: string; name: 
             if (!next) setAsking(null);
           }}
           title={t('openItems.writeOffTitle', {
-            amount: formatMoney(asking.outstandingPesewas),
-            document: documentName(asking),
+            amount: formatMoney(asking.amountPesewas),
+            document: documentName(asking.item),
           })}
-          body={t('openItems.writeOffBody', { name, document: documentName(asking) })}
+          body={t('openItems.writeOffBody', { name, document: documentName(asking.item) })}
           warning={
-            <dl className="grid grid-cols-[minmax(0,1fr)_max-content] gap-x-4 gap-y-1">
-              <dt>{t('openItems.writeOffDocument')}</dt>
-              <dd className="text-end">{documentName(asking)}</dd>
-              <dt>{t('openItems.writeOffOutstanding')}</dt>
-              <dd className="text-end">
-                <MoneyDisplay pesewas={asking.outstandingPesewas} />
-              </dd>
-              <dt className="font-semibold">{t('openItems.writeOffAmount')}</dt>
-              <dd className="text-end">
-                <MoneyDisplay pesewas={asking.outstandingPesewas} strong />
-              </dd>
-            </dl>
+            <div className="grid gap-2">
+              <dl className="grid grid-cols-[minmax(0,1fr)_max-content] gap-x-4 gap-y-1">
+                <dt>{t('openItems.writeOffDocument')}</dt>
+                <dd className="text-end">{documentName(asking.item)}</dd>
+                <dt>{t('openItems.writeOffOutstanding')}</dt>
+                <dd className="text-end">
+                  <MoneyDisplay pesewas={asking.item.outstandingPesewas} />
+                </dd>
+                <dt className="font-semibold">{t('openItems.writeOffAmount')}</dt>
+                <dd className="text-end">
+                  <MoneyDisplay pesewas={asking.amountPesewas} strong />
+                </dd>
+              </dl>
+              <p className="font-semibold" data-slot="write-off-extent">
+                {asking.amountPesewas === asking.item.outstandingPesewas
+                  ? t('openItems.writeOffAll')
+                  : t('openItems.writeOffPart')}
+              </p>
+              <p data-slot="write-off-approval">{t('openItems.writeOffApproval')}</p>
+            </div>
           }
           fieldLabel={t('openItems.writeOffReason')}
           fieldHint={t('openItems.writeOffReasonHint')}
@@ -229,11 +267,11 @@ export function OpenDocuments({ customerId, name }: { customerId: string; name: 
           error={shownFailure(writeOff.error)}
           failureLabels={failure}
           onConfirm={async (reason) => {
-            // All of what is still owed, as the API states it: nothing is worked out here.
+            // The amount chosen, all or part of what the API says is owed: nothing is worked out here.
             const input = {
               body: {
-                billingDocumentId: asking.billingDocument.id,
-                amountPesewas: asking.outstandingPesewas,
+                billingDocumentId: asking.item.billingDocument.id,
+                amountPesewas: asking.amountPesewas,
                 reason,
               },
             };
@@ -242,8 +280,8 @@ export function OpenDocuments({ customerId, name }: { customerId: string; name: 
               {
                 approvalId: answer.approvalRequestId,
                 summary: answer.summary,
-                document: documentName(asking),
-                amountPesewas: asking.outstandingPesewas,
+                document: documentName(asking.item),
+                amountPesewas: asking.amountPesewas,
               },
               ...now.filter((w) => w.approvalId !== answer.approvalRequestId),
             ]);
@@ -252,5 +290,79 @@ export function OpenDocuments({ customerId, name }: { customerId: string; name: 
         />
       )}
     </section>
+  );
+}
+
+/**
+ * The first step of a write-off: how much, all of what is owed or part of it. It starts at all of it, and
+ * takes no more than the API says is owed and nothing below a pesewa; the server checks both again
+ * (`NOT_POSITIVE`, `MORE_THAN_OUTSTANDING`).
+ */
+function WriteOffAmount({
+  item,
+  document,
+  amount,
+  onAmount,
+  tried,
+  onCancel,
+  onNext,
+}: {
+  item: OpenItem;
+  document: string;
+  amount: number | null;
+  onAmount: (amount: number | null) => void;
+  tried: boolean;
+  onCancel: () => void;
+  onNext: () => void;
+}) {
+  const { t } = useTranslation(['wholesale', 'common']);
+  const owed = item.outstandingPesewas;
+  const error =
+    amount === null || amount <= 0
+      ? t('openItems.writeOffAmountMissing')
+      : amount > owed
+        ? t('openItems.writeOffAmountOver', { amount: formatMoney(owed) })
+        : undefined;
+  return (
+    <Dialog
+      open
+      onOpenChange={(next) => {
+        if (!next) onCancel();
+      }}
+      title={t('openItems.writeOffHowMuch', { document })}
+      description={t('openItems.writeOffHowMuchBody', { amount: formatMoney(owed) })}
+      closeLabel={t('common:actions.close')}
+      icon={Scale}
+      footer={
+        <DialogActions cancelLabel={t('common:actions.cancel')} onCancel={onCancel}>
+          <Button onClick={onNext}>{t('openItems.writeOffNext')}</Button>
+        </DialogActions>
+      }
+    >
+      <div className="grid gap-3">
+        <dl className="grid grid-cols-[minmax(0,1fr)_max-content] gap-x-4 gap-y-1">
+          <dt>{t('openItems.writeOffDocument')}</dt>
+          <dd className="text-end">{document}</dd>
+          <dt>{t('openItems.writeOffOutstanding')}</dt>
+          <dd className="text-end">
+            <MoneyDisplay pesewas={owed} />
+          </dd>
+        </dl>
+        <Field
+          label={t('openItems.writeOffAmount')}
+          hint={t('openItems.writeOffAmountHint')}
+          error={tried ? error : undefined}
+        >
+          <MoneyInput value={amount} onValueChange={onAmount} />
+        </Field>
+        {amount === owed ? null : (
+          <div>
+            <Button variant="secondary" size="sm" onClick={() => onAmount(owed)}>
+              {t('openItems.writeOffWhole', { amount: formatMoney(owed) })}
+            </Button>
+          </div>
+        )}
+      </div>
+    </Dialog>
   );
 }
