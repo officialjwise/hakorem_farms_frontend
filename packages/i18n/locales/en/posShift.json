@@ -205,5 +205,50 @@
     "collections_other": "{{count}} deliveries handed in",
     "collection": "{{delivery}}, {{recipient}}, {{at}}",
     "unnumbered": "A delivery"
+  },
+  "invoicePayment": {
+    "title": "An invoice paid in cash",
+    "body": "A customer pays an invoice in cash here, in part or in full, or a guest pays what is left on an order’s receipt. The cash goes into this drawer and is counted at the close. Mobile money and card for an invoice go through the provider, not the till.",
+    "offline": "The till is offline. An invoice is paid at the till only while it reaches the server.",
+    "notOnServer": "The server does not have this shift yet. An invoice can be paid once it does.",
+    "documentNo": "Invoice or receipt number",
+    "documentNoHint": "As printed on the invoice, for example INV-2026-DDW-000014.",
+    "find": "Find it",
+    "finding": "Finding the invoice…",
+    "notFound": "No invoice or receipt numbered {{number}}",
+    "findFailed": "The till could not find the invoice",
+    "denied": "You cannot look up invoices",
+    "kind": {
+      "INVOICE": "Invoice",
+      "RECEIPT": "Order receipt"
+    },
+    "customer": "Customer",
+    "guest": "A guest",
+    "gross": "Total",
+    "outstanding": "Still to pay",
+    "notPayable": {
+      "NOT_AN_INVOICE": "Only an invoice, or an order’s receipt, is paid at the till.",
+      "NOT_ISSUED": "This invoice is not issued yet, so nothing can be paid on it.",
+      "SETTLED": "Nothing is outstanding on this document.",
+      "RECEIPT_NOT_OF_ORDER": "This receipt bills no order, so nothing is paid on it at the till."
+    },
+    "amount": "Amount paid off it (GH₵)",
+    "amountHint": "Part payment is allowed, never more than is still to pay.",
+    "amountError": "Enter what the customer pays off it, above zero.",
+    "amountOver": "That is more than is still to pay.",
+    "tendered": "Cash handed over (GH₵)",
+    "tenderedHint": "Optional. If more than the amount, the till says the change to give back.",
+    "tenderedBelow": "The cash handed over is less than the amount.",
+    "review": "Review the payment",
+    "confirmTitle": "Take this cash for the invoice?",
+    "confirmBody": "The cash is paid off {{number}} now.",
+    "consequence": "The cash goes into this drawer and is counted at the close. A payment taken in error is reversed by a manager, not here.",
+    "confirm": "Take the payment",
+    "sending": "Taking the payment…",
+    "failed": "The invoice payment was not taken",
+    "done": "Paid at the till: {{number}}",
+    "paid": "Paid off it",
+    "change": "Change to give back",
+    "stillOutstanding": "Still to pay on it"
   }
 }

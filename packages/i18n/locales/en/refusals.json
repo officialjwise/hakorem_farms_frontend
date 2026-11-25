@@ -309,6 +309,14 @@
     "CHANNEL_REPEATED": "A level names the same channel twice. Choose each channel once.",
     "NOTHING_HELD": "The driver holds no cash from deliveries at this branch, or it was already handed in.",
     "RECEIVER_IS_DRIVER": "A driver cannot hand their own cash in to themselves: another cashier takes it.",
-    "APPROVER_CANNOT_ISSUE": "You approved this version's margin, so someone else who may send quotes issues it."
+    "APPROVER_CANNOT_ISSUE": "You approved this version's margin, so someone else who may send quotes issues it.",
+    "AMOUNT_NOT_POSITIVE": "The amount must be above zero.",
+    "NOT_AN_INVOICE": "Only an issued invoice, or an order’s receipt with something outstanding, is paid at the till.",
+    "INVOICE_NOT_ISSUED": "The invoice is not issued yet.",
+    "INVOICE_OTHER_BRANCH": "The invoice belongs to another branch: it is paid there.",
+    "INVOICE_SETTLED": "Nothing is outstanding on the invoice.",
+    "AMOUNT_EXCEEDS_OUTSTANDING": "The amount is more than is outstanding on the invoice.",
+    "TENDERED_BELOW_AMOUNT": "The cash handed over is less than the amount paid.",
+    "RECEIPT_LINK_ALREADY_REVOKED": "This receipt link was already revoked."
   }
 }
