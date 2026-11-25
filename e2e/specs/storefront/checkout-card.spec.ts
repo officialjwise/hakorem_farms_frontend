@@ -22,6 +22,17 @@ const ORIGIN = 'http://localhost:3100';
 
 type Placement = { key: string | undefined; body: unknown };
 
+/**
+ * No sideways scroll at 360 px with the lettering 5 percent wider too: a font a little wider than this
+ * machine's (CI's renders these labels about 11 px wider) must still fit. Then the page's own lettering.
+ */
+async function expectRoomForWiderText(page: Page): Promise<void> {
+  await expectNoHorizontalScroll(page);
+  const style = await page.addStyleTag({ content: 'body { letter-spacing: 0.05em; }' });
+  await expectNoHorizontalScroll(page);
+  await style.evaluate((node) => (node as HTMLElement).remove());
+}
+
 /** No request leaves the machine: anything not local is refused, unless a test answers it itself. */
 async function stayLocal(context: BrowserContext): Promise<void> {
   await context.route(/^https?:\/\/(?!localhost[:/]|127\.0\.0\.1[:/])/, (route) => route.abort());
@@ -124,7 +135,7 @@ test.describe('paying by card', () => {
     const cardPage = await answerCardPage(page);
     await reviewByCard(page);
     await expectNoAxeViolations(page);
-    await expectNoHorizontalScroll(page);
+    await expectRoomForWiderText(page);
 
     await page.getByRole('button', { name: 'Pay GH₵450.00 by card' }).click();
     // The browser set off for the provider's page on its own; what the shop's page said as it left.
@@ -177,7 +188,7 @@ test.describe('paying by card', () => {
     await expect(page.getByText('Your order was not placed')).toHaveCount(0);
     expect(cardPage.asked()).toEqual([]);
     await expectNoAxeViolations(page);
-    await expectNoHorizontalScroll(page);
+    await expectRoomForWiderText(page);
 
     const attempts = sent.length;
     opens = true;

@@ -305,6 +305,8 @@ function Pay({
           title={w('review.cardNotOpened.title')}
           actions={
             <Button
+              // May wrap: at 360 px the label fills the alert's column, and a wider font would overflow it.
+              className="h-auto min-h-control-md py-2 text-center whitespace-normal"
               onClick={() => void submit()}
               loading={place.isPending}
               loadingLabel={w('review.cardNotOpened.opening')}
@@ -368,7 +370,8 @@ function Pay({
         <Button
           size="lg"
           fullWidth
-          className="sm:w-auto"
+          // May wrap: at 360 px "Pay GH₵12,450.00 by card" is wider than the column.
+          className="h-auto min-h-control-lg py-2 text-center whitespace-normal sm:w-auto"
           onClick={() => void submit()}
           loading={place.isPending}
           loadingLabel={w('review.placing')}
