@@ -277,6 +277,10 @@ const WHOLESALE_PERMISSIONS = [
   'whl.ageing.read',
   'whl.dunning.read',
   'whl.dunning.manage',
+  // 2.18.0, as seeded for the Owner and the Manager: standing orders, and what is owed on each document.
+  'whl.standing_order.read',
+  'whl.standing_order.manage',
+  'pay.receivable.read',
   'mdm.customer.read',
   'mdm.price.resolve',
   'mdm.price_list.read',
@@ -308,6 +312,11 @@ const SALES_PERMISSIONS = [
   'whl.ageing.read',
   // 2.16.0: Sales reads the reminder levels and the reminders sent, and changes neither.
   'whl.dunning.read',
+  // 2.18.0, as seeded: Sales sets up and keeps standing orders, reads what is owed on each document, and
+  // writes off no bad debt.
+  'whl.standing_order.read',
+  'whl.standing_order.manage',
+  'pay.receivable.read',
 ];
 
 /** What the owner holds for the F5b screens: the dashboard, branches and locations, and the new lists. */
@@ -514,6 +523,11 @@ const ACCOUNTANT_PERMISSIONS = [
   'whl.ageing.read',
   'whl.dunning.read',
   'mdm.customer.read',
+  // 2.18.0, as seeded: the Accountant reads standing orders and what is owed on each document, and asks
+  // for bad debt to be written off; the Owner approves it.
+  'whl.standing_order.read',
+  'pay.receivable.read',
+  'whl.bad_debt.write_off',
 ];
 
 /**
@@ -574,6 +588,9 @@ export const FAKE_USERS: Record<string, FakeUser> = {
       ...MANAGER_TILL_PERMISSIONS,
       ...DISPATCH_PERMISSIONS,
       ...EXCEPTION_REVIEW_PERMISSIONS,
+      // 2.18.0, as seeded: the Owner asks for a bad debt write-off and approves another person's.
+      'whl.bad_debt.write_off',
+      'whl.bad_debt.approve',
     ],
     moreBranches: SELLING_POINTS,
   },
