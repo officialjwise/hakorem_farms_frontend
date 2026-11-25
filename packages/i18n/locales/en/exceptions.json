@@ -52,7 +52,8 @@
     "save": "Mark reviewed",
     "saving": "Saving the review",
     "failed": "The review was not saved",
-    "cannot": "Only an Owner or a Manager marks an exception reviewed."
+    "cannot": "Only an Owner or a Manager marks an exception reviewed.",
+    "namesYou": "This names you, so someone else who reviews exceptions marks it reviewed."
   },
   "counts": {
     "title": "What each control raised",

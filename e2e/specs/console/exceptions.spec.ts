@@ -105,6 +105,31 @@ test('a day with nothing raised says so in words', async ({ page, api }) => {
   await expectNoAxeViolations(page);
 });
 
+test('an item that names the reader is not offered to them: someone else reviews it', async ({
+  page,
+  api,
+}) => {
+  api.rewrite('getDailyExceptionReport', (body) => {
+    const report = body as Body & { items: Body[] };
+    return {
+      ...report,
+      items: report.items.map((item) =>
+        item['kind'] === 'PRICE_OVERRIDE' ? { ...item, actor: OWNER, review: null } : item,
+      ),
+    };
+  });
+  await signInWithTotp(page, USERS.owner, '/exceptions');
+  const mine = page
+    .getByRole('list', { name: 'Exceptions, urgent first' })
+    .getByRole('listitem')
+    .filter({ hasText: 'Price different from the list' });
+  await expect(mine).toContainText(
+    'This names you, so someone else who reviews exceptions marks it reviewed.',
+  );
+  await expect(mine.getByRole('button', { name: /^Mark reviewed/ })).toHaveCount(0);
+  await expectNoAxeViolations(page);
+});
+
 test('a cashier sees the permission-denied state, not a broken page', async ({ page }) => {
   await signIn(page, USERS.cashier);
   await page.getByRole('heading', { name: 'Dashboard' }).waitFor();

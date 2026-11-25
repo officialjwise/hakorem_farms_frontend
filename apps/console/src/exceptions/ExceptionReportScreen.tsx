@@ -296,6 +296,10 @@ function ReviewPart({ item, review }: { item: Item; review: ExceptionReview | nu
     );
   }
   if (!auth.can('rpt.exceptions.review')) return null;
+  // The person an item names never reviews it (REVIEWER_IS_ACTOR): said here instead of offered and refused.
+  if (item.actor !== null && item.actor.id === auth.session?.principal.id) {
+    return <p className="text-sm text-fg-muted">{t('review.namesYou')}</p>;
+  }
   return (
     <div className="grid gap-2">
       <div>
