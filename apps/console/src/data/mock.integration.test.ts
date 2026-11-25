@@ -28,7 +28,7 @@ async function ask(method: string, path: string): Promise<Response> {
 
 describe('the Prism mock covers the whole contract', () => {
   it('lists the operations it is going to ask for', () => {
-    // 659 published in contract 2.31.0 (CONTRACT_CHANGELOG): 600 in 1.17.0; 1.21.0 adds eight tiles and two
+    // 668 published in contract 2.47.0 (CONTRACT_CHANGELOG): 600 in 1.17.0; 1.21.0 adds eight tiles and two
     // label reads (610); 1.23.0 adds the price list preview (611); 1.26.0 the sixteen care operations (627);
     // 1.27.0 the three unit conversions (630); 1.29.0 the payout details read (631); 1.30.0 three purchase
     // operations (634); 1.31.0 the tag lookup (635); 1.54.0 the shop's public profile (636); 2.4.0 the six
@@ -37,8 +37,11 @@ describe('the Prism mock covers the whole contract', () => {
     // credit check and its override (648, CR-046); 2.17.0 the till PIN's three and who may witness a
     // drop (652, CR-032 and CR-050); 2.21.0 a quote link's revoke (653); 2.24.0 the public receipt (654,
     // CR-033); 2.25.0 the short pick (655); 2.26.0 a receipt link's revoke and an invoice paid at the till
-    // (657); 2.29.0 the storekeeper's order view (658); 2.31.0 the driver's cash hand-in (659, CR-057).
-    expect(operations.length).toBe(659);
+    // (657); 2.29.0 the storekeeper's order view (658); 2.31.0 the driver's cash hand-in (659, CR-057);
+    // 2.32.0 a run's close and the driver list (661); 2.33.0 a van's write-off and the goods variances (663);
+    // 2.35.0 the drivers holding cash (664, CR-063); 2.36.0 the extra delivery fee (665); 2.42.0 a shared
+    // document's public read (666); 2.46.0 an investor's payout details and statement (668, 2.47.0).
+    expect(operations.length).toBe(668);
     expect(reads.length).toBeGreaterThan(250);
   });
 
