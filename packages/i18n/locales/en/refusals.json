@@ -317,6 +317,10 @@
     "INVOICE_SETTLED": "Nothing is outstanding on the invoice.",
     "AMOUNT_EXCEEDS_OUTSTANDING": "The amount is more than is outstanding on the invoice.",
     "TENDERED_BELOW_AMOUNT": "The cash handed over is less than the amount paid.",
-    "RECEIPT_LINK_ALREADY_REVOKED": "This receipt link was already revoked."
+    "RECEIPT_LINK_ALREADY_REVOKED": "This receipt link was already revoked.",
+    "SHORT_NOT_LESS": "A short pick must be fewer than the line ordered.",
+    "CATCH_WEIGHT_GOES_BY_WEIGHT": "This line is sold by weight: weigh what there is instead.",
+    "SAME_PRODUCT": "That is the same product: propose a short pick instead.",
+    "SHORT_PICK_NOT_AGREED": "A line is picked short and the customer has not agreed to it."
   }
 }
