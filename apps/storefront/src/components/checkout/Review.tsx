@@ -2,7 +2,7 @@
 
 import { Clock, CreditCard, Smartphone, Wallet } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { newIdempotencyKey, type components } from '@hakorem/api-client';
+import { ApiError, newIdempotencyKey, type components } from '@hakorem/api-client';
 import {
   Alert,
   Button,
@@ -18,6 +18,7 @@ import {
   WeightDisplay,
 } from '@hakorem/ui';
 import { useApiMutation } from '../../lib/browserApi';
+import { cardPageNotOpened } from '../../lib/cardPage';
 import { toE164 } from '../../lib/phone';
 import { fill, refusal, word, type Words } from '../../lib/words';
 import { perUnit } from '../cart/CartLines';
@@ -53,6 +54,8 @@ export function Review({
   onPlaced: (result: S['PlaceOrderResult']) => void;
 }) {
   const w = (path: string) => word(words, `checkout.${path}`);
+  // Set once a card order is placed without its page: the details can no longer change.
+  const [placed, setPlaced] = useState(false);
   const weighed = checkout.lines.some((line) => line.catchWeight);
   const expired = checkout.status === 'EXPIRED' || checkout.status === 'CANCELLED';
   const held = formatDateTime(checkout.reservedUntil).slice(11);
@@ -198,34 +201,53 @@ export function Review({
           </>
         )}
         <dd className="sm:col-span-2">
-          <Button variant="secondary" size="sm" onClick={onChange} disabled={expired}>
+          <Button variant="secondary" size="sm" onClick={onChange} disabled={expired || placed}>
             {w('review.change')}
           </Button>
         </dd>
       </dl>
 
-      {expired ? null : <Pay checkout={checkout} pay={pay} words={words} onPlaced={onPlaced} />}
+      {expired ? null : (
+        <Pay
+          checkout={checkout}
+          pay={pay}
+          words={words}
+          onPlaced={onPlaced}
+          onPlacedWithoutPage={() => setPlaced(true)}
+        />
+      )}
     </div>
   );
 }
 
-/** The payment: mobile money with its number and network, card, or cash on delivery; then one button. */
+/**
+ * The payment: mobile money with its number and network, card, or cash on delivery; then one button.
+ *
+ * Card (contract 2.30.0): the order is placed and the API answers the card provider's page, which `Done`
+ * opens. When the page could not be opened, the order is placed all the same (503
+ * `PAYMENT_PROVIDER_UNAVAILABLE`): that is said here, and stays, with one button that sends the same
+ * request with the same idempotency key, which opens the page for that order and never places a second.
+ */
 function Pay({
   checkout,
   pay,
   words,
   onPlaced,
+  onPlacedWithoutPage,
 }: {
   checkout: Checkout;
   pay: PayMethod;
   words: Words;
   onPlaced: (result: S['PlaceOrderResult']) => void;
+  onPlacedWithoutPage: () => void;
 }) {
   const w = (path: string) => word(words, `checkout.${path}`);
   const place = useApiMutation('placeOrder');
   const [payer, setPayer] = useState(checkout.contactPhone);
   const [network, setNetwork] = useState<Network>('MTN');
   const [checked, setChecked] = useState(false);
+  // Kept once true: the order exists, even while a replay is on its way or is refused.
+  const [withoutPage, setWithoutPage] = useState(false);
   const intent = useRef<{ said: string; key: string } | null>(null);
   const method = checkout.paymentTerms === 'COD' ? 'COD' : pay === 'COD' ? 'MOBILE_MONEY' : pay;
   const amount = formatMoney(checkout.estimatedTotalPesewas);
@@ -253,10 +275,54 @@ function Pay({
         { idempotencyKey: intent.current.key },
       );
       onPlaced(result);
-    } catch {
+    } catch (error) {
       // Said on screen from `place.error`.
+      if (error instanceof ApiError && cardPageNotOpened(method, error)) {
+        setWithoutPage(true);
+        onPlacedWithoutPage();
+      }
     }
   };
+  const reference =
+    place.error === null || place.error.correlationId === '' ? null : (
+      <span className="block text-sm">
+        {word(words, 'cart.reference')}{' '}
+        <RequestReference value={place.error.correlationId} words={words} />
+      </span>
+    );
+  if (withoutPage) {
+    // The order is placed; only its card page is missing. No other way to pay is offered for it here.
+    return (
+      <section
+        aria-labelledby="pay-title"
+        className="grid gap-4 rounded-lg border border-border bg-surface p-4"
+      >
+        <h3 id="pay-title" className="text-lg font-semibold">
+          {w('review.payTitle.CARD')}
+        </h3>
+        <Alert
+          severity="warning"
+          title={w('review.cardNotOpened.title')}
+          actions={
+            <Button
+              onClick={() => void submit()}
+              loading={place.isPending}
+              loadingLabel={w('review.cardNotOpened.opening')}
+            >
+              <CreditCard aria-hidden="true" />
+              {w('review.cardNotOpened.open')}
+            </Button>
+          }
+        >
+          <p>{w('review.cardNotOpened.body')}</p>
+          {place.error === null || cardPageNotOpened(method, place.error) ? null : (
+            <p className="font-medium">{refusal(words, place.error)}</p>
+          )}
+          {reference}
+        </Alert>
+      </section>
+    );
+  }
   return (
     <section
       aria-labelledby="pay-title"
@@ -314,12 +380,7 @@ function Pay({
       {place.error === null ? null : (
         <Alert severity="critical" title={w('review.placeFailed')}>
           {refusal(words, place.error)}
-          {place.error.correlationId === '' ? null : (
-            <span className="block text-sm">
-              {word(words, 'cart.reference')}{' '}
-              <RequestReference value={place.error.correlationId} words={words} />
-            </span>
-          )}
+          {reference}
         </Alert>
       )}
     </section>

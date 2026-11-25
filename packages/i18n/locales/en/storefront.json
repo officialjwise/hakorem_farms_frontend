@@ -341,7 +341,7 @@
       "mobileMoney": "Mobile money",
       "mobileMoneyHint": "Approve the payment on your phone.",
       "card": "Card",
-      "cardHint": "You go to our payment provider's page to pay.",
+      "cardHint": "You pay on our card provider's page, Paystack. You type your card there, never on this site.",
       "cod": "Cash on delivery",
       "codHint": "Pay the driver when the order arrives.",
       "codNeedsDelivery": "Cash on delivery is only for orders we deliver.",
@@ -391,7 +391,13 @@
         "CARD": "Pay by card",
         "COD": "Pay on delivery"
       },
-      "payerPhoneHint": "The mobile money number that will approve the payment."
+      "payerPhoneHint": "The mobile money number that will approve the payment.",
+      "cardNotOpened": {
+        "title": "Your order is placed, but the card page did not open",
+        "body": "You have not paid yet. Open the card page to pay: it is the same order, so you cannot be charged twice.",
+        "open": "Open the card page",
+        "opening": "Opening the card page"
+      }
     },
     "done": {
       "title": "Thank you. Your order {{orderNo}} is placed",
@@ -403,7 +409,15 @@
       "paid": "Payment received. Your order is confirmed.",
       "keep": "Keep this reference for any question about your order: {{orderNo}}.",
       "continue": "Back to the shop",
-      "card": "Continue to the payment page"
+      "card": "If the card page does not open, continue to it here",
+      "toCard": {
+        "title": "Taking you to the card page",
+        "body": "You are going to our card provider's page, Paystack, to pay {{amount}}. You type your card there, never on this site."
+      },
+      "wrongCardPage": {
+        "title": "We did not open the card page",
+        "body": "The card page we were given is not our card provider's, so we did not go to it. Do not pay on any other page. Check your payment below, or call us with your order number {{orderNo}}."
+      }
     }
   },
   "refusals": {
@@ -423,6 +437,7 @@
     "NOT_FOUND": "We could not find your basket. Start a new one from the shop.",
     "RATE_LIMITED": "Too many tries in a short time. Wait a minute and try again.",
     "SERVICE_UNAVAILABLE": "The checkout is busy. Wait a minute and try again.",
+    "PAYMENT_PROVIDER_UNAVAILABLE": "Our payment provider cannot take a payment just now. Wait a minute and try again.",
     "NETWORK_ERROR": "The shop could not be reached. Check your connection and try again.",
     "TIMEOUT": "The shop took too long to answer. Check your connection and try again.",
     "fallback": "Something went wrong. Try again."
