@@ -39,6 +39,7 @@ import {
   useDocumentName,
   type BillingDocument,
 } from './presentation';
+import { ReceiptLinkRevoke } from './ReceiptLink';
 import { ReprintButton, ReprintCopy, type ReprintResult } from './Reprint';
 import { ReadableId } from '../lib/ReadableId';
 
@@ -140,6 +141,7 @@ export function DocumentView({ document }: { document: BillingDocument }) {
         />
       )}
       <Actions document={document} name={name} onReprinted={setReprint} />
+      <ReceiptLinkRevoke document={document} />
 
       <Card>
         <CardBody className="grid gap-4 lg:grid-cols-2">
