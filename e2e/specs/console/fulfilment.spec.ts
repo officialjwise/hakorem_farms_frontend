@@ -141,7 +141,10 @@ test('picking: short is refused, cracked eggs are written off, a short pick is p
   expect(sent['proposeShortPick']).toEqual([
     { lineId: CRATE_LINE, quantity: '11.000', note: 'A crate was cracked and none are left.' },
   ]);
-  await expect(page.getByText('The order waits for the customer')).toBeVisible();
+  // The store's view says what was asked, as the whole order does (2.52.0, CR-064), with no money.
+  await expect(
+    page.getByText(`The order waits for the customer to agree to 11 crates of ${EGGS.name}.`),
+  ).toBeVisible();
   await expect(page.getByText('Nothing is packed or sent until they answer.')).toBeVisible();
   // One question at a time: nothing more is proposed while the order waits.
   await expect(

@@ -136,7 +136,10 @@ export function eggOrder(
  * The same order as the store reads it (`getOrderFulfilmentView`, 2.29.0): its lines, quantities and
  * delivery, built field by field as the contract's allow-list is, so no price or total can reach it.
  */
-export function eggOrderView(status: S['SalesOrder']['status']): S['OrderFulfilmentView'] {
+export function eggOrderView(
+  status: S['SalesOrder']['status'],
+  consent: S['SalesOrder']['pendingConsent'] = null,
+): S['OrderFulfilmentView'] {
   const o = eggOrder(status);
   return {
     id: o.id,
@@ -168,6 +171,17 @@ export function eggOrderView(status: S['SalesOrder']['status']): S['OrderFulfilm
       qtyBackordered: l.qtyBackordered,
       lineStatus: l.lineStatus,
     })),
+    // 2.52.0 (CR-064): what the customer is asked, without its totals.
+    pendingConsent:
+      consent === null
+        ? null
+        : {
+            id: consent.id,
+            kind: consent.kind,
+            lineId: consent.lineId,
+            proposed: consent.proposed,
+            askedAt: consent.askedAt,
+          },
   };
 }
 
@@ -253,7 +267,7 @@ export function installOrderServer(
   let consent = waitingFor;
   api.respond('getOrder', () => eggOrder(orderStatus, consent));
   // 2.29.0: the Storekeeper's read of the order, with no money in it.
-  api.respond('getOrderFulfilmentView', () => eggOrderView(orderStatus));
+  api.respond('getOrderFulfilmentView', () => eggOrderView(orderStatus, consent));
   api.rewrite('listOrders', (body) => ({
     ...(body as S['SalesOrderPage']),
     data: [eggOrder(orderStatus)],
