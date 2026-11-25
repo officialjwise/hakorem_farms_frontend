@@ -11,11 +11,13 @@ import { expect, test, type Page } from '../../support/test';
 import type { FakeApi } from '../../support/fakeApi';
 
 /**
- * Standing orders on a wholesale account (contract 2.18.0). Asantewaa Chop Bar takes goat meat every
- * Friday. Sales sets up a second standing order for big eggs on Mondays and Thursdays, changes it, pauses,
- * resumes and ends it, each with a reason, and reads each run with what happened and why. A refusal stays
- * on the form in words with its reference. Those without the permission are told so in words. The suite
- * runs at 360 px. Every date shown is the API's.
+ * Standing orders and bad debt on a wholesale account (contract 2.18.0). Asantewaa Chop Bar takes goat meat
+ * every Friday. Sales sets up a second standing order for big eggs on Mondays and Thursdays, changes it,
+ * pauses, resumes and ends it, each with a reason, and reads each run with what happened and why. A refusal
+ * stays on the form in words with its reference. An Accountant asks for an overdue invoice to be written
+ * off as bad debt: confirmed first with the exact amount and a reason, the server answers that it waits for
+ * the Owner, and that stays on screen. Holders of neither permission are told so in words. The suite runs at
+ * 360 px. Every amount and date shown is the API's.
  */
 
 type S = components['schemas'];
@@ -38,6 +40,9 @@ const EGGS = {
   sku: 'EGG-0003',
   name: 'Eggs, big, crate of 30',
 };
+const APPROVAL_ID = '019a7f41-2b3c-7d4e-8f5a-6b7c8d9e0f12';
+const INVOICE_ID = '019a7aeb-72a0-7fb3-84eb-040be35d7ce9';
+
 /** The standing order the server answers with once Sales has set it up, in the state it is in now. */
 function eggsOrder(change: Partial<S['StandingOrder']> = {}): S['StandingOrder'] {
   return {
@@ -101,7 +106,7 @@ const RUNS: S['StandingOrderRun'][] = [
   },
 ];
 
-/** The account as the other wholesale specs show it, with Asantewaa's own standing orders. */
+/** The account as the other wholesale specs show it, with Asantewaa's own standing orders and invoices. */
 function asantewaa(api: FakeApi) {
   api.rewrite('getBusinessAccount', (body) => chopBarAccount(body as S['BusinessAccount']));
   api.rewrite('getAgeingReport', (body) => chopBarAgeing(body as S['AgeingReport']));
@@ -111,6 +116,17 @@ function asantewaa(api: FakeApi) {
       body,
       page.data.filter((o) => o.customer.id === CUSTOMER.id),
     );
+  });
+  api.rewrite('listOpenItems', (body) => {
+    const page = body as Page_<S['OpenItem']> & { totalOutstandingPesewas: number };
+    return {
+      ...pageOf(
+        body,
+        page.data.filter((item) => item.customer?.id === CUSTOMER.id),
+      ),
+      // The server's total for the customer, never added up here.
+      totalOutstandingPesewas: 397800,
+    };
   });
 }
 
@@ -196,6 +212,11 @@ test.describe('standing orders on a wholesale account', () => {
     await expect(list).toContainText('None: it has ended');
     await expect(list).toContainText('Ended');
     await expect(list).not.toContainText('Royal Palm Hotel Ltd');
+    // Sales reads what is owed on each document, and writes off no bad debt.
+    await expect(
+      page.getByRole('region', { name: 'Each document of this buyer with something still owed' }),
+    ).toContainText('INV-2026-DDW-001159');
+    await expect(page.getByRole('button', { name: /^Write off/ })).toHaveCount(0);
     await checkEveryLook(page);
 
     await page.getByRole('link', { name: 'Set up a standing order' }).click();
@@ -356,6 +377,130 @@ test.describe('standing orders on a wholesale account', () => {
   });
 });
 
+test.describe('bad debt on an open invoice', () => {
+  test("an Accountant asks for a write-off: confirmed with the exact amount, it waits for the Owner's approval", async ({
+    page,
+    api,
+  }) => {
+    asantewaa(api);
+    const bodies: unknown[] = [];
+    api.respond(
+      'writeOffBadDebt',
+      (request) => {
+        bodies.push(request);
+        return {
+          status: 'PENDING_APPROVAL',
+          approvalRequestId: APPROVAL_ID,
+          kind: 'BAD_DEBT_WRITE_OFF',
+          subject: {
+            id: '019a7f41-3c4d-7e5f-8a6b-7c8d9e0f1a23',
+            docType: 'BAD_DEBT_WRITE_OFF',
+            number: null,
+          },
+          summary:
+            'Write off GHS 1,860.00 of INV-2026-DDW-001159 owed by Asantewaa Chop Bar as bad debt. Reason: Chop bar closed; owner left Kasoa',
+          requestedAt: '2026-11-25T10:12:00Z',
+        } satisfies S['ApprovalPending'];
+      },
+      202,
+    );
+    await signInWithTotp(page, USERS.accountantEnrolled, ACCOUNT);
+    const items = page.getByRole('region', {
+      name: 'Each document of this buyer with something still owed',
+    });
+    await expect(items).toContainText('INV-2026-DDW-001159');
+    await expect(items).toContainText('42 days');
+    await expect(items).toContainText('1,860.00');
+    await expect(items).toContainText('INV-2026-DDW-001186');
+    await expect(items).toContainText('Not overdue');
+    await expect(items).not.toContainText('Royal Palm Hotel Ltd');
+    // The server's own total, not a sum of the rows.
+    await expect(
+      page
+        .locator('dl')
+        .filter({ hasText: 'Still owed on these documents, as the server totals them' }),
+    ).toContainText('3,978.00');
+    // The Accountant reads standing orders and sets none up.
+    await expect(page.getByRole('link', { name: 'Set up a standing order' })).toHaveCount(0);
+    await checkEveryLook(page);
+
+    await page.getByRole('button', { name: 'Write off INV-2026-DDW-001159 as bad debt' }).click();
+    const confirm = page.getByRole('dialog', {
+      name: 'Write off GH₵1,860.00 of INV-2026-DDW-001159 as bad debt?',
+    });
+    await expect(confirm).toContainText('Nothing changes until the Owner approves it');
+    await expect(confirm).toContainText('To write off');
+    await expect(confirm).toContainText('1,860.00');
+    // A reason is asked for, as the contract does.
+    await confirm.getByRole('button', { name: 'Ask for the write-off' }).click();
+    await expect(confirm.getByText('Give a reason')).toBeVisible();
+    expect(bodies).toEqual([]);
+    await confirm
+      .getByLabel(/^Why it cannot be collected/)
+      .fill('Chop bar closed; owner left Kasoa');
+    await checkEveryLook(page);
+    const asked = page.waitForRequest(sent('POST', '/receivables/write-offs'));
+    await confirm.getByRole('button', { name: 'Ask for the write-off' }).click();
+    const request = await asked;
+    // All of what is still owed, as the API states it; the key made for this intent.
+    expect(request.postDataJSON()).toEqual({
+      billingDocumentId: INVOICE_ID,
+      amountPesewas: 186000,
+      reason: 'Chop bar closed; owner left Kasoa',
+    });
+    expect(request.headers()['idempotency-key']).toMatch(/^[0-9a-f-]{36}$/);
+
+    // The 202 stays on screen: nothing has changed, and someone else decides.
+    await expect(confirm).toBeHidden();
+    const waiting = page.getByText(
+      "The write-off of GH₵1,860.00 on INV-2026-DDW-001159 waits for the Owner's approval. Someone other than you decides it.",
+    );
+    await expect(waiting).toBeVisible();
+    await expect(
+      page.getByText(
+        'Nothing has changed yet: the document still owes it until the write-off is approved.',
+      ),
+    ).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Open the approval' })).toHaveAttribute(
+      'href',
+      `/approvals/${APPROVAL_ID}`,
+    );
+    await checkEveryLook(page);
+  });
+
+  test('a refused write-off stays on screen in words with its reference, after the dialog closes', async ({
+    page,
+    api,
+  }) => {
+    asantewaa(api);
+    api.refuse(
+      'writeOffBadDebt',
+      422,
+      'BAD_DEBT_WRITE_OFF_INVALID',
+      'A write-off of this document already waits for approval.',
+    );
+    await signInWithTotp(page, USERS.accountantEnrolled, ACCOUNT);
+    await page.getByRole('button', { name: 'Write off INV-2026-DDW-001159 as bad debt' }).click();
+    const confirm = page.getByRole('dialog', {
+      name: 'Write off GH₵1,860.00 of INV-2026-DDW-001159 as bad debt?',
+    });
+    await confirm.getByLabel(/^Why it cannot be collected/).fill('Chop bar closed');
+    await confirm.getByRole('button', { name: 'Ask for the write-off' }).click();
+    const inDialog = confirm
+      .getByRole('alert')
+      .filter({ hasText: 'The write-off was not asked for' });
+    await expect(inDialog).toContainText('This amount cannot be written off as bad debt as it is.');
+    await expect(inDialog).toContainText('35ea bc69');
+    await checkEveryLook(page);
+    await page.keyboard.press('Escape');
+    await expect(confirm).toBeHidden();
+    const onPage = page.getByRole('alert').filter({ hasText: 'The write-off was not asked for' });
+    await expect(onPage).toContainText('This amount cannot be written off as bad debt as it is.');
+    await expect(page.getByText(/waits for the Owner's approval/)).toHaveCount(0);
+    await checkEveryLook(page);
+  });
+});
+
 test.describe('without the permission, and when a read fails', () => {
   test('a cashier is denied a standing order and its set-up in words', async ({ page }) => {
     await signIn(page, USERS.cashier, `${ACCOUNT}/standing-orders/${FRIDAYS_ID}`);
@@ -410,13 +555,19 @@ test.describe('without the permission, and when a read fails', () => {
     api,
   }) => {
     asantewaa(api);
-    // The server's own 403: permission denied in words, on the same page.
+    // The server's own 403 for both sections: permission denied in words, on the same page.
     api.prefer('listStandingOrders', 'code=403');
+    api.prefer('listOpenItems', 'code=403');
+    // The Manager holds no bad debt permission, so no write-off is offered either way.
     await signInWithTotp(page, USERS.manager, ACCOUNT);
     await expect(
       page.getByText('You cannot see standing orders (whl.standing_order.read).'),
     ).toBeVisible();
+    await expect(
+      page.getByText('You cannot see what is owed on documents (pay.receivable.read).'),
+    ).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Payment reminders' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Write off/ })).toHaveCount(0);
     await checkEveryLook(page);
   });
 });

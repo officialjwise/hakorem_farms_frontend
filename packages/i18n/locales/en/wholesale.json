@@ -814,5 +814,47 @@
     "heldHint": "Over the limit or past the terms: it needs a credit override before it is confirmed.",
     "noReason": "Nothing to add",
     "noOrder": "No order"
+  },
+  "openItems": {
+    "title": "Open invoices",
+    "intro": "This buyer's invoices, receipts and debit notes with something still owed, newest first, as the server works it out now.",
+    "loading": "Loading the open invoices",
+    "empty": "Nothing is owed on any document",
+    "emptyBody": "An invoice of this buyer with something unpaid appears here.",
+    "error": "The open invoices could not be loaded",
+    "denied": "You cannot see what is owed on documents (pay.receivable.read).",
+    "table": "Each document of this buyer with something still owed",
+    "pages": "Pages of open invoices",
+    "total": "Still owed on these documents, as the server totals them",
+    "columns": {
+      "document": "Document",
+      "issued": "Issued",
+      "due": "Due",
+      "overdue": "Overdue by",
+      "outstanding": "Still owed",
+      "actions": "Bad debt"
+    },
+    "noDue": "No due date",
+    "notOverdue": "Not overdue",
+    "docType": {
+      "INVOICE": "Invoice",
+      "RECEIPT": "Receipt",
+      "DEBIT_NOTE": "Debit note"
+    },
+    "unnumbered": "Not numbered yet",
+    "writeOff": "Write off",
+    "writeOffFor": "Write off {{document}} as bad debt",
+    "writeOffTitle": "Write off {{amount}} of {{document}} as bad debt?",
+    "writeOffBody": "Nothing changes until the Owner approves it, and the Owner who decides cannot be you. Once approved, the amount comes off what {{name}} owes on {{document}} and is posted to bad debts. No payment or credit note can then be put onto it. Say why it cannot be collected.",
+    "writeOffDocument": "Document",
+    "writeOffOutstanding": "Still owed now",
+    "writeOffAmount": "To write off",
+    "writeOffReason": "Why it cannot be collected",
+    "writeOffReasonHint": "The Owner reads this before deciding, and it stays on the record.",
+    "writeOffSubmit": "Ask for the write-off",
+    "notWrittenOff": "The write-off was not asked for",
+    "deniedWriteOff": "You cannot write off bad debt (whl.bad_debt.write_off).",
+    "waiting": "The write-off of {{amount}} on {{document}} waits for the Owner's approval. Someone other than you decides it.",
+    "waitingBody": "Nothing has changed yet: the document still owes it until the write-off is approved."
   }
 }
