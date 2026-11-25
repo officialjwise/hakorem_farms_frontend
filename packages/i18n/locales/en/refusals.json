@@ -169,7 +169,22 @@
     "FULFILMENT_INVALID": "The pick list cannot be changed that way.",
     "RECEIPT_LINK_INVALID": "The receipt link was not changed.",
     "STANDING_ORDER_INVALID": "This standing order cannot be saved as it is.",
-    "TILL_INVOICE_PAYMENT_INVALID": "The invoice payment was not taken at the till."
+    "TILL_INVOICE_PAYMENT_INVALID": "The invoice payment was not taken at the till.",
+    "ALLOCATION_INVALID": "The overhead allocation was not saved or posted as it is.",
+    "CAPITAL_TRANSACTION_INVALID": "The capital contribution or withdrawal was not recorded as it is.",
+    "DISTRIBUTION_PAYMENT_INVALID": "The distribution payment was not recorded as it is.",
+    "DISTRIBUTION_RUN_INVALID": "The distribution run cannot be drafted or changed as it is.",
+    "FINANCING_INVALID": "The loan or grant was not saved as it is.",
+    "ID_IN_USE": "This record’s id is already used by another record. Nothing was saved twice.",
+    "INVESTOR_INVALID": "The investor’s details were not saved as they are.",
+    "MESSAGE_NOT_RETRYABLE": "This message cannot be sent again.",
+    "PREFERENCES_INVALID": "Your notification preferences were not saved as they are.",
+    "RECIPIENT_NOT_DOCUMENT_PARTY": "The document can be sent only to its own customer’s number or email.",
+    "REPAYMENT_INVALID": "The repayment was not recorded as it is.",
+    "ROUTE_INVALID": "The driver’s run was not changed as it is.",
+    "TEMPLATE_INVALID": "The message template was not saved as it is.",
+    "TEMPLATE_NOT_ACTIVATABLE": "This template cannot be made active.",
+    "TRIGGER_INVALID": "The notification setting was not saved as it is."
   },
   "rules": {
     "AMOUNT_EXCEEDS_LINE": "A line is credited for more than it charged.",
@@ -294,6 +309,18 @@
     "CHANNEL_REPEATED": "A level names the same channel twice. Choose each channel once.",
     "NOTHING_HELD": "The driver holds no cash from deliveries at this branch, or it was already handed in.",
     "RECEIVER_IS_DRIVER": "A driver cannot hand their own cash in to themselves: another cashier takes it.",
-    "APPROVER_CANNOT_ISSUE": "You approved this version's margin, so someone else who may send quotes issues it."
+    "APPROVER_CANNOT_ISSUE": "You approved this version's margin, so someone else who may send quotes issues it.",
+    "AMOUNT_NOT_POSITIVE": "The amount must be above zero.",
+    "NOT_AN_INVOICE": "Only an issued invoice, or an order’s receipt with something outstanding, is paid at the till.",
+    "INVOICE_NOT_ISSUED": "The invoice is not issued yet.",
+    "INVOICE_OTHER_BRANCH": "The invoice belongs to another branch: it is paid there.",
+    "INVOICE_SETTLED": "Nothing is outstanding on the invoice.",
+    "AMOUNT_EXCEEDS_OUTSTANDING": "The amount is more than is outstanding on the invoice.",
+    "TENDERED_BELOW_AMOUNT": "The cash handed over is less than the amount paid.",
+    "RECEIPT_LINK_ALREADY_REVOKED": "This receipt link was already revoked.",
+    "SHORT_NOT_LESS": "A short pick must be fewer than the line ordered.",
+    "CATCH_WEIGHT_GOES_BY_WEIGHT": "This line is sold by weight: weigh what there is instead.",
+    "SAME_PRODUCT": "That is the same product: propose a short pick instead.",
+    "SHORT_PICK_NOT_AGREED": "A line is picked short and the customer has not agreed to it."
   }
 }

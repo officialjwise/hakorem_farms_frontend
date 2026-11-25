@@ -27,6 +27,7 @@ import {
   type TillPinVerifierList,
   type TillSignOut,
 } from '../pin/pin';
+import type { CounterSaleBuyer } from './buyer';
 import type { CartLine, OtherTender } from './cart';
 import { buildSale } from './sale';
 import { indexedDbStore, memoryStore, type TillStore } from './store';
@@ -717,6 +718,7 @@ export class Till {
     others: (OtherTender & { method: PaymentMethodRef })[];
     cashHandedPesewas: number;
     customerPhone: string | null;
+    buyer?: CounterSaleBuyer | null;
     approvals?: PinApprovalRecord[];
   }): Promise<SaleEntry> {
     const { device, shift, pack } = this.snapshotOrThrow();

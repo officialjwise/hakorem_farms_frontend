@@ -120,6 +120,47 @@ export function AccountStatusBadge({ status }: { status: AccountStatus }) {
   );
 }
 
+type StandingStatus = S['StandingOrder']['status'];
+type RunOutcome = S['StandingOrderRun']['outcome'];
+
+const STANDING_LOOK: Record<StandingStatus, { tone: BadgeTone }> = {
+  ACTIVE: { tone: 'good' },
+  PAUSED: { tone: 'warning' },
+  ENDED: { tone: 'slate' },
+  CANCELLED: { tone: 'slate' },
+};
+
+const RUN_LOOK: Record<RunOutcome, { tone: BadgeTone }> = {
+  CREATED: { tone: 'good' },
+  HELD_FOR_CREDIT: { tone: 'warning' },
+  SKIPPED_ON_HOLD: { tone: 'critical' },
+  SKIPPED_NO_PRICE: { tone: 'warning' },
+  MISSED: { tone: 'critical' },
+  FAILED: { tone: 'critical' },
+};
+
+/** A standing order's state in words: paused and ended are said, never only coloured. */
+export function StandingOrderStatusBadge({ status }: { status: StandingStatus }) {
+  const { t } = useTranslation('wholesale');
+  return (
+    <StatusBadge
+      tone={lookup(STANDING_LOOK, status, UNKNOWN).tone}
+      label={t(`standing.status.${status}`, { defaultValue: status })}
+    />
+  );
+}
+
+/** What one run of a standing order did, in words: an order made, held for credit, or none and why. */
+export function RunOutcomeBadge({ outcome }: { outcome: RunOutcome }) {
+  const { t } = useTranslation('wholesale');
+  return (
+    <StatusBadge
+      tone={lookup(RUN_LOOK, outcome, UNKNOWN).tone}
+      label={t(`runs.outcome.${outcome}`, { defaultValue: outcome })}
+    />
+  );
+}
+
 /** "QUO-2026-DDW-000088", or "Draft quote" before the server numbers it. */
 export function useQuoteName(): (quote: Pick<S['Quote'], 'quoteNo'>) => string {
   const { t } = useTranslation('wholesale');

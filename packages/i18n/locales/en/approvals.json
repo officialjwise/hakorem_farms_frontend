@@ -52,6 +52,8 @@
     "POSTING_RULE_CHANGE": "Posting rule change",
     "CAPITAL_WITHDRAWAL": "Capital withdrawal",
     "INVESTOR_DISTRIBUTION": "Investor distribution",
+    "INVESTOR_PAYOUT_CHANGE": "Investor payout details change",
+    "FINANCING": "Loan or grant",
     "DATA_DELETION": "Data deletion",
     "BAD_DEBT_WRITE_OFF": "Bad debt write-off",
     "CREDIT_NOTE": "Credit note",

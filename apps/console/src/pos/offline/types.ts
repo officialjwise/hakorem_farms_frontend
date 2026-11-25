@@ -115,6 +115,8 @@ export interface ReceiptContent {
   }[];
   changePesewas: number;
   customerPhone: string | null;
+  /** The business buyer named on the receipt (2.26.0); absent on a sale queued before it. */
+  buyer?: { name: string; tin: string } | null;
   /**
    * The customer's receipt link (2.24.0), made from the pack's template and the sale's own token. Null where
    * the pack had no template; absent on a sale queued before 2.24.0.

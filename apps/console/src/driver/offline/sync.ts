@@ -178,7 +178,13 @@ export async function flushDriverQueue(deps: DriverSyncDeps): Promise<DriverFlus
       const item = byId.get(entry.id);
       // Not in the answer: the server said nothing about it, so it waits for the next pass.
       if (item === undefined) return { ...entry, localStatus: 'QUEUED' };
-      const common = { serverOutcome: item.outcome, serverReason: item.reason, confirmedAt: at() };
+      // A resend the server had already (2.35.0, CR-057 point 3): its first answer stands, so an exception
+      // raised when the answer was lost is still shown in the server's words.
+      const outcome =
+        item.outcome === 'DUPLICATE' && item.firstOutcome != null
+          ? item.firstOutcome
+          : item.outcome;
+      const common = { serverOutcome: outcome, serverReason: item.reason, confirmedAt: at() };
       return item.outcome === 'REJECTED'
         ? {
             ...entry,

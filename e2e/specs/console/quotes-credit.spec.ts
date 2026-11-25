@@ -1,6 +1,7 @@
 import type { components } from '@hakorem/api-client';
 import { seedEggs, EGGS_ID } from '../../support/eggs';
 import {
+  accraDay,
   expectNoAxeViolations,
   expectNoHorizontalScroll,
   signIn,
@@ -52,6 +53,9 @@ function first<T>(body: unknown): T {
   if (row === undefined) throw new Error('The example page has no row.');
   return row;
 }
+/** A week from today: the quote form refuses a day in the past. */
+const VALID_UNTIL = accraDay(7);
+
 const posted = (path: string) => (r: { method: () => string; url: () => string }) =>
   r.method() === 'POST' && new URL(r.url()).pathname === `/mock${path}`;
 
@@ -74,7 +78,7 @@ test.describe('a quote for crates and single eggs', () => {
     await page.getByRole('option', { name: `${CUSTOMER.name} (${CUSTOMER.publicId})` }).click();
     // The buyer's name and phone fill the contact.
     await expect(page.getByLabel(/^Contact phone/)).toHaveValue(CUSTOMER_PHONE);
-    await page.getByLabel(/^Valid until/).fill('2026-11-24');
+    await page.getByLabel(/^Valid until/).fill(VALID_UNTIL);
 
     // Line 1: 12 crates. Line 2: 30 single eggs.
     const line1 = page.getByRole('heading', { name: 'Line 1' }).locator('..').locator('..');
@@ -121,7 +125,7 @@ test.describe('a quote for crates and single eggs', () => {
     expect(body).toMatchObject({
       customerId: CUSTOMER.id,
       contactPhone: CUSTOMER_PHONE,
-      validUntil: '2026-11-24T23:59:59.999Z',
+      validUntil: `${VALID_UNTIL}T23:59:59.999Z`,
       taxInclusive: false,
     });
     // The API's prices, in pesewas, each with its unit (CR-045); no total is sent.

@@ -2,7 +2,8 @@
   "back": {
     "quotes": "Back to quotes",
     "rfqs": "Back to requests for quote",
-    "accounts": "Back to wholesale accounts"
+    "accounts": "Back to wholesale accounts",
+    "account": "Back to the account of {{name}}"
   },
   "quotes": {
     "title": "Quotes",
@@ -643,5 +644,217 @@
     "revokeSubmit": "Revoke the link",
     "revoked": "Link {{number}} is revoked. It opens nothing now.",
     "notRevoked": "The link was not revoked"
+  },
+  "standing": {
+    "title": "Standing orders",
+    "intro": "Orders this buyer takes on a schedule. On each day it is due the server makes the order, priced at the list price on that day, and it is confirmed like any other order, the credit check included.",
+    "loading": "Loading standing orders",
+    "empty": "This buyer has no standing order",
+    "emptyBody": "Set one up for a buyer who takes the same goods on a schedule.",
+    "error": "The standing orders could not be loaded",
+    "denied": "You cannot see standing orders (whl.standing_order.read).",
+    "table": "Each standing order of this buyer, newest first",
+    "pages": "Pages of standing orders",
+    "new": "Set up a standing order",
+    "columns": {
+      "schedule": "Schedule",
+      "lines": "What it orders",
+      "nextRun": "Next run",
+      "status": "State"
+    },
+    "moreLines_one": "and {{count}} more line",
+    "moreLines_other": "and {{count}} more lines",
+    "nextRun": {
+      "ACTIVE": "None to come",
+      "PAUSED": "None while it is paused",
+      "ENDED": "None: it has ended",
+      "CANCELLED": "None: it was cancelled"
+    },
+    "noEnd": "No last day: it runs until it is ended",
+    "weekday": {
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday",
+      "7": "Sunday"
+    },
+    "and": "and",
+    "every": {
+      "WEEKLY": "Every week on {{days}}",
+      "FORTNIGHTLY": "Every other week on {{days}}",
+      "MONTHLY": "Every month on day {{day}}",
+      "EVERY_N_DAYS_one": "Every day",
+      "EVERY_N_DAYS_other": "Every {{count}} days",
+      "unknown": "Schedule not complete ({{frequency}})"
+    },
+    "frequency": {
+      "WEEKLY": "Every week, on chosen days",
+      "FORTNIGHTLY": "Every other week, on chosen days",
+      "MONTHLY": "Every month, on one day",
+      "EVERY_N_DAYS": "Every so many days"
+    },
+    "status": {
+      "ACTIVE": "Running",
+      "PAUSED": "Paused",
+      "ENDED": "Ended",
+      "CANCELLED": "Cancelled"
+    }
+  },
+  "standingForm": {
+    "newTitle": "Standing order for {{name}}",
+    "intro": "Each run makes one order with these lines, collected from the farm. The server prices it at the list price on that day: nothing is priced here.",
+    "editTitle": "Change the standing order",
+    "frequency": "How often",
+    "frequencyHint": "It cannot be changed once set up: end this one and set up another.",
+    "frequencyFixed": "How often: {{frequency}}. It never changes; end this one and set up another to change it.",
+    "chooseFrequency": "Choose how often",
+    "weekdays": "On which days",
+    "weekdaysHint": "Every other week is counted from the week the first day falls in.",
+    "weekdaysMissing": "Choose at least one day.",
+    "dayOfMonth": "Day of the month",
+    "dayOfMonthHint": "1 to 28, so it runs in every month.",
+    "dayOfMonthWrong": "Type a whole number from 1 to 28.",
+    "intervalDays": "Every how many days",
+    "intervalDaysHint": "1 to 365, counted from the first day.",
+    "intervalDaysWrong": "Type a whole number of days from 1 to 365.",
+    "startsOn": "First day",
+    "startsOnHint": "Today or a later day.",
+    "startsOnFixed": "First day: {{day}}. It never changes.",
+    "endsOn": "Last day",
+    "endsOnHint": "Leave it empty to run until it is ended.",
+    "endsOnKept": "A last day can be moved, not taken away. Choose a day, or end the standing order instead.",
+    "lines": "Lines",
+    "linesHint": "Up to 50 lines, each product once.",
+    "line": "Line {{number}}",
+    "remove": "Remove line {{number}}",
+    "add": "Add a line",
+    "product": "Product",
+    "unit": "Counted in",
+    "unitHint": "The product's own unit, or one it converts from. The server converts.",
+    "qty": "How many",
+    "qtyIn": "How many, in {{unit}}",
+    "qtyWrong": "Type a quantity above nothing, for example 2.",
+    "linesMissing": "Every line needs a product and a quantity.",
+    "tooManyLines": "A standing order holds at most 50 lines.",
+    "save": "Set up the standing order",
+    "saving": "Saving the standing order",
+    "notSaved": "The standing order was not saved",
+    "saveChange": "Save the changes",
+    "discard": "Discard changes",
+    "denied": "You cannot set up standing orders (whl.standing_order.manage).",
+    "accountClosed": "This account is closed, so no standing order can be set up for it."
+  },
+  "standingOrder": {
+    "loading": "Loading the standing order",
+    "notFound": "This standing order does not exist",
+    "notFoundBody": "It may belong to a branch you do not keep standing orders for.",
+    "error": "The standing order could not be loaded",
+    "title": "Standing order for {{name}}",
+    "facts": {
+      "schedule": "Schedule",
+      "startsOn": "First day",
+      "endsOn": "Last day",
+      "nextRun": "Next run",
+      "collection": "How it reaches them"
+    },
+    "collected": "Collected from the farm",
+    "lines": "What each run orders",
+    "linesTable": "The lines each run orders",
+    "columns": {
+      "line": "Line",
+      "product": "Product",
+      "qty": "Quantity"
+    },
+    "edit": "Change it",
+    "pause": "Pause",
+    "pauseTitle": "Pause the standing order for {{name}}?",
+    "pauseBody": "It makes no order until it is resumed. Say why.",
+    "resume": "Resume",
+    "resumeTitle": "Resume the standing order for {{name}}?",
+    "resumeBody": "It runs again from its next day on or after today. The days it was paused are not made up. Say why.",
+    "end": "End it",
+    "endTitle": "End the standing order for {{name}}?",
+    "endBody": "It ends for good and makes no more orders. This cannot be undone. Say why.",
+    "notChanged": "The standing order was not changed",
+    "denied": "You cannot change standing orders (whl.standing_order.manage).",
+    "outcome": {
+      "saved": "The standing order was changed",
+      "paused": "The standing order is paused: it makes no order until it is resumed",
+      "resumed": "The standing order is running again",
+      "ended": "The standing order has ended: it makes no more orders"
+    }
+  },
+  "runs": {
+    "title": "Runs",
+    "intro": "Each day it was due, newest first, with the order it made or why none was made.",
+    "loading": "Loading the runs",
+    "empty": "It has not run yet",
+    "emptyBody": "Each day it is due appears here once the server has run it.",
+    "error": "The runs could not be loaded",
+    "denied": "You cannot see the runs of standing orders (whl.standing_order.read).",
+    "table": "Each run of this standing order, newest first",
+    "pages": "Pages of runs",
+    "columns": {
+      "runDate": "Day",
+      "outcome": "What happened",
+      "reason": "Why",
+      "order": "Order",
+      "recordedAt": "Recorded"
+    },
+    "outcome": {
+      "CREATED": "Order made",
+      "HELD_FOR_CREDIT": "Order made, held for credit",
+      "SKIPPED_ON_HOLD": "Skipped: account on hold",
+      "SKIPPED_NO_PRICE": "Skipped: a line has no price",
+      "MISSED": "Missed: the job did not run",
+      "FAILED": "Failed: no order made"
+    },
+    "heldHint": "Over the limit or past the terms: it needs a credit override before it is confirmed.",
+    "noReason": "Nothing to add",
+    "noOrder": "No order"
+  },
+  "openItems": {
+    "title": "Open invoices",
+    "intro": "This buyer's invoices, receipts and debit notes with something still owed, newest first, as the server works it out now.",
+    "loading": "Loading the open invoices",
+    "empty": "Nothing is owed on any document",
+    "emptyBody": "An invoice of this buyer with something unpaid appears here.",
+    "error": "The open invoices could not be loaded",
+    "denied": "You cannot see what is owed on documents (pay.receivable.read).",
+    "table": "Each document of this buyer with something still owed",
+    "pages": "Pages of open invoices",
+    "total": "Still owed on these documents, as the server totals them",
+    "columns": {
+      "document": "Document",
+      "issued": "Issued",
+      "due": "Due",
+      "overdue": "Overdue by",
+      "outstanding": "Still owed",
+      "actions": "Bad debt"
+    },
+    "noDue": "No due date",
+    "notOverdue": "Not overdue",
+    "docType": {
+      "INVOICE": "Invoice",
+      "RECEIPT": "Receipt",
+      "DEBIT_NOTE": "Debit note"
+    },
+    "unnumbered": "Not numbered yet",
+    "writeOff": "Write off",
+    "writeOffFor": "Write off {{document}} as bad debt",
+    "writeOffTitle": "Write off {{amount}} of {{document}} as bad debt?",
+    "writeOffBody": "Nothing changes until the Owner approves it, and the Owner who decides cannot be you. Once approved, the amount comes off what {{name}} owes on {{document}} and is posted to bad debts. No payment or credit note can then be put onto it. Say why it cannot be collected.",
+    "writeOffDocument": "Document",
+    "writeOffOutstanding": "Still owed now",
+    "writeOffAmount": "To write off",
+    "writeOffReason": "Why it cannot be collected",
+    "writeOffReasonHint": "The Owner reads this before deciding, and it stays on the record.",
+    "writeOffSubmit": "Ask for the write-off",
+    "notWrittenOff": "The write-off was not asked for",
+    "deniedWriteOff": "You cannot write off bad debt (whl.bad_debt.write_off).",
+    "waiting": "The write-off of {{amount}} on {{document}} waits for the Owner's approval. Someone other than you decides it.",
+    "waitingBody": "Nothing has changed yet: the document still owes it until the write-off is approved."
   }
 }

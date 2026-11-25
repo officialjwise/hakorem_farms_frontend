@@ -77,7 +77,10 @@ interface EntryBase {
   attempts: number;
   lastAttemptAt: string | null;
   confirmedAt: string | null;
-  /** The server's outcome: `APPLIED`, `APPLIED_WITH_EXCEPTION` or `DUPLICATE` (it had it already). */
+  /**
+   * The server's outcome: `APPLIED` or `APPLIED_WITH_EXCEPTION`, the first answer's for a resend it had
+   * already (`firstOutcome`, 2.35.0); `DUPLICATE` only where the server named no first answer.
+   */
   serverOutcome: string | null;
   /** The server's words with the outcome: why it was rejected, or the exception it raised. */
   serverReason: string | null;

@@ -10,8 +10,12 @@ import { encodeReceipt, type PrintWords } from '../printer/escpos';
 /**
  * How the customer gets their receipt (ADR 0045): the digital receipt first, by a link that works on every
  * phone (2.24.0); then a 58 mm Bluetooth printer where this browser can drive one. Nothing here holds up
- * the sale or waits on the network: the sale is already complete when this shows. The contract carries no
- * receipt SMS yet (CR-033 point 3), so the till promises none.
+ * the sale or waits on the network: the sale is already complete when this shows.
+ *
+ * The receipt SMS (2.41.0, CR-033 point 3): the farm sends the link by SMS when a sale that names a phone
+ * and whose token the server kept syncs. The sync's answer says nothing of the message (`receiptMessage`
+ * was not added), so the till says when the SMS goes, never that it arrived, and that none goes for a sale
+ * with no link or a refused one.
  */
 export function ReceiptOut({ entry, copy = false }: { entry: SaleEntry; copy?: boolean }) {
   const { t } = useTranslation('pos');
@@ -44,7 +48,13 @@ function DigitalReceipt({ entry }: { entry: SaleEntry }) {
         {t('digital.title')}
       </p>
       <p data-slot="sms-status">
-        {phone === null ? t('digital.noPhone') : t('digital.smsNoServer', { phone })}
+        {phone === null
+          ? t('digital.noPhone')
+          : link === null || refused
+            ? t('digital.smsNoLink', { phone })
+            : recorded
+              ? t('digital.smsSent', { phone })
+              : t('digital.smsWaiting', { phone })}
       </p>
       {link !== null && refused ? (
         <Alert severity="warning" title={t('digital.linkRefused')}>
@@ -77,6 +87,10 @@ function usePrintWords(entry: SaleEntry): PrintWords {
       code: entry.receipt.registerCode,
     }),
     cashier: t('receipt.cashier', { name: entry.receipt.cashierName }),
+    buyer:
+      entry.receipt.buyer != null
+        ? t('receipt.buyer', { name: entry.receipt.buyer.name, tin: entry.receipt.buyer.tin })
+        : null,
     saleReference: t('receipt.provisional'),
     receiptNo: t('receipt.official'),
     receiptNoFollows: t('receipt.officialFollows'),

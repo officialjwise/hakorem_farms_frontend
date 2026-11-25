@@ -23,6 +23,7 @@ import {
   type CartLine,
   type OtherTender,
 } from '../offline/cart';
+import { readBuyer } from '../offline/buyer';
 import { getTill, useTill } from '../offline/till';
 import { lineApprovalRecord } from '../offline/sale';
 import type { OfflinePack, PinApprovalRecord, SaleEntry } from '../offline/types';
@@ -86,10 +87,18 @@ export function PayDialog({
   const [customerPhone, setCustomerPhone] = useState('');
   const phone = customerPhone.replace(/\s+/g, '');
   const phoneOk = phone === '' || PHONE.test(phone);
+  // A business buyer's name and TIN on the receipt (2.26.0): both or neither, never a customer.
+  const [buyerName, setBuyerName] = useState('');
+  const [buyerTin, setBuyerTin] = useState('');
+  const { buyer, problem: buyerProblem } = readBuyer(buyerName, buyerTin);
 
   const split = splitTender(total, cleared, handed ?? 0);
   const canReview =
-    cash !== null && !split.otherExceedsTotal && split.shortPesewas === 0 && phoneOk;
+    cash !== null &&
+    !split.otherExceedsTotal &&
+    split.shortPesewas === 0 &&
+    phoneOk &&
+    buyerProblem === null;
 
   const complete = () => {
     if (cash === null) return;
@@ -110,6 +119,7 @@ export function PayDialog({
         ),
         cashHandedPesewas: handed ?? 0,
         customerPhone: phone === '' ? null : phone,
+        buyer,
         approvals: [
           // A supervisor's PIN that approved a line's price (2.17.0), then the tenders'.
           ...lines.flatMap((line) => {
@@ -199,6 +209,41 @@ export function PayDialog({
                 autoComplete="off"
               />
             </Field>
+            <fieldset className="grid gap-3">
+              <legend className="font-semibold">{t('pay.buyer')}</legend>
+              <p className="text-sm text-fg-muted">{t('pay.buyerHint')}</p>
+              <Field
+                label={t('pay.buyerName')}
+                error={
+                  buyerProblem === 'TIN_WITHOUT_NAME' || buyerProblem === 'NAME_INVALID'
+                    ? t(`pay.buyerProblem.${buyerProblem}`)
+                    : undefined
+                }
+              >
+                <Input
+                  value={buyerName}
+                  onChange={(event) => setBuyerName(event.target.value)}
+                  autoComplete="off"
+                />
+              </Field>
+              <Field
+                label={t('pay.buyerTin')}
+                hint={t('pay.buyerTinHint')}
+                error={
+                  buyerProblem === 'NAME_WITHOUT_TIN' || buyerProblem === 'TIN_INVALID'
+                    ? t(`pay.buyerProblem.${buyerProblem}`)
+                    : undefined
+                }
+              >
+                <Input
+                  value={buyerTin}
+                  onChange={(event) => setBuyerTin(event.target.value)}
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                />
+              </Field>
+            </fieldset>
             <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1">
               <dt>{t('pay.cashDue')}</dt>
               <dd className="text-end">
@@ -245,6 +290,9 @@ export function PayDialog({
               <Row term={t('pay.changeDue')} pesewas={split.changePesewas} strong />
             </dl>
             {phone !== '' ? <p>{t('pay.phoneConfirm', { phone })}</p> : null}
+            {buyer !== null ? (
+              <p>{t('pay.buyerConfirm', { name: buyer.name, tin: buyer.tin })}</p>
+            ) : null}
             <p className="text-sm">{online ? t('pay.sendsNow') : t('pay.queuedOffline')}</p>
             {failed !== null ? (
               <Alert severity="critical" title={t('pay.failed')}>

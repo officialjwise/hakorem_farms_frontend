@@ -108,6 +108,11 @@ export function Receipt({
         <p>{t('receipt.register', { name: receipt.registerName, code: receipt.registerCode })}</p>
         <p>{formatDateTime(receipt.occurredAt)}</p>
         <p>{t('receipt.cashier', { name: receipt.cashierName })}</p>
+        {receipt.buyer != null ? (
+          <p data-slot="receipt-buyer">
+            {t('receipt.buyer', { name: receipt.buyer.name, tin: receipt.buyer.tin })}
+          </p>
+        ) : null}
       </header>
       <dl className="grid grid-cols-[auto_1fr] gap-x-2">
         <dt>{t('receipt.provisional')}</dt>

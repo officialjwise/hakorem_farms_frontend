@@ -23,7 +23,7 @@
  * The session cookies are host-only (`__Host-`), so a session signed in on the console's host is never sent
  * from the investor portal's, and the other way round (ADR 0058): each host has its own jar.
  */
-import { operationManifest, type RequestedOperation } from '@hakorem/api-client';
+import { operationManifest, type RequestedOperation, type components } from '@hakorem/api-client';
 import type { BrowserContext, Page, Route } from '@playwright/test';
 import {
   createFakeAuthServer,
@@ -31,6 +31,9 @@ import {
   type FakeAuthServer,
 } from '../../apps/console/src/test/fakeAuthServer';
 import { CONSOLE_URL } from './hosts';
+
+/** One broken rule of an error envelope, as the contract's `ErrorDetail` writes it. */
+type ErrorDetail = components['schemas']['ErrorDetail'];
 
 /** The same-origin path the e2e build's HK_API_BASE_URL names. */
 export const API_PATH = '/mock';
@@ -140,7 +143,10 @@ export class FakeApi {
     status: number;
   }[] = [];
   private readonly prefers = new Map<string, string>();
-  private readonly refusals = new Map<string, { status: number; code: string; message: string }>();
+  private readonly refusals = new Map<
+    string,
+    { status: number; code: string; message: string; details: ErrorDetail[] }
+  >();
 
   /**
    * Rewrites Prism's answer to one operation for this test only, for a state the contract's single
@@ -195,10 +201,17 @@ export class FakeApi {
    * none of its examples carries that code: for example `approveRequest` refusing the maker
    * (MAKER_CANNOT_CHECK). The test names the code; the screen's words are its own (ADR 0038).
    */
-  refuse(operationId: string, status: number, code: string, message: string): void {
+  refuse(
+    operationId: string,
+    status: number,
+    code: string,
+    message: string,
+    /** The broken rules, as a 422's `details[]` names them (`FULFILMENT_INVALID` with `INEXACT_QUANTITY`). */
+    details: ErrorDetail[] = [],
+  ): void {
     const manifest = operationManifest[operationId as keyof typeof operationManifest];
     if (manifest === undefined) throw new Error(`${operationId} is not in the contract.`);
-    this.refusals.set(operationId, { status, code, message });
+    this.refusals.set(operationId, { status, code, message, details });
   }
 
   async install(context: BrowserContext): Promise<void> {
@@ -300,7 +313,7 @@ export class FakeApi {
             code: refused.code,
             message: refused.message,
             correlationId: '019a7b1d-5a33-73ab-98e3-438b35eabc69',
-            details: [],
+            details: refused.details,
           },
         }),
       });

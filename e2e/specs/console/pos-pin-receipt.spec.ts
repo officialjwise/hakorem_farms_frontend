@@ -332,6 +332,9 @@ test('offline, a supervisor’s PIN approves a price beyond the cashier’s limi
   await page.getByRole('textbox', { name: /^Cash handed over/ }).fill('570');
   await page.getByRole('button', { name: 'Review the sale' }).click();
   await page.getByRole('button', { name: 'Complete the sale' }).click();
+  // The sale is on the till's queue before the network comes back: otherwise "All sent" can read true for
+  // an empty queue before the sale is kept, and nothing has been sent yet.
+  await expect(page.locator('[data-slot="queue-count"]')).toContainText('1 to send');
 
   await api.setNetwork(context, true);
   await expect(page.locator('[data-slot="queue-count"]')).toContainText('All sent');
@@ -414,9 +417,9 @@ test('the digital receipt: the till makes the link from its own token and sends 
   await confirm.getByRole('button', { name: 'Complete the sale' }).click();
 
   const digital = page.locator('[data-slot="digital-receipt"]');
-  // 2.31.0 carries no receipt SMS (CR-033 point 3): the till promises none.
+  // 2.41.0 (CR-033 point 3): the farm sends the link by SMS at sync; the till is not told whether it arrives.
   await expect(digital.locator('[data-slot="sms-status"]')).toHaveText(
-    'The phone number +233244550199 goes with the sale. Receipts are not sent by SMS yet.',
+    'The server has the sale, so the farm sends the receipt link by SMS to +233244550199. The till is not told whether it arrives.',
   );
   const link = digital.locator('[data-slot="receipt-link"]');
   await expect(link).toHaveText(/^https:\/\/hakoremfarms\.com\/r\/[A-Za-z0-9_-]{22}$/);

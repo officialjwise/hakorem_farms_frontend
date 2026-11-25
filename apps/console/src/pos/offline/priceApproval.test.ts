@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { approvers, fromContract, priceApprovers, purposeOf, type PinVerifier } from '../pin/pin';
-import { checkAgreedPrice, lineDiscount, type CartLine } from './cart';
+import { cartDiscount, checkAgreedPrice, lineDiscount, type CartLine } from './cart';
 import { lineApprovalRecord, toOfflineSaleLine } from './sale';
 
 /** G-0142's own band (2.28.0): list GH₵650.00, floor GH₵400.00, ceiling GH₵900.00. */
@@ -61,6 +61,34 @@ describe("a supervisor's PIN approves a price beyond the cashier's limit (2.17.0
     expect(checkAgreedPrice(goat({ overrideApproval: APPROVAL }), POLICY, 0)).toBeNull();
     // Past the shift's limit too: the supervisor approved this line.
     expect(checkAgreedPrice(goat({ overrideApproval: APPROVAL }), POLICY, 19000)).toBeNull();
+  });
+
+  it('counts an approved discount toward the shift’s total, so every later discount then needs a supervisor (owner, 2026-11-24)', () => {
+    // The approved GH₵150.00 off is in the shift's discounts, as any other.
+    const approved = goat({ overrideApproval: APPROVAL });
+    expect(cartDiscount([approved])).toBe(15000);
+    // GH₵60.00 given before it: GH₵210.00, past the cashier's GH₵200.00 for the shift.
+    const shiftSoFar = 6000 + cartDiscount([approved]);
+    // GH₵10.00 off the next goat is inside the cashier's GH₵50.00 a line, but the shift's total is used.
+    const next = goat({ key: 'l2', agreedUnitPricePesewas: 64000 });
+    expect(lineDiscount(next)).toBe(1000);
+    expect(checkAgreedPrice(next, POLICY, shiftSoFar)).toBe('OVER_SHIFT_LIMIT');
+    // A supervisor's PIN for that price lets it through, and it counts too.
+    const nextApproved = goat({
+      key: 'l2',
+      agreedUnitPricePesewas: 64000,
+      overrideApproval: { ...APPROVAL, approvedPricePesewas: 64000 },
+    });
+    expect(checkAgreedPrice(nextApproved, POLICY, shiftSoFar)).toBeNull();
+    expect(cartDiscount([approved, nextApproved])).toBe(16000);
+    // The list price needs nothing.
+    expect(
+      checkAgreedPrice(
+        goat({ key: 'l3', agreedUnitPricePesewas: 65000, varianceReasonCode: null }),
+        POLICY,
+        shiftSoFar,
+      ),
+    ).toBeNull();
   });
 
   it('holds the approval to its own price, and to the supervisor’s own limit, and never past the band', () => {

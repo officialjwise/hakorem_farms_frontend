@@ -66,6 +66,31 @@ describe('refusals in words (ADR 0038)', () => {
     expect(said.details).toHaveLength(2);
   });
 
+  it('says why a short pick or a pack is refused, in the pick screen’s words (2.25.0)', () => {
+    const short = inWords(
+      refusal('FULFILMENT_INVALID', 'Refused.', [
+        { field: '/quantity', code: 'SHORT_NOT_LESS', message: 'not less' },
+      ]),
+      say,
+    );
+    expect(short.message).toBe(
+      'The pick list cannot be changed that way. A short pick must be fewer than the line ordered.',
+    );
+    // Packing names the line (`/pickList/<lineNo>`), which no field on the pick screen holds.
+    const pack = inWords(
+      refusal('FULFILMENT_INVALID', 'Refused.', [
+        { field: '/pickList/1', code: 'SHORT_PICK_NOT_AGREED', message: 'short' },
+      ]),
+      say,
+    );
+    expect(pack.message).toBe(
+      'The pick list cannot be changed that way. A line is picked short and the customer has not agreed to it.',
+    );
+    for (const rule of ['CATCH_WEIGHT_GOES_BY_WEIGHT', 'SAME_PRODUCT']) {
+      expect(say(`rules.${rule}`)).not.toBeNull();
+    }
+  });
+
   it('says a known rule even when its detail names a field the screen does not have', () => {
     const said = inWords(
       refusal('BRANCH_INVALID', 'Refused.', [

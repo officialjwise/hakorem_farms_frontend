@@ -5,7 +5,6 @@
  * and the order read back carrying the total the till sent. Everything else is Prism's.
  */
 import { createHash } from 'node:crypto';
-import { LIST_DRIVER_CASH_HOLDERS } from '../../apps/console/src/requested/driverCashHolders';
 import { expect, type Page } from '@playwright/test';
 import type { FakeApi } from './fakeApi';
 import { confirmStepUp, signIn, signInWithTotp, USERS } from './helpers';
@@ -21,6 +20,7 @@ export interface SentSale {
   occurredAt: string;
   customerPhone?: string;
   receiptToken?: string;
+  buyer?: { name: string; tin: string };
   lines: Record<string, unknown>[];
   tenders: {
     paymentMethodId: string;
@@ -130,8 +130,8 @@ export function installTillServer(
     locked: [],
     serverTime: new Date().toISOString(),
   }));
-  // CR-063, requested: no driver holds delivery cash unless a test says so.
-  api.respondRequested(LIST_DRIVER_CASH_HOLDERS, () => ({ data: [] }));
+  // Prism's example names a driver; no driver holds delivery cash unless a test says so.
+  api.respond('listShiftDriverCashHolders', () => ({ data: [] }));
   let receipt = 6200;
   api.rewrite('getOfflinePack', (body) => {
     const pack = body as {

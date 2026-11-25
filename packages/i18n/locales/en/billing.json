@@ -374,5 +374,20 @@
       "pending": "Drawing up…",
       "failed": "The statement was not drawn up"
     }
+  },
+  "receiptLink": {
+    "title": "The till’s receipt link",
+    "body": "The till made a link to this receipt for the customer’s phone. If it went to the wrong number or the wrong customer, revoke it: from then on it opens nothing. The customer can be given the receipt number instead.",
+    "action": "Revoke the receipt link",
+    "confirmTitle": "Revoke the receipt link of {{number}}?",
+    "confirmBody": "The link stops working at once and cannot be turned back on. The sale, its receipt and its money do not change.",
+    "reasonHint": "Why, for example “Sent to the wrong number”. It is kept with who revoked it.",
+    "confirm": "Revoke the link",
+    "revoking": "Revoking the link…",
+    "revoked": "The receipt link is revoked",
+    "revokedBody": "Revoked by {{name}}: {{reason}}.",
+    "failed": "The receipt link was not revoked",
+    "denied": "You cannot revoke this receipt link",
+    "noLink": "This sale holds no receipt link: it was sold online, its link was refused, or it has not reached the server from the till."
   }
 }
