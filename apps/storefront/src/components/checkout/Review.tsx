@@ -1,7 +1,7 @@
 'use client';
 
 import { Clock, CreditCard, Smartphone, Wallet } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ApiError, newIdempotencyKey, type components } from '@hakorem/api-client';
 import {
   Alert,
@@ -19,6 +19,13 @@ import {
 } from '@hakorem/ui';
 import { useApiMutation } from '../../lib/browserApi';
 import { cardPageNotOpened } from '../../lib/cardPage';
+import {
+  forgetCardRequest,
+  forgetStaleCardRequest,
+  rememberCardRequest,
+  useKeptCardRequest,
+  type CardRequest,
+} from '../../lib/cardRequest';
 import { toE164 } from '../../lib/phone';
 import { fill, refusal, word, type Words } from '../../lib/words';
 import { perUnit } from '../cart/CartLines';
@@ -55,9 +62,18 @@ export function Review({
 }) {
   const w = (path: string) => word(words, `checkout.${path}`);
   // Set once a card order is placed without its page: the details can no longer change.
-  const [placed, setPlaced] = useState(false);
+  const [placedHere, setPlaced] = useState(false);
+  // This tab's card request for this checkout, kept across a reload (the owner, 2026-11-25; ADR 0060).
+  const kept = useKeptCardRequest(checkout.id);
+  const placed = placedHere || kept?.notOpened === true;
   const weighed = checkout.lines.some((line) => line.catchWeight);
   const expired = checkout.status === 'EXPIRED' || checkout.status === 'CANCELLED';
+  const finished = expired || checkout.status === 'COMPLETED';
+  useEffect(() => {
+    // A finished or lapsed checkout's request is dropped, and so is another checkout's.
+    if (finished) forgetCardRequest();
+    else forgetStaleCardRequest(checkout.id, checkout.reservedUntil);
+  }, [finished, checkout.id, checkout.reservedUntil]);
   const held = formatDateTime(checkout.reservedUntil).slice(11);
   const address = checkout.deliveryAddress;
   return (
@@ -212,6 +228,7 @@ export function Review({
           checkout={checkout}
           pay={pay}
           words={words}
+          kept={kept}
           onPlaced={onPlaced}
           onPlacedWithoutPage={() => setPlaced(true)}
         />
@@ -227,17 +244,21 @@ export function Review({
  * opens. When the page could not be opened, the order is placed all the same (503
  * `PAYMENT_PROVIDER_UNAVAILABLE`): that is said here, and stays, with one button that sends the same
  * request with the same idempotency key, which opens the page for that order and never places a second.
+ * The card request is kept in this tab's session storage until the page is handed over or the checkout is
+ * done with (`lib/cardRequest.ts`), so after a reload the same button replays the same request.
  */
 function Pay({
   checkout,
   pay,
   words,
+  kept,
   onPlaced,
   onPlacedWithoutPage,
 }: {
   checkout: Checkout;
   pay: PayMethod;
   words: Words;
+  kept: CardRequest | null;
   onPlaced: (result: S['PlaceOrderResult']) => void;
   onPlacedWithoutPage: () => void;
 }) {
@@ -247,7 +268,8 @@ function Pay({
   const [network, setNetwork] = useState<Network>('MTN');
   const [checked, setChecked] = useState(false);
   // Kept once true: the order exists, even while a replay is on its way or is refused.
-  const [withoutPage, setWithoutPage] = useState(false);
+  const [withoutPageHere, setWithoutPage] = useState(false);
+  const withoutPage = withoutPageHere || kept?.notOpened === true;
   const intent = useRef<{ said: string; key: string } | null>(null);
   const method = checkout.paymentTerms === 'COD' ? 'COD' : pay === 'COD' ? 'MOBILE_MONEY' : pay;
   const amount = formatMoney(checkout.estimatedTotalPesewas);
@@ -263,25 +285,55 @@ function Pay({
         ? fill(w('review.payCard'), { amount })
         : fill(w('review.pay'), { amount });
   const Icon = method === 'COD' ? Wallet : method === 'CARD' ? CreditCard : Smartphone;
+  const send = async (
+    sent: S['PlaceOrderRequest'],
+    request: { said: string; key: string },
+    sentMethod: typeof method,
+  ) => {
+    const keep = (notOpened: boolean) =>
+      rememberCardRequest({
+        checkoutId: checkout.id,
+        said: request.said,
+        key: request.key,
+        notOpened,
+      });
+    // Kept before it is sent: a reload while it is on its way replays the same request.
+    if (sentMethod === 'CARD') keep(withoutPage);
+    try {
+      const result = await place.mutateAsync(
+        { path: { id: checkout.id }, body: sent },
+        { idempotencyKey: request.key },
+      );
+      forgetCardRequest();
+      onPlaced(result);
+    } catch (error) {
+      // Said on screen from `place.error`.
+      if (error instanceof ApiError && cardPageNotOpened(sentMethod, error)) {
+        keep(true);
+        setWithoutPage(true);
+        onPlacedWithoutPage();
+      } else if (error instanceof ApiError && error.status < 500 && !withoutPage) {
+        // Refused with nothing placed: nothing to replay. With no answer at all it stays kept.
+        forgetCardRequest();
+      }
+    }
+  };
   const submit = async () => {
     setChecked(true);
     if (method === 'MOBILE_MONEY' && payerPhone === null) return;
     // One key per payment asked for: a retry of the same one cannot charge twice.
     const said = JSON.stringify(body);
-    if (intent.current?.said !== said) intent.current = { said, key: newIdempotencyKey() };
-    try {
-      const result = await place.mutateAsync(
-        { path: { id: checkout.id }, body },
-        { idempotencyKey: intent.current.key },
-      );
-      onPlaced(result);
-    } catch (error) {
-      // Said on screen from `place.error`.
-      if (error instanceof ApiError && cardPageNotOpened(method, error)) {
-        setWithoutPage(true);
-        onPlacedWithoutPage();
-      }
+    if (intent.current?.said !== said) {
+      intent.current =
+        kept?.said === said ? { said, key: kept.key } : { said, key: newIdempotencyKey() };
     }
+    await send(body, intent.current, method);
+  };
+  // The order is placed without its page: the same request again, from this page or from before a reload.
+  const replay = async () => {
+    const request = intent.current ?? (kept === null ? null : { said: kept.said, key: kept.key });
+    if (request === null) return;
+    await send(JSON.parse(request.said) as S['PlaceOrderRequest'], request, 'CARD');
   };
   const reference =
     place.error === null || place.error.correlationId === '' ? null : (
@@ -307,7 +359,7 @@ function Pay({
             <Button
               // May wrap: at 360 px the label fills the alert's column, and a wider font would overflow it.
               className="h-auto min-h-control-md py-2 text-center whitespace-normal"
-              onClick={() => void submit()}
+              onClick={() => void replay()}
               loading={place.isPending}
               loadingLabel={w('review.cardNotOpened.opening')}
             >
@@ -317,7 +369,7 @@ function Pay({
           }
         >
           <p>{w('review.cardNotOpened.body')}</p>
-          {place.error === null || cardPageNotOpened(method, place.error) ? null : (
+          {place.error === null || cardPageNotOpened('CARD', place.error) ? null : (
             <p className="font-medium">{refusal(words, place.error)}</p>
           )}
           {reference}
