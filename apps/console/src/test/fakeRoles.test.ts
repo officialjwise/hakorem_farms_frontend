@@ -18,12 +18,12 @@ const NOT_SEEDED: Readonly<Record<string, string>> = {
 
 /**
  * Permissions the seed grants other roles but not yet this one, which its B11 work needs (CR-056): the
- * Driver's proof photograph and failure reasons, and the Storekeeper's read of the order it picks. When
- * the seed grants one to the role, its line fails: delete it.
+ * Driver's proof photograph and failure reasons. When the seed grants one to the role, its line fails:
+ * delete it. (The Storekeeper's read of the order it picks is seeded from 2.29.0 as its own permission,
+ * `ord.order.read.fulfilment`, and the fake holds that instead of `ord.order.read`.)
  */
 const NOT_SEEDED_FOR_ROLE: Readonly<Record<string, readonly string[]>> = {
   DRIVER: ['platform.file.upload'],
-  STOREKEEPER: ['ord.order.read'],
 };
 
 /**
@@ -58,6 +58,15 @@ describe('the test fake holds the seeded roles (CR-023)', () => {
       expect(beyond).toEqual([]);
     },
   );
+
+  it('gives the Storekeeper the store’s view of an order and not the order with its money (2.29.0)', () => {
+    const storekeepers = Object.values(FAKE_USERS).filter((u) => u.roleCode === 'STOREKEEPER');
+    expect(storekeepers.length).toBeGreaterThan(0);
+    for (const user of storekeepers) {
+      expect(user.permissions).toContain('ord.order.read.fulfilment');
+      expect(user.permissions).not.toContain('ord.order.read');
+    }
+  });
 
   it('asks a role for TOTP exactly when the seed does', () => {
     for (const user of Object.values(FAKE_USERS)) {

@@ -536,7 +536,15 @@ const ACCOUNTANT_PERMISSIONS = [
  * the runs; the Driver reads and works their own run, uploads the proof's photograph and reads the
  * failure reasons. A-F11-01.
  */
-const PICK_PERMISSIONS = ['ord.fulfilment.read', 'ord.fulfilment.pick', 'ord.order.read'];
+/**
+ * The Storekeeper's picking, as seeded (2.29.0): it reads the order it picks through the store's own view,
+ * which carries no money (`ord.order.read.fulfilment`), and still cannot call `getOrder`.
+ */
+const PICK_PERMISSIONS = [
+  'ord.fulfilment.read',
+  'ord.fulfilment.pick',
+  'ord.order.read.fulfilment',
+];
 const DISPATCH_PERMISSIONS = [
   'ord.fulfilment.read',
   'ord.fulfilment.pick',

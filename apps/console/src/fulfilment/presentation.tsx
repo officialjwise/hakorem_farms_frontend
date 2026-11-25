@@ -17,6 +17,10 @@ import { MoneyDisplay, StatusBadge, type StatusTone } from '@hakorem/ui';
 
 type S = components['schemas'];
 export type Order = S['SalesOrder'];
+/** The order as the store reads it (2.29.0): lines, quantities and delivery, and never any money. */
+export type OrderView = S['OrderFulfilmentView'];
+/** What a pick screen reads of an order: the whole order, or the store's view of it. */
+export type PickOrder = Order | OrderView;
 export type Fulfilment = S['Fulfilment'];
 export type Delivery = S['Delivery'];
 export type Route = S['Route'];

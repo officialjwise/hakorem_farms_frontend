@@ -129,6 +129,45 @@ export function eggOrder(status: S['SalesOrder']['status']): S['SalesOrder'] {
   };
 }
 
+/**
+ * The same order as the store reads it (`getOrderFulfilmentView`, 2.29.0): its lines, quantities and
+ * delivery, built field by field as the contract's allow-list is, so no price or total can reach it.
+ */
+export function eggOrderView(status: S['SalesOrder']['status']): S['OrderFulfilmentView'] {
+  const o = eggOrder(status);
+  return {
+    id: o.id,
+    orderNo: o.orderNo,
+    branchId: o.branchId,
+    channel: o.channel,
+    status: o.status,
+    fulfilmentMode: o.fulfilmentMode,
+    customer: o.customer,
+    contactName: o.contactName,
+    contactPhone: o.contactPhone,
+    deliveryAddress: o.deliveryAddress,
+    delivery: o.delivery,
+    notes: o.notes,
+    placedAt: o.placedAt,
+    fulfilments: [{ id: FULFILMENT_ID, docType: 'FULFILMENT', number: 'PCK-2026-KSA-000412' }],
+    lines: o.lines.map((l) => ({
+      id: l.id,
+      lineNo: l.lineNo,
+      product: l.product,
+      stockUnit: l.stockUnit,
+      qtyOrdered: l.qtyOrdered,
+      uom: l.uom,
+      estimatedWeightKg: l.estimatedWeightKg,
+      tolerancePercent: l.tolerancePercent,
+      qtyFulfilled: l.qtyFulfilled,
+      fulfilledWeightKg: l.fulfilledWeightKg,
+      weightSource: l.weightSource,
+      qtyBackordered: l.qtyBackordered,
+      lineStatus: l.lineStatus,
+    })),
+  };
+}
+
 export function eggPickList(status: S['Fulfilment']['status']): S['Fulfilment'] {
   return {
     id: FULFILMENT_ID,
@@ -196,6 +235,8 @@ export function installOrderServer(
   };
   let orderStatus = status;
   api.respond('getOrder', () => eggOrder(orderStatus));
+  // 2.29.0: the Storekeeper's read of the order, with no money in it.
+  api.respond('getOrderFulfilmentView', () => eggOrderView(orderStatus));
   api.rewrite('listOrders', (body) => ({
     ...(body as S['SalesOrderPage']),
     data: [eggOrder(orderStatus)],

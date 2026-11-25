@@ -23,6 +23,7 @@ import { expect, test } from '../../support/test';
 /**
  * F11 in the back office, at 360 px: an online order of eggs from the list to its pick list; picking in the
  * order's units, with cracked eggs written off and a short line offered to the customer first; the
+ * Storekeeper reading the order through the store's view, with no money on screen (2.29.0); the
  * customer's answer; and a run planned for a driver and a van, put in order and started. Every amount on
  * screen is the API's.
  */
@@ -34,7 +35,8 @@ test('the order list opens an order in its own units, and a confirmed order star
   api,
 }) => {
   const sent = installOrderServer(api, 'CONFIRMED');
-  await signIn(page, USERS.storekeeper, '/orders');
+  // The Manager reads orders with their money; the Storekeeper, as seeded, does not (2.29.0).
+  await signInWithTotp(page, USERS.manager, '/orders');
   await expect(page.getByRole('heading', { level: 1, name: 'Orders' })).toBeVisible();
   await expect(page.getByText(formatMoney(80100)).first()).toBeVisible();
   await expectNoAxeViolations(page);
@@ -132,6 +134,30 @@ test('picking: short is refused, cracked eggs are written off, a smaller quantit
   ).picks;
   expect(picks.map((p) => [p.orderLineId, p.qty])).toEqual([[EGG_LINE, '30.000']]);
   expect(picks[0]?.id).toMatch(UUID_V7);
+});
+
+test('the Storekeeper reads the order it picks through the store’s view, with no money on screen', async ({
+  page,
+  api,
+}) => {
+  installOrderServer(api, 'PICKING');
+  await signIn(page, USERS.storekeeper, `/fulfilments/${FULFILMENT_ID}`);
+  await expect(page.getByRole('heading', { level: 1, name: 'PCK-2026-KSA-000412' })).toBeVisible();
+  // What was ordered and picked so far, in the order's units, from the store's view.
+  const lines = page.getByRole('listitem').filter({ hasText: 'How many crates picked' });
+  await expect(lines).toContainText('Ordered12 crates');
+  await expect(lines).toContainText('Picked so far0 crates');
+  await expect(page.getByRole('textbox', { name: /^Packages/ })).toBeVisible();
+  // Not a price, a total or a balance anywhere, and the order is no link to a page it cannot open.
+  await expect(page.getByRole('main')).not.toContainText('GH₵');
+  await expect(page.getByText('Order SO-2026-KSA-004310')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Order SO-2026-KSA-004310' })).toHaveCount(0);
+  const reads = api.log.filter((e) => e.operationId === 'getOrderFulfilmentView');
+  expect(reads.length).toBeGreaterThan(0);
+  expect(reads.every((e) => e.outcome === 'prism')).toBe(true);
+  expect(api.log.some((e) => e.operationId === 'getOrder')).toBe(false);
+  await expectNoAxeViolations(page);
+  await expectNoHorizontalScroll(page);
 });
 
 test('the customer’s answer is recorded with how it was given', async ({ page, api }) => {

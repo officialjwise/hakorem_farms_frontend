@@ -3,7 +3,8 @@
  * order's own units, eggs found cracked written off with their reason, a line short or substituted only
  * once the customer agrees (as the server allows: a substitute is offered, and the order waits for the
  * answer), then packed, and dispatched onto a van or handed over for collection. Every amount and the
- * cash to collect come from the API.
+ * cash to collect come from the API. The Storekeeper reads the order through the store's own view
+ * (2.29.0), which carries no money, so the pick screen shows none to them.
  */
 import { PackageCheck, Truck } from 'lucide-react';
 import { useState } from 'react';
@@ -33,6 +34,8 @@ import {
   formatDateTime,
   formatQuantity,
   useTableView,
+  type FailureLike,
+  type QueryLike,
 } from '@hakorem/ui';
 import { useAuth } from '../auth/AuthProvider';
 import { useApiAllPages, useApiMutation, useApiQuery } from '../data/api';
@@ -53,10 +56,18 @@ import {
   OrderTotals,
   type Fulfilment,
   type Order,
+  type OrderView,
+  type PickOrder,
 } from './presentation';
+import { orderReadFor } from './pickRules';
 
 type S = components['schemas'];
 type PickListLine = S['PickListLine'];
+/** What the pick screen reads of an order line, the same in the whole order and the store's view. */
+type PickOrderLine = Pick<
+  OrderView['lines'][number],
+  'id' | 'qtyOrdered' | 'qtyFulfilled' | 'uom' | 'lineStatus'
+>;
 type Units = ReturnType<typeof useUnits>;
 
 /** The pick lists, oldest first as the API gives them, by status and pick location. */
@@ -177,14 +188,38 @@ function InUnit({ quantity, uom, units }: { quantity: string; uom: string; units
 export function PickScreen() {
   const { t } = useTranslation(['fulfilment', 'common']);
   const { id = '' } = useParams();
+  const auth = useAuth();
   const fulfilment = useApiQuery('getFulfilment', { path: { id } });
   const orderId = fulfilment.data?.order.id ?? '';
-  const order = useApiQuery('getOrder', { path: { id: orderId } }, { enabled: orderId !== '' });
+  const read = orderReadFor(auth.can);
+  const full = useApiQuery(
+    'getOrder',
+    { path: { id: orderId } },
+    { enabled: orderId !== '' && read === 'full' },
+  );
+  // 2.29.0: the Storekeeper, who cannot call getOrder, reads the order it picks through the store's view.
+  const store = useApiQuery(
+    'getOrderFulfilmentView',
+    { path: { id: orderId } },
+    { enabled: orderId !== '' && read === 'store' },
+  );
+  const orderQuery: QueryLike<PickOrder, FailureLike> = read === 'store' ? store : full;
+  const order: PickOrder | null = read === 'none' ? null : (orderQuery.data ?? null);
+  // Only the whole order carries money; the store's view has none to show.
+  const money: Order | null = read === 'full' ? (full.data ?? null) : null;
+  const canOpenOrder = auth.can('ord.order.read');
   const labels = useStateLabels({
     loading: t('pick.loading'),
     emptyTitle: t('pick.notFound'),
     errorTitle: t('pick.error'),
     deniedTitle: t('pick.denied'),
+  });
+  const orderLabels = useStateLabels({
+    loading: t('pick.orderLoading'),
+    emptyTitle: t('order.notFound'),
+    errorTitle: t('pick.orderError'),
+    deniedTitle: t('pick.orderDenied'),
+    deniedDescription: t('pick.orderDeniedBody'),
   });
   const back = (
     <Link to="/fulfilments" className="text-accent-text underline">
@@ -218,34 +253,62 @@ export function PickScreen() {
             <FulfilmentStatusBadge kind="fulfilment" status={f.status} />
           </div>
           <p className="flex flex-wrap gap-x-4 gap-y-1">
-            <Link to={`/orders/${f.order.id}/fulfilment`} className="text-accent-text underline">
-              {t('pick.order', { order: f.order.number ?? '' })}
-            </Link>
+            {canOpenOrder ? (
+              <Link to={`/orders/${f.order.id}/fulfilment`} className="text-accent-text underline">
+                {t('pick.order', { order: f.order.number ?? '' })}
+              </Link>
+            ) : (
+              <span>{t('pick.order', { order: f.order.number ?? '' })}</span>
+            )}
             <span>{t('pick.from', { location: f.pickLocation.name })}</span>
             {f.picker === null ? null : (
               <span>{t('pick.picker', { name: f.picker.displayName })}</span>
             )}
           </p>
+          {order === null ? (
+            <QueryBoundary
+              query={orderQuery}
+              labels={orderLabels}
+              denied={read === 'none'}
+              isEmpty={() => false}
+              loadingFallback={
+                <Skeleton label={orderLabels.loading} shape="block" className="h-12" />
+              }
+            >
+              {() => null}
+            </QueryBoundary>
+          ) : null}
           {f.withinTolerance === false ? (
             <Alert severity="warning" title={t('pick.overTolerance')}>
-              <Link to={`/orders/${f.order.id}/fulfilment`} className="text-accent-text underline">
-                {t('pick.recordAnswer')}
-              </Link>
+              <AnswerWhere orderId={f.order.id} canOpenOrder={canOpenOrder} />
             </Alert>
           ) : null}
-          {order.data?.status === 'AWAITING_CUSTOMER' ? (
+          {order?.status === 'AWAITING_CUSTOMER' ? (
             <Alert severity="warning" title={t('pick.awaiting')}>
-              <Link to={`/orders/${f.order.id}/fulfilment`} className="text-accent-text underline">
-                {t('pick.recordAnswer')}
-              </Link>
+              <AnswerWhere orderId={f.order.id} canOpenOrder={canOpenOrder} />
             </Alert>
           ) : null}
-          <PickLines fulfilment={f} order={order.data ?? null} />
+          <PickLines fulfilment={f} order={order} canOpenOrder={canOpenOrder} />
           <Picked fulfilment={f} />
-          {order.data === undefined ? null : <NextStep fulfilment={f} order={order.data} />}
+          {order === null ? null : <NextStep fulfilment={f} order={order} money={money} />}
         </article>
       )}
     </QueryBoundary>
+  );
+}
+
+/**
+ * Where the customer's answer is recorded: the order's page, for someone who may open it. The Storekeeper
+ * cannot (it holds no `ord.order.read`), so it is told who does instead of being sent to a denied page.
+ */
+function AnswerWhere({ orderId, canOpenOrder }: { orderId: string; canOpenOrder: boolean }) {
+  const { t } = useTranslation('fulfilment');
+  return canOpenOrder ? (
+    <Link to={`/orders/${orderId}/fulfilment`} className="text-accent-text underline">
+      {t('pick.recordAnswer')}
+    </Link>
+  ) : (
+    <p>{t('pick.answerElsewhere')}</p>
   );
 }
 
@@ -260,13 +323,27 @@ interface LineEntry {
  * fewer is a short pick and more is not on the order, so either is refused here and the way forward is a
  * substitute or a smaller quantity offered to the customer, which the server holds the order for.
  */
-function PickLines({ fulfilment: f, order }: { fulfilment: Fulfilment; order: Order | null }) {
+function PickLines({
+  fulfilment: f,
+  order,
+  canOpenOrder,
+}: {
+  fulfilment: Fulfilment;
+  order: PickOrder | null;
+  canOpenOrder: boolean;
+}) {
   const { t } = useTranslation(['fulfilment', 'common']);
   const auth = useAuth();
   const units = useUnits();
   const keyFor = useIntentKey();
   const record = useApiMutation('recordPicks', {
-    invalidates: ['getFulfilment', 'getOrder', 'listFulfilments', 'listOrders'],
+    invalidates: [
+      'getFulfilment',
+      'getOrder',
+      'getOrderFulfilmentView',
+      'listFulfilments',
+      'listOrders',
+    ],
   });
   const [entries, setEntries] = useState<Record<string, LineEntry>>({});
   const [tried, setTried] = useState(false);
@@ -279,7 +356,8 @@ function PickLines({ fulfilment: f, order }: { fulfilment: Fulfilment; order: Or
   const [done, setDone] = useState(false);
   const picking =
     (f.status === 'PICK_LIST' || f.status === 'PICKING') && auth.can('ord.fulfilment.pick');
-  const lineOf = (orderLineId: string) => order?.lines.find((l) => l.id === orderLineId) ?? null;
+  const orderLines: readonly PickOrderLine[] = order?.lines ?? [];
+  const lineOf = (orderLineId: string) => orderLines.find((l) => l.id === orderLineId) ?? null;
   const set = (lineId: string, change: Partial<LineEntry>) =>
     setEntries((all) => ({
       ...all,
@@ -501,7 +579,12 @@ function PickLines({ fulfilment: f, order }: { fulfilment: Fulfilment; order: Or
           <CrackedDialog line={cracked} fulfilment={f} onClose={() => setCracked(null)} />
         )}
         {substitute === null || order === null ? null : (
-          <SubstituteDialog line={substitute} order={order} onClose={() => setSubstitute(null)} />
+          <SubstituteDialog
+            line={substitute}
+            orderId={order.id}
+            canOpenOrder={canOpenOrder}
+            onClose={() => setSubstitute(null)}
+          />
         )}
       </CardBody>
     </Card>
@@ -740,18 +823,26 @@ function CrackedDialog({
  */
 function SubstituteDialog({
   line,
-  order,
+  orderId,
+  canOpenOrder,
   onClose,
 }: {
   line: PickListLine;
-  order: Order;
+  orderId: string;
+  canOpenOrder: boolean;
   onClose: () => void;
 }) {
   const { t } = useTranslation(['fulfilment', 'common']);
   const units = useUnits();
   const keyFor = useIntentKey();
   const propose = useApiMutation('proposeSubstitution', {
-    invalidates: ['getOrder', 'getFulfilment', 'listOrders', 'listOrderHistory'],
+    invalidates: [
+      'getOrder',
+      'getOrderFulfilmentView',
+      'getFulfilment',
+      'listOrders',
+      'listOrderHistory',
+    ],
   });
   // The same product is offered first: fewer of it is a short pick the customer agrees to.
   const same = useApiQuery('getProduct', { path: { id: line.product.id } });
@@ -778,7 +869,7 @@ function SubstituteDialog({
     !ok || product === null || qty === null
       ? null
       : {
-          path: { id: order.id },
+          path: { id: orderId },
           body: {
             lineId: line.orderLineId,
             productId: product.id,
@@ -815,9 +906,7 @@ function SubstituteDialog({
     >
       {sent ? (
         <Alert severity="good" title={t('substitute.sent')}>
-          <Link to={`/orders/${order.id}/fulfilment`} className="text-accent-text underline">
-            {t('pick.recordAnswer')}
-          </Link>
+          <AnswerWhere orderId={orderId} canOpenOrder={canOpenOrder} />
         </Alert>
       ) : (
         <div className="grid gap-3">
@@ -859,13 +948,31 @@ function SubstituteDialog({
   );
 }
 
-/** Pack once picked; then dispatch onto a van for a delivery, or hand over for a collection. */
-function NextStep({ fulfilment: f, order: o }: { fulfilment: Fulfilment; order: Order }) {
+/**
+ * Pack once picked; then dispatch onto a van for a delivery, or hand over for a collection. The store's
+ * view of the order has no money (`money` null), so the confirmations show the totals only to someone who
+ * reads the whole order.
+ */
+function NextStep({
+  fulfilment: f,
+  order: o,
+  money,
+}: {
+  fulfilment: Fulfilment;
+  order: PickOrder;
+  money: Order | null;
+}) {
   const { t } = useTranslation(['fulfilment', 'common']);
   const auth = useAuth();
   const keyFor = useIntentKey();
   const pack = useApiMutation('packFulfilment', {
-    invalidates: ['getFulfilment', 'getOrder', 'listFulfilments', 'listOrders'],
+    invalidates: [
+      'getFulfilment',
+      'getOrder',
+      'getOrderFulfilmentView',
+      'listFulfilments',
+      'listOrders',
+    ],
   });
   const dispatch = useApiMutation('dispatchFulfilment', {
     invalidates: ['getFulfilment', 'getOrder', 'listFulfilments', 'listOrders', 'listDeliveries'],
@@ -970,7 +1077,7 @@ function NextStep({ fulfilment: f, order: o }: { fulfilment: Fulfilment; order: 
                   .catch(() => undefined);
               }}
             >
-              <OrderTotals order={o} />
+              {money === null ? null : <OrderTotals order={money} />}
             </ConfirmDialog>
           </CardBody>
         </Card>
@@ -1022,7 +1129,7 @@ function NextStep({ fulfilment: f, order: o }: { fulfilment: Fulfilment; order: 
                 .catch(() => undefined);
             }}
           >
-            <OrderTotals order={o} />
+            {money === null ? null : <OrderTotals order={money} />}
           </ConfirmDialog>
         </CardBody>
       </Card>
